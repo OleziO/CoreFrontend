@@ -1,0 +1,20 @@
+
+@use "element-plus/theme-chalk/src/drawer";
+
+.el-drawer {
+  @apply bg-gray-900;
+
+  .el-drawer__header {
+    @apply mb-0 text-white;
+  }
+
+  .el-drawer__body {
+    @apply p-20 overflow-hidden
+  }
+}
+
+@media (max-width: 768px) {
+  .el-drawer {
+    @apply w-full !important
+  }
+}

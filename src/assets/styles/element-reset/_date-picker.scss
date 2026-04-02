@@ -1,0 +1,15 @@
+@use "element-plus/theme-chalk/src/date-picker-panel";
+
+
+.el-date-editor.is-focus .el-input__wrapper {
+  @apply shadow-none;
+}
+
+.el-picker-panel {
+  @apply bg-transparent;
+
+  &__footer {
+    @apply bg-[inherit] flex items-center justify-between;
+  }
+}
+

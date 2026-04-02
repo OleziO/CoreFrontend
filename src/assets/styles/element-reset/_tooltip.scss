@@ -1,0 +1,9 @@
+@use "element-plus/theme-chalk/src/tooltip";
+
+.el-tooltip.el-popper.el-popover {
+  @apply flex p-15 max-w-fit;
+}
+
+.custom-tooltip.el-tooltip.el-popper {
+  @apply w-fit flex p-0 #{!important};
+}

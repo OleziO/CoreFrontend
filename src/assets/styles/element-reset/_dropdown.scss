@@ -1,0 +1,53 @@
+@use "element-plus/theme-chalk/src/dropdown";
+
+/* =========================
+   Dropdown wrapper (popper)
+   ========================= */
+.el-dropdown-menu {
+  @apply rounded-xl border border-white/20 bg-white/5 backdrop-blur-xl
+         shadow-[0_20px_40px_rgba(0,0,0,0.45)] overflow-hidden p-0;
+  min-width: 200px;
+}
+
+/* =========================
+   Dropdown items
+   ========================= */
+.el-dropdown-menu__item {
+  @apply px-4 py-3 text-white/90 cursor-pointer transition-colors duration-200 rounded-lg;
+
+  &:hover {
+    @apply bg-white/10 text-white;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.2));
+  }
+
+  &.is-disabled {
+    @apply opacity-40 cursor-not-allowed;
+  }
+
+  &.is-active {
+    @apply bg-white/20 text-white font-medium;
+  }
+}
+
+/* =========================
+   Dropdown divided items
+   ========================= */
+.el-dropdown-menu__item.divider {
+  @apply border-t border-white/10 my-1;
+}
+
+/* =========================
+   Submenu arrow (якщо є)
+   ========================= */
+.el-dropdown-menu__item.is-has-child::after {
+  @apply border-l border-white/50;
+}
+
+/* =========================
+   При активному dropdown прибираємо outline/box-shadow у тригера
+   ========================= */
+.el-dropdown.is-active > .el-dropdown-link,
+.el-dropdown.is-opened > .el-dropdown-link,
+.el-dropdown .el-dropdown-link:focus {
+  @apply border-none outline-none shadow-none;
+}

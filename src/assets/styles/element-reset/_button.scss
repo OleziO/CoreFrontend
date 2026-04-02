@@ -1,0 +1,167 @@
+@use "element-plus/theme-chalk/src/button";
+
+/* Відступ між кнопками */
+.el-button + .el-button {
+  @apply ml-0;
+}
+
+/* =========================
+   Базові стилі для всіх кнопок
+   ========================= */
+.el-button {
+  @apply
+    relative            /* для drop-shadow */
+    flex
+    justify-center
+    items-center
+    gap-8
+    rounded-xl
+    font-medium
+    text-sm
+    text-white
+    border
+    border-white/10
+    bg-white/5
+    backdrop-blur-md
+    shadow-none
+    outline-none
+    transition-all
+    duration-200
+    ease-out
+    cursor-pointer
+    overflow-hidden;    /* обмежує тінь псевдоелемента */
+
+  &:active {
+    @apply scale-[0.98];
+  }
+
+  &:focus-visible {
+    @apply outline-none;
+  }
+
+  &.is-disabled {
+    @apply opacity-40 cursor-not-allowed scale-100 shadow-none;
+  }
+}
+
+/* =========================
+   Primary кнопка (синя)
+   ========================= */
+.el-button--primary {
+  --el-color-primary: #43bfee;
+  border: 1px solid #43bfee;
+  background: linear-gradient(90deg, rgba(67,191,254,0.6) 0%, rgba(31,150,255,0.6) 100%);
+  backdrop-filter: blur(8px);
+  transition: filter 0.2s ease, transform 0.2s ease, background 0.2s ease;
+
+  &.el-button:not(.is-disabled, .is-link):hover {
+    filter: drop-shadow(0 0 15px #43bfee);
+  }
+
+  &:active {
+    filter: drop-shadow(0 0 12px #43bfee);
+  }
+
+  &.is-disabled {
+    @apply text-white cursor-not-allowed shadow-none;
+  }
+}
+
+/* =========================
+   Success кнопка (зелена)
+   ========================= */
+   
+.el-button--success {
+  --el-color-success: #16a34a;
+  border: 1px solid #16a34a;
+  background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+  backdrop-filter: blur(8px);
+  transition: filter 0.2s ease, transform 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+  }
+
+  &:active {
+    filter: drop-shadow(0 0 12px #16a34a);
+  }
+
+ &.is-disabled {
+    @apply text-white cursor-not-allowed shadow-none;
+  }
+}
+
+/* =========================
+   Danger кнопка (червона)
+   ========================= */
+.el-button--danger {
+  --el-color-danger: #dc2626;
+  border: 1px solid #dc2626;
+  background: linear-gradient(90deg, #dc2626 0%, #f87171 100%);
+  backdrop-filter: blur(8px);
+  transition: filter 0.2s ease, transform 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    background: linear-gradient(90deg, #f87171 0%, #dc2626 100%);
+  }
+
+  &:active {
+    filter: drop-shadow(0 0 12px #dc2626);
+  }
+
+  &.is-disabled {
+    @apply text-white cursor-not-allowed shadow-none;
+  }
+}
+
+/* =========================
+   Warning кнопка (жовта)
+   ========================= */
+   .el-button--warning {
+    --el-color-warning: #eab308; /* Yellow-500 */
+    border: 1px solid #eab308;
+    background: linear-gradient(90deg, #eab308 0%, #facc15 100%); /* Yellow-500 -> Yellow-400 */
+    backdrop-filter: blur(8px);
+    transition: filter 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    color: #fff; /* Для жовтого іноді краще чорний текст, але тут залишив білий для стилю */
+  
+    &:hover {
+      background: linear-gradient(90deg, #facc15 0%, #eab308 100%);
+    }
+  
+    &:active {
+      filter: drop-shadow(0 0 12px #eab308);
+    }
+  
+    &.is-disabled {
+      @apply text-white cursor-not-allowed shadow-none;
+    }
+  }
+
+/* =========================
+   Plain / Text кнопка
+   ========================= */
+.el-button.is-plain,
+.el-button--text {
+  @apply text-white/80 border-none;
+
+  &:hover {
+    @apply bg-white/5 text-white;
+  }
+
+  &:active {
+    @apply scale-[0.98] outline-none;
+  }
+
+  &:focus-visible {
+    @apply outline-none;
+  }
+
+  &.is-disabled {
+    @apply opacity-40 cursor-not-allowed scale-100;
+  }
+}
+
+.el-custom-button {
+  @apply bg-gray-800 text-white
+}

@@ -1,0 +1,356 @@
+@use "element-plus/theme-chalk/src/dialog";
+
+.el-overlay-dialog {
+  @apply flex justify-center items-center;
+}
+
+
+/* Центрування wrapper */
+.el-dialog__wrapper {
+  @apply flex items-center justify-center px-4;
+}
+
+.el-overlay,
+.el-overlay-dialog,
+.el-dialog__wrapper {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Сам діалог */
+.el-dialog,
+.el-dialog:focus,
+.el-dialog:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Всі елементи всередині модалки */
+.el-dialog *:focus,
+.el-dialog *:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+/* Сам діалог */
+.el-dialog {
+  @apply relative rounded-2xl m-auto border border-white/20 bg-white/10 backdrop-blur-xl max-h-[70vh] overflow-hidden flex flex-col pr-0;
+
+  &::focus,
+  &:focus-visible {
+    @apply ring-0 shadow-none border-0 #{!important};
+  }
+  
+
+
+  &::after {
+    content: '';
+    @apply pointer-events-none absolute left-0 right-0 bottom-0 h-20 rounded-b-2xl bg-gradient-to-b to-black/25;
+  }
+
+  // TODO: Fix divider
+  &__header { @apply pr-16 pb-10 #{!important}; }
+  &__title { @apply text-white text-xl font-semibold pr-16; }
+  &__body { @apply py-10 text-white/90 overflow-auto flex-1 pr-16; }
+  &__footer { @apply pr-16 pt-10 #{!important}; }
+
+  /* Buttons */
+  .el-button {
+    @apply border-0 shadow-none p-0 h-auto leading-normal outline-none;
+  }
+
+  /* Inputs / Selects */
+  .el-input__wrapper,
+  .el-select__wrapper,
+  .el-input-number {
+    @apply bg-white/10 border border-white/20 backdrop-blur-md shadow-none rounded-xl;
+  }
+
+  .el-select__wrapper {
+    @apply h-44;
+  }
+
+  .is-near {
+    @apply m-0;
+  }
+
+  /* Текст всередині інпутів */
+  .el-input__inner {
+    @apply text-white placeholder-white/40;
+  }
+
+  /* =========================
+     EL-TEXTAREA
+     ========================= */
+  .el-textarea {
+    @apply w-full;
+
+    .el-textarea__inner {
+      @apply bg-white/10 text-white placeholder-white/40 rounded-xl;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      min-height: 80px; /* регулюється кількість рядків */
+      resize: none;
+      outline: none;
+      backdrop-filter: blur(6px);
+      transition: all 0.2s ease-in-out;
+      box-shadow: none;
+
+      &:focus {
+        border-color: #43bfee;
+        box-shadow: 0 0 8px rgba(67,191,238,0.4);
+      }
+
+      &::placeholder {
+        color: rgba(255,255,255,0.4);
+      }
+    }
+  }
+
+  /* Form labels */
+  .el-form-item__label {
+    @apply text-white/80 font-semibold text-sm tracking-wide mb-2 pb-6 select-none;
+  }
+
+  /* Select tags */
+  .el-select__tags-text {
+    @apply text-white;
+  }
+
+  .el-tag {
+    @apply bg-white/10 border-white/10 text-white rounded-lg;
+  }
+
+  /* Select dropdown (popup) */
+  .el-select__popper {
+    @apply rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.55)];
+  }
+
+  .el-select-dropdown {
+    @apply rounded-xl p-8;
+  }
+
+  .el-select-dropdown__item {
+    @apply text-white/80 rounded-lg px-12 py-8 transition cursor-pointer;
+
+    &:not(.is-disabled):hover {
+      @apply bg-white/10 text-white;
+    }
+
+    &.is-selected {
+      @apply text-primary;
+    }
+
+    &.is-disabled {
+      @apply opacity-40 cursor-not-allowed;
+    }
+  }
+
+  /* Звичайний селект (не multiple) */
+  .el-select__selected-item > span {
+    @apply text-white;
+  }
+
+  .el-select-dropdown__empty {
+    @apply text-white/40 px-12 py-8;
+  }
+
+  .el-input__count {
+    background: transparent;
+  }
+
+  /* Dialog Buttons (Glass UI) */
+  .el-button {
+    @apply
+      inline-flex
+      items-center
+      gap-8
+      px-20 
+      py-8
+      rounded-xl
+      font-medium
+      text-sm
+      transition-all
+      duration-200
+      ease-out
+      bg-white/5
+      text-white
+      border
+      border-white/10
+      backdrop-blur-md;
+
+    &:not(.is-disabled):hover {
+      @apply bg-white/10 border-white/20;
+    }
+
+    &:not(.is-disabled):active {
+      @apply scale-[0.98];
+    }
+
+    &:focus-visible {
+      @apply outline-none ring-2;
+    }
+
+    &.is-disabled {
+      @apply cursor-not-allowed scale-100 shadow-none;
+
+      background: linear-gradient(
+        180deg,
+        rgba(255,255,255,0.08),
+        rgba(255,255,255,0.04)
+      );
+
+      border-color: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.5);
+    }
+  }
+
+  .el-button--primary.is-disabled {
+    background: linear-gradient(
+      90deg,
+      rgba(67,191,254,0.35),
+      rgba(31,150,255,0.35)
+    );
+    border-color: rgba(67,191,254,0.6);
+    color: rgba(255,255,255,0.75);
+  }
+
+  .el-icon--close-tip {
+    @apply hidden;
+  }
+
+  .el-button--success.is-disabled {
+    background: linear-gradient(
+      90deg,
+      rgba(22,163,74,0.35),
+      rgba(34,197,94,0.35)
+    );
+    border-color: rgba(34,197,94,0.6);
+    color: rgba(255,255,255,0.75);
+  }
+
+  .el-button--danger.is-disabled {
+    background: linear-gradient(
+      90deg,
+      rgba(220,38,38,0.35),
+      rgba(248,113,113,0.35)
+    );
+    border-color: rgba(248,113,113,0.6);
+    color: rgba(255,255,255,0.75);
+  }
+
+  /* =========================
+     EL-UPLOAD
+     ========================= */
+
+  .el-upload {
+    @apply w-full;
+
+    .el-upload__input {
+      @apply hidden;
+    }
+  }
+
+  .el-upload-dragger {
+    @apply
+      flex
+      flex-col
+      items-center
+      justify-center
+      gap-12
+      w-full
+      rounded-2xl
+      border
+      border-dashed
+      border-white/25
+      bg-white/5
+      backdrop-blur-md
+      text-white/70
+      transition-all
+      duration-200
+      p-20;
+
+    &:hover {
+      @apply bg-white/10 border-white/40 text-white;
+    }
+  }
+
+  .el-form-item--label-top label {
+    @apply flex;
+  }
+
+  .el-upload-dragger.is-dragover {
+    @apply bg-white/15 border-primary text-white;
+    box-shadow: 0 0 18px rgba(67,191,238,0.45);
+  }
+
+  .el-upload__icon {
+    @apply text-3xl text-white/60 mb-6;
+  }
+
+  .el-upload__text {
+    @apply text-sm text-white/70;
+
+    em {
+      @apply not-italic text-primary font-semibold;
+    }
+  }
+
+  .el-upload__tip {
+    @apply mt-8 text-xs text-white/40;
+    }
+
+    &:active {
+      box-shadow: 0 0 12px #43bfee;
+    }
+
+    &:focus-visible {
+      @apply outline-none ring-2;
+    }
+
+    &.is-success {
+      @apply border-green-400/40;
+    }
+
+    &.is-error {
+      @apply border-red-400/40;
+    }
+  }
+
+  .el-upload-list--text .el-upload-list__item-name {
+    @apply flex-1 truncate text-sm text-white cursor-pointer;
+
+    &:hover {
+      @apply text-primary;
+    }
+  }
+
+  .el-upload-list--text .el-upload-list__item-status-label {
+    @apply text-primary text-sm;
+  }
+
+  .el-upload-list--text
+  .el-upload-list__item.is-error
+  .el-upload-list__item-status-label {
+    @apply text-red-400;
+  }
+
+  .el-upload-list--text .el-upload-list__item-delete {
+    @apply ml-auto text-white/40 transition cursor-pointer;
+
+    &:hover {
+      @apply text-red-400;
+    }
+  }
+
+  .el-upload-list--text .el-progress {
+    @apply w-full mt-6;
+  }
+
+  .el-upload-list--text .el-progress-bar__outer {
+    @apply bg-white/10 rounded-full;
+  }
+
+  .el-upload-list--text .el-progress-bar__inner {
+    @apply bg-primary;
+  }
+

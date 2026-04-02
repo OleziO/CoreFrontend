@@ -1,0 +1,34 @@
+@use "element-plus/theme-chalk/src/badge";
+
+.el-badge {
+  @apply relative inline-flex items-center;
+
+  /* Бейдж-число / контент */
+  .el-badge__content {
+    @apply flex items-center justify-center
+           min-w-[24px] h-[24px] 
+           px-1.5
+           text-xs font-semibold text-white
+           rounded-full
+           bg-purple-600
+           border border-white/20
+           shadow-[0_2px_8px_rgba(0,0,0,0.25)]
+           backdrop-blur-md
+           transition-all duration-200 ease-out;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Відображення числа через data-count */
+    &::after {
+      content: attr(data-count);
+      @apply text-xs font-semibold text-white;
+    }
+
+    /* Для дуже великих чисел */
+    &.overflow {
+      @apply px-2; /* додаємо більше падінгу для 99+ */
+    }
+  }
+}

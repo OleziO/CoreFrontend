@@ -1,0 +1,129 @@
+@use "element-plus/theme-chalk/src/select";
+
+/* ---------------- Popper / Tooltip ---------------- */
+.el-popper.is-pure.is-light,
+.el-select__popper {
+  @apply
+    rounded-xl
+    border
+    border-white/10
+    bg-white/5
+    backdrop-blur-xl
+    shadow-[0_20px_60px_rgba(0,0,0,0.55)];
+
+  /* ⬇️ Глушимо дефолтні змінні EP */
+  --el-bg-color: transparent;
+  --el-fill-color-light: transparent;
+}
+
+.el-select__selection.is-near {
+  @apply -ml-2;
+}
+
+/* Для випадку popper + tooltip */
+.el-popper.is-light.el-tooltip {
+  @apply
+    rounded-xl
+    border
+    border-white/10
+    bg-white/5
+    backdrop-blur-xl
+    shadow-[0_20px_60px_rgba(0,0,0,0.55)];
+
+  --el-bg-color: transparent;
+  --el-fill-color-light: transparent;
+}
+
+/* ---------------- Dropdown container ---------------- */
+.el-select-dropdown {
+  @apply
+    rounded-xl
+    p-8;
+}
+
+/* ---------------- Items ---------------- */
+.el-select-dropdown__item {
+  @apply
+    flex
+    items-center
+    gap-8
+    text-white/80
+    rounded-lg
+    px-12
+    py-8
+    cursor-pointer
+    transition
+    duration-200
+    ease-out;
+
+  /* Hover state */
+  &:hover,
+  &.hover {
+    @apply bg-white/10 text-white;
+  }
+
+  /* Active / Selected state */
+  &.is-selected {
+    @apply text-primary font-semibold;
+  }
+
+  /* Disabled state */
+  &.is-disabled {
+    @apply opacity-40 cursor-not-allowed;
+  }
+}
+
+/* ---------------- Empty state ---------------- */
+.el-select-dropdown__empty {
+  @apply text-white/40 px-12 py-8 text-sm;
+}
+
+/* ---------------- Arrow ---------------- */
+.el-popper__arrow::before {
+  @apply bg-white/5 border-white/10;
+}
+
+/* ---------------- Collapsed tags in popper/tooltip ---------------- */
+.el-popper.is-light.el-tooltip .el-select__tags {
+  @apply flex flex-wrap items-center gap-4 bg-white/5 rounded-lg border border-white/10 p-4 min-h-[40px];
+}
+
+/* ---------------- Arrow ---------------- */
+/* Загальна стрілка для селекту */
+.el-popper__arrow::before {
+  @apply hidden;
+}
+
+/* Приховуємо стрілку для попапа колапсованих тегів */
+.el-popper.is-light.el-tooltip .el-popper__arrow {
+  @apply hidden;
+}
+
+/* Individual tags */
+.el-popper.is-light.el-tooltip .el-tag {
+  @apply bg-white/10 border-white/10 text-white rounded-lg;
+
+  &.is-hit {
+    @apply bg-primary text-white;
+  }
+
+  &.is-disabled {
+    @apply opacity-40 cursor-not-allowed;
+  }
+}
+
+/* Collapsed indicator (наприклад "+3") */
+.el-popper.is-light.el-tooltip .el-select__tags__collapse {
+  @apply
+    bg-white/10
+    text-white/80
+    px-8
+    py-2
+    rounded-full
+    text-sm
+    cursor-pointer
+    hover:bg-white/20
+    transition
+    duration-200
+    ease-out;
+}

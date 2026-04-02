@@ -1,0 +1,188 @@
+@use "element-plus/theme-chalk/src/input";
+
+/* =========================
+   INPUT – GLASS RESET
+   ========================= */
+.el-input {
+  @apply relative w-full;
+
+  /* =========================
+     WRAPPER
+     ========================= */
+  .el-input__wrapper {
+    @apply
+      h-max
+      flex
+      items-center
+      w-full
+      rounded-xl
+      bg-white/10
+      border
+      border-white/20
+      backdrop-blur-md
+      shadow-none
+      transition-all
+      duration-200
+      ease-out;
+
+    &:hover {
+      @apply bg-white/15 border-white/30;
+    }
+
+    &:focus-within {
+      @apply border-white/40;
+    }
+  }
+
+  /* =========================
+     INNER INPUT
+     ========================= */
+  .el-input__inner {
+    @apply
+      flex-1
+      h-max
+      text-white
+      placeholder-white/40
+      outline-none
+      px-4
+      py-10
+      rounded-xl
+      text-sm
+      font-medium;
+
+    transition: all 0.2s ease-in-out;
+
+    &:focus {
+      @apply ring-0;
+    }
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  /* =========================
+     PREPEND / APPEND
+     ========================= */
+  .el-input__prepend,
+  .el-input__append {
+    @apply
+      flex
+      items-center
+      justify-center
+      text-white/70
+      px-3
+      py-3
+      border-none
+      shadow-none;
+
+    pointer-events: none;
+
+    .el-input__prepend-inner,
+    .el-input__append-inner {
+      @apply flex items-center justify-center text-white/70;
+      background: transparent;
+    }
+  }
+
+  .el-input-group__prepend,
+  .el-input-group__append {
+    --el-fill-color-light: rgb(255 255 255 / 0.1);
+
+    @apply
+      flex
+      items-center
+      bg-white/10
+      border
+      border-white/20
+      backdrop-blur-md
+      transition-all
+      duration-200
+      ease-out
+      px-10
+      shadow-none;
+  }
+
+  .el-input-group__prepend {
+    @apply rounded-l-xl border-r-0;
+  }
+
+  .el-input-group__append {
+    @apply rounded-r-xl border-l-0;
+  }
+
+  /* Забираємо подвійну рамку */
+  &:has(.el-input-group__prepend) {
+    .el-input__wrapper {
+      @apply rounded-l-none pl-0 border-l-0;
+    }
+  }
+
+  &:has(.el-input-group__append) {
+    .el-input__wrapper {
+      @apply rounded-r-none pr-0 border-r-0;
+    }
+  }
+
+  /* =========================
+     SYNC HOVER / FOCUS
+     ========================= */
+  &:has(.el-input__wrapper:hover) {
+    .el-input-group__prepend,
+    .el-input-group__append {
+      @apply bg-white/15 border-white/30;
+    }
+  }
+
+  &:has(.el-input__wrapper:focus-within) {
+    .el-input-group__prepend,
+    .el-input-group__append {
+      @apply border-white/40;
+    }
+  }
+
+  /* =========================
+     PREFIX / SUFFIX ICONS
+     ========================= */
+  .el-input__prefix,
+  .el-input__suffix {
+    @apply flex items-center justify-center text-white/70 px-3 py-2;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  /* =========================
+     DISABLED
+     ========================= */
+  &.is-disabled {
+    .el-input__wrapper,
+    .el-input-group__prepend,
+    .el-input-group__append {
+      @apply opacity-40 cursor-not-allowed;
+    }
+  }
+
+  /* =========================
+     TEXTAREA
+     ========================= */
+  &.el-textarea {
+    .el-input__inner {
+      @apply min-h-[80px] resize-none;
+
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(6px);
+      padding: 0.5rem 1rem;
+
+      &:focus {
+        border-color: #43bfee;
+        box-shadow: 0 0 8px rgba(67, 191, 238, 0.4);
+      }
+
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+    }
+  }
+}

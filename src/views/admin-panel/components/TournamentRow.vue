@@ -1,0 +1,73 @@
+<template>
+  <div
+    class="grid-row group relative flex items-center
+     hover:bg-white/5 transition-colors border-b border-white/5 cursor-pointer"
+    @click="$emit('edit', tournament)"
+  >
+    <div class="col-id flex justify-center items-center">
+      <span class="text-gray-500 font-mono text-xs">#{{ tournament.id }}</span>
+    </div>
+
+    <div class="col-title flex flex-col justify-center py-2 pr-4 pl-4 overflow-hidden">
+      <span class="font-bold text-gray-200 text-base truncate">{{ tournament.title }}</span>
+      <span class="text-xs text-gray-500 truncate">{{ tournament.description }}</span>
+    </div>
+
+    <div class="col-type flex items-center justify-center">
+      <TournamentTypeTag :type="tournament.type" />
+    </div>
+
+    <div class="col-division flex items-center justify-center">
+      <DivisionTag
+        v-if="tournament.division"
+        :divisionName="tournament.division.name"
+      />
+      <span v-else class="text-gray-600 text-[10px]">—</span>
+    </div>
+
+    <div class="col-status flex items-center justify-center">
+      <TournamentStatusTag :status="tournament.status" />
+    </div>
+
+    <div class="col-actions flex justify-center items-center" @click.stop>
+      <el-tooltip content="Редагувати" placement="top" :enterable="false">
+        <el-button
+          type="primary"
+          link
+          class="!p-2 hover:bg-white/10 rounded-lg transition-colors text-cyan-400 hover:text-cyan-300"
+          @click="$emit('edit', tournament)"
+        >
+          <el-icon size="20"><EditPen /></el-icon>
+        </el-button>
+      </el-tooltip>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { EditPen } from '@element-plus/icons-vue'
+import TournamentTypeTag from '@/components/tournaments-tags/TournamentTypeTag.vue'
+import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
+
+defineProps<{
+  tournament: any
+}>()
+
+defineEmits(['edit'])
+</script>
+
+<style scoped>
+.grid-row {
+  display: grid;
+  /* Сетка должна совпадать с TournamentsPage.vue */
+  grid-template-columns: 80px minmax(250px, 1fr) 180px 140px 180px 100px;
+  height: 100%;
+  width: 1500px;
+  /* width: 100%; */
+}
+
+/* Дополнительно: чтобы контент не прилипал к краям ячеек */
+.grid-row > div {
+  padding: 0 4px;
+}
+</style>

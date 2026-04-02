@@ -1,0 +1,86 @@
+@use 'element-plus/theme-chalk/src/table';
+
+// element-plus-table-dark.scss
+
+// === Reset базових стилів Element Plus для Table ===
+.el-table {
+  --el-table-tr-bg-color: #0b1121;
+  --el-table-header-text-color: #0b1121;
+  --el-table-header-bg-color: #0b1121;
+  --el-table-border: #535353;
+  --el-table-header-text-color: white;
+  --el-table-border-color: #0b1121;
+  --el-table-row-hover-bg-color: #162141;
+
+  @apply w-full bg-[#0b1121] border border-white/10 rounded-2xl overflow-hidden shadow-lg shadow-black/20;
+
+  .el-table__header {
+    @apply bg-[#111827]/80 border-b border-white/10 text-gray-300;
+    
+    .cell {
+      @apply font-semibold text-left text-sm py-3;
+    }
+  }
+
+  .el-table__body {
+  .el-table__row {
+    @apply even:bg-[#111827]/50 odd:bg-[#111827]/30 cursor-pointer transition-all;
+
+    .el-table__cell {
+      @apply text-sm;
+    }
+
+    // Hover та виділення рядка
+    &:hover {
+      @apply bg-[#0f1425]; // темніший hover, ніж фон рядка
+    }
+
+    &.is-hovered {
+      @apply bg-[#10152b]; // трохи темніше за hover
+    }
+
+    &.is-current-row {
+      @apply bg-blue-800/40 font-semibold;
+    }
+  }
+}
+
+  .el-table__footer {
+    @apply bg-[#111827]/70 border-t border-white/10 text-gray-400;
+    
+    .cell {
+      @apply px-4 py-2 text-sm;
+    }
+  }
+}
+
+// === Pagination (якщо використовується Element Plus Pagination) ===
+.el-pagination {
+  @apply mt-4 flex justify-end items-center text-gray-400;
+
+  .el-pager li {
+    @apply bg-[#111827]/50 text-gray-300 rounded-lg px-3 py-1 mx-1 cursor-pointer hover:bg-blue-500/20;
+  }
+
+  .el-pager li.active {
+    @apply bg-blue-500/40 text-white;
+  }
+
+  .el-pagination__total {
+    @apply text-gray-400 mr-4;
+  }
+}
+
+// === Scrollbar для таблиці ===
+.el-table__body-wrapper.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.el-table__body-wrapper.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.el-table__body-wrapper.custom-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+}

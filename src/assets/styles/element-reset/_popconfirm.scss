@@ -1,0 +1,47 @@
+@use "element-plus/theme-chalk/src/popconfirm";
+
+/* Контейнер поповера */
+.custom-popconfirm.el-popper.is-light.el-tooltip {
+  @apply
+    bg-red-400          /* темно-сірий фон */
+    text-white
+    p-15
+    rounded-xl
+    border
+    border-primary
+    backdrop-blur-sm
+    !w-max;
+}
+
+/* Сам popconfirm */
+.el-popconfirm {
+  @apply flex flex-col gap-3 min-w-[220px];
+}
+
+/* Основний текст */
+.el-popconfirm__main {
+  @apply
+    text-sm
+    text-gray-100
+    flex items-center gap-2;
+}
+
+/* Іконка попередження */
+.el-popconfirm__icon {
+  @apply
+    text-red-400
+    text-lg;
+}
+
+/* Кнопки */
+.el-popconfirm__action {
+  @apply
+    flex justify-end gap-8 pt-2;
+}
+
+/* Кнопка "Скасувати" */
+.el-popconfirm__action .el-button.el-button--danger,
+.el-popconfirm__action .el-button.el-button--primary  {
+  @apply rounded-lg px-10 py-4 #{!important};
+}
+

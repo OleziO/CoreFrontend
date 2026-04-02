@@ -1,0 +1,54 @@
+@use "element-plus/theme-chalk/src/avatar";
+
+/* =========================
+   Загальні стилі для всіх аватарів
+   ========================= */
+.el-avatar {
+  @apply relative flex items-center justify-center
+         bg-white/10 text-white/70
+         ring-2 ring-gray-800 shadow-md
+         transition-all duration-300
+         overflow-hidden;
+
+  width: 56px;  // стандартний розмір, можна змінювати
+  height: 56px;
+
+  /* Тінь при ховері */
+  &:hover {
+    @apply shadow-lg;
+  }
+
+  /* Фолбек іконка */
+  &::after {
+    content: '';
+    @apply absolute inset-0 flex items-center justify-center;
+  }
+
+  /* Власний слот для фолбек іконки (Phosphor) */
+  .ph-user {
+    @apply text-white/50 w-7 h-7;
+  }
+
+  /* Якщо src відсутній, покажемо фолбек */
+  &[src=''],
+  &[src='null'],
+  &[src='undefined'] {
+    background: rgba(255, 255, 255, 0.08);
+    & > img {
+      display: none;
+    }
+
+    &::before {
+      content: '';
+    }
+  }
+
+  /* Картинка аватара */
+  img {
+    @apply w-full h-full object-cover rounded-full;
+  }
+
+  &.el-avatar--square img {
+  @apply rounded-none;
+}
+}

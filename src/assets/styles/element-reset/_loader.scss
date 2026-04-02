@@ -1,0 +1,58 @@
+@use "element-plus/theme-chalk/src/loading";
+
+// 1. Базовый стиль (для локального лоадера v-loading)
+.el-loading-mask {
+  // Меняем fixed на absolute!
+  // Уменьшаем z-index, чтобы он не перекрывал модалки, если он внутри страницы
+  @apply absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-[2000];
+  
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  visibility: visible;
+}
+
+// 2. Специальный стиль для v-loading.fullscreen
+// Element Plus добавляет класс .is-fullscreen автоматически
+.el-loading-mask.is-fullscreen {
+  @apply fixed z-[9999]; // Возвращаем fixed и высокий z-index только здесь
+}
+
+.el-loading-mask.leaving {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Кастомний великий спінер */
+.custom-spinner {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 8px solid rgba(128, 0, 128, 0.2);
+  border-top-color: #6b21a8;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+  transition: opacity 0.2s ease;
+}
+
+.el-loading-mask.leaving .custom-spinner {
+  animation-play-state: paused;
+  opacity: 0;
+}
+
+/* Анімація обертання */
+@keyframes spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Текст під спінером */
+.el-loading-text {
+  @apply text-white text-base font-semibold;
+  transition: opacity 0.2s ease;
+}
+
+.el-loading-mask.leaving .el-loading-text {
+  opacity: 0;
+}
