@@ -111,11 +111,18 @@
 </template>
 
 <script setup lang="ts">
-import { getImageUrl } from '@/core/helpers'
+// import { getImageUrl } from '@/core/helpers'
 import { PhInfo, PhUploadSimple, PhUser } from '@phosphor-icons/vue'
+import type { TTeam as Team } from '@/api/types/api.types'
+
+interface ICreateTeamForm {
+  name: string
+  dotaTeamId: number | null
+  avatar: File | null
+}
 
 const props = defineProps<{
-  team?: TTeam
+  team?: Team
 }>()
 
 const modelValue = defineModel<boolean>({ default: false })
@@ -178,15 +185,16 @@ async function onSubmit () {
 }
 
 watch(() => [modelValue.value, props.team], ([newModelValue, newTeam]) => {
-  const newTeamData = newTeam as TTeam
+  const newTeamData = newTeam as Team
   if (newModelValue && newTeamData) {
     form.value = {
-      name: newTeamData.team_name,
-      dotaTeamId: newTeamData.dota_team_id ?? null,
+      name: newTeamData.name ?? '',
+      dotaTeamId: null,
       avatar: null
     }
 
-    preview.value = getImageUrl(newTeamData.avatar_url) ?? null
+    // TODO: Team.avatarUrl not in API schema
+    preview.value = null
   }
 }, { immediate: true })
 </script>

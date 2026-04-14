@@ -215,15 +215,8 @@
                   >
                     турніри
                   </span> з чіткою структурою та зрозумілими правилами.
-                  Формати змагань підходять як для новачків, так і для досвідчених команд,
-                  На платформі є різні дивізіони, від початкових до професійних, також є свій
-                  <span
-                    class="underline cursor-pointer"
-                    @click="route.push('/mix-cup-leaderboard')"
-                  >
-                    лідерборд
-                  </span> гравців,
-                  у якому показується найкращі гравці платформи.
+                  Формати змагань підходять як для новачків, так і для досвідчених команд;
+                  на платформі є різні дивізіони — від початкових до професійних.
                   Кожен сезон — це новий виклик, чесна конкуренція та можливість показати свій справжній рівень гри.
                 </p>
 
@@ -234,75 +227,6 @@
                 />
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <div class="absolute bottom-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        <button
-          class="rounded-full flex justify-center items-center border animate-pulse border-white p-10"
-          @click="scrollToSection(four)"
-        >
-          <PhCaretDown />
-        </button>
-      </div>
-    </div>
-
-    <!-- Четвертый блок -->
-    <div ref="four" class="relative">
-      <div class="absolute inset-0 pointer-events-none" />
-      <div class="relative py-40 h-full max-w-[1440px] md:px-40 px-10 mx-auto w-full">
-        <h4
-          class="lg:text-4xl md:text-3xl text-center text-2xl uppercase font-bold"
-        >
-          Лідерборд гравців
-        </h4>
-
-        <div class="grid xl:grid-cols-2 h-full lg:my-0 py-40 justify-center mx-auto items-center gap-16 lg:gap-24">
-          <div class="flex flex-col gap-40 py-20">
-            <div class="relative">
-              <span
-                class="absolute z-10 -top-18 mb-6 py-10 px-20
-                 text-xs uppercase tracking-widest font-semibold
-                 bg-[#2e2d77]"
-              >
-                Лідерборд
-              </span>
-
-              <div
-                class="relative rounded-2xl
-                 bg-[#0b1424]
-                 xl:p-40 lg:p-30 p-20
-                 text-slate-300
-                 leading-relaxed"
-              >
-                <p class="xl:text-xl lg:text-lg text-base sm:text-lg font-light">
-                  Платформа Core League дає можливість показувати дошку лідерів гравців,
-                  які найбільше беруть участь у турнірах, що проходять. У цій таблиці вказуються грошові призи,
-                  зароблені гравцем у процесі участі в турнірах, і поінти гравця.
-                </p>
-
-                <RouterLink :to="{name: routeNames.mixLEaderboard}">
-                  <el-button class="mt-20 w-full" type="primary">Перейти до лідерборду</el-button>
-                </RouterLink>
-
-                <div
-                  class="absolute inset-0 rounded-2xl
-                   bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.12),transparent_60%)]
-                   -z-10"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="relative max-w-[700px] w-full">
-            <div
-              class="absolute inset-0
-                 rounded-full
-                 bg-orange-400/30 blur-3xl"
-            />
-            <el-image
-              class=""
-              :src="leaderboardMacbook"
-            />
           </div>
         </div>
       </div>
@@ -463,9 +387,7 @@
 <script setup lang="ts">
 import { scrollToSection } from '@/core/helpers'
 import playersMacbook from '@/assets/images/players_macbook.png'
-import leaderboardMacbook from '@/assets/images/leaderboard_macbook.png'
 import { PhShieldCheck, PhTarget, PhBrowser, PhQuestionMark, PhCaretDown } from '@phosphor-icons/vue'
-import { routeNames } from '@/router/route-names'
 
 const apiBaseUrl = import.meta.env.VITE_API_PUBLIC_URL
 const authStore = useAuthStore()
@@ -473,7 +395,6 @@ const route = useRouter()
 
 const second = ref<HTMLElement | null>(null)
 const third = ref<HTMLElement | null>(null)
-const four = ref<HTMLElement | null>(null)
 const five = ref<HTMLElement | null>(null)
 
 </script>

@@ -62,7 +62,8 @@
 </template>
 
 <script setup lang="ts">
-import { useGetRequests } from '@/composables/query/use-requests'
+// TODO: endpoint not in API yet
+// import { useGetRequests } from '@/composables/query/use-requests'
 import { Check, TopRight } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { routeNames } from '@/router/route-names'
@@ -71,7 +72,10 @@ import RequestStatusTag from '@/components/request-tags/RequestStatusTag.vue'
 import RequestTypeTag from '@/components/request-tags/RequestTypeTag.vue'
 
 const router = useRouter()
-const { data: requests, isLoading, refetch } = useGetRequests('player_verification')
+// TODO: endpoint not in API yet
+const requests = ref<any[]>([])
+const isLoading = ref(false)
+const refetch = async () => {}
 
 const handleTake = async (requestId: number) => {
   try {

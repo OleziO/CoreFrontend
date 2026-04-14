@@ -34,15 +34,14 @@
               :class="{'bg-gray-700 hover:!bg-gray-700': selectedPlayer === row.id}"
               @click="setSelectedPLayer(row.id)"
             >
-              <!-- Гравець -->
               <div class="flex items-center gap-10">
-                <el-avatar :src="getAvatarUrl(row.avatar_url)" class="size-50" />
+                <el-avatar :src="getAvatarUrl(row.avatarUrl)" class="size-50" />
                 <div class="flex flex-col leading-tight">
                   <span class="font-bold text-gray-200">
-                    {{ row.steam_name }}
+                    {{ row.discordName }}
                   </span>
-                  <span v-if="row.user_name" class="text-xs text-gray-500">
-                    @{{ row.user_name }}
+                  <span v-if="row.discordUsername" class="text-xs text-gray-500">
+                    @{{ row.discordUsername }}
                   </span>
                 </div>
               </div>
@@ -50,7 +49,6 @@
           </template>
         </RecycleScroller>
 
-        <!-- Порожній стан -->
         <div
           v-if="!freePlayers.length"
           class="text-center py-10 text-gray-500 text-sm"
@@ -61,11 +59,14 @@
     </div>
 
     <template #footer>
+      <!-- TODO: endpoint not in API yet (joinToTeam) -->
       <div class="flex gap-10">
-        <el-button :disabled="!selectedPlayer" type="primary" class="flex-1" @click="joinToTeam()">
-          <PhPlus />
-          <span class="ml-10">Додати гравця до {{ isMain ? 'основи' : 'запасу' }}</span>
-        </el-button>
+        <el-tooltip content="Функціонал в розробці">
+          <el-button :disabled="true" type="primary" class="flex-1">
+            <PhPlus />
+            <span class="ml-10">Додати гравця до {{ isMain ? 'основи' : 'запасу' }}</span>
+          </el-button>
+        </el-tooltip>
       </div>
     </template>
   </el-dialog>
@@ -74,28 +75,24 @@
 <script setup lang="ts">
 import { searchPlayer } from '@/core/helpers'
 import { PhMagnifyingGlass, PhPlus } from '@phosphor-icons/vue'
+import type { TTeam as Team } from '@/api/types/api.types'
 
-// 1. Добавляем проп isMain
-const props = defineProps<{
-  team: TTeam | undefined
+defineProps<{
+  team: Team | undefined
   isMain: boolean
 }>()
 
 const modelValue = defineModel<boolean>({ default: false })
 
-const selectedPlayer = ref<number | null>(null)
+const selectedPlayer = ref<string | null>(null)
 const search = ref('')
 const apiPublicUrl = import.meta.env.VITE_API_PUBLIC_URL
 
-const teamsStore = useTeamsStore()
 const playerStore = usePlayersStore()
 
 const freePlayers = computed(() => {
   if (!playerStore.players) return []
-
-  const _players = playerStore.players.filter(player => !player.team_id)
-
-  return _players.filter(player => searchPlayer(player, search.value.trim()))
+  return playerStore.players.filter(player => searchPlayer(player, search.value.trim()))
 })
 
 const getAvatarUrl = (path: string | null | undefined) => {
@@ -104,23 +101,13 @@ const getAvatarUrl = (path: string | null | undefined) => {
   return `${apiPublicUrl}${path}`
 }
 
-function setSelectedPLayer (id: number) {
+function setSelectedPLayer (id: string) {
   selectedPlayer.value = id
 }
 
 function close () {
   modelValue.value = false
   selectedPlayer.value = null
-}
-
-async function joinToTeam () {
-  await teamsStore.joinToTeam(
-    selectedPlayer.value as number,
-    props.team?.id as number,
-    props.isMain
-  )
-
-  close()
 }
 
 onMounted(() => {

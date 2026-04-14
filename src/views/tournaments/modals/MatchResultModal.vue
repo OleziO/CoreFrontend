@@ -66,15 +66,15 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   modelValue: boolean
-  tournamentId: number
-  match: TTournamentOpenMatch | null
+  tournamentId: string
+  match: any | null
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'success', matches: TTournamentOpenMatch[]): void
+  (e: 'success', matches: any[]): void
 }>()
 
 const isLoading = ref(false)
@@ -128,17 +128,8 @@ async function submit () {
 
   isLoading.value = true
   try {
-    const updatedMatches = await tournamentsService.updateMatchResult(
-      props.tournamentId,
-      props.match!.id,
-      {
-        team_1_score: form.team_1_score,
-        team_2_score: form.team_2_score
-      }
-    )
-
-    ElMessage.success('Результат матчу успішно оновлено')
-    emit('success', updatedMatches || [])
+    // TODO: endpoint not in API yet (updateMatchResult)
+    ElMessage.info('Функціонал оновлення результату матчу ще не реалізований в API')
     closeModal()
   } catch (error: any) {
     console.error(error)

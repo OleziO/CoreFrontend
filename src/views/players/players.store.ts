@@ -1,15 +1,10 @@
-import { ERole } from '@/types/general.types'
-import { AxiosError } from 'axios'
+import type { TPlayer as Player } from '@/api/types/api.types'
 
 export const usePlayersStore = defineStore('players', () => {
-  const authStore = useAuthStore()
-  const teamStore = useTeamsStore()
-
-  const players = ref<TPlayer[]>([])
+  const players = ref<Player[]>([])
   const loading = ref(false)
-  const allPlayerRoles = ref<TRole[]>([])
 
-  async function findPlayer (playerId?: number | null) {
+  async function findPlayer (playerId?: string | null) {
     if (!players.value.length) {
       await getPlayers()
     }
@@ -19,16 +14,17 @@ export const usePlayersStore = defineStore('players', () => {
     return players.value.find(player => player.id === playerId) || null
   }
 
-  function searchPlayer (player: TPlayer, search = '') {
-    if (!search) return true
-
-    const q = search.toLowerCase()
-
-    return (
-      player.user_name?.toLowerCase().includes(q) ||
-      player.steam_name?.toLowerCase().includes(q)
-    )
-  }
+  // function searchPlayer (player: Player, search = '') {
+  //   if (!search) return true
+  //
+  //   const q = search.toLowerCase()
+  //
+  //   return (
+  //     player.discordName?.toLowerCase().includes(q) ||
+  //     player.discordUsername?.toLowerCase().includes(q) ||
+  //     player.steamId?.toLowerCase().includes(q)
+  //   )
+  // }
 
   async function getPlayers () {
     if (players.value.length) return players.value
@@ -36,8 +32,7 @@ export const usePlayersStore = defineStore('players', () => {
     loading.value = true
 
     try {
-      const fetchPlayers = await playersService.fetchPlayers()
-      players.value = fetchPlayers.data
+      players.value = await playersService.fetchPlayers()
     } finally {
       loading.value = false
     }
@@ -45,192 +40,38 @@ export const usePlayersStore = defineStore('players', () => {
     return players.value
   }
 
-  async function updatePlayerMMP (id: number, newMMP: number) {
-    loading.value = true
+  // TODO: endpoint not in API yet
+  // async function updatePlayerMMP (id: string, newMMP: number) { ... }
 
-    try {
-      const res = await playersService.updatePlayerMmrByAdmin(id, newMMP)
-      const player = await findPlayer(id)
+  // TODO: endpoint not in API yet
+  // async function updateMyProfileData (newMMP: number, positions: number[]) { ... }
 
-      if (!player) {
-        ElMessage.error('Гравця не знайдено')
-        return
-      }
+  // TODO: endpoint not in API yet
+  // async function updatePlayerPoints (playerId: string, _points: number) { ... }
 
-      Object.assign(player, res)
+  // TODO: endpoint not in API yet
+  // async function getAllPlayerRoles () { ... }
 
-      if (player.team_id) {
-        const playerTeam = await teamStore.findTeam(player.team_id)
-        const playerInTeam = playerTeam?.players.find(p => p.id === player.id)
+  // TODO: endpoint not in API yet
+  // async function updatePlayerRoles (playerId: string, rolesIdArr: number[]) { ... }
 
-        if (playerInTeam) {
-          Object.assign(playerInTeam, res)
-        }
-      }
-    } finally {
-      loading.value = false
-    }
-  }
+  // TODO: endpoint not in API yet
+  // async function changePlayerRespect (id: string, action: 'like' | 'dislike') { ... }
 
-  async function updateMyProfileData (newMMP: number, positions: number[]) {
-    loading.value = true
+  // TODO: endpoint not in API yet
+  // function isVerified (player: Player) { ... }
 
-    try {
-      const res = await playersService.updateMyMMPAndPositions(newMMP, positions)
+  // TODO: endpoint not in API yet
+  // async function verifyPlayer (playerId: string) { ... }
 
-      if (!authStore.user?.id) {
-        ElMessage.error('Гравця не знайдено')
-        return
-      }
-
-      Object.assign(authStore.user, res)
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function updatePlayerPoints (playerId: number, _points: number) {
-    loading.value = true
-
-    try {
-      const res = await playersService.updatePlayerPoints(playerId, _points)
-
-      if (!authStore.user?.id) {
-        ElMessage.error('Гравця не знайдено')
-        return
-      }
-
-      Object.assign(authStore.user, res)
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function getAllPlayerRoles () {
-    if (allPlayerRoles.value.length) return allPlayerRoles.value
-
-    loading.value = true
-    try {
-      allPlayerRoles.value = await playersService.getPlayerRoles()
-      return allPlayerRoles.value
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function updatePlayerRoles (playerId: number, rolesIdArr: number[]) {
-    loading.value = true
-
-    try {
-      const currPlayer = await findPlayer(playerId)
-
-      if (!currPlayer) {
-        throw new Error('Гравця не знайдено')
-      }
-
-      const updated = await playersService.updatePlayerRoles(playerId, rolesIdArr)
-      currPlayer.roles = updated.roles
-
-      console.log(playerId, authStore.user)
-
-      if (playerId === authStore.user?.id) {
-        authStore.user.roles = updated.roles
-      }
-
-      return currPlayer
-    } catch (e) {
-      if (e instanceof Error) {
-        ElMessage.error(e.message)
-      }
-      return null
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function changePlayerRespect (id: number, action: 'like' | 'dislike') {
-    loading.value = true
-
-    try {
-      const player = await findPlayer(id)
-      if (!player) return null
-
-      const updated = await playersService.changePlayerRespect(id, action)
-      Object.assign(player, updated)
-
-      return player
-    } finally {
-      loading.value = false
-    }
-  }
-
-  function isVerified (player: TPlayer) {
-    return !player.roles?.some(role => role.type_name === ERole.GUEST)
-  }
-
-  async function verifyPlayer (playerId: number) {
-    loading.value = true
-
-    try {
-      const player = await findPlayer(playerId)
-      if (!player) return null
-
-      const updated = await playersService.verifyPlayer(player.id)
-      Object.assign(player, updated)
-
-      if (player.team_id) {
-        const playerTeam = await teamStore.findTeam(player.team_id)
-
-        console.log('playerTeam', playerTeam)
-        const playerInTeam = playerTeam?.players.find(p => p.id === player.id)
-
-        if (playerInTeam) {
-          Object.assign(playerInTeam, updated)
-        }
-      }
-
-      return player
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function toggleDiscordNotification (isTrue: boolean) {
-    loading.value = true
-    try {
-      const res = await playersService.toggleDiscordNotification(isTrue)
-
-      const authStore = useAuthStore()
-
-      if (authStore.user && res) {
-        Object.assign(authStore.user, res)
-      }
-
-      ElMessage.success('Оповіщення у діскорді успішно оновлено')
-    } catch (e) {
-      if (e instanceof AxiosError) {
-        ElMessage.error(e)
-      }
-    } finally {
-      loading.value = false
-    }
-  }
+  // TODO: endpoint not in API yet
+  // async function toggleDiscordNotification (isTrue: boolean) { ... }
 
   return {
     players,
     loading,
-    allPlayerRoles,
     findPlayer,
-    searchPlayer,
-    getPlayers,
-    isVerified,
-    updatePlayerMMP,
-    updateMyProfileData,
-    getAllPlayerRoles,
-    updatePlayerRoles,
-    changePlayerRespect,
-    verifyPlayer,
-    updatePlayerPoints,
-    toggleDiscordNotification
+    // searchPlayer,
+    getPlayers
   }
 })

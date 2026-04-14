@@ -66,18 +66,19 @@
 import { PhMagnifyingGlass } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import { parseQueryArray } from '@/core/helpers'
-import { useGetDivisions } from '@/composables/query/use-divisions'
+// TODO: endpoint not in API yet
+// import { useGetDivisions } from '@/composables/query/use-divisions'
 import { teamStatus } from '@/constants/teams'
 
 const modelValue = defineModel<boolean>({ default: false })
 const router = useRouter()
 const route = useRoute()
 
-// Данные для селектов
-const { data: divisions, isLoading } = useGetDivisions()
+// TODO: endpoint not in API yet (divisions)
+const divisions = ref<any[]>([])
+const isLoading = ref(false)
 const divisionOptions = computed(() => {
-  if (!divisions.value) return []
-  return divisions.value.map(item => ({ key: item.name, label: item.name }))
+  return divisions.value.map((item: any) => ({ key: item.name, label: item.name }))
 })
 
 const localFilters = ref<{

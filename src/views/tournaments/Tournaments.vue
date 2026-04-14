@@ -78,7 +78,7 @@
     <div class="h-full w-full">
       <div class="mx-auto w-full">
         <VirtualList
-          :items="filteredTournaments.filter(x => x.type === 'team')"
+          :items="filteredTournaments"
           :grid-items="cardsPerRow"
           :grid-width="window.height.value"
           withTopMargin
@@ -126,23 +126,20 @@ const filteredTournaments = computed(() => {
   })
 })
 
-function checkQueryFilter (tournament: TTournament, query: LocationQuery) {
+import type { TTournament as Tournament } from '@/api/types/api.types'
+
+function checkQueryFilter (tournament: Tournament, query: LocationQuery) {
   if (query.status) {
     const status = query.status.toString().split(',')
-    if (!status.includes(tournament.status)) return false
-  }
-
-  if (query.division) {
-    const division = query.division.toString().split(',')
-    if (!division.includes(tournament.division?.name as string)) return false
+    if (!status.includes(tournament.tournamentStatus as string)) return false
   }
 
   return true
 }
 
-function searchTournament (tournament: TTournament) {
+function searchTournament (tournament: Tournament) {
   if (!search.value) return true
-  return tournament.title.toLowerCase().includes(search.value.toLowerCase())
+  return tournament.name?.toLowerCase().includes(search.value.toLowerCase())
 }
 
 // Подсчёт активных фильтров
@@ -160,7 +157,6 @@ function openTournamentFilterModal () {
 }
 
 onMounted(async () => {
-  await tournamentStore.getDivisions()
   await tournamentStore.getTournaments()
 })
 </script>

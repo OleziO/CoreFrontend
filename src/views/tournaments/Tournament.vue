@@ -5,10 +5,10 @@
 
       <div class="absolute inset-0 z-0 select-none">
         <el-image
-          v-if="tournament?.img_url"
+          v-if="tournament?.headerBannerUrl"
           class="w-full h-full object-cover"
           fit="cover"
-          :src="getImageUrl(tournament.img_url)"
+          :src="tournament.headerBannerUrl"
         />
         <div class="absolute inset-0 bg-gradient-to-t from-[#0b1121] via-[#0b1121]/80 to-transparent" />
         <div class="absolute inset-0 bg-gradient-to-r from-[#0b1121]/80 via-transparent to-transparent" />
@@ -21,32 +21,18 @@
               class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black
                text-white tracking-tight leading-[1] drop-shadow-2xllg:mb-10"
             >
-              {{ tournament?.title }}
+              {{ tournament?.name }}
             </h1>
 
             <div class="flex md:flex-nowrap flex-wrap gap-10 max-w-lg">
               <TournamentStatusTag
-                :status="(tournament?.status as ETournamentStatus)"
-                class="shadow-lg flex-1 shadow-black/20 justify-center"
-              />
-
-              <TournamentTypeTag
-                :type="tournament?.type"
-                class="shadow-lg flex-1 shadow-black/20 justify-center"
-              />
-
-              <DivisionTag
-                :divisionName="tournament?.division?.name"
+                :status="tournament?.tournamentStatus"
                 class="shadow-lg flex-1 shadow-black/20 justify-center"
               />
             </div>
 
-            <div
-              class="text-base md:text-lg text-gray-300 font-normal
-            leading-relaxed whitespace-pre-wrap max-w-2xl drop-shadow-md"
-            >
-              {{ tournament?.description }}
-            </div>
+            <!-- tournament.description not in new API schema -->
+
           </div>
 
           <div class="lg:col-span-5 flex justify-center lg:justify-end w-full">
@@ -63,7 +49,7 @@
                   <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Призовий фонд</span>
                   <div class="flex items-center gap-2 text-yellow-400 font-bold text-lg">
                     <el-icon><Trophy /></el-icon>
-                    <span class="truncate">{{ tournament?.prizes || '—' }}</span>
+                    <span class="truncate">{{ tournament?.prizePool || '—' }}</span>
                   </div>
                 </div>
 
@@ -75,7 +61,7 @@
                   <div class="flex items-center gap-5 text-cyan-400 font-bold text-lg">
                     <el-icon><Calendar /></el-icon>
                     <span class="whitespace-nowrap truncate">
-                      {{ formatDate(new Date(tournament?.start_time as string)) }}
+                      {{ formatDate(new Date(tournament?.tournamentStartsAt as string)) }}
                     </span>
                   </div>
                 </div>
@@ -88,13 +74,13 @@
                   <div class="flex items-center gap-2 text-purple-400 font-bold text-lg">
                     <el-icon><User /></el-icon>
                     <span>
-                      <template v-if="!tournament?.limit">
+                      <template v-if="!tournament?.tournamentSlots">
                         Необмежено
                       </template>
                       <template v-else>
-                        <span>{{ tournament.participants?.length || 0 }}</span>
+                        <span>{{ tournament.teams?.length || 0 }}</span>
                         <span class="text-gray-500 mx-2">/</span>
-                        <span>{{ tournament.limit }}</span>
+                        <span>{{ tournament.tournamentSlots }}</span>
                       </template>
                     </span>
                   </div>
@@ -152,7 +138,7 @@
                 rounded-full size-20 flex justify-center items-center text-xs
                 tracking-wide font-semibold transition-all duration-300"
                 >
-                  {{ tournament?.participants?.length || 0 }}
+                  {{ tournament?.teams?.length || 0 }}
                 </el-tag>
               </div>
             </template>
@@ -171,8 +157,8 @@
             flex items-center justify-center relative overflow-hidden"
         >
           <iframe
-            v-if="tournament?.bracket"
-            :src="getBracketUrl(tournament?.bracket || '')"
+            v-if="tournament?.tournamentGridUrl"
+            :src="getBracketUrl(tournament?.tournamentGridUrl || '')"
             width="100%"
             height="500"
             class="sm:h-[600px] rounded-lg border-0"
@@ -194,7 +180,7 @@
         <div
           v-if="activeTab === 'admin'"
         >
-          <TournamentAdminTab v-model:matches="matches" :tournament="tournament" />
+          <TournamentAdminTab :tournament="tournament" />
         </div>
       </div>
     </div>
@@ -203,26 +189,22 @@
 
 <script setup lang="ts">
 import { Trophy, Calendar, User } from '@element-plus/icons-vue'
-import TournamentTypeTag from '@/components/tournaments-tags/TournamentTypeTag.vue'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
-import checkRoles, { formatDate, getImageUrl } from '@/core/helpers'
-import { ERole } from '@/types/general.types'
-import { ETournamentStatus } from '@/components/tournaments-tags/tournament.constants'
+import { formatDate } from '@/core/helpers'
 import { PhBracketsCurly, PhSteamLogo } from '@phosphor-icons/vue'
+import type { TTournament as Tournament } from '@/api/types/api.types'
 
-const tournament = ref<TTournamentItem>()
+const tournament = ref<Tournament | null>(null)
 const activeTab = ref('teams')
-const matches = ref<TTournamentOpenMatch[]>([])
 
 const route = useRoute()
 const authStore = useAuthStore()
 const tournamentStore = useTournamentStore()
-const tournamentId = Number(route.params.id)
+const tournamentId = String(route.params.id)
 const apiBaseUrl = import.meta.env.VITE_API_PUBLIC_URL
 
 const canManagePlayers = computed(() => {
-  return checkRoles(authStore.user?.roles || [], ERole.ADMIN) ||
-        checkRoles(authStore.user?.roles || [], ERole.MODERATOR)
+  return authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator
 })
 
 const tabs = computed(() => {
@@ -238,23 +220,18 @@ const tabs = computed(() => {
   return items
 })
 
-const isTeamRegistered = computed(() => {
-  if (!tournament.value) return false
-  return tournament.value?.participants?.some(team => team.id === authStore.user?.team_id)
-})
-
-const isCaptain = computed(() => {
-  return authStore.user?.is_cap === true
-})
+// TODO: endpoint not in API yet (registerInTeamTournament, unRegisterInTeamTournament)
+const isTeamRegistered = computed(() => false)
+const isCaptain = computed(() => false)
 
 const freeSlots = computed(() => {
-  if (!tournament.value?.limit) return true
-  return tournament.value.limit - tournament.value.participants?.length > 0
+  if (!tournament.value?.tournamentSlots) return true
+  return tournament.value.tournamentSlots - (tournament.value.teams?.length ?? 0) > 0
 })
 
 const actionButtonText = computed(() => {
-  if (tournament.value?.status === ETournamentStatus.ENDED) return 'Турнір завершено'
-  if (tournament.value?.status === ETournamentStatus.IN_PROGRESS) return 'Турнір вже триває'
+  if (tournament.value?.tournamentStatus === 'COMPLETED') return 'Турнір завершено'
+  if (tournament.value?.tournamentStatus === 'IN_PROGRESS') return 'Турнір вже триває'
   if (isTeamRegistered.value && isCaptain.value) return 'Відмінити реєстрацію'
   if (isTeamRegistered.value) return 'Ваша команда вже зареєстрована'
   if (!freeSlots.value) return 'Вільних слотів більше немає'
@@ -262,21 +239,17 @@ const actionButtonText = computed(() => {
 })
 
 const isDisabledActionButton = computed(() => {
-  if (tournament.value?.status === ETournamentStatus.IN_PROGRESS) return true
-  if (tournament.value?.status === ETournamentStatus.ENDED) return true
+  if (tournament.value?.tournamentStatus === 'IN_PROGRESS') return true
+  if (tournament.value?.tournamentStatus === 'COMPLETED') return true
   if (isTeamRegistered.value && isCaptain.value) return false
   if (!freeSlots.value) return true
   if (!isCaptain.value) return true
   return false
 })
 
+// TODO: endpoint not in API yet
 async function registerOnTeamTournament () {
-  // Если команда зарегистрирована и пользователь капитан - отменяем регистрацию
-  if (isTeamRegistered.value && isCaptain.value) {
-    await tournamentStore.unRegisterInTeamTournament(tournamentId)
-  } else {
-    await tournamentStore.registerInTeamTournament(tournamentId)
-  }
+  ElMessage.info('Функціонал реєстрації в турнір ще не реалізований в API')
 }
 
 function getBracketUrl (url: string) {
@@ -289,12 +262,9 @@ function getBracketUrl (url: string) {
 
 onMounted(async () => {
   const data = await tournamentStore.findTournament(tournamentId)
-
   if (data) {
     tournament.value = data
   }
-
-  matches.value = await tournamentStore.getOpenMatches(tournamentId) || []
 })
 
 </script>

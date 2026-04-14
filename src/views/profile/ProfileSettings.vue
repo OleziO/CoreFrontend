@@ -7,15 +7,15 @@
     >
       <div class="flex items-center gap-30 border-b border-gray-800 pb-30">
         <el-avatar
-          :src="`${apiPublicUrl}${user?.avatar_url}`"
+          :src="user?.avatarUrl ?? ''"
           size="large"
           class="ring-2 ring-gray-700 shadow-md"
         />
         <div class="flex flex-col justify-center">
           <h1 class="text-2xl font-semibold text-white leading-tight">
-            {{ user?.steam_name }}
+            {{ user?.discordName }}
           </h1>
-          <p class="text-gray-400 text-sm">@{{ user?.user_name }}</p>
+          <p class="text-gray-400 text-sm">@{{ user?.discordUsername }}</p>
         </div>
       </div>
 
@@ -28,7 +28,7 @@
           </h2>
           <div class="flex items-center gap-x-20">
             <p class="text-green-500 text-sm">
-              {{ user?.discord_id
+              {{ user?.discordId
                 ?
                   "Ваш обліковий запис Discord успішно прив'язаний."
                 : "Ваш обліковий запис Discord ще не прив'язаний." }}
@@ -57,7 +57,7 @@
           </h2>
           <div class="flex items-center gap-x-20 justify-between w-full">
             <p class="text-green-500 text-sm">
-              {{ user?.mmr && user?.positions
+              {{ user?.rating
                 ?
                   "Дані гравця успішно додані"
                 : "Дані гравця не були додані, це не дозволить вступити до команди" }}
@@ -185,12 +185,13 @@ const user = computed(() => {
   return authStore.user
 })
 
-watch(() => user.value?.mmr, () => {
-  console.log(user.value?.mmr)
+watch(() => user.value?.rating, () => {
+  // rating changed
 }, { deep: true })
 
 onMounted(() => {
-  selectedPositions.value = authStore.user?.positions as number[]
-  selectedMmr.value = authStore.user?.mmr
+  // TODO: positions and mmr not in API yet
+  selectedPositions.value = []
+  selectedMmr.value = authStore.user?.rating ?? null
 })
 </script>

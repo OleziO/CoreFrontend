@@ -19,9 +19,10 @@
 import { computed, ref } from 'vue'
 import { useElementSize } from '@vueuse/core'
 import UserCard from './UserCard.vue'
+import type { TPlayer as Player } from '@/api/types/api.types'
 
 const props = defineProps<{
-  players: TPlayer[]
+  players: Player[]
   cardWidth: number
   cardGap: number
 }>()
@@ -34,7 +35,7 @@ const rows = computed(() => {
   if (!containerWidth.value) return [props.players]
 
   const cardsPerRow = Math.floor((containerWidth.value + props.cardGap) / (props.cardWidth + props.cardGap))
-  const result: TPlayer[][] = []
+  const result: Player[][] = []
 
   for (let i = 0; i < props.players.length; i += cardsPerRow) {
     result.push(props.players.slice(i, i + cardsPerRow))

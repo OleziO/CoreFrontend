@@ -1,4 +1,4 @@
-export type TOptionsArr = {
-  key: string | number
-  label: string
-}[]
+// export type TOptionsArr = {
+//   key: string | number
+//   label: string
+// }[]

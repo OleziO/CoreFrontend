@@ -81,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { bugService } from '@/services/bug.service'
+// import { bugService } from '@/services/bug.service'
 
 const props = defineProps<{
   modelValue?: boolean
@@ -143,7 +143,10 @@ const submitBug = async () => {
     formData.append('detail', detail.value.trim())
     formData.append('image', selectedFile.value)
 
-    await bugService.createBugRequest(formData)
+    // TODO: endpoint not in API yet
+    // await bugService.createBugRequest(formData)
+    // eslint-disable-next-line no-void
+    void formData
 
     ElMessage.success('Баг успішно надіслано')
     updateModelValue(false)

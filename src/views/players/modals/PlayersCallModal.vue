@@ -99,7 +99,7 @@ interface IMessageForm {
   message: string
 }
 
-const props = defineProps<{ playerIds: number[] }>()
+defineProps<{ playerIds: string[] }>()
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
 }>()
@@ -111,8 +111,8 @@ const form = ref<IMessageForm>({
   message: ''
 })
 
-const userStore = useAuthStore()
-const chats = computed(() => userStore.chats)
+// TODO: endpoint not in API yet (/constants/chats)
+const chats = computed(() => [] as any[])
 const route = useRoute()
 
 const filterTags = computed<string[]>(() => {
@@ -163,15 +163,10 @@ function onReset () {
 }
 
 async function onSend () {
-  if (!form.value.searchType) {
-    ElMessage.error('Оберіть тип пошуку')
-    return
-  }
-
+  // TODO: endpoint not in API yet (callPlayers)
+  ElMessage.info('Функціонал callPlayers ще не реалізований в API')
   loading.value = true
   try {
-    await playersService.callPlayers(form.value.searchType, props.playerIds, form.value.message)
-    ElMessage.success('Гравців успішно тегнуто')
     onReset()
   } catch {
     ElMessage.error('Не вдалося надіслати повідомлення')

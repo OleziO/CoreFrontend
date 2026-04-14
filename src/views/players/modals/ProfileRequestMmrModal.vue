@@ -137,17 +137,9 @@ const submitRequest = async () => {
   loading.value = true
 
   try {
-    const formData = new FormData()
-    formData.append('type', 'mmr')
-    formData.append('detail', String(newMmr.value))
-    formData.append('image', selectedFile.value)
-
-    await authService.createMmrRequest(formData)
-
-    ElMessage.success('Запит на оновлення MMP успішно надіслано')
+    // TODO: endpoint not in API yet (createMmrRequest)
+    ElMessage.info('Функціонал запиту MMR ще не реалізований в API')
     updateModelValue(false)
-
-    // Очищаем форму
     selectedFile.value = null
     imagePreview.value = null
     newMmr.value = null

@@ -74,23 +74,17 @@ import { routeNames } from '@/router/route-names'
 import { tournamentStatuses } from '@/utils/formatters'
 import { PhMagnifyingGlass } from '@phosphor-icons/vue'
 
-const DEFAULT_TOURNAMENT_FILTERS: ITournamentFilters = {
-  status: [],
-  division: []
+const DEFAULT_TOURNAMENT_FILTERS = {
+  status: [] as string[],
+  division: [] as string[]
 }
 const modelValue = defineModel<boolean>({ default: false })
 const router = useRouter()
 const route = useRoute()
-const tournamentStore = useTournamentStore()
-const filters = ref<ITournamentFilters>({ ...DEFAULT_TOURNAMENT_FILTERS })
+const filters = ref({ ...DEFAULT_TOURNAMENT_FILTERS })
 
-const divisionArr = computed(() => {
-  if (!tournamentStore.divisionsData?.length) return []
-  return tournamentStore.divisionsData.map((item) => ({
-    key: item.name,
-    label: item.name
-  }))
-})
+// TODO: endpoint not in API yet (divisions)
+const divisionArr = computed(() => [] as { key: string; label: string }[])
 
 function onReset (withClose = true) {
   filters.value = { ...DEFAULT_TOURNAMENT_FILTERS }

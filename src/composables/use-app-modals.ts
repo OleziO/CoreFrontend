@@ -13,13 +13,7 @@ export function useAppModals () {
     PLayerEditProfileModal: defineAsyncComponent(() => import('@/views/players/modals/PLayerEditProfileModal.vue')) as Component,
     AdminAddPointsModal: defineAsyncComponent(() => import('@/views/players/modals/AdminAddPointsModal.vue')) as Component,
     ChangeCaptainModal: defineAsyncComponent(() => import('@/views/teams/modals/ChangeCaptainModal.vue')) as Component,
-    MixTournamentFilterModal: defineAsyncComponent(() => import('@/views/mix-tournaments/modals/MixTournamentFilterModal.vue')) as Component,
-    CreateMixTeamModal: defineAsyncComponent(() => import('@/views/mix-tournaments/modals/CreateMixTeamModal.vue')) as Component,
-    AddPlayerToMixTeamModal: defineAsyncComponent(() => import('@/views/mix-tournaments/modals/AddPlayerToMixTeamModal.vue')) as Component,
-    RollPlayersModal: defineAsyncComponent(() => import('@/views/mix-tournaments/modals/RollPlayersModal.vue')) as Component,
     ProfileRequestMmrModal: defineAsyncComponent(() => import('@/views/players/modals/ProfileRequestMmrModal.vue')) as Component,
-    AdminUpdateMmrModal: defineAsyncComponent(() => import('@/views/players/modals/AdminUpdateMmrModal.vue')) as Component,
-    MailboxModal: defineAsyncComponent(() => import('@/components/modals/MailboxModal.vue')) as Component,
-    BugReportModal: defineAsyncComponent(() => import('@/components/modals/BugReportModal.vue')) as Component
+    AdminUpdateMmrModal: defineAsyncComponent(() => import('@/views/players/modals/AdminUpdateMmrModal.vue')) as Component
   })
 }

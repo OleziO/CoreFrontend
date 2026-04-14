@@ -29,26 +29,9 @@
           Ролі
         </label>
 
-        <div v-if="!playersStore.allPlayerRoles" class="text-center py-10 text-gray-500">
-          Немає доступних ролей
-        </div>
-
-        <div v-else class="flex flex-col gap-8">
-          <el-select
-            v-model="selectedRoleIds"
-            multiple
-            placeholder="Оберіть ролі"
-            collapse-tags
-            :max-collapse-tags="2"
-          >
-            <el-option
-              v-for="role in playersStore.allPlayerRoles"
-              :key="role.id"
-
-              :value="role.id"
-              :label="getRoleLabel(role.type_name)"
-            />
-          </el-select>
+        <!-- TODO: endpoint not in API yet (getAllPlayerRoles) -->
+        <div class="text-center py-10 text-gray-500">
+          Управління ролями недоступне
         </div>
       </div>
     </div>
@@ -75,35 +58,36 @@
 <script setup lang="ts">
 import { MAX_RATING } from '@/components/player-tags/player.constants'
 
-const props = defineProps<{playerId: number}>()
+const props = defineProps<{playerId: string}>()
 
 const modelValue = defineModel<boolean>({ default: false })
 
-const roleLabels: Record<string, string> = {
-  admin: 'Адміністратор',
-  moderator: 'Модератор',
-  media: 'Медіа',
-  cap: 'Капітан',
-  player: 'Гравець',
-  unverified: 'Не верифікований',
-  blocked: 'Заблокований'
-}
+// const roleLabels: Record<string, string> = {
+//   admin: 'Адміністратор',
+//   moderator: 'Модератор',
+//   media: 'Медіа',
+//   cap: 'Капітан',
+//   player: 'Гравець',
+//   unverified: 'Не верифікований',
+//   blocked: 'Заблокований'
+// }
 
 const playersStore = usePlayersStore()
 
 const mmr = ref<number | null>(null)
 
-const selectedRoleIds = ref<number[]>([])
+// const selectedRoleIds = ref<number[]>([])
 
-const player = ref<TPlayer | null>(null)
+import type { TPlayer as Player } from '@/api/types/api.types'
+const player = ref<Player | null>(null)
 
 const isValid = computed(() => {
   return mmr.value === null
 })
 
-function getRoleLabel (roleName: string): string {
-  return roleLabels[roleName] || roleName
-}
+// function getRoleLabel (roleName: string): string {
+//   return roleLabels[roleName] || roleName
+// }
 
 function onNumericInput (newValue: number | string) {
   const value = String(newValue ?? '')
@@ -113,32 +97,14 @@ function onNumericInput (newValue: number | string) {
   mmr.value = numeric === '' ? null : Math.min(Number(numeric), MAX_RATING)
 }
 
+// TODO: endpoint not in API yet (updatePlayerMMP, updatePlayerRoles, getAllPlayerRoles)
 async function onSubmit () {
-  if (mmr.value === null) {
-    ElMessage.error('Введіть MMP гравця')
-    return
-  }
-
-  playersStore.loading = true
-
-  try {
-    await playersStore.updatePlayerMMP(props.playerId, mmr.value)
-    await playersStore.updatePlayerRoles(props.playerId, selectedRoleIds.value)
-
-    ElMessage.success('MMR та ролі успішно оновлено')
-  } finally {
-    playersStore.loading = false
-    modelValue.value = false
-  }
+  ElMessage.info('Функціонал оновлення MMR ще не реалізований в API')
+  modelValue.value = false
 }
 
 onMounted(async () => {
-  await playersStore.getAllPlayerRoles()
-
   player.value = await playersStore.findPlayer(props.playerId)
-  mmr.value = player.value?.mmr ?? null
-  selectedRoleIds.value = player.value?.roles?.map(role => role.id)
-    .filter(id => playersStore.allPlayerRoles.some(role => role.id === id)) || []
 })
 
 </script>

@@ -20,17 +20,13 @@
             <el-option
               v-for="team in teams"
               :key="team.id"
-              :label="team.team_name || `Team #${team.id}`"
+              :label="team.name || `Team #${team.id}`"
               :value="team.id"
               class="h-50"
             >
               <div class="flex items-center gap-10 py-2">
-                <el-avatar
-                  v-if="team.avatar_url"
-                  :src="getImageUrl(team.avatar_url)"
-                  class="size-35"
-                />
-                <span class="text-base font-medium">{{ team.team_name || `Team #${team.id}` }}</span>
+                <!-- Team.avatarUrl not in API schema -->
+                <span class="text-base font-medium">{{ team.name || `Team #${team.id}` }}</span>
               </div>
             </el-option>
           </el-select>
@@ -76,24 +72,25 @@
 </template>
 
 <script setup lang="ts">
-import { getImageUrl } from '@/core/helpers'
+// import { getImageUrl } from '@/core/helpers'
 
-const props = defineProps<{
+import type { TTeam as Team } from '@/api/types/api.types'
+
+defineProps<{
   modelValue: boolean
-  tournamentId: number
-  teams: TTeam[] | undefined
+  tournamentId: string
+  teams: Team[] | undefined
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'success', data: { teamId: number; points: number }): void
+  (e: 'success', data: { teamId: string; points: number }): void
 }>()
 
-const tournamentStore = useTournamentStore()
 const isLoading = ref(false)
 
 const form = reactive({
-  teamId: undefined as number | undefined,
+  teamId: undefined as string | undefined,
   points: undefined as number | undefined
 })
 
@@ -137,11 +134,8 @@ async function submit () {
 
   isLoading.value = true
   try {
-    await tournamentStore.endTournament(
-      props.tournamentId,
-      form.teamId,
-      form.points
-    )
+    // TODO: endpoint not in API yet (endTournament)
+    ElMessage.info('Функціонал нарахування поінтів ще не реалізований в API')
     emit('success', {
       teamId: form.teamId,
       points: form.points

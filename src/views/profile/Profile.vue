@@ -13,28 +13,26 @@
           <template #dropdown>
             <el-dropdown-menu>
               <a
-                v-if="user?.steam_id"
-                :href="getSteamProfileUrl(user.steam_id)"
+                v-if="user?.steamId"
+                :href="getSteamProfileUrl(user.steamId)"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <el-dropdown-item
-                  :icon="steamImg"
-                >
+                <el-dropdown-item :icon="steamImg">
                   Steam
                 </el-dropdown-item>
               </a>
               <a
-                v-if="user?.discord_id"
-                :href="getDiscordProfileUrl(user.discord_id)"
+                v-if="user?.discordId"
+                :href="getDiscordProfileUrl(user.discordId)"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <el-dropdown-item :icon="discordImg">Discord</el-dropdown-item>
               </a>
               <a
-                v-if="user?.steam_id"
-                :href="getDotabuffProfileUrl(user.steam_id)"
+                v-if="user?.steamId"
+                :href="getDotabuffProfileUrl(user.steamId)"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -46,15 +44,15 @@
       </div>
       <div class="flex items-center gap-30 border-b border-gray-800 pb-20">
         <el-avatar
-          :src="getImageUrl(user?.avatar_url as string)"
+          :src="getImageUrl(user?.avatarUrl as string)"
           size="large"
           class="ring-2 ring-gray-700 shadow-md"
         />
         <div class="flex flex-col justify-center">
           <h1 class="text-2xl font-semibold text-white leading-tight">
-            {{ user?.steam_name }}
+            {{ user?.discordName }}
           </h1>
-          <p class="text-gray-400 text-sm">@{{ user?.user_name }}</p>
+          <p class="text-gray-400 text-sm">@{{ user?.discordUsername }}</p>
         </div>
       </div>
 
@@ -63,20 +61,8 @@
           class="flex flex-col items-center justify-center bg-gray-900/60 border border-gray-800
             rounded-2xl py-20 transition-all duration-300"
         >
-          <span class="text-sm text-gray-400 mb-2">Ранг</span>
-          <el-tooltip
-            v-if="user?.rang?.img_url?.length"
-            :content="`MMR: ${user.mmr}`"
-            effect="dark"
-            placement="top"
-          >
-            <el-image
-              :src="`/images/ranks/${user.rang?.img_url}`"
-              class="!size-40"
-              fit="contain"
-            />
-          </el-tooltip>
-          <span v-else class="text-white text-base font-semibold">-</span>
+          <span class="text-sm text-gray-400 mb-2">Рейтинг</span>
+          <span class="text-white text-base font-semibold">{{ user?.rating ?? '-' }}</span>
         </div>
 
         <div
@@ -84,9 +70,8 @@
             rounded-2xl py-20 transition-all duration-300"
         >
           <span class="text-sm text-gray-400 mb-2">Позиція</span>
-          <span class="text-white text-base font-semibold">
-            {{ user?.position || '-' }}
-          </span>
+          <!-- TODO: position not in API yet -->
+          <span class="text-white text-base font-semibold">-</span>
         </div>
 
         <div
@@ -98,30 +83,9 @@
                 Команда:
               </h2>
             </div>
-            <div>
-              <el-tag
-                v-if="user?.is_cap"
-                type="warning"
-                class="ml-auto text-sm font-medium px-10 bg-yellow-500/10 text-yellow-400 border-0"
-              >
-                Капітан
-              </el-tag>
-            </div>
           </div>
-          <RouterLink v-if="user?.team" :to="`/teams/${user?.team_id}`">
-            <div class="flex items-center gap-20 hover:bg-gray-700 p-10 rounded-xl">
-              <el-avatar
-                size="default"
-                :src="getImageUrl(user?.team?.avatar_url as string)"
-                class="ring-2 ring-gray-700"
-              />
-              <div class="flex flex-col">
-                <span class="text-white font-medium">{{ user?.team.team_name }}</span>
-                <span class="text-xs text-gray-500">ID: {{ user?.team.dota_team_id }}</span>
-              </div>
-            </div>
-          </RouterLink>
-          <div v-else class="text-gray-500 text-sm italic">
+          <!-- TODO: team info not in Player API schema yet -->
+          <div class="text-gray-500 text-sm italic">
             Ви ще не приєднані до жодної команди
           </div>
         </div>
@@ -135,7 +99,6 @@
               </h2>
             </div>
           </div>
-          <!-- Тут надо будет отобразить микс команду турнира -->
           <div class="text-gray-500 text-sm italic w-full h-full flex items-center justify-center">
             Ви ще не приєднані до жодної MIX команди
           </div>
@@ -158,10 +121,9 @@ const authStore = useAuthStore()
 const user = computed(() => {
   return authStore.user
 })
-console.log(user)
 
 onMounted(() => {
-  authStore.fetchUser()
+  // TODO: endpoint not in API yet (fetchUser)
 })
 
 </script>

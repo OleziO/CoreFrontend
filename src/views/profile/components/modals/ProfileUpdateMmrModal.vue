@@ -25,18 +25,14 @@
 </template>
 
 <script setup lang="ts">
-const authStore = useAuthStore()
+// const authStore = useAuthStore()
 
 const selectedMmr = defineModel<number | null | undefined>('selectedMmr')
 const showMmrModal = defineModel<boolean>('showMmrModal')
 
 function updatePlayerMmr () {
-  authService.updatePlayerData(selectedMmr.value as number, authStore.user?.positions as number[]).then(data => {
-    if (data) {
-      authStore.user = data
-    }
-  })
-  ElMessage({ message: 'Ммр гравця оновлено' })
+  // TODO: endpoint not in API yet (updatePlayerData)
+  ElMessage({ message: 'Функціонал оновлення MMR ще не реалізований в API', type: 'warning' })
 }
 
 </script>

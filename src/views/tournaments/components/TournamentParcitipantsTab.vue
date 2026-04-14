@@ -1,10 +1,10 @@
 <template>
   <div
-    v-if="tournament?.participants?.length"
+    v-if="tournament?.teams?.length"
     class="flex py-20 flex-wrap gap-16 justify-center"
   >
     <TeamCard
-      v-for="team in tournament?.participants"
+      v-for="team in tournament?.teams"
       :key="team.id"
       :team="team"
       class="w-full md:w-[calc(50%-18px)] max-w-[300px] lg:w-[calc(25%-16px)]"
@@ -17,7 +17,7 @@
   >
     <PhTrophy :size="40" class="text-gray-600 mb-3" />
     <p class="text-gray-400">
-      {{ tournament?.status === 'ended'
+      {{ tournament?.tournamentStatus === 'COMPLETED'
         ? 'Турнір завершено' : 'Ще немає зареєстрованих команд' }}
     </p>
   </div>
@@ -25,6 +25,7 @@
 
 <script setup lang="ts">
 import { PhTrophy } from '@phosphor-icons/vue'
+import type { TTournament as Tournament } from '@/api/types/api.types'
 
-defineProps<{tournament: TTournamentWithParticipants | undefined}>()
+defineProps<{tournament: Tournament | null | undefined}>()
 </script>

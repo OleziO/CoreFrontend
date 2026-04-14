@@ -56,7 +56,7 @@
 
 <script setup lang="ts">
 const showMmrUnverifiedModal = defineModel<boolean>('showMmrUnverifiedModal')
-const authStore = useAuthStore()
+// const authStore = useAuthStore()
 
 const newMmr = ref<number | null>(null)
 const loading = ref(false)
@@ -70,16 +70,10 @@ const updateMmr = async () => {
   loading.value = true
 
   try {
-    // Используем текущую позицию пользователя или 1 по умолчанию
-    const currentPosition = authStore.user?.positions || [1]
-    const data = await authService.updatePlayerData(newMmr.value, currentPosition)
-
-    if (data) {
-      authStore.user = data
-      ElMessage.success('MMR успішно оновлено')
-      showMmrUnverifiedModal.value = false
-      newMmr.value = null
-    }
+    // TODO: endpoint not in API yet (updatePlayerData)
+    ElMessage.warning('Функціонал оновлення MMR ще не реалізований в API')
+    showMmrUnverifiedModal.value = false
+    newMmr.value = null
   } catch (error: any) {
     console.error('Помилка при оновленні MMP:', error)
 
@@ -97,7 +91,7 @@ const updateMmr = async () => {
 watch(showMmrUnverifiedModal, (newVal) => {
   if (newVal) {
     // Устанавливаем текущий MMP при открытии модалки
-    newMmr.value = authStore.user?.mmr || null
+    newMmr.value = null
   } else {
     // Очищаем форму при закрытии модалки
     newMmr.value = null

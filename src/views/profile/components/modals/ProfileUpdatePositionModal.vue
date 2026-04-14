@@ -31,17 +31,13 @@
 
 <script setup lang="ts">
 const showPositionModal = defineModel<boolean>('showPositionModal') // Не забывать что чтобы связывать с v-model в дочернем компоненте, использеутся defineModel а не defineProps, пропсы не имеют реактивности и их нельзя менять
-const authStore = useAuthStore()
+// const authStore = useAuthStore()
 
 const selectedPositions = defineModel<number[] | undefined>('selectedPositions')
 
 function updatePlayerPosition () {
-  authService.updatePlayerData(authStore?.user?.mmr as number, selectedPositions.value as number[]).then(data => {
-    if (data) {
-      authStore.user = data
-    }
-  })
-  ElMessage({ message: 'Позиція гравця оновлено' })
+  // TODO: endpoint not in API yet (updatePlayerData)
+  ElMessage({ message: 'Функціонал оновлення позиції ще не реалізований в API', type: 'warning' })
 }
 
 const positions = [

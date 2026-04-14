@@ -1,61 +1,33 @@
-// src/stores/auth.ts
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import apiClient from '@/api/client'
-import checkRoles from '@/core/helpers'
-import { ERole } from '@/types/general.types'
+import type { TPlayer as Player, TUserRole as UserRole } from '@/api/types/api.types'
 
 export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
 
-  const loading = ref(false)
+  // const loading = ref(false)
 
   const token = ref<string | null>(localStorage.getItem('userToken'))
-  const user = ref<TPlayerMe | null>(null)
-
-  const chats = ref<TChats>([])
+  const user = ref<Player | null>(null)
 
   const isAdmin = computed(() => {
+    const roles: UserRole[] = (user.value as any)?.roles || []
     return {
-      isAdmin: checkRoles(user.value?.roles || [], ERole.ADMIN),
-      isModerator: checkRoles(user.value?.roles || [], ERole.MODERATOR)
+      isAdmin: roles.some(r => r.isAdminRole),
+      isModerator: roles.some(r => r.isAdminRole)
     }
   })
 
-  async function fetchUser () {
-    if (!token.value?.length) return
+  // TODO: endpoint not in API yet (/players/me)
+  // async function fetchUser () { ... }
 
-    try {
-      const data = await apiClient.get('/api/v1/players/me')
-      user.value = data
-    } catch (error) {
-      logout()
-    }
-  }
-
-  async function getChats () {
-    if (chats.value.length) return
-
-    loading.value = true
-
-    try {
-      const data = await playersService.getChats()
-
-      chats.value = data?.filter(chat =>
-        chat.roles?.some(role =>
-          user.value?.roles?.some(userRole => userRole.type_name === role.type_name)
-        )
-      ) || []
-    } finally {
-      loading.value = false
-    }
-  }
+  // TODO: endpoint not in API yet (/constants/chats)
+  // async function getChats () { ... }
 
   const login = (newToken: string) => {
     token.value = newToken
     localStorage.setItem('userToken', newToken)
-    fetchUser()
   }
 
   const logout = () => {
@@ -68,11 +40,9 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     token,
     user,
-    chats,
+    // loading,
     isAdmin,
     login,
-    logout,
-    fetchUser,
-    getChats
+    logout
   }
 })

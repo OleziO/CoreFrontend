@@ -21,4 +21,4 @@ type TElementPlus = {
   TranslatePair: import('element-plus/es/locale').TranslatePair
 }
 
-type TElEpPropMergeType<Type, Value, Validator> = import('element-plus/es/utils/index.mjs').EpPropMergeType<Type, Value, Validator>
+// type TElEpPropMergeType<Type, Value, Validator> = import('element-plus/es/utils/index.mjs').EpPropMergeType<Type, Value, Validator>

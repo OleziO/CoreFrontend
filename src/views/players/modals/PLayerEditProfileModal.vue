@@ -133,30 +133,32 @@ interface IEditProfileForm {
 
 const modelValue = defineModel<boolean>({ default: false })
 
+import type { TPlayer as Player } from '@/api/types/api.types'
+
 const emit = defineEmits<{
   (e: 'submit', payload: IEditProfileForm): void
   (e: 'connect-discord'): void
-  (e: 'updated', player: TPlayer): void
+  (e: 'updated', player: Player): void
 }>()
 
 const props = defineProps<{
-  player: TPlayer | TPlayerMe
-  onUpdated?: (player: TPlayer | TPlayerMe) => void
+  player: Player
+  onUpdated?: (player: Player) => void
 }>()
 
 const authStore = useAuthStore()
-const playersStore = usePlayersStore()
+// const playersStore = usePlayersStore()
 
 const { open: openModal } = useAppModals()
-const playerStore = usePlayersStore()
+// const playerStore = usePlayersStore()
 
 const form = ref<IEditProfileForm>({
-  mmr: props.player.mmr ?? null,
-  positions: props.player.positions ?? [],
-  isNotification: (props.player as TPlayerMe)?.is_receive_notification ?? true
+  mmr: props.player.rating ?? null,
+  positions: [],
+  isNotification: true
 })
 
-const hasDiscord = computed(() => !!props.player.discord_id)
+const hasDiscord = computed(() => !!props.player.discordId)
 
 const isVerified = computed(() => {
   const roles = props.player.roles || []
@@ -166,6 +168,8 @@ const isVerified = computed(() => {
 const isAdmin = computed(() => {
   return checkRoles(authStore.user?.roles || [], ERole.MODERATOR) || checkRoles(props.player.roles || [], ERole.ADMIN)
 })
+
+
 
 const isValid = computed(() => {
   // Для верифицированных пользователей валидация MMP не требуется
@@ -187,11 +191,10 @@ function onMmrInput () {
       : Math.min(Number(numeric), 22000)
 }
 
-async function toggleDiscordNotification (isTrue: boolean) {
-  await playerStore.toggleDiscordNotification(isTrue)
-
-  form.value.isNotification = isTrue
-}
+// async function toggleDiscordNotification (isTrue: boolean) {
+//   // TODO: endpoint not in API yet (toggleDiscordNotification)
+//   form.value.isNotification = isTrue
+// }
 
 function onConnectDiscord () {
   const apiPublicUrl = import.meta.env.VITE_API_PUBLIC_URL
@@ -216,10 +219,8 @@ function openRequestMmrModal () {
 async function onSubmit () {
   if (!isValid.value) return
 
-  if (form.value.mmr) {
-    await playersStore.updateMyProfileData(form.value.mmr, form.value.positions)
-    await toggleDiscordNotification(!!form.value.isNotification)
-  }
+  // TODO: endpoint not in API yet (updateMyProfileData)
+  ElMessage.info('Функціонал оновлення профілю ще не реалізований в API')
 
   emit('submit', form.value)
   modelValue.value = false

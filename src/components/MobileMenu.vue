@@ -14,6 +14,14 @@
         >
           {{ item.label }}
         </button>
+        <RoleGuard :roles="['admin', 'moderator']">
+          <button
+            class="mobile-menu-link"
+            @click="go(routeNames.adminPanel)"
+          >
+            Адмінка
+          </button>
+        </RoleGuard>
       </nav>
     </div>
   </transition>
@@ -22,20 +30,24 @@
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
 import { useRouter } from 'vue-router'
+import RoleGuard from '@/guards/RoleGuard.vue'
 
 const router = useRouter()
 const togglerStore = useTogglerStore()
+const authStore = useAuthStore()
 
-const menu = [
-  { label: 'Головна', to: routeNames.rootPage },
-  { label: 'Профіль', to: routeNames.profile },
-  { label: 'Турніри', to: routeNames.tournaments },
-  { label: 'Mix Cup', to: routeNames.mixTournaments },
-  { label: 'Команди', to: routeNames.teams },
-  { label: 'Гравці', to: routeNames.players },
-  { label: 'Лідерборд', to: routeNames.mixLEaderboard },
-  { label: 'FAQ', to: routeNames.rules }
-]
+const menu = computed(() => {
+  const items: { label: string; to: string }[] = [
+    { label: 'Головна', to: routeNames.rootPage },
+    { label: 'Турніри', to: routeNames.tournaments },
+    { label: 'Команди', to: routeNames.teams },
+    { label: 'Гравці', to: routeNames.players }
+  ]
+  if (authStore.token) {
+    items.push({ label: 'Профіль', to: routeNames.profile })
+  }
+  return items
+})
 
 function close () {
   togglerStore.showMobileMenu = false

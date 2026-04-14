@@ -46,27 +46,7 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="Тип">
-          <el-select
-            v-model="tournamentData.type"
-            placeholder="Оберіть тип"
-            size="large"
-            class="w-full"
-            clearable
-          >
-            <el-option
-              value="team"
-              label="5x5"
-            />
-            <el-option
-              value="mix"
-              label="Мікс"
-            />
-          </el-select>
-        </el-form-item>
-
         <el-form-item
-          v-if="tournamentData.type === 'team'"
           label="Дивізіон"
         >
           <el-select
@@ -158,30 +138,35 @@ import { queryCache } from '@/core/query-cache-client'
 import { tournamentStatuses } from '@/utils/formatters'
 import { Plus, Edit } from '@element-plus/icons-vue'
 import type { UploadFile } from 'element-plus'
-import { useGetDivisions } from '@/composables/query/use-divisions'
+// TODO: endpoint not in API yet (divisions)
+// import { useGetDivisions } from '@/composables/query/use-divisions'
 import { ElMessage } from 'element-plus'
+import type { TTournament as Tournament, TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
 
-const props = defineProps<{newTournamentData: TTournament | undefined | null}>()
+interface ITournamentUpdateFormData extends Partial<UpdateTournamentDto> {
+  status?: string
+  division_id?: string | null
+  limit?: number | null
+}
+
+const props = defineProps<{newTournamentData: Tournament | undefined | null}>()
 const { file, preview, reset } = useGetFile()
 
-const { data: divisions } = useGetDivisions()
+// TODO: endpoint not in API yet (divisions)
+const divisions = ref<any[]>([])
 
-const defaultTournamentData = (): TUpdateTournament & { type?: string | null; limit?: number | null } => ({
-  id: 0,
-  title: '',
-  description: '',
-  prizes: '',
-  division_id: null,
-  start_time: '',
-  end_time: '',
-  start_registration: '',
-  end_registration: '',
+const defaultTournamentData = (): ITournamentUpdateFormData => ({
+  name: '',
+  tournamentStartsAt: '',
+  tournamentEndsAt: '',
+  registrationStartsAt: '',
+  registrationEndsAt: '',
   status: '',
-  type: null,
+  division_id: null,
   limit: null
 })
 
-const tournamentData = ref<TUpdateTournament & { type?: string | null; limit?: number | null }>(defaultTournamentData())
+const tournamentData = ref<ITournamentUpdateFormData>(defaultTournamentData())
 
 const showUpdateTournamentDrawer = defineModel<boolean>()
 const loading = ref<boolean>(false)
@@ -190,21 +175,14 @@ watch(() => showUpdateTournamentDrawer.value, (isOpen) => {
   if (isOpen && props.newTournamentData) {
     reset()
     tournamentData.value = {
-      id: props.newTournamentData.id,
-      title: props.newTournamentData.title || '',
-      description: props.newTournamentData.description || '',
-      prizes: props.newTournamentData.prizes || '',
-      division_id: props.newTournamentData.division_id ? String(props.newTournamentData.division_id) : null,
-      start_time: props.newTournamentData.start_time || '',
-      end_time: props.newTournamentData.end_time || '',
-      start_registration: props.newTournamentData.start_registration || '',
-      end_registration: props.newTournamentData.end_registration || '',
-      status: props.newTournamentData.status || '',
-      type: (props.newTournamentData as any).type || null,
-      limit: (props.newTournamentData as any).limit || null
+      name: props.newTournamentData.name || '',
+      tournamentStartsAt: props.newTournamentData.tournamentStartsAt || '',
+      tournamentEndsAt: props.newTournamentData.tournamentEndsAt || '',
+      registrationStartsAt: props.newTournamentData.registrationStartsAt || '',
+      registrationEndsAt: props.newTournamentData.registrationEndsAt || ''
     }
-    if (props.newTournamentData.img_url) {
-      preview.value = getImageUrl(props.newTournamentData.img_url as string)
+    if (props.newTournamentData.headerBannerUrl) {
+      preview.value = getImageUrl(props.newTournamentData.headerBannerUrl)
     }
   }
 })
@@ -220,7 +198,10 @@ function handleImageChange (uploadFile: UploadFile) {
 const handleSubmit = async () => {
   loading.value = true
   try {
-    await tournamentsService.updateTournament(tournamentData.value, file.value || undefined)
+    await tournamentsService.updateTournament(
+      props.newTournamentData?.id ?? '',
+      tournamentData.value as unknown as UpdateTournamentDto
+    )
     ElMessage({ message: 'Турнір успішно оновлено', type: 'success' })
     showUpdateTournamentDrawer.value = false
     queryCache.invalidateQueries({ key: ['tournaments'] })

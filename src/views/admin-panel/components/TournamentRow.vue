@@ -9,24 +9,19 @@
     </div>
 
     <div class="col-title flex flex-col justify-center py-2 pr-4 pl-4 overflow-hidden">
-      <span class="font-bold text-gray-200 text-base truncate">{{ tournament.title }}</span>
-      <span class="text-xs text-gray-500 truncate">{{ tournament.description }}</span>
+      <span class="font-bold text-gray-200 text-base truncate">{{ tournament.name }}</span>
     </div>
 
     <div class="col-type flex items-center justify-center">
-      <TournamentTypeTag :type="tournament.type" />
+      <span class="text-gray-400 text-xs">—</span>
     </div>
 
     <div class="col-division flex items-center justify-center">
-      <DivisionTag
-        v-if="tournament.division"
-        :divisionName="tournament.division.name"
-      />
-      <span v-else class="text-gray-600 text-[10px]">—</span>
+      <span class="text-gray-400 text-xs">—</span>
     </div>
 
     <div class="col-status flex items-center justify-center">
-      <TournamentStatusTag :status="tournament.status" />
+      <TournamentStatusTag :status="tournament.tournamentStatus" />
     </div>
 
     <div class="col-actions flex justify-center items-center" @click.stop>
@@ -46,7 +41,7 @@
 
 <script setup lang="ts">
 import { EditPen } from '@element-plus/icons-vue'
-import TournamentTypeTag from '@/components/tournaments-tags/TournamentTypeTag.vue'
+// import TournamentTypeTag from '@/components/tournaments-tags/TournamentTypeTag.vue'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
 
 defineProps<{

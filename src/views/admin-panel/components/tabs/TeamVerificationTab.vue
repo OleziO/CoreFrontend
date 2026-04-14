@@ -62,10 +62,11 @@
 </template>
 
 <script setup lang="ts">
-import { useGetRequests } from '@/composables/query/use-requests'
-import { getImageUrl } from '@/core/helpers'
-import { Check, Close, Picture, TopRight, ZoomIn } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+// TODO: endpoint not in API yet
+// import { useGetRequests } from '@/composables/query/use-requests'
+// import { getImageUrl } from '@/core/helpers'
+import { Check, TopRight } from '@element-plus/icons-vue'
+// import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { routeNames } from '@/router/route-names'
 import { adminPanelService } from '@/views/admin-panel/admin-panel.service'
@@ -73,7 +74,10 @@ import RequestStatusTag from '@/components/request-tags/RequestStatusTag.vue'
 import RequestTypeTag from '@/components/request-tags/RequestTypeTag.vue'
 
 const router = useRouter()
-const { data: requests, isLoading, refetch } = useGetRequests('team_verification')
+// TODO: endpoint not in API yet
+const requests = ref<any[]>([])
+const isLoading = ref(false)
+const refetch = async () => {}
 
 const handleTake = async (requestId: number) => {
   try {

@@ -25,8 +25,8 @@
           <router-link :to="{ name: routeNames.teams }">
             <el-button type="primary" link class="tracking-[4]">Команди</el-button>
           </router-link>
-          <router-link :to="{ name: routeNames.rules }">
-            <el-button type="primary" link class="tracking-[4]">FAQ</el-button>
+          <router-link :to="{ name: routeNames.players }">
+            <el-button type="primary" link class="tracking-[4]">Гравці</el-button>
           </router-link>
         </nav>
 

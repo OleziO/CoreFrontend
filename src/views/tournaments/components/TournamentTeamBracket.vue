@@ -1,12 +1,12 @@
 <template>
   <div
-    v-if="tournament?.bracket &&
-      tournament?.status !== ETournamentStatus.REGISTRATION &&
-      tournament?.status !== ETournamentStatus.PRE_REGISTRATION"
+    v-if="tournament?.tournamentGridUrl &&
+      tournament?.tournamentStatus !== ETournamentStatus.REGISTRATION &&
+      tournament?.tournamentStatus !== ETournamentStatus.PRE_REGISTRATION"
     class="w-full h-full"
   >
     <iframe
-      :src="getBracketUrl(tournament.bracket)"
+      :src="getBracketUrl(tournament.tournamentGridUrl)"
       width="100%"
       height="500"
       frameborder="0"
@@ -23,8 +23,9 @@
 
 <script setup lang="ts">
 import { ETournamentStatus } from '@/components/tournaments-tags/tournament.constants'
+import type { TTournament as Tournament } from '@/api/types/api.types'
 
-defineProps<{tournament: TTournament | undefined}>()
+defineProps<{tournament: Tournament | undefined}>()
 
 function getBracketUrl (url: string) {
   if (!url) return ''

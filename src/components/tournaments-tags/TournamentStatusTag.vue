@@ -5,7 +5,6 @@
            relative overflow-hidden rounded-lg border border-white/10"
     :class="statusClass"
   >
-    <!-- ПОКРАЩЕНЕ ЗАТЕМНЕННЯ -->
     <div
       class="absolute inset-0
              bg-gradient-to-b from-black/15 to-black/35
@@ -21,25 +20,21 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import {
-  ETournamentStatus,
-  tournamentStatusClassMap,
-  tournamentStatusLabelMap
-} from './tournament.constants'
+import { tournamentStatusClassMap, tournamentStatusLabelMap } from './tournament.constants'
 
 const props = defineProps<{
-  status?: ETournamentStatus | null
+  status?: string | null
 }>()
 
 const isValidStatus = computed(() =>
-  props.status && tournamentStatusClassMap[props.status as ETournamentStatus]
+  props.status && tournamentStatusClassMap[props.status]
 )
 
 const statusClass = computed(() =>
-  props.status ? tournamentStatusClassMap[props.status as ETournamentStatus] || '' : ''
+  props.status ? tournamentStatusClassMap[props.status] || '' : ''
 )
 
 const statusLabel = computed(() =>
-  props.status ? tournamentStatusLabelMap[props.status as ETournamentStatus] || props.status : ''
+  props.status ? tournamentStatusLabelMap[props.status] || props.status : ''
 )
 </script>

@@ -332,8 +332,8 @@
     "watchWithFilter": true,
     "whenever": true,
     "useMixTournamentsListStore": true,
-    "mailboxService": true,
-    "useMailboxStore": true,
-    "bugService": true
+    "bugService": true,
+    "userRolesService": true,
+    "matchesService": true
   }
 }

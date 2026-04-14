@@ -15,25 +15,19 @@
                  border border-white/5 shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
         >
           <div class="flex items-center gap-15">
-            <el-image
-              :src="getImageUrl(team?.avatar_url)"
-              fit="cover"
-              class="!h-100 !w-100 lg:!h-[150px] lg:!w-[150px] mt-15 rounded-xl border-2 border-gray-800"
-            />
-
             <div>
               <div class="flex items-center gap-10 mt-15">
-                <el-tooltip placement="top" :content="team?.team_name">
+                <el-tooltip placement="top" :content="team?.name">
                   <h1
                     class="text-xl md:max-w-300 max-w-150 font-bold uppercase
                       whitespace-nowrap leading-tight truncate"
                   >
-                    {{ team?.team_name }}
+                    {{ team?.name }}
                   </h1>
                 </el-tooltip>
 
                 <el-button
-                  v-if="authStore.user?.is_cap || authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator"
+                  v-if="authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator"
                   type="primary"
                   class="px-10"
                   @click="open('TeamCreateModal', {
@@ -45,18 +39,10 @@
                 </el-button>
               </div>
 
-              <span
-                class="text-xs w-fit mt-5 mb-15 flex gap-4 items-center text-gray-500/80 hover:text-primary
-                       transition-all duration-300 cursor-pointer"
-                @click.stop="team?.dota_team_id && copyDotaTeamID(team.dota_team_id)"
-              >
-                {{ team?.dota_team_id || '-' }}
-                <PhCopy v-if="team?.dota_team_id" size="14" />
-              </span>
-
-              <div class="w-full flex flex-wrap gap-10">
-                <DivisionTag :divisionName="team?.calculated_division?.name as EDivision" />
-                <StatusTag :status="team?.status" />
+              <div class="w-full flex flex-wrap gap-10 mt-10">
+                <el-tag :type="team?.isVerified ? 'success' : 'danger'">
+                  {{ team?.isVerified ? 'Верифікована' : 'Не верифікована' }}
+                </el-tag>
               </div>
             </div>
           </div>
@@ -74,8 +60,6 @@
 
               <template #dropdown>
                 <div class="flex flex-col gap-10 p-2 rounded-lg shadow-lg bg-gray-900">
-                  <el-button type="primary" @click="createChat">Створити чати</el-button>
-                  <el-button type="primary" @click="deleteChat">Видалити чати</el-button>
                   <el-button type="primary" @click="teamsStore.deleteTeam(team?.id!)">Розпустити команду</el-button>
                   <el-button
                     class="w-max px-10 rounded-md"
@@ -88,24 +72,7 @@
             </el-dropdown>
 
             <div class="flex gap-12">
-              <el-tooltip content="Вийти з команди" placement="top">
-                <el-button
-                  v-if="isTeamPlayer" class="w-max px-10 rounded-md"
-                  type="primary" @click="leaveFromTeam"
-                >
-                  <PhSignOut :size="20" />
-                  <span class="ml-10 hidden 2xs:flex">Вийти з команди</span>
-                </el-button>
-              </el-tooltip>
-
-              <el-button
-                v-if="isCap"
-                class="w-max px-10 rounded-md"
-                type="primary" @click="changeCapTeam"
-              >
-                <PhSwap :size="20" />
-                <span class="ml-10 hidden 2xs:flex">Передати капітанство</span>
-              </el-button>
+              <!-- TODO: endpoint not in API yet (leaveFromTeam, transferCaptaincy) -->
             </div>
           </div>
         </div>
@@ -137,13 +104,13 @@
                 rounded-xl bg-gray-800/50 hover:bg-gray-800 transition-colors backdrop-blur-sm"
               >
                 <el-image
-                  :src="getImageUrl(tournament.img_url)"
+                  :src="tournament.listBannerUrl"
                   class="w-[60px] max-w-full rounded-lg object-cover shrink-0"
                 />
 
                 <div class="flex flex-col w-full gap-15 min-w-0">
                   <h3 class="flex justify-between gap-20 items-center font-semibold text-sm text-white">
-                    <span class="text-lg truncate pr-2">{{ tournament.title }}</span>
+                    <span class="text-lg truncate pr-2">{{ tournament.name }}</span>
 
                     <el-tooltip placement="top" effect="dark">
                       <PhCalendarDots
@@ -154,34 +121,20 @@
                         <div class="flex flex-col gap-2 p-2 text-xs">
                           <div class="flex gap-2 justify-between">
                             <span class="text-white/70">Початок:</span>
-
                             <span class="text-white">
-                              {{ dayjs(tournament.start_time).format("D MMMM YYYY") }}
+                              {{ dayjs(tournament.tournamentStartsAt).format("D MMMM YYYY") }}
                             </span>
                           </div>
-
                           <div class="flex gap-2 justify-between">
                             <span class="text-white/70">Кінець:</span>
-
                             <span class="text-white">
-                              {{ dayjs(tournament.end_time).format("D MMMM YYYY") }}
+                              {{ dayjs(tournament.tournamentEndsAt).format("D MMMM YYYY") }}
                             </span>
                           </div>
                         </div>
                       </template>
                     </el-tooltip>
                   </h3>
-
-                  <div class="hidden sm:flex w-full gap-10">
-                    <DivisionTag
-                      class="flex-1 md:text-xs
-                      max-w-200" :divisionName="tournament.division?.name"
-                    />
-                    <TournamentTypeTag
-                      class="flex-1 md:text-xs
-                     normal-case max-w-200" :type="tournament.type"
-                    />
-                  </div>
                 </div>
               </RouterLink>
             </div>
@@ -197,18 +150,16 @@
       >
         <div class="grid xl:grid-cols-2 gap-40 min-h-0 h-fit">
           <div class="flex-1 h-fit w-full">
-            <h3 class="text-xl text-center font-semibold items-center justify-center gap-6 flex">
+              <h3 class="text-xl text-center font-semibold items-center justify-center gap-6 flex">
               Основа
-              <TeamAvg :team="team" />
             </h3>
             <el-divider class="mt-15" />
 
             <div class="mr-0 xl:mr-10 rounded-xl bg-gray-800/50 p-16 flex flex-col gap-20 min-h-0 justify-between">
               <PlayerCard
-                v-for="player in team?.players?.filter(p => p.is_team_main)"
+                v-for="player in team?.mainPlayers"
                 :key="player.id"
                 :player="player"
-                @removePlayer="teamsStore.removePlayerFromTeam(team?.id!, player.id)"
               />
 
               <template v-if="isAdmin">
@@ -243,10 +194,9 @@
 
             <div class="ml-0 xl:ml-10 rounded-xl bg-gray-800/30 p-16 flex flex-col gap-20 min-h-0">
               <PlayerCard
-                v-for="player in team?.players?.filter(p => !p.is_team_main)"
+                v-for="player in team?.reservedPlayers"
                 :key="player.id"
                 :player="player"
-                @removePlayer="teamsStore.removePlayerFromTeam(team?.id!, player.id)"
               />
 
               <template v-if="isAdmin">
@@ -280,18 +230,16 @@
 </template>
 
 <script setup lang="ts">
-import { PhDotsThree, PhSwap, PhCalendarDots, PhCopy, PhSignOut, PhPencil } from '@phosphor-icons/vue'
-import { getImageUrl } from '@/core/helpers'
-import { useWindowSize, useClipboard } from '@vueuse/core'
-import type { EDivision } from '@/components/team-tags/team.constants'
+import { PhDotsThree, PhCalendarDots, PhPencil } from '@phosphor-icons/vue'
+import { useWindowSize } from '@vueuse/core'
 import dayjs from 'dayjs'
 import 'dayjs/locale/uk'
+import type { TTeam as Team, TUpdateTeamDto as UpdateTeamDto } from '@/api/types/api.types'
 dayjs.locale('uk')
 
 const route = useRoute()
-const id = ref(Number(route.params.id))
+const id = String(route.params.id)
 
-const { copy } = useClipboard({ legacy: true })
 const { open, close } = useAppModals()
 
 const authStore = useAuthStore()
@@ -301,42 +249,31 @@ const isMobile = computed(() => currWindow.width.value < 850)
 const teamsStore = useTeamsStore()
 const playersStore = usePlayersStore()
 
-const team = ref<TTeam | null>(null)
-
-const isTeamPlayer = computed(() =>
-  team.value?.players?.some(el => el.id === authStore.user?.id) ?? false
-)
-const isCap = computed(() => {
-  return authStore.user?.is_cap && authStore.user.team_id === team.value?.id
-})
-
-const teamTournaments = computed(() => team.value?.tournaments ?? [])
+const team = ref<Team | null>(null)
 
 const isAdmin = computed(() => {
   return authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator
 })
 
+// TODO: endpoint not in API yet
+// const isTeamPlayer = computed(() => false)
+// const isCap = computed(() => false)
+const teamTournaments = computed(() => team.value?.tournament ? [team.value.tournament] : [])
+
 const mainSlotCounts = computed(() => {
-  const players = team.value?.players.filter(el => el.is_team_main)
-  return players ? Math.max(0, 5 - players.length) : 0
+  const count = team.value?.mainPlayers?.length ?? 0
+  return Math.max(0, 5 - count)
 })
 
 const reserveSlotCounts = computed(() => {
-  const players = team.value?.players.filter(el => !el.is_team_main)
-  return players ? Math.max(0, 3 - players.length) : 0
+  const count = team.value?.reservedPlayers?.length ?? 0
+  return Math.max(0, 3 - count)
 })
 
-async function leaveFromTeam () {
-  await teamsStore.leaveFromTeam()
-}
-
-function createChat () {
-  teamsService.createTeamChats(team.value?.id)
-}
-
-function deleteChat () {
-  teamsService.deleteTeamChats(team.value?.id)
-}
+// TODO: endpoint not in API yet
+// async function leaveFromTeam () { ... }
+// function createChat () { ... }
+// function deleteChat () { ... }
 
 function changeCapTeam () {
   if (!team.value?.id) return
@@ -347,16 +284,9 @@ function handleOpenAddPlayer (isMain: boolean) {
   open('PlayerAddToTeamModal', { team: team.value, isMain })
 }
 
-function copyDotaTeamID (id: number) {
-  if (!id) return
-  copy(String(id))
-  ElMessage.success('Dota id скопійовано')
-}
-
-async function handleTeamUpdate (payload: ICreateTeamForm) {
+async function handleTeamUpdate (payload: UpdateTeamDto) {
   try {
     await teamsStore.updateTeam(team.value!.id, payload)
-
     close('TeamCreateModal')
   } catch (e) {
     if (e instanceof Error) {
@@ -366,7 +296,6 @@ async function handleTeamUpdate (payload: ICreateTeamForm) {
 }
 
 onMounted(async () => {
-  team.value = await teamsStore.findTeam(id.value)
-  console.log(team)
+  team.value = await teamsStore.findTeam(id)
 })
 </script>

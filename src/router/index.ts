@@ -9,14 +9,14 @@ export const router = createRouter({
 router.beforeEach(async (to, from, next) => { // Перед роутингом будет проверка есть ли юзер
   const authStore = useAuthStore()
 
-  // Проверка при которой пользователь не сможет посещать страницы профиля и настроек профиля без токена
-  if (!authStore.token && (to.fullPath === '/profile' || to.fullPath === '/profile-settings')) {
+  if (!authStore.token && to.name === 'me') {
     return next('/')
   }
 
   if (!authStore.user) {
-    await authStore.fetchUser()
-    await authStore.getChats()
+    // TODO: endpoint not in API yet (fetchUser, getChats)
+    // await authStore.fetchUser()
+    // await authStore.getChats()
   }
   next()
 })

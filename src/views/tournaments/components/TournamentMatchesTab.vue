@@ -107,35 +107,29 @@
 <script setup lang="ts">
 import { PhArrowsClockwise, PhUsers } from '@phosphor-icons/vue'
 import MatchResultModal from '../modals/MatchResultModal.vue'
+import type { TMatch as Match } from '@/api/types/api.types'
 
-const props = defineProps<{tournamentId: number}>()
+const props = defineProps<{tournamentId: string}>()
 
-const matches = defineModel<TTournamentOpenMatch[]>('matches', { default: [] })
-console.log(matches.value)
+const matches = defineModel<Match[]>('matches', { default: [] })
 const apiPublicUrl = import.meta.env.VITE_API_PUBLIC_URL
 
-const tournamentStore = useTournamentStore()
 const loading = ref(false)
 
 const isResultModalOpen = ref(false)
-const selectedMatch = ref<TTournamentOpenMatch | null>(null)
+const selectedMatch = ref<Match | null>(null)
 
-function openResultModal (match: TTournamentOpenMatch) {
+function openResultModal (match: Match) {
   selectedMatch.value = match
   isResultModalOpen.value = true
 }
 
-async function handleResultSuccess (updatedMatches: TTournamentOpenMatch[]) {
+async function handleResultSuccess (updatedMatches: Match[]) {
   matches.value = updatedMatches
 }
 
 async function updateMatches () {
-  loading.value = true
-  try {
-    const res = await tournamentStore.getOpenMatches(props.tournamentId, false)
-    matches.value = res || []
-  } finally {
-    loading.value = false
-  }
+  // TODO: endpoint not in API yet (getOpenMatches)
+  loading.value = false
 }
 </script>

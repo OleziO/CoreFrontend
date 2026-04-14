@@ -36,34 +36,34 @@
 </template>
 
 <script setup lang="ts">
+import type { TTeam as Team } from '@/api/types/api.types'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps<{
-  team: TTeam | undefined
-  teamId: number
+  team: Team | undefined
+  teamId: string
 }>()
 
 const modelValue = defineModel<boolean>({ default: false })
 
-const selectedPlayerId = ref<number | null>(null)
-const teamsStore = useTeamsStore()
+const selectedPlayerId = ref<string | null>(null)
 
 const teamPlayers = computed(() => {
-  if (!props.team?.players) return []
-
-  // Исключаем текущего капитана из списка
-  return props.team.players
-    .filter(player => !player.is_cap)
-    .map(player => ({
-      value: player.id,
-      label: player.steam_name || player.user_name || `Гравець #${player.id}`
-    }))
+  const players = [
+    ...(props.team?.mainPlayers ?? []),
+    ...(props.team?.reservedPlayers ?? [])
+  ]
+  return players.map((player) => ({
+    value: player.id,
+    label: player.discordName || player.discordUsername || `Гравець #${player.id}`
+  }))
 })
 
 async function transferCaptaincy () {
   if (!selectedPlayerId.value || !props.teamId) return
 
-  await teamsStore.updateTeamCapitan(props.teamId, selectedPlayerId.value)
-
+  // TODO: endpoint not in API yet (updateTeamCapitan)
+  ElMessage.info('Функціонал передачі капітанства ще не реалізований в API')
   modelValue.value = false
 }
 </script>

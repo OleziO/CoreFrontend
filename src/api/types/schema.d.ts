@@ -4,2052 +4,6 @@
  */
 
 export interface paths {
-    "/metrics": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Metrics
-         * @description Endpoint that serves Prometheus metrics.
-         */
-        get: operations["metrics_metrics_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/token": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Login For Access Token
-         * @description Получение Bearer токена для авторизации в Swagger.
-         *
-         *     Для тестирования используйте:
-         *     - username: ID игрока (например, 1, 2, 3)
-         *     - password: можно оставить пустым или любое значение (не используется)
-         *
-         *     Токен будет действителен 7 дней.
-         */
-        post: operations["login_for_access_token_api_v1_token_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/token/by-id": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Get Token By Player Id
-         * @description Получение Bearer токена по ID игрока (альтернативный способ).
-         *
-         *     Параметры:
-         *     - player_id: ID игрока в базе данных
-         *
-         *     Токен будет действителен 7 дней.
-         */
-        post: operations["get_token_by_player_id_api_v1_token_by_id_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/players/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Players
-         * @description Получить список всех игроков с пагинацией и поиском.
-         */
-        get: operations["read_players_api_v1_players__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/players/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Users Me
-         * @description Получить данные текущего пользователя.
-         */
-        get: operations["read_users_me_api_v1_players_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/players/me/game-data": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update User Game Data
-         * @description Обновляет MMR, позицию и ранг для текущего пользователя.
-         */
-        patch: operations["update_user_game_data_api_v1_players_me_game_data_patch"];
-        trace?: never;
-    };
-    "/api/v1/players/me/notifications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Toggle Notifications
-         * @description Переключает настройку получения уведомлений для текущего пользователя.
-         */
-        patch: operations["toggle_notifications_api_v1_players_me_notifications_patch"];
-        trace?: never;
-    };
-    "/api/v1/players/{player_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Player
-         * @description Получить информацию о конкретном игроке по его ID.
-         */
-        get: operations["read_player_api_v1_players__player_id__get"];
-        put?: never;
-        post?: never;
-        /**
-         * Delete Player
-         * @description Удалить игрока из базы данных.
-         */
-        delete: operations["delete_player_api_v1_players__player_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/players/leave": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Leave Team Endpoint
-         * @description Позволяет текущему пользователю покинуть свою команду.
-         */
-        post: operations["leave_team_endpoint_api_v1_players_leave_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/players/{player_id}/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Verify Player Endpoint
-         * @description Верифицирует игрока (только для админов).
-         */
-        patch: operations["verify_player_endpoint_api_v1_players__player_id__verify_patch"];
-        trace?: never;
-    };
-    "/api/v1/players/{player_id}/mmr": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Player Mmr By Admin
-         * @description Обновляет MMR для указанного игрока (только для админов).
-         */
-        patch: operations["update_player_mmr_by_admin_api_v1_players__player_id__mmr_patch"];
-        trace?: never;
-    };
-    "/api/v1/players/{player_id}/points": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Player Points By Admin
-         * @description Обновляет MMR для указанного игрока (только для админов).
-         */
-        patch: operations["update_player_points_by_admin_api_v1_players__player_id__points_patch"];
-        trace?: never;
-    };
-    "/api/v1/players/respect": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Update Player Respect
-         * @description Обновляет respect для указанного игрока (только для верифицированных пользователей).
-         *     Пользователь может похвалить/дизреспектнуть другого игрока только один раз.
-         */
-        post: operations["update_player_respect_api_v1_players_respect_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/players/respect/staff": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Update Player Respect By Staff
-         * @description Обновляет respect для указанного игрока (только для стафа).
-         *     Стаф может установить любое значение respect без ограничений.
-         */
-        post: operations["update_player_respect_by_staff_api_v1_players_respect_staff_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Teams
-         * @description Получить список всех команд с расчётным дивизионом.
-         */
-        get: operations["read_teams_api_v1_teams__get"];
-        put?: never;
-        /**
-         * Create Team
-         * @description Создает новую команду. Текущий пользователь автоматически становится капитаном.
-         */
-        post: operations["create_team_api_v1_teams__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/{team_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Team Public Profile
-         * @description Получение публичной информации о команде по ее ID.
-         */
-        get: operations["read_team_public_profile_api_v1_teams__team_id__get"];
-        /**
-         * Update Team
-         * @description Обновляет данные команды. Доступно только капитану команды. или админу/модератору
-         */
-        put: operations["update_team_api_v1_teams__team_id__put"];
-        post?: never;
-        /**
-         * Disband Team Endpoint
-         * @description Позволяет капитану распустить свою команду.
-         */
-        delete: operations["disband_team_endpoint_api_v1_teams__team_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/{team_id}/invite/{player_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Invite Player To Team
-         * @description Пригласить игрока в команду. Доступно только капитану команды или админу.
-         */
-        post: operations["invite_player_to_team_api_v1_teams__team_id__invite__player_id__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/{team_id}/invites": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Team Invites
-         * @description Получить приглашения команды и данные о команде. Капитан видит все приглашения, обычный пользователь - только свои.
-         */
-        get: operations["get_team_invites_api_v1_teams__team_id__invites_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/invites/{invite_id}/accept": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Accept Team Invite
-         * @description Принять приглашение в команду. Обновляет статус приглашения на 'confirmed' и добавляет игрока в команду.
-         */
-        post: operations["accept_team_invite_api_v1_teams_invites__invite_id__accept_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/invites/{invite_id}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reject Team Invite
-         * @description Отклонить приглашение в команду. Обновляет статус приглашения на 'rejected'.
-         */
-        post: operations["reject_team_invite_api_v1_teams_invites__invite_id__reject_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/invites/{invite_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Team Invite By Id
-         * @description Получить данные о команде и приглашении по invite_id. Доступно игроку, которому отправлено приглашение, или капитану команды.
-         */
-        get: operations["get_team_invite_by_id_api_v1_teams_invites__invite_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/{team_id}/players/{player_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Add Player To Team Endpoint
-         * @description Добавляет игрока в команду. Доступно только для админов.
-         */
-        post: operations["add_player_to_team_endpoint_api_v1_teams__team_id__players__player_id__post"];
-        /**
-         * Remove Player From Team Endpoint
-         * @description Удаляет игрока из команды. Доступно только для админов.
-         */
-        delete: operations["remove_player_from_team_endpoint_api_v1_teams__team_id__players__player_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/{team_id}/captain/{new_captain_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Transfer Captaincy Endpoint
-         * @description Передает капитанство другому игроку команды. Доступно капитану команды или админу.
-         */
-        post: operations["transfer_captaincy_endpoint_api_v1_teams__team_id__captain__new_captain_id__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/{team_id}/tournaments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Team Tournaments
-         * @description Получить все турниры, в которых участвовала команда (без списка участников).
-         */
-        get: operations["get_team_tournaments_api_v1_teams__team_id__tournaments_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/{team_id}/matches": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Team Matches
-         * @description Получить все матчи, в которых участвовала команда.
-         */
-        get: operations["get_team_matches_api_v1_teams__team_id__matches_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/{team_id}/recreate_discord": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Recreate Team Discord
-         * @description Полностью пересоздает Discord ресурсы команды (роль, каналы).
-         *     Удаляет существующие и создает новые.
-         *     Доступно только администраторам.
-         */
-        post: operations["recreate_team_discord_api_v1_teams__team_id__recreate_discord_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/{team_id}/cleanup_discord": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Cleanup Team Discord
-         * @description Полностью удаляет Discord ресурсы команды (роль, каналы).
-         *     Доступно только администраторам.
-         */
-        post: operations["cleanup_team_discord_api_v1_teams__team_id__cleanup_discord_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tournaments/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Tournaments
-         * @description Получить список всех турниров.
-         */
-        get: operations["read_tournaments_api_v1_tournaments__get"];
-        put?: never;
-        /**
-         * Create Tournament
-         * @description Создать новый турнир (только для админов).
-         */
-        post: operations["create_tournament_api_v1_tournaments__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tournaments/all": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Tournaments
-         * @description Получить список всех турниров.
-         */
-        get: operations["read_tournaments_api_v1_tournaments_all_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tournaments/{tournament_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Tournament
-         * @description Получить информацию о турнире по ID.
-         */
-        get: operations["read_tournament_api_v1_tournaments__tournament_id__get"];
-        /**
-         * Update Tournament
-         * @description Обновить турнир (только для админов).
-         */
-        put: operations["update_tournament_api_v1_tournaments__tournament_id__put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tournaments/{tournament_id}/matches": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Tournament Matches
-         * @description Получить все матчи турнира.
-         */
-        get: operations["read_tournament_matches_api_v1_tournaments__tournament_id__matches_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tournaments/{tournament_id}/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Register For Tournament
-         * @description Регистрирует команду текущего пользователя на турнир.
-         */
-        post: operations["register_for_tournament_api_v1_tournaments__tournament_id__register_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tournaments/{tournament_id}/unregister": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Unregister From Tournament
-         * @description Отменяет регистрацию команды на турнир.
-         */
-        delete: operations["unregister_from_tournament_api_v1_tournaments__tournament_id__unregister_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tournaments/{tournament_id}/unregister/{team_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Admin Unregister Team From Tournament
-         * @description Отменяет регистрацию команды на турнир (только для админов).
-         */
-        delete: operations["admin_unregister_team_from_tournament_api_v1_tournaments__tournament_id__unregister__team_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tournaments/{tournament_id}/start-bracket": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Start Tournament Bracket
-         * @description Создает сетку Challonge для обычного турнира:
-         *     1. Получает все команды-участники турнира.
-         *     2. Создает турнир на Challonge.
-         *     3. Добавляет команды как участников.
-         *     4. Стартует сетку и сохраняет матчи в tournament_matches.
-         *     5. Сохраняет ссылку на Challonge в поле bracket турнира.
-         *
-         *     Args:
-         *         tournament_id: ID турнира
-         *         tournament_type: Тип турнира - "single elimination" или "double elimination" (по умолчанию "single elimination")
-         */
-        post: operations["start_tournament_bracket_api_v1_tournaments__tournament_id__start_bracket_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tournaments/{tournament_id}/matches/{match_id}/result": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Match Result
-         * @description Обновляет результат матча обычного турнира:
-         *     1. Обновляет результат матча в БД.
-         *     2. Продвигает победителя в следующий матч по сетке.
-         *     3. Возвращает все открытые матчи турнира.
-         */
-        put: operations["update_match_result_api_v1_tournaments__tournament_id__matches__match_id__result_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tournaments/{tournament_id}/matches/open": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Open Matches
-         * @description Получает все матчи турнира, готовые к игре (без winner_id), с командами.
-         */
-        get: operations["get_open_matches_api_v1_tournaments__tournament_id__matches_open_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tournaments/{tournament_id}/open-registration": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Open Tournament Registration
-         * @description Открывает регистрацию на турнир:
-         *     1. Проверяет, что турнир существует.
-         *     2. Проверяет, что текущий статус - "pre-registration".
-         *     3. Меняет статус на "registration".
-         */
-        post: operations["open_tournament_registration_api_v1_tournaments__tournament_id__open_registration_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tournaments/{tournament_id}/reward-winners": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reward Tournament Winners
-         * @description Награждает победителей турнира и завершает турнир:
-         *     1. Добавляет balance всем игрокам команды победителей.
-         *     2. Обновляет статус турнира на "ended".
-         */
-        post: operations["reward_tournament_winners_api_v1_tournaments__tournament_id__reward_winners_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/matches/{match_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Match
-         * @description Получить информацию о матче.
-         */
-        get: operations["get_match_api_v1_matches__match_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/matches/{match_id}/call-moder": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Call Moderator
-         * @description Вызвать модератора для матча.
-         */
-        post: operations["call_moderator_api_v1_matches__match_id__call_moder_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/matches/{match_id}/set-ready": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Set Ready
-         * @description Установить готовность команды к матчу.
-         */
-        post: operations["set_ready_api_v1_matches__match_id__set_ready_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/matches/{match_id}/start": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Admin Start Match
-         * @description Принудительный запуск лобби админом.
-         */
-        post: operations["admin_start_match_api_v1_matches__match_id__start_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/matches/{match_id}/create-lobby": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Admin Create Lobby
-         * @description Принудительно создать лобби для матча (админ).
-         */
-        post: operations["admin_create_lobby_api_v1_matches__match_id__create_lobby_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/matches/{match_id}/invite-me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Invite Self To Lobby
-         * @description Отправить себе инвайт в лобби матча.
-         */
-        post: operations["invite_self_to_lobby_api_v1_matches__match_id__invite_me_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/matches/{match_id}/set-result": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Admin Set Match Result
-         * @description Установить результат матча (только для админов).
-         */
-        post: operations["admin_set_match_result_api_v1_matches__match_id__set_result_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/teams/{tournament_id}/players/{player_id}/create-team": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Mix Team Endpoint
-         * @description Создает микс-команду для капитана.
-         *     Принимает данные формы (multipart/form-data) для загрузки файла.
-         */
-        post: operations["create_mix_team_endpoint_api_v1_mix_teams__tournament_id__players__player_id__create_team_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/teams/{team_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Mix Team
-         * @description Получает mix команду по ID.
-         */
-        get: operations["get_mix_team_api_v1_mix_teams__team_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/teams/{team_id}/recreate_discord": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Recreate Mix Team Discord
-         * @description Полностью пересоздает Discord ресурсы микс-команды (роль, каналы).
-         *     Удаляет существующие и создает новые.
-         *     Доступно только администраторам.
-         */
-        post: operations["recreate_mix_team_discord_api_v1_mix_teams__team_id__recreate_discord_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/teams/{team_id}/cleanup_discord": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Cleanup Mix Team Discord
-         * @description Полностью удаляет Discord ресурсы микс-команды (роль, каналы).
-         *     Доступно только администраторам.
-         */
-        post: operations["cleanup_mix_team_discord_api_v1_mix_teams__team_id__cleanup_discord_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Mix Tournaments
-         * @description Получить список всех mix-турниров с командами.
-         */
-        get: operations["read_mix_tournaments_api_v1_mix_tournaments__get"];
-        put?: never;
-        /**
-         * Create Mix Tournament
-         * @description Создает новый mix-турнир.
-         */
-        post: operations["create_mix_tournament_api_v1_mix_tournaments__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Mix Tournament
-         * @description Получить mix-турнир по ID с командами.
-         */
-        get: operations["read_mix_tournament_api_v1_mix_tournaments__tournament_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Register For Mix Tournament
-         * @description Регистрирует игрока на mix-турнир.
-         */
-        post: operations["register_for_mix_tournament_api_v1_mix_tournaments__tournament_id__register_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}/unregister": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Unregister From Mix Tournament
-         * @description Отменяет регистрацию игрока на mix-турнир.
-         */
-        delete: operations["unregister_from_mix_tournament_api_v1_mix_tournaments__tournament_id__unregister_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}/distribute-pools": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Distribute Players To Pools
-         * @description Распределяет игроков по пулам (1-5) на основе MMR.
-         */
-        post: operations["distribute_players_to_pools_api_v1_mix_tournaments__tournament_id__distribute_pools_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}/recruit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Recruit Player To Team
-         * @description Рекрутирует случайного игрока из доступного пула в команду капитана.
-         */
-        post: operations["recruit_player_to_team_api_v1_mix_tournaments__tournament_id__recruit_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}/players/{player_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Admin Register Player For Tournament
-         * @description Регистрирует игрока на mix-турнир (только для администраторов).
-         *     Администратор может зарегистрировать любого игрока, даже с ролью unverified.
-         */
-        post: operations["admin_register_player_for_tournament_api_v1_mix_tournaments__tournament_id__players__player_id__post"];
-        /**
-         * Admin Remove Player From Tournament
-         * @description Удаляет игрока из mix-турнира (только для администраторов).
-         *     Удаляет игрока из команды через MixPool.
-         *     Можно удалить игрока на любом этапе турнира.
-         */
-        delete: operations["admin_remove_player_from_tournament_api_v1_mix_tournaments__tournament_id__players__player_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}/players/{player_id}/set-captain/{is_cap}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Admin Register Player For Tournament
-         * @description Меняет поле капитана для игрока в турнире.
-         */
-        post: operations["admin_register_player_for_tournament_api_v1_mix_tournaments__tournament_id__players__player_id__set_captain__is_cap__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}/players/{player_id}/set-pool/{pool}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Admin Set Pool For Player
-         * @description Меняет пул игрока (1-5) вручную.
-         *     Только для администраторов.
-         */
-        post: operations["admin_set_pool_for_player_api_v1_mix_tournaments__tournament_id__players__player_id__set_pool__pool__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}/teams/{team_id}/players/{player_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Admin Add Player To Team
-         * @description Добавляет игрока в команду на mix-турнире (только для стафа).
-         *
-         *     Проверяет:
-         *     - Игрок верифицирован
-         *     - Игрок зарегистрирован на турнир
-         *     - У игрока указан микс пул
-         *     - Пул игрока не был уже использован капитаном команды
-         */
-        post: operations["admin_add_player_to_team_api_v1_mix_tournaments__tournament_id__teams__team_id__players__player_id__post"];
-        /**
-         * Admin Remove Player From Team
-         * @description Удаляет игрока из команды на mix-турнире (только для стафа).
-         *
-         *     При удалении:
-         *     - Удаляет игрока из команды
-         *     - Удаляет пул игрока из mix_pool_used капитана
-         */
-        delete: operations["admin_remove_player_from_team_api_v1_mix_tournaments__tournament_id__teams__team_id__players__player_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}/start-bracket": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Start Mix Bracket
-         * @description Создает сетку Challonge для микс-турнира:
-         *     1. Получает все микс-команды турнира.
-         *     2. Создает турнир на Challonge.
-         *     3. Добавляет команды как участников.
-         *     4. Стартует сетку и сохраняет матчи в tournament_matches_mix.
-         *     5. Сохраняет ссылку на Challonge в поле bracket турнира.
-         */
-        post: operations["start_mix_bracket_api_v1_mix_tournaments__tournament_id__start_bracket_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}/matches/{match_id}/result": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Mix Match Result
-         * @description Обновляет результат матча микс-турнира:
-         *     1. Обновляет результат на Challonge.
-         *     2. Обновляет данные матча в БД (state, winner_id, winner_challonge_id, loser_challonge_id).
-         *     3. Продвигает победителя в следующий матч по сетке.
-         *     Возвращает список всех матчей турнира с командами.
-         */
-        put: operations["update_mix_match_result_api_v1_mix_tournaments__tournament_id__matches__match_id__result_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}/matches/open": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Open Matches
-         * @description Получает все матчи турнира со статусом 'open'.
-         *     Возвращает данные о матчах вместе с командами и их игроками.
-         */
-        get: operations["get_open_matches_api_v1_mix_tournaments__tournament_id__matches_open_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}/teams": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Tournament Teams
-         * @description Получает все команды микс-турнира со слотами.
-         *     Возвращает список всех команд, зарегистрированных на турнир, вместе с их игроками.
-         *     Если в команде меньше 5 игроков, пустые слоты заполняются информацией о доступных пулах.
-         */
-        get: operations["get_tournament_teams_api_v1_mix_tournaments__tournament_id__teams_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mix/tournaments/{tournament_id}/reward-winners": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reward Mix Tournament Winners
-         * @description Награждает победителей микс-турнира и завершает турнир:
-         *     1. Добавляет balance и points всем игрокам команды победителей.
-         *     2. Обновляет статус турнира на "ended".
-         */
-        post: operations["reward_mix_tournament_winners_api_v1_mix_tournaments__tournament_id__reward_winners_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/roles/visible": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get visible roles
-         * @description Возвращает список всех ролей с is_visible = True.
-         */
-        get: operations["get_visible_roles_api_v1_roles_visible_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/roles/all": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get all roles
-         * @description Возвращает список всех ролей.
-         */
-        get: operations["get_all_roles_api_v1_roles_all_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/roles/{player_id}/roles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Player Roles
-         * @description Обновить список ролей пользователя.
-         *
-         *     - **player_id**: ID пользователя
-         *     - **role_ids**: Список ID ролей, которые нужно установить (старые роли будут заменены)
-         *
-         *     Примечание: Только пользователи с ролью admin могут выдавать роль admin.
-         */
-        put: operations["update_player_roles_api_v1_roles__player_id__roles_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/steam/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Login Steam
-         * @description Шаг 1: Создание state_token и перенаправление на Steam.
-         */
-        get: operations["login_steam_api_v1_steam_login_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/steam/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Auth Steam Callback
-         * @description Шаг 2: Проверка ответа от Steam и привязка аккаунта к пользователю из state_token.
-         */
-        get: operations["auth_steam_callback_api_v1_steam_callback_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/discord/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Login Discord
-         * @description Шаг 1: Создание state_token и перенаправление на Discord для аутентификации.
-         */
-        get: operations["login_discord_api_v1_discord_login_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/discord/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Auth Discord Callback
-         * @description Шаг 2: Discord возвращает пользователя сюда. Проверяем state, обмениваем код на токен.
-         */
-        get: operations["auth_discord_callback_api_v1_discord_callback_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/requests/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Requests
-         * @description Получить список запросов с фильтрацией.
-         *     Доступно только для администраторов.
-         */
-        get: operations["read_requests_api_v1_requests__get"];
-        put?: never;
-        /**
-         * Create Request
-         * @description Создать новый запрос.
-         *     Доступно для авторизованных пользователей.
-         */
-        post: operations["create_request_api_v1_requests__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/requests/count": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Requests Count
-         * @description Получить количество запросов с фильтрацией.
-         *     Доступно только для администраторов.
-         */
-        get: operations["get_requests_count_api_v1_requests_count_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/requests/{request_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Request
-         * @description Получить запрос по ID.
-         *     Доступно только для администраторов.
-         */
-        get: operations["read_request_api_v1_requests__request_id__get"];
-        /**
-         * Update Request
-         * @description Обновить запрос.
-         *     Доступно только для администраторов.
-         */
-        put: operations["update_request_api_v1_requests__request_id__put"];
-        post?: never;
-        /**
-         * Delete Request
-         * @description Удалить запрос.
-         *     Доступно только для администраторов.
-         */
-        delete: operations["delete_request_api_v1_requests__request_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/requests/{request_id}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Approve Request
-         * @description Одобрить запрос.
-         *     Для запросов типа MMR - обновляет MMR игрока и устанавливает статус 'approved'.
-         *     Доступно только для администраторов и модераторов.
-         */
-        post: operations["approve_request_api_v1_requests__request_id__approve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/requests/{request_id}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reject Request
-         * @description Отклонить запрос.
-         *     Устанавливает статус запроса 'rejected'.
-         *     Доступно только для администраторов и модераторов.
-         */
-        post: operations["reject_request_api_v1_requests__request_id__reject_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/requests/{request_id}/take": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Take Request
-         * @description Взять запрос в работу.
-         *     Устанавливает статус запроса 'taken' и назначает его текущему пользователю.
-         *     Доступно только для администраторов и модераторов.
-         */
-        post: operations["take_request_api_v1_requests__request_id__take_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/bug-requests/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Bug Requests
-         * @description Получить список запросов на исправление багов с фильтрацией.
-         *     Доступно только для администраторов и модераторов.
-         */
-        get: operations["read_bug_requests_api_v1_bug_requests__get"];
-        put?: never;
-        /**
-         * Create Bug Request
-         * @description Создать новый запрос на исправление бага.
-         *     Изображение обязательно для загрузки.
-         *     Доступно для авторизованных пользователей.
-         */
-        post: operations["create_bug_request_api_v1_bug_requests__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/bug-requests/{bug_request_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Bug Request
-         * @description Получить запрос на исправление бага по ID.
-         *     Доступно только для администраторов и модераторов.
-         */
-        get: operations["read_bug_request_api_v1_bug_requests__bug_request_id__get"];
-        /**
-         * Update Bug Request
-         * @description Обновить запрос на исправление бага.
-         *     Доступно только для администраторов и модераторов.
-         */
-        put: operations["update_bug_request_api_v1_bug_requests__bug_request_id__put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/bug-requests/{bug_request_id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Bug Request Status
-         * @description Изменить статус запроса на исправление бага.
-         *     Доступно только для администраторов и модераторов.
-         */
-        patch: operations["update_bug_request_status_api_v1_bug_requests__bug_request_id__status_patch"];
-        trace?: never;
-    };
-    "/api/v1/constants/chats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Получить все чаты
-         * @description Получить список всех чатов Discord с привязанными ролями.
-         *
-         *     Возвращает:
-         *     - discord_id: ID чата в Discord
-         *     - label: Название/метка чата
-         *     - roles: Список ролей, связанных с чатом
-         *     - role_ids: Список ID ролей (вычисляемое поле)
-         */
-        get: operations["get_all_chats_api_v1_constants_chats_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/constants/chats/{discord_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Получить чат по ID
-         * @description Получить информацию о конкретном чате по его Discord ID.
-         *
-         *     Args:
-         *         discord_id: Discord ID чата
-         *
-         *     Возвращает:
-         *         Информацию о чате с привязанными ролями
-         */
-        get: operations["get_chat_by_id_api_v1_constants_chats__discord_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/constants/rangs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Получить все ранги
-         * @description Получить список всех рангов Dota 2.
-         *
-         *     Ранги используются для определения уровня игроков и формирования дивизионов.
-         *     Включает Herald, Guardian, Crusader, Archon, Legend, Ancient, Divine, Immortal.
-         */
-        get: operations["get_all_rangs_api_v1_constants_rangs_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/constants/divisions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Получить все дивизионы
-         * @description Получить список всех дивизионов турниров.
-         *
-         *     Дивизионы определяют уровень турниров и команд на основе среднего MMR.
-         */
-        get: operations["get_all_divisions_api_v1_constants_divisions_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/constants/tournaments/{tournament_id}/pool-stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Получить статистику пулов турнира
-         * @description Получить статистику по пулам микс-турнира.
-         *
-         *     Возвращает минимальный и максимальный MMR для каждого пула (1-5).
-         *     Используется для отображения информации о доступных пулах при формировании команд.
-         *
-         *     Args:
-         *         tournament_id: ID микс-турнира
-         *
-         *     Returns:
-         *         Статистика по всем пулам турнира с min_mmr и max_mmr для каждого пула
-         */
-        get: operations["get_tournament_pool_stats_api_v1_constants_tournaments__tournament_id__pool_stats_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/notifications/send": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Send Notification
-         * @description Отправляет уведомление в указанный Discord-чат с упоминанием выбранных игроков.
-         *     Пингуются только те игроки, у которых включены уведомления (is_receive_notification=True)
-         *     и есть привязанный Discord ID.
-         */
-        post: operations["send_notification_api_v1_notifications_send_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/notifications/send_mix_tournament": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Send Notification
-         * @description Отправляет уведомление в указанный Discord-чат с упоминанием выбранных игроков.
-         *     Пингуются только те игроки, у которых включены уведомления (is_receive_notification=True)
-         *     и есть привязанный Discord ID.
-         */
-        post: operations["send_notification_api_v1_notifications_send_mix_tournament_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mail/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get User Mails
-         * @description Получить все письма текущего пользователя.
-         *     Сортировка: сначала новые (по mail_id в порядке убывания).
-         *
-         *     Параметры:
-         *     - is_readed: Фильтр по статусу прочтения (True/False, опционально)
-         */
-        get: operations["get_user_mails_api_v1_mail__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mail/unread-count": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Unread Count
-         * @description Получить количество непрочитанных писем текущего пользователя.
-         */
-        get: operations["get_unread_count_api_v1_mail_unread_count_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/mail/{mail_id}/read": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Mark Mail As Read
-         * @description Обновить статус прочтения письма для текущего пользователя.
-         *
-         *     Параметры:
-         *     - mail_id: ID письма
-         *     - is_readed: Статус прочтения (True/False)
-         */
-        patch: operations["mark_mail_as_read_api_v1_mail__mail_id__read_patch"];
-        trace?: never;
-    };
-    "/api/v1/mail/mark-all-read": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Mark All Mails As Read
-         * @description Отметить все письма текущего пользователя как прочитанные.
-         */
-        patch: operations["mark_all_mails_as_read_api_v1_mail_mark_all_read_patch"];
-        trace?: never;
-    };
-    "/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Root
-         * @description Корневой эндпоинт.
-         */
-        get: operations["read_root__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/health": {
         parameters: {
             query?: never;
@@ -2057,11 +11,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Health Check
-         * @description Проверка состояния сервиса.
-         */
-        get: operations["health_check_health_get"];
+        get: operations["HealthController_getHealth"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2070,1307 +20,335 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/players": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlayersController_findAll"];
+        put?: never;
+        post: operations["PlayersController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/players/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlayersController_findOne"];
+        put?: never;
+        post?: never;
+        delete: operations["PlayersController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["PlayersController_update"];
+        trace?: never;
+    };
+    "/user-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UserRolesController_findAll"];
+        put?: never;
+        post: operations["UserRolesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user-roles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UserRolesController_findOne"];
+        put?: never;
+        post?: never;
+        delete: operations["UserRolesController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["UserRolesController_update"];
+        trace?: never;
+    };
+    "/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TeamsController_findAll"];
+        put?: never;
+        post: operations["TeamsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/teams/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TeamsController_findOne"];
+        put?: never;
+        post?: never;
+        delete: operations["TeamsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["TeamsController_update"];
+        trace?: never;
+    };
+    "/tournaments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TournamentsController_findAll"];
+        put?: never;
+        post: operations["TournamentsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TournamentsController_findOne"];
+        put?: never;
+        post?: never;
+        delete: operations["TournamentsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["TournamentsController_update"];
+        trace?: never;
+    };
+    "/matches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MatchesController_findAll"];
+        put?: never;
+        post: operations["MatchesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/matches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MatchesController_findOne"];
+        put?: never;
+        post?: never;
+        delete: operations["MatchesController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["MatchesController_update"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** Body_create_bug_request_api_v1_bug_requests__post */
-        Body_create_bug_request_api_v1_bug_requests__post: {
-            /**
-             * Image
-             * Format: binary
-             */
-            image: string;
-            /**
-             * Status
-             * @default new
-             */
-            status: string | null;
-            /** Detail */
-            detail?: string | null;
-            /** Branch */
-            branch?: string | null;
+        CreatePlayerDto: {
+            steamId: string;
+            discordId: string;
+            telegramId: string;
+            avatarUrl?: string;
+            discordName: string;
+            discordUsername: string;
+            rating: number;
         };
-        /** Body_create_mix_team_endpoint_api_v1_mix_teams__tournament_id__players__player_id__create_team_post */
-        Body_create_mix_team_endpoint_api_v1_mix_teams__tournament_id__players__player_id__create_team_post: {
-            /** Team Name */
-            team_name: string;
-            /** Team Dota Id */
-            team_dota_id: number;
-            /** Team Avatar */
-            team_avatar?: string | null;
+        Player: {
+            id: string;
+            steamId: string;
+            discordId: string;
+            telegramId: string;
+            avatarUrl: string;
+            discordName: string;
+            discordUsername: string;
+            rating: number;
+            /** Format: date-time */
+            verifiedAt: string;
+            roles: components["schemas"]["UserRoles"][];
         };
-        /** Body_create_mix_tournament_api_v1_mix_tournaments__post */
-        Body_create_mix_tournament_api_v1_mix_tournaments__post: {
-            /** Title */
-            title: string;
-            /** Description */
-            description?: string | null;
-            /** Prizes */
-            prizes?: string | null;
-            /** Start Time */
-            start_time: string;
-            /** End Time */
-            end_time: string;
-            /** Start Registration */
-            start_registration: string;
-            /** End Registration */
-            end_registration: string;
-            /** Status */
-            status: string;
-            /**
-             * Img
-             * Format: binary
-             */
-            img: string;
+        Match: {
+            id: string;
+            teamA: components["schemas"]["Team"];
+            teamB: components["schemas"]["Team"];
+            winner: components["schemas"]["Team"];
+            dotaMatchId: string;
         };
-        /** Body_create_request_api_v1_requests__post */
-        Body_create_request_api_v1_requests__post: {
-            /** Type */
-            type?: string | null;
-            /** Detail */
-            detail?: string | null;
-        };
-        /** Body_create_team_api_v1_teams__post */
-        Body_create_team_api_v1_teams__post: {
-            /** Team Name */
-            team_name: string;
-            /** Team Id */
-            team_id: number;
-            /**
-             * Avatar
-             * Format: binary
-             */
-            avatar: string;
-        };
-        /** Body_create_tournament_api_v1_tournaments__post */
-        Body_create_tournament_api_v1_tournaments__post: {
-            /** Title */
-            title: string;
-            /** Description */
-            description?: string | null;
-            /** Prizes */
-            prizes?: string | null;
-            /** Division Id */
-            division_id?: number | null;
-            /** Start Time */
-            start_time: string;
-            /** End Time */
-            end_time: string;
-            /** Start Registration */
-            start_registration: string;
-            /** End Registration */
-            end_registration: string;
-            /** Status */
-            status: string;
-            /** Limit */
-            limit?: number | null;
-            /** Type */
-            type?: string | null;
-            /**
-             * Img
-             * Format: binary
-             */
-            img: string;
-        };
-        /** Body_login_for_access_token_api_v1_token_post */
-        Body_login_for_access_token_api_v1_token_post: {
-            /** Grant Type */
-            grant_type?: string | null;
-            /** Username */
-            username: string;
-            /**
-             * Password
-             * Format: password
-             */
-            password: string;
-            /**
-             * Scope
-             * @default
-             */
-            scope: string;
-            /** Client Id */
-            client_id?: string | null;
-            /**
-             * Client Secret
-             * Format: password
-             */
-            client_secret?: string | null;
-        };
-        /** Body_update_team_api_v1_teams__team_id__put */
-        Body_update_team_api_v1_teams__team_id__put: {
-            /** Team Name */
-            team_name: string;
-            /** Dota Team Id */
-            dota_team_id: number;
-            /** Avatar */
-            avatar?: string | null;
-        };
-        /** Body_update_tournament_api_v1_tournaments__tournament_id__put */
-        Body_update_tournament_api_v1_tournaments__tournament_id__put: {
-            /** Title */
-            title: string;
-            /** Description */
-            description?: string | null;
-            /** Prizes */
-            prizes?: string | null;
-            /** Division Id */
-            division_id?: number | null;
-            /** Start Time */
-            start_time: string;
-            /** End Time */
-            end_time: string;
-            /** Start Registration */
-            start_registration: string;
-            /** End Registration */
-            end_registration: string;
-            /** Status */
-            status: string;
-            /** Limit */
-            limit?: number | null;
-            /** Type */
-            type?: string | null;
-            /** Img */
-            img?: string | null;
-        };
-        /** Bot */
-        Bot: {
-            /** Bot Name */
-            bot_name?: string | null;
-            /** Id */
-            id: number;
-        };
-        /**
-         * BracketType
-         * @enum {string}
-         */
-        BracketType: "upper" | "lower" | "grand_final";
-        /**
-         * BugRequest
-         * @description Схема запроса на исправление бага с полной информацией.
-         */
-        BugRequest: {
-            /** Status */
-            status?: string | null;
-            /** Detail */
-            detail?: string | null;
-            /** Img Url */
-            img_url?: string | null;
-            /** Branch */
-            branch?: string | null;
-            /** Requestor Id */
-            requestor_id?: number | null;
-            /** Assign Id */
-            assign_id?: number | null;
-            /** Id */
-            id: number;
-            /**
-             * Created On
-             * Format: date-time
-             */
-            created_on: string;
-            requestor?: components["schemas"]["PlayerPublic"] | null;
-            assign?: components["schemas"]["PlayerPublic"] | null;
-        };
-        /**
-         * BugRequestStatusUpdate
-         * @description Схема для изменения статуса запроса.
-         */
-        BugRequestStatusUpdate: {
-            /** Status */
-            status: string;
-        };
-        /**
-         * BugRequestUpdate
-         * @description Схема для обновления запроса на исправление бага.
-         */
-        BugRequestUpdate: {
-            /** Status */
-            status?: string | null;
-            /** Detail */
-            detail?: string | null;
-            /** Img Url */
-            img_url?: string | null;
-            /** Branch */
-            branch?: string | null;
-            /** Assign Id */
-            assign_id?: number | null;
-        };
-        /**
-         * ChatWithRoles
-         * @description Расширенная схема чата с полной информацией о ролях.
-         */
-        ChatWithRoles: {
-            /**
-             * Discord Id
-             * @description Discord ID чата
-             */
-            discord_id: string;
-            /**
-             * Label
-             * @description Название/метка чата
-             */
-            label?: string | null;
-            /**
-             * Roles
-             * @description Полная информация о ролях
-             */
-            roles?: components["schemas"]["UserType"][];
-            /**
-             * Role Ids
-             * @description Получить список ID ролей из связанных объектов.
-             */
-            readonly role_ids: number[];
-        };
-        /** Division */
-        Division: {
-            /** Name */
-            name: string;
-            /** Img Url */
-            img_url?: string | null;
-            /** Start Mmr */
-            start_mmr?: number | null;
-            /** Stop Mmr */
-            stop_mmr?: number | null;
-            /** Id */
-            id: number;
-        };
-        /** DivisionBase */
-        DivisionBase: {
-            /** Name */
-            name: string;
-            /** Img Url */
-            img_url?: string | null;
-            /** Start Mmr */
-            start_mmr?: number | null;
-            /** Stop Mmr */
-            stop_mmr?: number | null;
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /**
-         * Mail
-         * @description Схема письма с полной информацией.
-         */
-        Mail: {
-            /** Type */
-            type?: string | null;
-            /** Message */
-            message?: string | null;
-            /** Target Group */
-            target_group?: string | null;
-            /** Invite Id */
-            invite_id?: number | null;
-            /**
-             * Created On
-             * Format: date-time
-             */
-            created_on: string;
-            /** Id */
-            id: number;
-        };
-        /**
-         * MailBox
-         * @description Схема почтового ящика с полной информацией.
-         */
-        MailBox: {
-            /** Player Id */
-            player_id: number;
-            /** Mail Id */
-            mail_id: number;
-            /**
-             * Is Readed
-             * @default false
-             */
-            is_readed: boolean;
-            mail?: components["schemas"]["Mail"] | null;
-        };
-        /**
-         * MatchMixResultUpdate
-         * @description Схема для обновления результата матча mix-турнира.
-         */
-        MatchMixResultUpdate: {
-            /** Team 1 Score */
-            team_1_score: number;
-            /** Team 2 Score */
-            team_2_score: number;
-        };
-        /**
-         * MatchResultUpdate
-         * @description Схема для обновления результата матча.
-         */
-        MatchResultUpdate: {
-            /** Team 1 Score */
-            team_1_score: number;
-            /** Team 2 Score */
-            team_2_score: number;
-        };
-        /** MixPool */
-        MixPool: {
-            /** Pool */
-            pool?: number | null;
-            /**
-             * Is Free
-             * @default true
-             */
-            is_free: boolean;
-            /** Tournament Id */
-            tournament_id?: number | null;
-            /** Team Id */
-            team_id?: number | null;
-            /**
-             * Is Cap
-             * @default false
-             */
-            is_cap: boolean;
-            /** Mix Pool Used */
-            mix_pool_used?: number[] | null;
-            /** Player Id */
-            player_id: number;
-            player?: components["schemas"]["PlayerPublic"] | null;
-        };
-        /**
-         * MixTournamentRewardWinners
-         * @description Схема для награждения победителей микс-турнира.
-         */
-        MixTournamentRewardWinners: {
-            /** Winner Team Id */
-            winner_team_id: number;
-            /**
-             * Balance
-             * @default 0
-             */
-            balance: number;
-            /**
-             * Points
-             * @default 0
-             */
-            points: number;
-        };
-        /** MixedTeam */
-        MixedTeam: {
-            /** Team Name */
-            team_name?: string | null;
-            /** Img Url */
-            img_url?: string | null;
-            /** Id */
-            id: number;
-        };
-        /**
-         * MixedTeamWithPlayers
-         * @description Схема mix-команды с игроками.
-         */
-        MixedTeamWithPlayers: {
-            /** Id */
-            id: number;
-            /** Team Name */
-            team_name?: string | null;
-            /** Img Url */
-            img_url?: string | null;
-            /** Dota Team Id */
-            dota_team_id?: number | null;
-            /**
-             * Players
-             * @default []
-             */
-            players: components["schemas"]["PlayerPublic"][];
-        };
-        /**
-         * MixedTeamWithSlots
-         * @description Схема mix-команды со слотами (ID игроков + информация о пулах для пустых слотов).
-         */
-        MixedTeamWithSlots: {
-            /** Id */
-            id: number;
-            /** Team Name */
-            team_name?: string | null;
-            /** Img Url */
-            img_url?: string | null;
-            /** Dota Team Id */
-            dota_team_id?: number | null;
-            /** Tournament Id */
-            tournament_id: number;
-            /**
-             * Slots
-             * @default []
-             */
-            slots: components["schemas"]["TeamSlot"][];
-        };
-        /** NotificationRequest */
-        NotificationRequest: {
-            /** Players Ids */
-            players_ids: number[];
-            /** Chat Discord Id */
-            chat_discord_id: string;
-            /** Message */
-            message: string;
-            /**
-             * Signature
-             * @default false
-             */
-            signature: boolean;
-        };
-        /** NotificationRequestMixTournament */
-        NotificationRequestMixTournament: {
-            /** Tournament Id */
-            tournament_id: number;
-            /** Mmr Start */
-            mmr_start: number;
-            /** Mmr End */
-            mmr_end: number;
-            /** Message */
-            message: string;
-            /**
-             * Signature
-             * @default false
-             */
-            signature: boolean | null;
-        };
-        /**
-         * PlayerInTeam
-         * @description Схема для игрока внутри команды (без поля team для избежания циклических ссылок).
-         */
-        PlayerInTeam: {
-            /** Discord Id */
-            discord_id?: string | null;
-            /** User Name */
-            user_name?: string | null;
-            /**
-             * Is Cap
-             * @default false
-             */
-            is_cap: boolean;
-            /**
-             * Is Team Main
-             * @default false
-             */
-            is_team_main: boolean;
-            /** Steam Id */
-            steam_id?: string | null;
-            /**
-             * Activity
-             * @default 0
-             */
-            activity: number;
-            /** Steam Name */
-            steam_name?: string | null;
-            /** Avatar Url */
-            avatar_url?: string | null;
-            /** Discord Avatar Url */
-            discord_avatar_url?: string | null;
-            /** Id */
-            id: number;
-            /** Mmr */
-            mmr?: number | null;
-            /**
-             * Positions
-             * @default []
-             */
-            positions: number[] | null;
-            rang?: components["schemas"]["Rang"] | null;
-            /** Respect */
-            respect?: number | null;
-            /**
-             * Points
-             * @default 0
-             */
-            points: number;
-            /** Team Id */
-            team_id?: number | null;
-            /**
-             * Roles
-             * @default []
-             */
-            roles: components["schemas"]["UserType"][] | null;
-        };
-        /** PlayerPrivate */
-        PlayerPrivate: {
-            /** Discord Id */
-            discord_id?: string | null;
-            /** User Name */
-            user_name?: string | null;
-            /**
-             * Is Cap
-             * @default false
-             */
-            is_cap: boolean;
-            /**
-             * Is Team Main
-             * @default false
-             */
-            is_team_main: boolean;
-            /** Steam Id */
-            steam_id?: string | null;
-            /**
-             * Activity
-             * @default 0
-             */
-            activity: number;
-            /** Steam Name */
-            steam_name?: string | null;
-            /** Avatar Url */
-            avatar_url?: string | null;
-            /** Discord Avatar Url */
-            discord_avatar_url?: string | null;
-            /** Id */
-            id: number;
-            /** Mmr */
-            mmr?: number | null;
-            /**
-             * Positions
-             * @default []
-             */
-            positions: number[] | null;
-            rang?: components["schemas"]["Rang"] | null;
-            /** Respect */
-            respect?: number | null;
-            /**
-             * Points
-             * @default 0
-             */
-            points: number;
-            /** Team Id */
-            team_id?: number | null;
-            team?: components["schemas"]["TeamBase"] | null;
-            /**
-             * Roles
-             * @default []
-             */
-            roles: components["schemas"]["UserType"][] | null;
-            /** Is Viewer Respected */
-            is_viewer_respected?: boolean | null;
-            /** Team Players Count */
-            team_players_count?: number | null;
-            /**
-             * Balance
-             * @default 0
-             */
-            balance: number;
-            /**
-             * Is Receive Notification
-             * @default true
-             */
-            is_receive_notification: boolean;
-        };
-        /**
-         * PlayerPublic
-         * @description Схема для публичного отображения профиля игрока.
-         */
-        PlayerPublic: {
-            /** Discord Id */
-            discord_id?: string | null;
-            /** User Name */
-            user_name?: string | null;
-            /**
-             * Is Cap
-             * @default false
-             */
-            is_cap: boolean;
-            /**
-             * Is Team Main
-             * @default false
-             */
-            is_team_main: boolean;
-            /** Steam Id */
-            steam_id?: string | null;
-            /**
-             * Activity
-             * @default 0
-             */
-            activity: number;
-            /** Steam Name */
-            steam_name?: string | null;
-            /** Avatar Url */
-            avatar_url?: string | null;
-            /** Discord Avatar Url */
-            discord_avatar_url?: string | null;
-            /** Id */
-            id: number;
-            /** Mmr */
-            mmr?: number | null;
-            /**
-             * Positions
-             * @default []
-             */
-            positions: number[] | null;
-            rang?: components["schemas"]["Rang"] | null;
-            /** Respect */
-            respect?: number | null;
-            /**
-             * Points
-             * @default 0
-             */
-            points: number;
-            /** Team Id */
-            team_id?: number | null;
-            team?: components["schemas"]["TeamBase"] | null;
-            /**
-             * Roles
-             * @default []
-             */
-            roles: components["schemas"]["UserType"][] | null;
-            /** Is Viewer Respected */
-            is_viewer_respected?: boolean | null;
-            /** Team Players Count */
-            team_players_count?: number | null;
-        };
-        /**
-         * PlayerRespectUpdate
-         * @description Схема для обновления respect игрока (для верифицированных пользователей).
-         */
-        PlayerRespectUpdate: {
-            /** Target Id */
-            target_id: number;
-            /** Value */
-            value: number;
-        };
-        /**
-         * PlayerRespectUpdateByStaff
-         * @description Схема для обновления respect игрока администратором/модератором.
-         */
-        PlayerRespectUpdateByStaff: {
-            /** Target Id */
-            target_id: number;
-            /** Value */
-            value: number;
-        };
-        /**
-         * PlayerToggleNotification
-         * @description Схема для переключения получения уведомлений.
-         */
-        PlayerToggleNotification: {
-            /** Is Receive Notification */
-            is_receive_notification: boolean;
-        };
-        /** PlayerUpdateGameData */
-        PlayerUpdateGameData: {
-            /** Mmr */
-            mmr: number;
-            /** Positions */
-            positions: number[];
-        };
-        /**
-         * PlayerUpdateMMRByAdmin
-         * @description Схема для обновления MMR игрока администратором.
-         */
-        PlayerUpdateMMRByAdmin: {
-            /** Mmr */
-            mmr: number;
-        };
-        /**
-         * PoolInfo
-         * @description Информация о пуле для заполнения пустых слотов.
-         */
-        PoolInfo: {
-            /** Pool */
-            pool: number;
-            /** Min Mmr */
-            min_mmr?: number | null;
-            /** Max Mmr */
-            max_mmr?: number | null;
-        };
-        /**
-         * PoolStats
-         * @description Статистика по одному пулу.
-         */
-        PoolStats: {
-            /** Min Mmr */
-            min_mmr?: number | null;
-            /** Max Mmr */
-            max_mmr?: number | null;
-        };
-        /** Rang */
-        Rang: {
-            /** Name */
-            name?: string | null;
-            /** Start Mmr */
-            start_mmr?: number | null;
-            /** Stop Mmr */
-            stop_mmr?: number | null;
-            /** Img Url */
-            img_url?: string | null;
-            /** Id */
-            id: number;
-        };
-        /**
-         * Request
-         * @description Схема запроса с полной информацией.
-         */
-        Request: {
-            /** Type */
-            type?: string | null;
-            /** Detail */
-            detail?: string | null;
-            /**
-             * Status
-             * @default received
-             */
-            status: string;
-            /** Img Url */
-            img_url?: string | null;
-            /** Requestor Id */
-            requestor_id?: number | null;
-            /** Assign Id */
-            assign_id?: number | null;
-            /** Id */
-            id: number;
-            /**
-             * Created On
-             * Format: date-time
-             */
-            created_on: string;
-        };
-        /**
-         * RequestUpdate
-         * @description Схема для обновления запроса.
-         */
-        RequestUpdate: {
-            /** Type */
-            type?: string | null;
-            /** Detail */
-            detail?: string | null;
-            /** Status */
-            status?: string | null;
-            /** Img Url */
-            img_url?: string | null;
-            /** Requestor Id */
-            requestor_id?: number | null;
-            /** Assign Id */
-            assign_id?: number | null;
-        };
-        /** Team */
         Team: {
-            /** Team Name */
-            team_name: string;
-            /** Avatar Url */
-            avatar_url?: string | null;
-            /** Status */
-            status: string;
-            /** Dota Team Id */
-            dota_team_id?: number | null;
-            /** Wins */
-            wins: number;
-            /** Id */
-            id: number;
-            /**
-             * Players
-             * @default []
-             */
-            players: components["schemas"]["PlayerInTeam"][];
+            id: string;
+            name: string;
+            captain: components["schemas"]["Player"];
+            coach: components["schemas"]["Player"];
+            isVerified: boolean;
+            isPlayingTournament: boolean;
+            /** Format: date-time */
+            verifiedAt: string;
+            mainPlayers: components["schemas"]["Player"][];
+            reservedPlayers: components["schemas"]["Player"][];
+            tournament: components["schemas"]["Tournament"] | null;
+            matchesAsTeamA: components["schemas"]["Match"][];
+            matchesAsTeamB: components["schemas"]["Match"][];
+            matchesAsWinner: components["schemas"]["Match"][];
         };
-        /** TeamBase */
-        TeamBase: {
-            /** Team Name */
-            team_name: string;
-            /** Avatar Url */
-            avatar_url?: string | null;
-            /** Status */
-            status: string;
-            /** Dota Team Id */
-            dota_team_id?: number | null;
-            /** Wins */
-            wins: number;
-        };
-        /**
-         * TeamInvite
-         * @description Схема приглашения с полной информацией.
-         */
-        TeamInvite: {
-            /** Team Id */
-            team_id: number;
-            /** Player Id */
-            player_id: number;
-            /**
-             * Status
-             * @default pending
-             */
-            status: string;
-            /** Is Team Main */
-            is_team_main: boolean;
-            /** Id */
-            id: number;
-        };
-        /**
-         * TeamInviteWithTeam
-         * @description Схема для ответа с данными о команде и приглашениями.
-         */
-        TeamInviteWithTeam: {
-            team: components["schemas"]["Team"];
-            /**
-             * Invites
-             * @default []
-             */
-            invites: components["schemas"]["TeamInvite"][];
-        };
-        /**
-         * TeamInviteWithTeamSingle
-         * @description Схема для ответа с данными о команде и одном приглашении.
-         */
-        TeamInviteWithTeamSingle: {
-            team: components["schemas"]["Team"];
-            invite: components["schemas"]["TeamInvite"];
-        };
-        /**
-         * TeamSlot
-         * @description Схема слота команды: либо игрок, либо информация о пуле.
-         */
-        TeamSlot: {
-            /** Player Id */
-            player_id?: number | null;
-            pool_info?: components["schemas"]["PoolInfo"] | null;
-        };
-        /**
-         * TeamWithCalculatedDivision
-         * @description Схема команди з доданим полем для розрахованого дивізіону.
-         */
-        TeamWithCalculatedDivision: {
-            /** Team Name */
-            team_name: string;
-            /** Avatar Url */
-            avatar_url?: string | null;
-            /** Status */
-            status: string;
-            /** Dota Team Id */
-            dota_team_id?: number | null;
-            /** Wins */
-            wins: number;
-            /** Id */
-            id: number;
-            /**
-             * Players
-             * @default []
-             */
-            players: components["schemas"]["PlayerInTeam"][];
-            calculated_division?: components["schemas"]["DivisionBase"] | null;
-            /**
-             * Tournaments
-             * @default []
-             */
-            tournaments: components["schemas"]["TournamentWithoutParticipants"][];
-        };
-        /**
-         * TokenResponse
-         * @description Ответ с токеном доступа
-         */
-        TokenResponse: {
-            /** Access Token */
-            access_token: string;
-            /**
-             * Token Type
-             * @default bearer
-             */
-            token_type: string;
-        };
-        /** Tournament */
         Tournament: {
-            /** Title */
-            title: string;
-            /** Description */
-            description?: string | null;
-            /** Division Id */
-            division_id?: number | null;
-            /**
-             * Start Time
-             * Format: date-time
-             */
-            start_time: string;
-            /**
-             * End Time
-             * Format: date-time
-             */
-            end_time: string;
-            /**
-             * Start Registration
-             * Format: date-time
-             */
-            start_registration: string;
-            /**
-             * End Registration
-             * Format: date-time
-             */
-            end_registration: string;
-            /** Status */
-            status: string;
-            /** Prizes */
-            prizes?: string | null;
-            /** Bracket */
-            bracket?: string | null;
-            /** Type */
-            type?: string | null;
-            /** Node Id */
-            node_id?: number | null;
-            /** Start Node Id */
-            start_node_id?: number | null;
-            /** Stop Node Id */
-            stop_node_id?: number | null;
-            /** Limit */
-            limit?: number | null;
-            /** Id */
-            id: number;
-            /** Img Url */
-            img_url?: string | null;
-            division?: components["schemas"]["Division"] | null;
-            /**
-             * Participants
-             * @default []
-             */
-            participants: components["schemas"]["Team"][];
+            id: string;
+            name: string;
+            prizePool: number;
+            headerBannerUrl: string;
+            listBannerUrl: string;
+            tournamentSlots: number;
+            /** Format: date-time */
+            registrationStartsAt: string;
+            /** Format: date-time */
+            registrationEndsAt: string;
+            /** Format: date-time */
+            tournamentStartsAt: string;
+            /** Format: date-time */
+            tournamentEndsAt: string;
+            /** @enum {string} */
+            tournamentStatus: "REGISTRATION_OPEN" | "REGISTRATION_CLOSED" | "IN_PROGRESS" | "COMPLETED" | "SCHEDULED";
+            tournamentGridUrl: string;
+            teams: components["schemas"]["Team"][];
+            eligibleRoles: components["schemas"]["UserRoles"][];
         };
-        /**
-         * TournamentForMatch
-         * @description Облегченная схема турнира для вложения в TournamentMatch,
-         *     исключающая тяжелые поля matches и participants.
-         */
-        TournamentForMatch: {
-            /** Title */
-            title: string;
-            /** Description */
-            description?: string | null;
-            /** Division Id */
-            division_id?: number | null;
-            /**
-             * Start Time
-             * Format: date-time
-             */
-            start_time: string;
-            /**
-             * End Time
-             * Format: date-time
-             */
-            end_time: string;
-            /**
-             * Start Registration
-             * Format: date-time
-             */
-            start_registration: string;
-            /**
-             * End Registration
-             * Format: date-time
-             */
-            end_registration: string;
-            /** Status */
-            status: string;
-            /** Prizes */
-            prizes?: string | null;
-            /** Bracket */
-            bracket?: string | null;
-            /** Type */
-            type?: string | null;
-            /** Node Id */
-            node_id?: number | null;
-            /** Start Node Id */
-            start_node_id?: number | null;
-            /** Stop Node Id */
-            stop_node_id?: number | null;
-            /** Limit */
-            limit?: number | null;
-            /** Id */
-            id: number;
-            /** Img Url */
-            img_url?: string | null;
-            division?: components["schemas"]["Division"] | null;
+        UserRoles: {
+            id: string;
+            name: string;
+            isAdminRole: boolean;
+            player: components["schemas"]["Player"];
+            tournaments: components["schemas"]["Tournament"][];
         };
-        /** TournamentMatch */
-        TournamentMatch: {
-            match_type: components["schemas"]["BracketType"];
-            /** Round Num */
-            round_num: number;
-            /** Match In Round */
-            match_in_round: number;
-            /** League Id */
-            league_id?: number | null;
-            /** League Node Id */
-            league_node_id?: number | null;
-            /** Steam Node Id */
-            steam_node_id?: number | null;
-            /** Start Time */
-            start_time?: string | null;
-            /**
-             * Is Team1 Ready
-             * @default false
-             */
-            is_team1_ready: boolean;
-            /**
-             * Is Team2 Ready
-             * @default false
-             */
-            is_team2_ready: boolean;
-            /** Bot Id */
-            bot_id?: number | null;
-            /** Dota Match Id */
-            dota_match_id?: number | null;
-            /** Lobby Status */
-            lobby_status?: string | null;
-            /**
-             * State
-             * @default open
-             */
-            state: string;
-            /** Id */
-            id: number;
-            /** Tournament Id */
-            tournament_id: number;
-            team1?: components["schemas"]["Team"] | null;
-            team2?: components["schemas"]["Team"] | null;
-            winner?: components["schemas"]["Team"] | null;
-            bot?: components["schemas"]["Bot"] | null;
-            tournament?: components["schemas"]["TournamentForMatch"] | null;
+        UpdatePlayerDto: {
+            steamId?: string;
+            discordId?: string;
+            telegramId?: string;
+            avatarUrl?: string;
+            discordName?: string;
+            discordUsername?: string;
+            rating?: number;
         };
-        /**
-         * TournamentMatchMixWithTeams
-         * @description Схема матча mix-турнира с командами и игроками.
-         */
-        TournamentMatchMixWithTeams: {
-            /** Tournament Id */
-            tournament_id: number;
-            /** Tournament Challonge Id */
-            tournament_challonge_id: string;
-            /** Match Challonge Id */
-            match_challonge_id: number;
-            /** State */
-            state: string;
-            /** Team1 Challonge Id */
-            team1_challonge_id?: number | null;
-            /** Team2 Challonge Id */
-            team2_challonge_id?: number | null;
-            /** Player1 Prereq Match Id */
-            player1_prereq_match_id?: number | null;
-            /** Player2 Prereq Match Id */
-            player2_prereq_match_id?: number | null;
-            /** Winner Challonge Id */
-            winner_challonge_id?: number | null;
-            /** Loser Challonge Id */
-            loser_challonge_id?: number | null;
-            /** Round */
-            round?: number | null;
-            /** Team1 Id */
-            team1_id?: number | null;
-            /** Team2 Id */
-            team2_id?: number | null;
-            /** Winner Id */
-            winner_id?: number | null;
-            /** Id */
-            id: number;
-            team1?: components["schemas"]["MixedTeamWithPlayers"] | null;
-            team2?: components["schemas"]["MixedTeamWithPlayers"] | null;
-            winner?: components["schemas"]["MixedTeamWithPlayers"] | null;
+        CreateUserRoleDto: {
+            name: string;
+            isAdminRole: boolean;
+            /** @description UUID of the player */
+            playerId: string;
         };
-        /**
-         * TournamentMix
-         * @description Схема турнира для mix-турниров.
-         *     Не содержит division, participants берутся из mix_pool.
-         */
-        TournamentMix: {
-            /** Title */
-            title: string;
-            /** Description */
-            description?: string | null;
-            /** Division Id */
-            division_id?: number | null;
-            /**
-             * Start Time
-             * Format: date-time
-             */
-            start_time: string;
-            /**
-             * End Time
-             * Format: date-time
-             */
-            end_time: string;
-            /**
-             * Start Registration
-             * Format: date-time
-             */
-            start_registration: string;
-            /**
-             * End Registration
-             * Format: date-time
-             */
-            end_registration: string;
-            /** Status */
-            status: string;
-            /** Prizes */
-            prizes?: string | null;
-            /** Bracket */
-            bracket?: string | null;
-            /** Type */
-            type?: string | null;
-            /** Node Id */
-            node_id?: number | null;
-            /** Start Node Id */
-            start_node_id?: number | null;
-            /** Stop Node Id */
-            stop_node_id?: number | null;
-            /** Limit */
-            limit?: number | null;
-            /** Id */
-            id: number;
-            /** Img Url */
-            img_url?: string | null;
-            division?: components["schemas"]["Division"] | null;
-            /** Mix Pools */
-            mix_pools?: components["schemas"]["MixPool"][];
+        UpdateUserRoleDto: {
+            name?: string;
+            isAdminRole?: boolean;
+            /** @description UUID of the player */
+            playerId?: string;
         };
-        /**
-         * TournamentMixWithTeams
-         * @description Схема турнира для mix-турниров с командами.
-         *     Расширяет TournamentMix, добавляя список команд со слотами.
-         */
-        TournamentMixWithTeams: {
-            /** Title */
-            title: string;
-            /** Description */
-            description?: string | null;
-            /** Division Id */
-            division_id?: number | null;
-            /**
-             * Start Time
-             * Format: date-time
-             */
-            start_time: string;
-            /**
-             * End Time
-             * Format: date-time
-             */
-            end_time: string;
-            /**
-             * Start Registration
-             * Format: date-time
-             */
-            start_registration: string;
-            /**
-             * End Registration
-             * Format: date-time
-             */
-            end_registration: string;
-            /** Status */
-            status: string;
-            /** Prizes */
-            prizes?: string | null;
-            /** Bracket */
-            bracket?: string | null;
-            /** Type */
-            type?: string | null;
-            /** Node Id */
-            node_id?: number | null;
-            /** Start Node Id */
-            start_node_id?: number | null;
-            /** Stop Node Id */
-            stop_node_id?: number | null;
-            /** Limit */
-            limit?: number | null;
-            /** Id */
-            id: number;
-            /** Img Url */
-            img_url?: string | null;
-            division?: components["schemas"]["Division"] | null;
-            /** Mix Pools */
-            mix_pools?: components["schemas"]["MixPool"][];
-            /** Teams */
-            teams?: components["schemas"]["MixedTeamWithSlots"][];
+        CreateTeamDto: {
+            name: string;
+            /** @description UUID of the captain player */
+            captainId: string;
+            /** @description UUID of the coach player */
+            coachId?: string;
+            isVerified: boolean;
+            isPlayingTournament: boolean;
         };
-        /**
-         * TournamentPoolStats
-         * @description Статистика по всем пулам турнира.
-         */
-        TournamentPoolStats: {
-            /** Tournament Id */
-            tournament_id: number;
-            /** Pools */
-            pools: {
-                [key: string]: components["schemas"]["PoolStats"];
-            };
+        UpdateTeamDto: {
+            name?: string;
+            /** @description UUID of the captain player */
+            captainId?: string;
+            /** @description UUID of the coach player */
+            coachId?: string;
+            isVerified?: boolean;
+            isPlayingTournament?: boolean;
         };
-        /**
-         * TournamentWithoutParticipants
-         * @description Облегченная схема турнира без списка участников.
-         *     Используется для списка турниров команды, чтобы избежать циклических ссылок.
-         */
-        TournamentWithoutParticipants: {
-            /** Title */
-            title: string;
-            /** Description */
-            description?: string | null;
-            /** Division Id */
-            division_id?: number | null;
-            /**
-             * Start Time
-             * Format: date-time
-             */
-            start_time: string;
-            /**
-             * End Time
-             * Format: date-time
-             */
-            end_time: string;
-            /**
-             * Start Registration
-             * Format: date-time
-             */
-            start_registration: string;
-            /**
-             * End Registration
-             * Format: date-time
-             */
-            end_registration: string;
-            /** Status */
-            status: string;
-            /** Prizes */
-            prizes?: string | null;
-            /** Bracket */
-            bracket?: string | null;
-            /** Type */
-            type?: string | null;
-            /** Node Id */
-            node_id?: number | null;
-            /** Start Node Id */
-            start_node_id?: number | null;
-            /** Stop Node Id */
-            stop_node_id?: number | null;
-            /** Limit */
-            limit?: number | null;
-            /** Id */
-            id: number;
-            /** Img Url */
-            img_url?: string | null;
-            division?: components["schemas"]["Division"] | null;
+        /** @enum {string} */
+        TournamentStatus: "REGISTRATION_OPEN" | "REGISTRATION_CLOSED" | "IN_PROGRESS" | "COMPLETED" | "SCHEDULED";
+        CreateTournamentDto: {
+            name: string;
+            prizePool: number;
+            headerBannerUrl?: string;
+            listBannerUrl?: string;
+            tournamentSlots?: number;
+            /** Format: date-time */
+            registrationStartsAt: string;
+            /** Format: date-time */
+            registrationEndsAt: string;
+            /** Format: date-time */
+            tournamentStartsAt: string;
+            /** Format: date-time */
+            tournamentEndsAt: string;
+            tournamentStatus: components["schemas"]["TournamentStatus"];
+            tournamentGridUrl?: string;
         };
-        /**
-         * UserRoleUpdate
-         * @description Схема для обновления списка ролей пользователя.
-         */
-        UserRoleUpdate: {
-            /** Role Ids */
-            role_ids: number[];
+        UpdateTournamentDto: {
+            name?: string;
+            prizePool?: number;
+            headerBannerUrl?: string;
+            listBannerUrl?: string;
+            tournamentSlots?: number;
+            /** Format: date-time */
+            registrationStartsAt?: string;
+            /** Format: date-time */
+            registrationEndsAt?: string;
+            /** Format: date-time */
+            tournamentStartsAt?: string;
+            /** Format: date-time */
+            tournamentEndsAt?: string;
+            tournamentStatus?: components["schemas"]["TournamentStatus"];
+            tournamentGridUrl?: string;
         };
-        /** UserType */
-        UserType: {
-            /** Type Name */
-            type_name: string;
-            /**
-             * Is Active
-             * @default true
-             */
-            is_active: boolean;
-            /**
-             * Is Visible
-             * @default false
-             */
-            is_visible: boolean;
-            /** Id */
-            id: number;
+        CreateMatchDto: {
+            /** @description UUID of team A */
+            teamAId: string;
+            /** @description UUID of team B */
+            teamBId: string;
+            /** @description UUID of the winning team */
+            winnerId: string;
+            dotaMatchId: string;
         };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
+        UpdateMatchDto: {
+            /** @description UUID of team A */
+            teamAId?: string;
+            /** @description UUID of team B */
+            teamBId?: string;
+            /** @description UUID of the winning team */
+            winnerId?: string;
+            dotaMatchId?: string;
         };
     };
     responses: never;
@@ -3381,7 +359,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    metrics_metrics_get: {
+    HealthController_getHealth: {
         parameters: {
             query?: never;
             header?: never;
@@ -3390,260 +368,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    login_for_access_token_api_v1_token_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/x-www-form-urlencoded": components["schemas"]["Body_login_for_access_token_api_v1_token_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TokenResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_token_by_player_id_api_v1_token_by_id_post: {
-        parameters: {
-            query: {
-                player_id: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TokenResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_players_api_v1_players__get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                search?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlayerPublic"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_users_me_api_v1_players_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlayerPrivate"];
-                };
-            };
-        };
-    };
-    update_user_game_data_api_v1_players_me_game_data_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlayerUpdateGameData"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlayerPrivate"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    toggle_notifications_api_v1_players_me_notifications_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlayerToggleNotification"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlayerPrivate"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_player_api_v1_players__player_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                player_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlayerPrivate"] | components["schemas"]["PlayerPublic"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_player_api_v1_players__player_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                player_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
         };
     };
-    leave_team_endpoint_api_v1_players_leave_post: {
+    PlayersController_findAll: {
         parameters: {
             query?: never;
             header?: never;
@@ -3652,214 +385,124 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PlayerPrivate"];
+                    "application/json": components["schemas"]["Player"][];
                 };
             };
         };
     };
-    verify_player_endpoint_api_v1_players__player_id__verify_patch: {
+    PlayersController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePlayerDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Player"];
+                };
+            };
+        };
+    };
+    PlayersController_findOne: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                player_id: number;
+                id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PlayerPrivate"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["Player"];
                 };
             };
         };
     };
-    update_player_mmr_by_admin_api_v1_players__player_id__mmr_patch: {
+    PlayersController_remove: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                player_id: number;
+                id: string;
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlayerUpdateMMRByAdmin"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["PlayerPrivate"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
+                content?: never;
             };
         };
     };
-    update_player_points_by_admin_api_v1_players__player_id__points_patch: {
+    PlayersController_update: {
         parameters: {
-            query: {
-                points: number;
-            };
+            query?: never;
             header?: never;
             path: {
-                player_id: number;
+                id: string;
             };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlayerPrivate"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_player_respect_api_v1_players_respect_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PlayerRespectUpdate"];
+                "application/json": components["schemas"]["UpdatePlayerDto"];
             };
         };
         responses: {
-            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PlayerPrivate"] | components["schemas"]["PlayerPublic"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["Player"];
                 };
             };
         };
     };
-    update_player_respect_by_staff_api_v1_players_respect_staff_post: {
+    UserRolesController_findAll: {
         parameters: {
             query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlayerRespectUpdateByStaff"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlayerPrivate"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_teams_api_v1_teams__get: {
-        parameters: {
-            query?: {
-                skip?: number;
-            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TeamWithCalculatedDivision"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["UserRoles"][];
                 };
             };
         };
     };
-    create_team_api_v1_teams__post: {
+    UserRolesController_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3868,11 +511,117 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["Body_create_team_api_v1_teams__post"];
+                "application/json": components["schemas"]["CreateUserRoleDto"];
             };
         };
         responses: {
-            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRoles"];
+                };
+            };
+        };
+    };
+    UserRolesController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRoles"];
+                };
+            };
+        };
+    };
+    UserRolesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UserRolesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRoles"];
+                };
+            };
+        };
+    };
+    TeamsController_findAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Team"][];
+                };
+            };
+        };
+    };
+    TeamsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTeamDto"];
+            };
+        };
+        responses: {
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -3881,64 +630,63 @@ export interface operations {
                     "application/json": components["schemas"]["Team"];
                 };
             };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
         };
     };
-    read_team_public_profile_api_v1_teams__team_id__get: {
+    TeamsController_findOne: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                team_id: number;
+                id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TeamWithCalculatedDivision"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["Team"];
                 };
             };
         };
     };
-    update_team_api_v1_teams__team_id__put: {
+    TeamsController_remove: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                team_id: number;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TeamsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["Body_update_team_api_v1_teams__team_id__put"];
+                "application/json": components["schemas"]["UpdateTeamDto"];
             };
         };
         responses: {
-            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3947,446 +695,17 @@ export interface operations {
                     "application/json": components["schemas"]["Team"];
                 };
             };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
         };
     };
-    disband_team_endpoint_api_v1_teams__team_id__delete: {
+    TournamentsController_findAll: {
         parameters: {
             query?: never;
-            header?: never;
-            path: {
-                team_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    invite_player_to_team_api_v1_teams__team_id__invite__player_id__post: {
-        parameters: {
-            query?: {
-                /** @description Приглашение в основной состав (True) или запасной (False) */
-                is_team_main?: boolean;
-            };
-            header?: never;
-            path: {
-                team_id: number;
-                player_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TeamInvite"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_team_invites_api_v1_teams__team_id__invites_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TeamInviteWithTeam"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    accept_team_invite_api_v1_teams_invites__invite_id__accept_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                invite_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlayerPrivate"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reject_team_invite_api_v1_teams_invites__invite_id__reject_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                invite_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TeamInvite"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_team_invite_by_id_api_v1_teams_invites__invite_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                invite_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TeamInviteWithTeamSingle"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    add_player_to_team_endpoint_api_v1_teams__team_id__players__player_id__post: {
-        parameters: {
-            query?: {
-                is_main?: boolean;
-            };
-            header?: never;
-            path: {
-                team_id: number;
-                player_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlayerPrivate"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    remove_player_from_team_endpoint_api_v1_teams__team_id__players__player_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: number;
-                player_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Игрок удален из команды */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Team"];
-                };
-            };
-            /** @description Команда распущена, так как не осталось игроков основного состава */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    transfer_captaincy_endpoint_api_v1_teams__team_id__captain__new_captain_id__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: number;
-                new_captain_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Team"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_team_tournaments_api_v1_teams__team_id__tournaments_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentWithoutParticipants"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_team_matches_api_v1_teams__team_id__matches_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMatch"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    recreate_team_discord_api_v1_teams__team_id__recreate_discord_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    cleanup_team_discord_api_v1_teams__team_id__cleanup_discord_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_tournaments_api_v1_tournaments__get: {
-        parameters: {
-            query?: {
-                status?: string | null;
-            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -4395,18 +714,9 @@ export interface operations {
                     "application/json": components["schemas"]["Tournament"][];
                 };
             };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
         };
     };
-    create_tournament_api_v1_tournaments__post: {
+    TournamentsController_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4415,1832 +725,105 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["Body_create_tournament_api_v1_tournaments__post"];
+                "application/json": components["schemas"]["CreateTournamentDto"];
             };
         };
         responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Tournament"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_tournaments_api_v1_tournaments_all_get: {
-        parameters: {
-            query?: {
-                status?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Tournament"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_tournament_api_v1_tournaments__tournament_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMix"] | components["schemas"]["Tournament"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_tournament_api_v1_tournaments__tournament_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_update_tournament_api_v1_tournaments__tournament_id__put"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Tournament"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_tournament_matches_api_v1_tournaments__tournament_id__matches_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMatch"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    register_for_tournament_api_v1_tournaments__tournament_id__register_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Tournament"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    unregister_from_tournament_api_v1_tournaments__tournament_id__unregister_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Tournament"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_unregister_team_from_tournament_api_v1_tournaments__tournament_id__unregister__team_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-                team_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Tournament"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    start_tournament_bracket_api_v1_tournaments__tournament_id__start_bracket_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Tournament"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_match_result_api_v1_tournaments__tournament_id__matches__match_id__result_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-                match_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MatchResultUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMatch"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_open_matches_api_v1_tournaments__tournament_id__matches_open_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMatch"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    open_tournament_registration_api_v1_tournaments__tournament_id__open_registration_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Tournament"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reward_tournament_winners_api_v1_tournaments__tournament_id__reward_winners_post: {
-        parameters: {
-            query: {
-                winner_team_id: number;
-                points?: number;
-            };
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Tournament"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_match_api_v1_matches__match_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                match_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMatch"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    call_moderator_api_v1_matches__match_id__call_moder_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                match_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMatch"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    set_ready_api_v1_matches__match_id__set_ready_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                match_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TournamentMatch"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["Tournament"];
                 };
             };
         };
     };
-    admin_start_match_api_v1_matches__match_id__start_post: {
+    TournamentsController_findOne: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                match_id: number;
+                id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TournamentMatch"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["Tournament"];
                 };
             };
         };
     };
-    admin_create_lobby_api_v1_matches__match_id__create_lobby_post: {
+    TournamentsController_remove: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                match_id: number;
+                id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMatch"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    invite_self_to_lobby_api_v1_matches__match_id__invite_me_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                match_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_set_match_result_api_v1_matches__match_id__set_result_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                match_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MatchResultUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMatch"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_mix_team_endpoint_api_v1_mix_teams__tournament_id__players__player_id__create_team_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-                player_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_create_mix_team_endpoint_api_v1_mix_teams__tournament_id__players__player_id__create_team_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_mix_team_api_v1_mix_teams__team_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MixedTeam"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    recreate_mix_team_discord_api_v1_mix_teams__team_id__recreate_discord_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    cleanup_mix_team_discord_api_v1_mix_teams__team_id__cleanup_discord_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_mix_tournaments_api_v1_mix_tournaments__get: {
-        parameters: {
-            query?: {
-                status?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_mix_tournament_api_v1_mix_tournaments__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_create_mix_tournament_api_v1_mix_tournaments__post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_mix_tournament_api_v1_mix_tournaments__tournament_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    register_for_mix_tournament_api_v1_mix_tournaments__tournament_id__register_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    unregister_from_mix_tournament_api_v1_mix_tournaments__tournament_id__unregister_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    distribute_players_to_pools_api_v1_mix_tournaments__tournament_id__distribute_pools_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    recruit_player_to_team_api_v1_mix_tournaments__tournament_id__recruit_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlayerPublic"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_register_player_for_tournament_api_v1_mix_tournaments__tournament_id__players__player_id__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-                player_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_remove_player_from_tournament_api_v1_mix_tournaments__tournament_id__players__player_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-                player_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_register_player_for_tournament_api_v1_mix_tournaments__tournament_id__players__player_id__set_captain__is_cap__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-                player_id: number;
-                is_cap: boolean;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_set_pool_for_player_api_v1_mix_tournaments__tournament_id__players__player_id__set_pool__pool__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-                player_id: number;
-                pool: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_add_player_to_team_api_v1_mix_tournaments__tournament_id__teams__team_id__players__player_id__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-                team_id: number;
-                player_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_remove_player_from_team_api_v1_mix_tournaments__tournament_id__teams__team_id__players__player_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-                team_id: number;
-                player_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    start_mix_bracket_api_v1_mix_tournaments__tournament_id__start_bracket_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_mix_match_result_api_v1_mix_tournaments__tournament_id__matches__match_id__result_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-                match_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MatchMixResultUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMatchMixWithTeams"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_open_matches_api_v1_mix_tournaments__tournament_id__matches_open_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMatchMixWithTeams"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_tournament_teams_api_v1_mix_tournaments__tournament_id__teams_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MixedTeamWithSlots"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reward_mix_tournament_winners_api_v1_mix_tournaments__tournament_id__reward_winners_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MixTournamentRewardWinners"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentMixWithTeams"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_visible_roles_api_v1_roles_visible_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserType"][];
-                };
-            };
-        };
-    };
-    get_all_roles_api_v1_roles_all_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserType"][];
-                };
-            };
-        };
-    };
-    update_player_roles_api_v1_roles__player_id__roles_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                player_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserRoleUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlayerPrivate"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    login_steam_api_v1_steam_login_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    auth_steam_callback_api_v1_steam_callback_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    login_discord_api_v1_discord_login_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    auth_discord_callback_api_v1_discord_callback_get: {
-        parameters: {
-            query: {
-                code: string;
-                state: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_requests_api_v1_requests__get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-                status_filter?: string | null;
-                type_filter?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Request"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_request_api_v1_requests__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/x-www-form-urlencoded": components["schemas"]["Body_create_request_api_v1_requests__post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Request"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_requests_count_api_v1_requests_count_get: {
-        parameters: {
-            query?: {
-                status_filter?: string | null;
-                type_filter?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": number;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_request_api_v1_requests__request_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Request"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_request_api_v1_requests__request_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RequestUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Request"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_request_api_v1_requests__request_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
         };
     };
-    approve_request_api_v1_requests__request_id__approve_post: {
+    TournamentsController_update: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                request_id: number;
+                id: string;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTournamentDto"];
+            };
+        };
         responses: {
-            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["Tournament"];
                 };
             };
         };
     };
-    reject_request_api_v1_requests__request_id__reject_post: {
+    MatchesController_findAll: {
         parameters: {
             query?: never;
-            header?: never;
-            path: {
-                request_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Request"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    take_request_api_v1_requests__request_id__take_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Request"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_bug_requests_api_v1_bug_requests__get: {
-        parameters: {
-            query?: {
-                status_filter?: string | null;
-            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BugRequest"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["Match"][];
                 };
             };
         };
     };
-    create_bug_request_api_v1_bug_requests__post: {
+    MatchesController_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6249,459 +832,81 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["Body_create_bug_request_api_v1_bug_requests__post"];
+                "application/json": components["schemas"]["CreateMatchDto"];
             };
         };
         responses: {
-            /** @description Successful Response */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BugRequest"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["Match"];
                 };
             };
         };
     };
-    read_bug_request_api_v1_bug_requests__bug_request_id__get: {
+    MatchesController_findOne: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                bug_request_id: number;
+                id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BugRequest"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["Match"];
                 };
             };
         };
     };
-    update_bug_request_api_v1_bug_requests__bug_request_id__put: {
+    MatchesController_remove: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                bug_request_id: number;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MatchesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BugRequestUpdate"];
+                "application/json": components["schemas"]["UpdateMatchDto"];
             };
         };
         responses: {
-            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BugRequest"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_bug_request_status_api_v1_bug_requests__bug_request_id__status_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                bug_request_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BugRequestStatusUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BugRequest"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_all_chats_api_v1_constants_chats_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChatWithRoles"][];
-                };
-            };
-        };
-    };
-    get_chat_by_id_api_v1_constants_chats__discord_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                discord_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChatWithRoles"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_all_rangs_api_v1_constants_rangs_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Rang"][];
-                };
-            };
-        };
-    };
-    get_all_divisions_api_v1_constants_divisions_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Division"][];
-                };
-            };
-        };
-    };
-    get_tournament_pool_stats_api_v1_constants_tournaments__tournament_id__pool_stats_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tournament_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TournamentPoolStats"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    send_notification_api_v1_notifications_send_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["NotificationRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    send_notification_api_v1_notifications_send_mix_tournament_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["NotificationRequestMixTournament"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_user_mails_api_v1_mail__get: {
-        parameters: {
-            query?: {
-                is_readed?: boolean | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MailBox"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_unread_count_api_v1_mail_unread_count_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    mark_mail_as_read_api_v1_mail__mail_id__read_patch: {
-        parameters: {
-            query?: {
-                is_readed?: boolean;
-            };
-            header?: never;
-            path: {
-                mail_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MailBox"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    mark_all_mails_as_read_api_v1_mail_mark_all_read_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    read_root__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    health_check_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["Match"];
                 };
             };
         };

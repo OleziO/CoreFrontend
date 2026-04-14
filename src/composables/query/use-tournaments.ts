@@ -8,11 +8,3 @@ export const useGetTournaments = () => {
     refetchOnWindowFocus: false
   })
 }
-
-export const useGetAllTournaments = () => {
-  return useQueryWrapper({
-    key: ['tournaments', 'all'],
-    query: () => tournamentsService.fetchAllTournaments(),
-    refetchOnWindowFocus: false
-  })
-}

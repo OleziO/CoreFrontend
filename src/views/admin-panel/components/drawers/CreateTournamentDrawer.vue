@@ -46,27 +46,7 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="Тип">
-          <el-select
-            v-model="tournamentData.type"
-            placeholder="Оберіть тип"
-            size="large"
-            class="w-full"
-            clearable
-          >
-            <el-option
-              value="team"
-              label="5x5"
-            />
-            <el-option
-              value="mix"
-              label="Мікс"
-            />
-          </el-select>
-        </el-form-item>
-
         <el-form-item
-          v-if="tournamentData.type === 'team'"
           label="Дивізіон (опціонально)"
         >
           <el-select
@@ -160,45 +140,41 @@ import { queryCache } from '@/core/query-cache-client'
 import { tournamentStatuses } from '@/utils/formatters'
 import { Plus, Edit } from '@element-plus/icons-vue'
 import type { UploadFile } from 'element-plus'
-import { useGetDivisions } from '@/composables/query/use-divisions'
 import { ElMessage } from 'element-plus'
+import type { TCreateTournamentDto as CreateTournamentDto } from '@/api/types/api.types'
+
+interface ITournamentFormData extends Partial<CreateTournamentDto> {
+  status?: string
+  division_id?: string | null
+  limit?: number | null
+}
 
 const showCreateTournamentDrawer = defineModel<boolean>()
 const loading = ref<boolean>(false)
 
-const { data: divisions } = useGetDivisions()
+// TODO: endpoint not in API yet (divisions)
+const divisions = ref<any[]>([])
 
-const isFormValid = computed(() => {
-  const isDivisionValid = tournamentData.value.type !== 'team' || tournamentData.value.division_id !== null
-
-  return tournamentData.value.title !== '' &&
-    tournamentData.value.start_time !== '' &&
-    tournamentData.value.end_time !== '' &&
-    tournamentData.value.start_registration !== '' &&
-    tournamentData.value.end_registration !== '' &&
-    tournamentData.value.status !== '' &&
-    tournamentData.value.type !== '' &&
-    file.value !== null &&
-    isDivisionValid
-})
+const isFormValid = computed(() =>
+  tournamentData.value.name !== '' &&
+    tournamentData.value.tournamentStartsAt !== '' &&
+    file.value !== null
+)
 
 const { file, preview, reset } = useGetFile()
 
-const defaultTournamentData = (): TCreateTournament & { type?: string | null; limit?: number | null } => ({
-  title: '',
-  description: '',
-  prizes: '',
-  division_id: null,
-  start_time: '',
-  end_time: '',
-  start_registration: '',
-  end_registration: '',
+const defaultTournamentData = (): ITournamentFormData => ({
+  name: '',
+  tournamentStartsAt: '',
+  tournamentEndsAt: '',
+  registrationStartsAt: '',
+  registrationEndsAt: '',
   status: '',
-  type: '',
+  division_id: null,
   limit: null
 })
 
-const tournamentData = ref<TCreateTournament & { type?: string | null; limit?: number | null }>(defaultTournamentData())
+const tournamentData = ref<ITournamentFormData>(defaultTournamentData())
 
 function clearData () {
   reset()
@@ -225,7 +201,7 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
-    await tournamentsService.createTournament(tournamentData.value, file.value)
+    await tournamentsService.createTournament(tournamentData.value as unknown as CreateTournamentDto)
     ElMessage({ message: 'Турнір успішно створено', type: 'success' })
     showCreateTournamentDrawer.value = false
     queryCache.invalidateQueries({ key: ['tournaments'] })

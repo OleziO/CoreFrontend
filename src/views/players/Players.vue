@@ -158,8 +158,6 @@
 </template>
 
 <script setup lang="ts">
-import { MAX_RATING } from '@/components/player-tags/player.constants'
-import { ERole } from '@/types/general.types'
 import { PhSlidersHorizontal, PhCallBell, PhMagnifyingGlass } from '@phosphor-icons/vue'
 import type { LocationQuery } from 'vue-router'
 
@@ -178,7 +176,7 @@ const authStore = useAuthStore()
 const search = ref('')
 
 const hasAccess = computed(() => {
-  return authStore.user?.id && authStore.user.roles?.some(role => role.type_name === ERole.PLAYER)
+  return authStore.user?.id && authStore.isAdmin.isAdmin
 })
 
 const filteredPlayers = computed(() => {
@@ -191,31 +189,17 @@ const filteredPlayers = computed(() => {
     : mappedPlayers
 })
 
-function checkQueryFilter (player: TPlayer, query: LocationQuery) {
-  const ratingFrom = query.ratingFrom != null ? Number(query.ratingFrom) : 0
-  const ratingTo = query.ratingTo != null ? Number(query.ratingTo) : MAX_RATING
-  const rating = player.mmr ?? 0
-  if (rating < ratingFrom || rating > ratingTo) return false
+import type { TPlayer as Player } from '@/api/types/api.types'
 
-  if (query.positions) {
-    const positions = query.positions.toString().split(',').map(Number)
-    if (!positions.some(pos => player.positions?.includes(pos))) return false
-  }
+function checkQueryFilter (player: Player, query: LocationQuery) {
+  const ratingFrom = query.ratingFrom != null ? Number(query.ratingFrom) : 0
+  const ratingTo = query.ratingTo != null ? Number(query.ratingTo) : 9999
+  const rating = player.rating ?? 0
+  if (rating < ratingFrom || rating > ratingTo) return false
 
   if (query.roles) {
     const roles = query.roles.toString().split(',')
-    if (!roles.some(role => player.roles?.some(r =>
-      r.type_name === role) || (role === ERole.CAP && player.is_cap))) return false
-  }
-
-  if (query.teamStatus) {
-    const teamStatus = query.teamStatus.toString().split(',').map(Number)
-    if (!teamStatus.includes(Number(Boolean(player.team_id)))) return false
-  }
-
-  if (query.verificationStatus) {
-    const verification = query.verificationStatus.toString().split(',')
-    if (!verification.some(v => player.roles?.some(r => r.type_name === v))) return false
+    if (!roles.some(role => player.roles?.some(r => r.name === role))) return false
   }
 
   return true
@@ -225,17 +209,15 @@ const activeFiltersCount = computed(() => {
   const query = route.query
   let count = 0
   if (query.ratingFrom != null || query.ratingTo != null) count += 1
-  if (query.positions) count += 1
   if (query.roles) count += 1
-  if (query.teamStatus) count += 1
-  if (query.verificationStatus) count += 1
   return count
 })
 
-function searchPlayer (player: TPlayer) {
+function searchPlayer (player: Player) {
   if (!search.value) return true
-  return player.user_name?.toLowerCase().includes(search.value.toLowerCase()) ||
-         player.steam_name?.toLowerCase().includes(search.value.toLowerCase())
+  return player.discordName?.toLowerCase().includes(search.value.toLowerCase()) ||
+         player.discordUsername?.toLowerCase().includes(search.value.toLowerCase()) ||
+         player.steamId?.toLowerCase().includes(search.value.toLowerCase())
 }
 
 function openPlayersFilterModal () {

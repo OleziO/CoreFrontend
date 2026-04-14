@@ -33,7 +33,7 @@
       <!-- DESKTOP NAV -->
       <nav class="lg:flex items-center gap-20 hidden h-full">
         <el-button
-          v-for="link in links"
+          v-for="link in navLinks"
           :key="link.name"
           type="primary"
           link
@@ -50,63 +50,27 @@
           {{ link.label }}
         </el-button>
 
-        <el-button
-          type="primary"
-          link
-          class="
-            text-sm font-medium tracking-wide
-            text-white/70 hover:text-white
-            transition-colors
-          "
-          @click="handleOpenBugModal"
-        >
-          Баги
-        </el-button>
+        <RoleGuard :roles="['admin', 'moderator']">
+          <el-button
+            type="primary"
+            link
+            class="
+              text-sm font-medium tracking-wide
+              !text-white/70 hover:!text-primary rounded-none
+              transition-colors !h-full
+            "
+            :class="{
+              '!border-b-2 !border-b-primary': $route.name === routeNames.adminPanel
+            }"
+            @click="$router.push({ name: routeNames.adminPanel })"
+          >
+            Адмінка
+          </el-button>
+        </RoleGuard>
       </nav>
 
       <!-- RIGHT SIDE -->
       <div class="flex items-center gap-12 py-15">
-        <!-- MAILBOX DROPDOWN -->
-        <el-dropdown
-          v-if="authStore.token"
-          ref="mailboxDropdownRef"
-          v-model="dropDown"
-          class="hidden lg:flex"
-          trigger="click"
-          popper-class="mailbox-dropdown-popper mt-20"
-          placement="left-start"
-          @visible-change="handleMailboxDropdownVisible"
-        >
-          <el-badge
-            :value="mailboxStore.unreadCount"
-            :hidden="mailboxStore.unreadCount === 0"
-            :offset="[-8, 4]"
-            class="mailbox-badge"
-          >
-            <div
-              class="
-                flex items-center justify-center
-                w-40 !h-36 py-2
-                rounded-xl
-                border border-white/10
-                bg-white/5
-                hover:bg-white/10
-                hover:border-white/20
-                transition-all duration-200
-                cursor-pointer
-              "
-            >
-              <PhEnvelope :size="18" class="text-white/80" />
-            </div>
-          </el-badge>
-
-          <template #dropdown>
-            <MailboxDropdown
-              @open-modal="handleOpenModalFromDropdown"
-            />
-          </template>
-        </el-dropdown>
-
         <!-- USER -->
         <el-dropdown
           v-if="authStore.token"
@@ -126,31 +90,18 @@
             "
           >
             <span class="text-sm text-white/80 max-w-[120px] truncate">
-              {{ authStore.user?.steam_name }}
+              {{ authStore.user?.discordName }}
             </span>
 
             <el-image
               class="h-36 w-36 rounded-full border border-white/25"
-              :src="`${urlForProfileImg}${authStore.user?.avatar_url}`"
+              :src="`${urlForProfileImg}${authStore.user?.avatarUrl}`"
               fit="cover"
             />
           </div>
 
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click="$router.push('/me')">
-                <PhUser />
-                <span class="ml-8">Профіль</span>
-              </el-dropdown-item>
-
-              <RoleGuard :roles="['admin', 'moderator']">
-                <el-dropdown-item @click="$router.push({name: routeNames.adminPanel})">
-                  <PhIdentificationBadge />
-
-                  <span class="ml-8">Адмін панель</span>
-                </el-dropdown-item>
-              </RoleGuard>
-
               <el-dropdown-item
                 class="!ext-red-400"
                 @click="authStore.logout"
@@ -184,140 +135,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
 import { routeNames } from '@/router/route-names'
 import logo from '@/assets/LongLogo.png'
-import { PhSteamLogo, PhUser, PhSignOut, PhIdentificationBadge, PhEnvelope } from '@phosphor-icons/vue'
+import { PhSteamLogo, PhSignOut } from '@phosphor-icons/vue'
 import RoleGuard from '@/guards/RoleGuard.vue'
-import MailboxDropdown from '@/components/mailbox/MailboxDropdown.vue'
-import type { ElDropdown } from 'element-plus'
-
-import { useWebSocket } from '@vueuse/core'
 
 const authStore = useAuthStore()
-const mailboxStore = useMailboxStore()
-const dropDown = ref(false)
 
 const apiBaseUrl = import.meta.env.VITE_API_PUBLIC_URL
 const urlForProfileImg = import.meta.env.VITE_API_PUBLIC_URL
 
-const mailboxDropdownRef = ref<InstanceType<typeof ElDropdown> | null>(null)
-const isMailboxDropdownOpen = ref(false)
-const wasDropdownOpenBeforeModal = ref(false)
-
-// Обработка открытия/закрытия дропдауна почты
-function handleMailboxDropdownVisible (visible: boolean) {
-  isMailboxDropdownOpen.value = visible
-  if (visible) {
-    // Загружаем письма при открытии дропдауна
-    mailboxStore.fetchMails()
+const navLinks = computed(() => {
+  const links: { name: string; label: string }[] = [
+    { name: routeNames.rootPage, label: 'Головна' },
+    { name: routeNames.tournaments, label: 'Турніри' },
+    { name: routeNames.teams, label: 'Команди' },
+    { name: routeNames.players, label: 'Гравці' }
+  ]
+  if (authStore.token) {
+    links.push({ name: routeNames.profile, label: 'Профіль' })
   }
-}
-
-// Обработка открытия модалки из дропдауна
-function handleOpenModalFromDropdown () {
-  // Сохраняем состояние дропдауна перед открытием модалки
-  wasDropdownOpenBeforeModal.value = isMailboxDropdownOpen.value
-
-  // Переоткрываем дропдаун после небольшой задержки, чтобы модалка успела открыться
-  if (wasDropdownOpenBeforeModal.value) {
-    nextTick(() => {
-      setTimeout(() => {
-        if (dropDown.value === false && wasDropdownOpenBeforeModal.value) {
-          dropDown.value = true
-        }
-      }, 100)
-    })
-  }
-}
-
-// Отслеживаем закрытие модалки и переоткрываем дропдаун, если он был открыт
-const { isOpen, open: openModal } = useAppModals()
-watch(() => isOpen.value.MailboxModal, (isModalOpen) => {
-  if (!isModalOpen && wasDropdownOpenBeforeModal.value) {
-    // Модалка закрылась, переоткрываем дропдаун
-    nextTick(() => {
-      if (dropDown.value === false) {
-        dropDown.value = true
-      }
-      wasDropdownOpenBeforeModal.value = false
-    })
-  }
+  return links
 })
-
-// Обработка открытия модалки багов
-function handleOpenBugModal () {
-  openModal('BugReportModal')
-}
-
-// Формируем URL для WebSocket
-const wsUrl = ref<string | undefined>(undefined)
-
-const { status, open, close, data } = useWebSocket(wsUrl, {
-  autoReconnect: {
-    retries: 3,
-    delay: 1000
-  },
-  immediate: false // Не открываем соединение автоматически
-})
-
-// Обработка сообщений WebSocket
-watch(data, (newData) => {
-  if (!newData) return
-
-  try {
-    const message = JSON.parse(newData)
-
-    // Обрабатываем новое письмо
-    if (message.type === 'new_mail' && message.mail) {
-      mailboxStore.addMail(message.mail)
-    }
-  } catch (error) {
-    console.error('Помилка при обробці повідомлення WebSocket:', error)
-  }
-})
-
-// Обновляем URL и управляем соединением при изменении токена
-watch(
-  () => authStore.token,
-  (token) => {
-    if (token) {
-      // Закрываем старое соединение, если оно открыто
-      if (status.value === 'OPEN') {
-        close()
-      }
-      // Устанавливаем новый URL и открываем соединение
-      wsUrl.value = `${import.meta.env.VITE_API_PUBLIC_URL}/ws?token=${token}`
-      // Небольшая задержка перед открытием, чтобы URL успел обновиться
-      nextTick(() => {
-        if (wsUrl.value) {
-          open()
-        }
-      })
-      // Загружаем письма при наличии токена
-      mailboxStore.fetchMails()
-    } else {
-      // Закрываем соединение, если токена нет
-      if (status.value === 'OPEN' || status.value === 'CONNECTING') {
-        close()
-      }
-      wsUrl.value = undefined
-      // Очищаем письма при выходе
-      mailboxStore.clearMails()
-    }
-  },
-  { immediate: true }
-)
-
-const links = [
-  { name: routeNames.rootPage, label: 'Головна' },
-  { name: routeNames.tournaments, label: 'Турніри' },
-  { name: routeNames.mixTournaments, label: 'Mix Cup' },
-  { name: routeNames.teams, label: 'Команди' },
-  { name: routeNames.players, label: 'Гравці' },
-  { name: routeNames.mixLEaderboard, label: 'Лідерборд' },
-  { name: routeNames.rules, label: 'FAQ' }
-]
 
 </script>
 
@@ -352,11 +191,4 @@ const links = [
   @apply opacity-40;
 }
 
-.mailbox-badge .el-badge__content {
-  @apply bg-red-600;
-}
-
-.mailbox-dropdown-popper {
-  @apply p-0 border-none bg-[transparent];
-}
 </style>

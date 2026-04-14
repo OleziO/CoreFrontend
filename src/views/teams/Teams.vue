@@ -164,24 +164,17 @@ const filteredTeams = computed(() => {
 
   const mappedTeams = teamsStore.teams.filter(team => {
     if (
-      filters.value.status.length &&
-      !filters.value.status.includes(team.status)
+      filters.value.status.length
     ) {
-      return false
-    }
-
-    if (
-      filters.value.divisions.length &&
-      !filters.value.divisions.includes(team.calculated_division?.name ?? '')
-    ) {
-      return false
+      const isVerified = team.isVerified ? 'verified' : 'unverified'
+      if (!filters.value.status.includes(isVerified)) return false
     }
 
     return true
   })
 
   return searchValue
-    ? mappedTeams.filter(team => team.team_name.toLowerCase().includes(searchValue))
+    ? mappedTeams.filter(team => team.name?.toLowerCase().includes(searchValue))
     : mappedTeams
 })
 

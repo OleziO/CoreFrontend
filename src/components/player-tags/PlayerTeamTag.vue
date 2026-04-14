@@ -1,22 +1,19 @@
 <template>
   <el-tag
     class="px-10 py-4 w-full rounded-lg text-[12px] font-medium tracking-wide"
-    :class="roleClass"
+    :type="hasTeam ? 'success' : 'info'"
     disable-transitions
   >
-    {{ roleLabel }}
+    {{ hasTeam ? 'В команді' : 'Без команди' }}
   </el-tag>
 </template>
 
 <script setup lang="ts">
-import { EUserIsTeam, hasTeamClassMap, hasTeamLabelMap } from './player.constants'
+import type { TPlayer as Player } from '@/api/types/api.types'
 
-const props = defineProps<{ user: TPlayer | TPlayer}>()
+const props = defineProps<{ user: Player }>()
 
-const hasTeam = computed<EUserIsTeam>(() => {
-  return Number(!!props.user?.team_id || 0)
+const hasTeam = computed(() => {
+  return !!(props.user as any)?.teamId || false
 })
-
-const roleLabel = computed(() => hasTeamLabelMap[hasTeam.value])
-const roleClass = computed(() => hasTeamClassMap[hasTeam.value])
 </script>

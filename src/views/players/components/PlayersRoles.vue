@@ -1,32 +1,25 @@
 <template>
   <div class="w-full flex justify-between gap-10 items-center">
     <div class="flex gap-10">
-      <div
-        v-for="(entity, index) in filteredRoles"
-        :key="index"
+      <el-tag
+        v-for="role in currentPlayerRoles"
+        :key="role.id"
+        type="primary"
       >
-        <el-tag
-          v-if="checkRoles(playersStore.player?.roles as TRole[],
-                           entity.value as unknown as EUserRoles)" type="primary"
-        >
-          {{ entity.label }}
-        </el-tag>
-      </div>
+        {{ role.name }}
+      </el-tag>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import checkRoles from '@/core/helpers'
-import { playersRolesArr } from '@/constants/players'
-import type { EUserRoles } from '@/components/player-tags/player.constants'
-
 const playersStore = usePlayersStore()
 
-const filteredRoles = computed(() => {
-  return playersRolesArr.filter(el => {
-    return checkRoles(playersStore.player?.roles, el.value as unknown as EUserRoles)
-  })
-})
+const route = useRoute()
 
+const currentPlayerRoles = computed(() => {
+  const id = String(route.params.id)
+  const player = playersStore.players.find(p => p.id === id)
+  return player?.roles || []
+})
 </script>

@@ -1,8 +1,3 @@
-export enum ETeamStatuses {
-  APPLIED = 'applied',
-  APPROVED = 'approved',
-}
-
 export enum ERole {
   ADMIN = 'admin',
   DEV = 'dev',

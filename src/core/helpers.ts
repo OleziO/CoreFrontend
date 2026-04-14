@@ -1,6 +1,7 @@
 import { ERole } from '@/types/general.types'
 import get from 'lodash/get'
-import type { LocationQueryValue, Router } from 'vue-router'
+import type { LocationQueryValue } from 'vue-router'
+import type { TPlayer as Player, TUserRole as UserRole } from '@/api/types/api.types'
 
 export const createHashedObject = <
   T extends TIndexedObject,
@@ -30,9 +31,9 @@ export const createHashedObject = <
   }, {} as Record<T[Prop], ValueArray extends true ? T[] : T>)
 }
 
-export function goBack (router: Router) {
-  router.back()
-}
+// export function goBack (router: Router) {
+//   router.back()
+// }
 
 export function getImageUrl (imgUrl: string | null | undefined) {
   return import.meta.env.VITE_API_PUBLIC_URL + imgUrl
@@ -67,16 +68,16 @@ export function formatDate (date: Date) {
   return date.toLocaleDateString('uk-UA').slice(0, 10)
 }
 
-export function searchPlayer (player: TPlayer, search = '') {
+export function searchPlayer (player: Player, search = '') {
   if (!search) return true
-  return player.user_name?.toLowerCase().includes(search.toLowerCase()) ||
-         player.steam_name?.toLowerCase().includes(search.toLowerCase())
+  return player.discordUsername?.toLowerCase().includes(search.toLowerCase()) ||
+         player.discordName?.toLowerCase().includes(search.toLowerCase()) ||
+         player.steamId?.toLowerCase().includes(search.toLowerCase())
 }
 
-function checkRoles (roles: TRole[], roleName: ERole) {
+function checkRoles (roles: UserRole[], roleName: ERole) {
   if (!roles?.length || !roleName) return false
-
-  return roles.some(role => role.type_name === roleName)
+  return roles.some(role => role.name === roleName)
 }
 
 export function getCopy (data: number | string | undefined | null, message: string) {
