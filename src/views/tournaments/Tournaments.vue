@@ -100,6 +100,7 @@
 import { PhSlidersHorizontal } from '@phosphor-icons/vue'
 import { useTournamentStore } from './tournaments.store'
 import type { LocationQuery } from 'vue-router'
+import type { TTournament as Tournament } from '@/api/types/api.types'
 
 const { open } = useAppModals()
 const window = useWindowSize()
@@ -125,8 +126,6 @@ const filteredTournaments = computed(() => {
     return true
   })
 })
-
-import type { TTournament as Tournament } from '@/api/types/api.types'
 
 function checkQueryFilter (tournament: Tournament, query: LocationQuery) {
   if (query.status) {

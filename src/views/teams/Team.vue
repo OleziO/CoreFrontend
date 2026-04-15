@@ -150,7 +150,7 @@
       >
         <div class="grid xl:grid-cols-2 gap-40 min-h-0 h-fit">
           <div class="flex-1 h-fit w-full">
-              <h3 class="text-xl text-center font-semibold items-center justify-center gap-6 flex">
+            <h3 class="text-xl text-center font-semibold items-center justify-center gap-6 flex">
               Основа
             </h3>
             <el-divider class="mt-15" />

@@ -124,6 +124,7 @@ import checkRoles from '@/core/helpers'
 import { ERole } from '@/types/general.types'
 import { useAuthStore } from '@/store/modules/auth'
 import { useAppModals } from '@/composables/use-app-modals'
+import type { TPlayer as Player } from '@/api/types/api.types'
 
 interface IEditProfileForm {
   mmr: number | null
@@ -132,8 +133,6 @@ interface IEditProfileForm {
 }
 
 const modelValue = defineModel<boolean>({ default: false })
-
-import type { TPlayer as Player } from '@/api/types/api.types'
 
 const emit = defineEmits<{
   (e: 'submit', payload: IEditProfileForm): void
@@ -168,8 +167,6 @@ const isVerified = computed(() => {
 const isAdmin = computed(() => {
   return checkRoles(authStore.user?.roles || [], ERole.MODERATOR) || checkRoles(props.player.roles || [], ERole.ADMIN)
 })
-
-
 
 const isValid = computed(() => {
   // Для верифицированных пользователей валидация MMP не требуется

@@ -57,6 +57,7 @@
 
 <script setup lang="ts">
 import { MAX_RATING } from '@/components/player-tags/player.constants'
+import type { TPlayer as Player } from '@/api/types/api.types'
 
 const props = defineProps<{playerId: string}>()
 
@@ -77,8 +78,6 @@ const playersStore = usePlayersStore()
 const mmr = ref<number | null>(null)
 
 // const selectedRoleIds = ref<number[]>([])
-
-import type { TPlayer as Player } from '@/api/types/api.types'
 const player = ref<Player | null>(null)
 
 const isValid = computed(() => {

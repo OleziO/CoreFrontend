@@ -22,6 +22,26 @@
             Адмінка
           </button>
         </RoleGuard>
+
+        <template v-if="!authStore.token">
+          <el-button
+            type="primary"
+            class="w-full mt-10"
+            :loading="authStore.loginLoading"
+            @click="handleDiscordLogin"
+          >
+            <PhDiscordLogo size="20" weight="bold" class="mr-8" />
+            Увійти через Discord
+          </el-button>
+        </template>
+        <template v-else>
+          <button
+            class="mobile-menu-link !text-red-400"
+            @click="handleLogout"
+          >
+            Вийти з аккаунту
+          </button>
+        </template>
       </nav>
     </div>
   </transition>
@@ -31,6 +51,7 @@
 import { routeNames } from '@/router/route-names'
 import { useRouter } from 'vue-router'
 import RoleGuard from '@/guards/RoleGuard.vue'
+import { PhDiscordLogo } from '@phosphor-icons/vue'
 
 const router = useRouter()
 const togglerStore = useTogglerStore()
@@ -56,6 +77,16 @@ function close () {
 function go (name: string) {
   router.push({ name })
   close()
+}
+
+function handleDiscordLogin () {
+  close()
+  authStore.startDiscordLogin()
+}
+
+function handleLogout () {
+  close()
+  authStore.logout()
 }
 </script>
 

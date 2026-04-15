@@ -118,12 +118,12 @@
           v-else
           type="primary"
           class="hidden lg:flex w-full items-center justify-center gap-2 h-40"
-          tag="a"
-          :href="`${apiBaseUrl}/api/v1/steam/login`"
+          :loading="authStore.loginLoading"
+          @click="authStore.startDiscordLogin()"
         >
-          <PhSteamLogo size="20" weight="bold" />
+          <PhDiscordLogo size="20" weight="bold" />
           <span class="ml-10 text-sm font-medium">
-            Увійти через Steam
+            Увійти через Discord
           </span>
         </el-button>
 
@@ -137,12 +137,11 @@
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
 import logo from '@/assets/LongLogo.png'
-import { PhSteamLogo, PhSignOut } from '@phosphor-icons/vue'
+import { PhDiscordLogo, PhSignOut } from '@phosphor-icons/vue'
 import RoleGuard from '@/guards/RoleGuard.vue'
 
 const authStore = useAuthStore()
 
-const apiBaseUrl = import.meta.env.VITE_API_PUBLIC_URL
 const urlForProfileImg = import.meta.env.VITE_API_PUBLIC_URL
 
 const navLinks = computed(() => {

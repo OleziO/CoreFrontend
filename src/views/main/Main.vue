@@ -20,10 +20,11 @@
             v-if="!authStore.token"
             type="primary"
             class="max-w-[320px] w-full mt-10"
-            tag="a"
-            :href="`${apiBaseUrl}/api/v1/steam/login`"
+            :loading="authStore.loginLoading"
+            @click="authStore.startDiscordLogin()"
           >
-            Увійти через стім
+            <PhDiscordLogo size="20" weight="bold" class="mr-8" />
+            Увійти через Discord
           </el-button>
           <RouterLink to="/tournaments">
             <el-button
@@ -268,10 +269,10 @@
               1
             </span>
             <h1 class="text-lg font-semibold mb-3 mt-6">
-              Авторизація через Steam
+              Авторизація через Discord
             </h1>
             <p class="text-sm text-zinc-400 leading-relaxed">
-              Увійдіть у систему за допомогою вашого Steam-акаунта без довгих форм
+              Увійдіть у систему за допомогою вашого Discord-акаунта без довгих форм
               та підтверджень.
             </p>
           </div>
@@ -387,9 +388,8 @@
 <script setup lang="ts">
 import { scrollToSection } from '@/core/helpers'
 import playersMacbook from '@/assets/images/players_macbook.png'
-import { PhShieldCheck, PhTarget, PhBrowser, PhQuestionMark, PhCaretDown } from '@phosphor-icons/vue'
+import { PhShieldCheck, PhTarget, PhBrowser, PhQuestionMark, PhCaretDown, PhDiscordLogo } from '@phosphor-icons/vue'
 
-const apiBaseUrl = import.meta.env.VITE_API_PUBLIC_URL
 const authStore = useAuthStore()
 const route = useRouter()
 

@@ -32,7 +32,6 @@
             </div>
 
             <!-- tournament.description not in new API schema -->
-
           </div>
 
           <div class="lg:col-span-5 flex justify-center lg:justify-end w-full">
