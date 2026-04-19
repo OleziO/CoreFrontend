@@ -10,7 +10,9 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
-    "api": "npx openapi-typescript http://193.169.241.19/api-json -o src/api/types/schema.d.ts"
+    "api": "npx openapi-typescript http://193.169.241.19/api-json -o src/api/types/schema.d.ts",
+    "api:local": "npx openapi-typescript http://localhost:3000/api-json -o src/api/types/schema.d.ts"
+
   },
   "dependencies": {
     "@phosphor-icons/vue": "^2.2.1",

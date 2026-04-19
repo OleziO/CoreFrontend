@@ -95,6 +95,20 @@
                 </el-button>
               </el-tooltip>
 
+              <el-button
+                v-if="showAdditionalInfo"
+                :loading="linkingSteam"
+                class="h-30 flex-1"
+                @click="handleSteamLink"
+              >
+                <Icon :size="16" name="steam" />
+                <span class="ml-8">
+                  {{
+                    player?.steamId ? 'Прив\'язати Steam' : 'Прив\'язати Steam'
+                  }}
+                </span>
+              </el-button>
+
               <!-- <el-tooltip
                 v-if="me.isAdmin.isAdmin || me.isAdmin.isModerator"
                 content="Функціонал в розробці" placement="top"
@@ -319,6 +333,7 @@ const playerStore = usePlayersStore()
 const me = useAuthStore()
 
 const loading = ref(false)
+const linkingSteam = ref(false)
 const apiPublicUrl = import.meta.env.VITE_API_PUBLIC_URL
 
 const links = computed(() => {
@@ -366,5 +381,30 @@ async function onOpen () {
   }
 }
 
-onMounted(onOpen)
+async function handleSteamLink () {
+  linkingSteam.value = true
+  try {
+    await me.linkSteam()
+  } catch {
+    ElMessage.error('Не вдалося отримати посилання для Steam. Спробуйте ще раз.')
+    linkingSteam.value = false
+  }
+}
+
+onMounted(async () => {
+  await onOpen()
+
+  const steamLinked = route.query.steam_linked
+  const steamError = route.query.steam_error
+
+  if (steamLinked === 'true') {
+    ElMessage.success("Steam акаунт успішно прив'язано!")
+    await me.fetchUser()
+    player.value = me.user as Player
+    router.replace({ name: routeNames.profile })
+  } else if (steamError) {
+    ElMessage.error(`Помилка прив'язки Steam: ${steamError}`)
+    router.replace({ name: routeNames.profile })
+  }
+})
 </script>

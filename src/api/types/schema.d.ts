@@ -220,6 +220,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/steam/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Steam OpenID link URL
+         * @description Returns a URL to redirect the authenticated user to for Steam account linking. No Valve partnership required — uses public Steam OpenID. After the user approves, Steam GET-redirects to STEAM_CALLBACK_URI where the account is linked server-side.
+         */
+        get: operations["AuthController_getSteamLinkUrl"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/steam/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Steam OpenID callback (server-side)
+         * @description Validates the Steam OpenID response, links the SteamID to the player, then redirects to STEAM_FRONTEND_REDIRECT.
+         */
+        get: operations["AuthController_steamCallback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/me": {
         parameters: {
             query?: never;
@@ -259,11 +299,11 @@ export interface components {
         Player: {
             id: string;
             steamId: string | null;
-            discordId: string;
+            discordId: string | null;
             telegramId: string | null;
             avatarUrl: string | null;
-            discordName: string;
-            discordUsername: string;
+            discordName: string | null;
+            discordUsername: string | null;
             rating: number;
             /** Format: date-time */
             verifiedAt: string;
@@ -430,11 +470,11 @@ export interface components {
         CurrentPlayerDto: {
             id: string;
             steamId?: string | null;
-            discordId: string;
+            discordId?: string | null;
             telegramId?: string | null;
             avatarUrl?: string | null;
-            discordName: string;
-            discordUsername: string;
+            discordName?: string | null;
+            discordUsername?: string | null;
             rating: number;
             /** Format: date-time */
             verifiedAt?: string | null;
@@ -1032,6 +1072,40 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_getSteamLinkUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_steamCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

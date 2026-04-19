@@ -23,6 +23,10 @@ class AuthService {
   async getMe (): Promise<TCurrentPlayer> {
     return apiClient.get('/auth/me')
   }
+
+  async getSteamLinkUrl (): Promise<{ url: string }> {
+    return apiClient.get('/auth/steam/link')
+  }
 }
 
 export const authService = new AuthService()

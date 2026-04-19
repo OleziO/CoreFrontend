@@ -63,6 +63,11 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function linkSteam () {
+    const { url } = await authService.getSteamLinkUrl()
+    window.location.href = url
+  }
+
   async function fetchUser () {
     if (!token.value) {
       user.value = null
@@ -89,6 +94,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     startDiscordLogin,
     handleDiscordCallback,
+    linkSteam,
     fetchUser
   }
 })
