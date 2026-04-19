@@ -124,7 +124,7 @@ import checkRoles from '@/core/helpers'
 import { ERole } from '@/types/general.types'
 import { useAuthStore } from '@/store/modules/auth'
 import { useAppModals } from '@/composables/use-app-modals'
-import type { TPlayer as Player } from '@/api/types/api.types'
+import type { TPlayer as Player, TUserRole as UserRole } from '@/api/types/api.types'
 
 interface IEditProfileForm {
   mmr: number | null
@@ -165,7 +165,7 @@ const isVerified = computed(() => {
 })
 
 const isAdmin = computed(() => {
-  return checkRoles(authStore.user?.roles || [], ERole.MODERATOR) || checkRoles(props.player.roles || [], ERole.ADMIN)
+  return checkRoles((authStore.user?.roles || []) as UserRole[], ERole.MODERATOR) || checkRoles(props.player.roles || [], ERole.ADMIN)
 })
 
 const isValid = computed(() => {

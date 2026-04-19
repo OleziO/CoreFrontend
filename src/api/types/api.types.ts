@@ -1,6 +1,7 @@
 import type { components } from './schema'
 
 export type TPlayer = components['schemas']['Player']
+export type TCurrentPlayer = components['schemas']['CurrentPlayerDto']
 export type TTeam = components['schemas']['Team']
 export type TTournament = components['schemas']['Tournament']
 export type TMatch = components['schemas']['Match']

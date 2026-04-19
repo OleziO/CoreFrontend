@@ -180,25 +180,88 @@ export interface paths {
         patch: operations["MatchesController_update"];
         trace?: never;
     };
+    "/auth/discord/url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Discord OAuth2 URL
+         * @description Redirect the browser to the returned URL. After login, Discord redirects to DISCORD_REDIRECT_URI with ?code=...&state=...; send those to POST /auth/discord/token.
+         */
+        get: operations["AuthController_getDiscordAuthorizeUrl"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/discord/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exchange Discord OAuth code for app JWT
+         * @description Body must include code and state exactly as returned by Discord on your redirect URI.
+         */
+        post: operations["AuthController_exchangeDiscordToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Current player profile
+         * @description Returns the Player row for the JWT subject. Send Authorization: Bearer <access_token>.
+         */
+        get: operations["AuthController_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         CreatePlayerDto: {
-            steamId: string;
+            /** @description Optional until linked; omit for Discord-only placeholder flows */
+            steamId?: string;
             discordId: string;
-            telegramId: string;
+            /** @description Optional until linked; omit for Discord-only placeholder flows */
+            telegramId?: string;
             avatarUrl?: string;
             discordName: string;
             discordUsername: string;
+            /** @default 0 */
             rating: number;
         };
         Player: {
             id: string;
-            steamId: string;
+            steamId: string | null;
             discordId: string;
-            telegramId: string;
-            avatarUrl: string;
+            telegramId: string | null;
+            avatarUrl: string | null;
             discordName: string;
             discordUsername: string;
             rating: number;
@@ -258,13 +321,16 @@ export interface components {
             tournaments: components["schemas"]["Tournament"][];
         };
         UpdatePlayerDto: {
+            /** @description Optional until linked; omit for Discord-only placeholder flows */
             steamId?: string;
             discordId?: string;
+            /** @description Optional until linked; omit for Discord-only placeholder flows */
             telegramId?: string;
             avatarUrl?: string;
             discordName?: string;
             discordUsername?: string;
-            rating?: number;
+            /** @default 0 */
+            rating: number;
         };
         CreateUserRoleDto: {
             name: string;
@@ -349,6 +415,30 @@ export interface components {
             /** @description UUID of the winning team */
             winnerId?: string;
             dotaMatchId?: string;
+        };
+        DiscordExchangeDto: {
+            /** @description Authorization code from Discord redirect */
+            code: string;
+            /** @description State value returned by Discord (signed by this API) */
+            state: string;
+        };
+        CurrentPlayerRoleDto: {
+            id: string;
+            name: string;
+            isAdminRole: boolean;
+        };
+        CurrentPlayerDto: {
+            id: string;
+            steamId?: string | null;
+            discordId: string;
+            telegramId?: string | null;
+            avatarUrl?: string | null;
+            discordName: string;
+            discordUsername: string;
+            rating: number;
+            /** Format: date-time */
+            verifiedAt?: string | null;
+            roles: components["schemas"]["CurrentPlayerRoleDto"][];
         };
     };
     responses: never;
@@ -907,6 +997,63 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Match"];
+                };
+            };
+        };
+    };
+    AuthController_getDiscordAuthorizeUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_exchangeDiscordToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscordExchangeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentPlayerDto"];
                 };
             };
         };

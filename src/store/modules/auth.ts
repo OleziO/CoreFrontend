@@ -1,14 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import type { TPlayer as Player, TUserRole as UserRole } from '@/api/types/api.types'
+import type { TCurrentPlayer, TUserRole as UserRole } from '@/api/types/api.types'
 import { authService } from '@/services/auth.service'
 
 export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
 
   const token = ref<string | null>(localStorage.getItem('userToken'))
-  const user = ref<Player | null>(null)
+  const user = ref<TCurrentPlayer | null>(null)
   const loginLoading = ref(false)
   const loginError = ref<string | null>(null)
 
@@ -53,6 +53,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const data = await authService.exchangeDiscordCode(code, state)
       login(data.access_token)
+      await fetchUser()
       return true
     } catch {
       loginError.value = 'Помилка авторизації через Discord. Спробуйте ще раз.'
@@ -63,10 +64,16 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function fetchUser () {
+    if (!token.value) {
+      user.value = null
+      return null
+    }
     try {
       const data = await authService.getMe()
+      user.value = data
       return data
     } catch {
+      user.value = null
       return null
     }
   }

@@ -31,10 +31,8 @@ router.beforeEach(async (to, from, next) => { // Перед роутингом �
     return next('/')
   }
 
-  if (!authStore.user) {
-    // TODO: endpoint not in API yet (fetchUser, getChats)
-    // await authStore.fetchUser()
-    // await authStore.getChats()
+  if (authStore.token && !authStore.user) {
+    await authStore.fetchUser()
   }
   next()
 })

@@ -11,7 +11,7 @@
         <div>
           <el-avatar
             :size="30"
-            :src="player.avatarUrl"
+            :src="player.avatarUrl ?? undefined"
           />
         </div>
 

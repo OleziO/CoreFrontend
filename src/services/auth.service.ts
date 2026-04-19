@@ -1,4 +1,5 @@
 import apiClient from '@/api/client'
+import type { TCurrentPlayer } from '@/api/types/api.types'
 
 interface DiscordUrlResponse {
   url: string
@@ -10,10 +11,6 @@ interface DiscordTokenResponse {
   expires_in: number
 }
 
-interface MeResponse {
-  playerId: string
-}
-
 class AuthService {
   async getDiscordAuthUrl (): Promise<DiscordUrlResponse> {
     return apiClient.get('/auth/discord/url')
@@ -23,7 +20,7 @@ class AuthService {
     return apiClient.post('/auth/discord/token', { code, state })
   }
 
-  async getMe (): Promise<MeResponse> {
+  async getMe (): Promise<TCurrentPlayer> {
     return apiClient.get('/auth/me')
   }
 }
