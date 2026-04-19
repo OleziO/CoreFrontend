@@ -3,7 +3,7 @@
   "version": "2.1.0",
   "type": "module",
   "scripts": {
-    "dev-only": "vite --host",
+    "dev-only": "vite --host --mode dev",
     "dev": "run-s dev-only",
     "build": "run-s type-check build-only",
     "preview": "vite preview",
