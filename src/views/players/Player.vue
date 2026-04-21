@@ -31,7 +31,7 @@
                 <div class="relative">
                   <el-avatar
                     size="large"
-                    :src="player.avatarUrl ? `${apiPublicUrl}${player.avatarUrl}` : ''"
+                    :src="player.avatarUrl ?? ''"
                     class="ring-2 ring-gray-800 shadow-md"
                   >
                     <template #default>
@@ -82,30 +82,29 @@
             </div>
 
             <div class="w-full flex items-center justify-between mt-20 gap-20 p-8">
-              <!-- TODO: endpoint not in API yet (edit profile, add points, verify, verification request) -->
               <el-tooltip content="Функціонал в розробці">
                 <el-button
                   v-if="showAdditionalInfo"
                   type="primary"
-                  disabled
                   class="h-30 flex-1"
+                  @click="openEditProfileModal"
                 >
                   <PhPencil />
+
                   <span class="ml-8">Редагувати {{ window.width.value > 650 ? ' профіль' : '' }}</span>
                 </el-button>
               </el-tooltip>
 
               <el-button
-                v-if="showAdditionalInfo"
+                v-if="showAdditionalInfo && !player.steamId"
                 :loading="linkingSteam"
                 class="h-30 flex-1"
                 @click="handleSteamLink"
               >
                 <Icon :size="16" name="steam" />
+
                 <span class="ml-8">
-                  {{
-                    player?.steamId ? 'Прив\'язати Steam' : 'Прив\'язати Steam'
-                  }}
+                  Прив\'язати Steam
                 </span>
               </el-button>
 
@@ -264,7 +263,7 @@
           </div>
         </div>
 
-        <!-- Team section commented out: team membership fields not in new Player schema -->
+        <!-- Team section commented out: team membership fields not in new TPlayer schema -->
         <div
           class="
             rounded-2xl flex justify-between flex-wrap
@@ -320,13 +319,13 @@ import {
 
 import { getCopy, getSteamProfileUrl, getDotabuffProfileUrl, getDiscordProfileUrl } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
-import type { TPlayer as Player } from '@/api/types/api.types'
+import type { TPlayer } from '@/api/types/api.types'
 
 const route = useRoute()
 const router = useRouter()
-const player = ref<Player | null>(null)
+const player = ref<TPlayer | null>(null)
 
-// const { open, close } = useAppModals()
+const { open } = useAppModals()
 const window = useWindowSize()
 
 const playerStore = usePlayersStore()
@@ -334,7 +333,6 @@ const me = useAuthStore()
 
 const loading = ref(false)
 const linkingSteam = ref(false)
-const apiPublicUrl = import.meta.env.VITE_API_PUBLIC_URL
 
 const links = computed(() => {
   return {
@@ -372,7 +370,7 @@ async function onOpen () {
 
   loading.value = true
   try {
-    player.value = isMePage ? (me.user as Player) : await playerStore.findPlayer(id)
+    player.value = isMePage ? (me.user as TPlayer) : await playerStore.findPlayer(id)
     if (!player.value) throw new Error()
   } catch {
     router.push('/')
@@ -391,6 +389,12 @@ async function handleSteamLink () {
   }
 }
 
+function openEditProfileModal () {
+  if (!player.value) return
+
+  open('PLayerEditProfileModal', { player: player.value })
+}
+
 onMounted(async () => {
   await onOpen()
 
@@ -400,7 +404,7 @@ onMounted(async () => {
   if (steamLinked === 'true') {
     ElMessage.success("Steam акаунт успішно прив'язано!")
     await me.fetchUser()
-    player.value = me.user as Player
+    player.value = me.user as TPlayer
     router.replace({ name: routeNames.profile })
   } else if (steamError) {
     ElMessage.error(`Помилка прив'язки Steam: ${steamError}`)

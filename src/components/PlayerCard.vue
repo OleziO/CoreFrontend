@@ -14,7 +14,7 @@
         <div class="flex items-center justify-between w-full gap-10">
           <div class="relative truncate flex items-center gap-15">
             <el-avatar
-              :src="`${apiPublicUrl}${player.avatarUrl}`"
+              :src="player.avatarUrl ?? ''"
               class="border-2 relative min-w-50 size-50 border-gray-700 shadow-sm transition-all duration-300"
             />
 
@@ -61,10 +61,10 @@
 import { RouterLink } from 'vue-router'
 import { routeNames } from '@/router/route-names'
 import { getCopy } from '@/core/helpers'
-import type { TPlayer as Player } from '@/api/types/api.types'
+import type { TPlayer } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
-  player: Player | null
+  player: TPlayer | null
   showStatusGlow?: boolean
   showRegularCap?: boolean
   skipTeamFetch?: boolean
@@ -79,8 +79,6 @@ const props = withDefaults(defineProps<{
 const isVerified = computed(() => {
   return !!props.player?.verifiedAt
 })
-
-const apiPublicUrl = import.meta.env.VITE_API_PUBLIC_URL
 
 // function kickFromTeam () {
 //   emit('removePlayer', props.player?.id)

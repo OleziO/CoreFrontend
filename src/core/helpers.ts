@@ -1,7 +1,7 @@
 import { ERole } from '@/types/general.types'
 import get from 'lodash/get'
 import type { LocationQueryValue } from 'vue-router'
-import type { TPlayer as Player, TUserRole as UserRole } from '@/api/types/api.types'
+import type { TPlayer, TUserRole as UserRole } from '@/api/types/api.types'
 
 export const createHashedObject = <
   T extends TIndexedObject,
@@ -68,7 +68,7 @@ export function formatDate (date: Date) {
   return date.toLocaleDateString('uk-UA').slice(0, 10)
 }
 
-export function searchPlayer (player: Player, search = '') {
+export function searchPlayer (player: TPlayer, search = '') {
   if (!search) return true
   return player.discordUsername?.toLowerCase().includes(search.toLowerCase()) ||
          player.discordName?.toLowerCase().includes(search.toLowerCase()) ||

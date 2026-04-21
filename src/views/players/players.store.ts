@@ -1,7 +1,7 @@
-import type { TPlayer as Player } from '@/api/types/api.types'
+import type { TPlayer } from '@/api/types/api.types'
 
 export const usePlayersStore = defineStore('players', () => {
-  const players = ref<Player[]>([])
+  const players = ref<TPlayer[]>([])
   const loading = ref(false)
 
   async function findPlayer (playerId?: string | null) {
@@ -14,7 +14,7 @@ export const usePlayersStore = defineStore('players', () => {
     return players.value.find(player => player.id === playerId) || null
   }
 
-  // function searchPlayer (player: Player, search = '') {
+  // function searchPlayer (player: TPlayer, search = '') {
   //   if (!search) return true
   //
   //   const q = search.toLowerCase()
@@ -59,7 +59,7 @@ export const usePlayersStore = defineStore('players', () => {
   // async function changePlayerRespect (id: string, action: 'like' | 'dislike') { ... }
 
   // TODO: endpoint not in API yet
-  // function isVerified (player: Player) { ... }
+  // function isVerified (player: TPlayer) { ... }
 
   // TODO: endpoint not in API yet
   // async function verifyPlayer (playerId: string) { ... }

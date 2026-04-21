@@ -124,7 +124,7 @@ import checkRoles from '@/core/helpers'
 import { ERole } from '@/types/general.types'
 import { useAuthStore } from '@/store/modules/auth'
 import { useAppModals } from '@/composables/use-app-modals'
-import type { TPlayer as Player, TUserRole as UserRole } from '@/api/types/api.types'
+import type { TPlayer, TUserRole as UserRole } from '@/api/types/api.types'
 
 interface IEditProfileForm {
   mmr: number | null
@@ -137,12 +137,12 @@ const modelValue = defineModel<boolean>({ default: false })
 const emit = defineEmits<{
   (e: 'submit', payload: IEditProfileForm): void
   (e: 'connect-discord'): void
-  (e: 'updated', player: Player): void
+  (e: 'updated', player: TPlayer): void
 }>()
 
 const props = defineProps<{
-  player: Player
-  onUpdated?: (player: Player) => void
+  player: TPlayer
+  onUpdated?: (player: TPlayer) => void
 }>()
 
 const authStore = useAuthStore()
@@ -165,7 +165,8 @@ const isVerified = computed(() => {
 })
 
 const isAdmin = computed(() => {
-  return checkRoles((authStore.user?.roles || []) as UserRole[], ERole.MODERATOR) || checkRoles(props.player.roles || [], ERole.ADMIN)
+  return checkRoles((authStore.user?.roles || []) as UserRole[], ERole.MODERATOR) ||
+  checkRoles(props.player.roles || [], ERole.ADMIN)
 })
 
 const isValid = computed(() => {

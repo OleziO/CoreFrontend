@@ -160,7 +160,7 @@
 <script setup lang="ts">
 import { PhSlidersHorizontal, PhCallBell, PhMagnifyingGlass } from '@phosphor-icons/vue'
 import type { LocationQuery } from 'vue-router'
-import type { TPlayer as Player } from '@/api/types/api.types'
+import type { TPlayer } from '@/api/types/api.types'
 
 const USER_CARD_WIDTH = 270
 const USER_CARD_HEIGHT = 360
@@ -190,7 +190,7 @@ const filteredPlayers = computed(() => {
     : mappedPlayers
 })
 
-function checkQueryFilter (player: Player, query: LocationQuery) {
+function checkQueryFilter (player: TPlayer, query: LocationQuery) {
   const ratingFrom = query.ratingFrom != null ? Number(query.ratingFrom) : 0
   const ratingTo = query.ratingTo != null ? Number(query.ratingTo) : 9999
   const rating = player.rating ?? 0
@@ -212,7 +212,7 @@ const activeFiltersCount = computed(() => {
   return count
 })
 
-function searchPlayer (player: Player) {
+function searchPlayer (player: TPlayer) {
   if (!search.value) return true
   return player.discordName?.toLowerCase().includes(search.value.toLowerCase()) ||
          player.discordUsername?.toLowerCase().includes(search.value.toLowerCase()) ||

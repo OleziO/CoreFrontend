@@ -95,7 +95,7 @@
 
             <el-image
               class="h-36 w-36 rounded-full border border-white/25"
-              :src="`${urlForProfileImg}${authStore.user?.avatarUrl}`"
+              :src="authStore.user?.avatarUrl ?? ''"
               fit="cover"
             />
           </div>
@@ -141,8 +141,6 @@ import { PhDiscordLogo, PhSignOut } from '@phosphor-icons/vue'
 import RoleGuard from '@/guards/RoleGuard.vue'
 
 const authStore = useAuthStore()
-
-const urlForProfileImg = import.meta.env.VITE_API_PUBLIC_URL
 
 const navLinks = computed(() => {
   const links: { name: string; label: string }[] = [

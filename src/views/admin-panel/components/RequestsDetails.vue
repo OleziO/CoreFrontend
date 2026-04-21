@@ -53,7 +53,7 @@ const activeTab = ref<TRequestTabType>('mmr')
 const tabs: { label: string; value: TRequestTabType }[] = [
   { label: 'MMR', value: 'mmr' },
   { label: 'Team Verification', value: 'team-verification' },
-  { label: 'Player Verification', value: 'player-verification' },
+  { label: 'TPlayer Verification', value: 'player-verification' },
   { label: 'Баги', value: 'bugs' }
 ]
 </script>

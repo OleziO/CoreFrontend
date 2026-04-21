@@ -9,9 +9,9 @@
 </template>
 
 <script setup lang="ts">
-import type { TPlayer as Player } from '@/api/types/api.types'
+import type { TPlayer } from '@/api/types/api.types'
 
-const props = defineProps<{ user: Player }>()
+const props = defineProps<{ user: TPlayer }>()
 
 const hasTeam = computed(() => {
   return !!(props.user as any)?.teamId || false

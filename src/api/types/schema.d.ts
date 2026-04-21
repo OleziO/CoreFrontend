@@ -269,7 +269,7 @@ export interface paths {
         };
         /**
          * Current player profile
-         * @description Returns the Player row for the JWT subject. Send Authorization: Bearer <access_token>.
+         * @description Returns the TPlayer row for the JWT subject. Send Authorization: Bearer <access_token>.
          */
         get: operations["AuthController_me"];
         put?: never;
@@ -296,7 +296,7 @@ export interface components {
             /** @default 0 */
             rating: number;
         };
-        Player: {
+        TPlayer: {
             id: string;
             steamId: string | null;
             discordId: string | null;
@@ -319,14 +319,14 @@ export interface components {
         Team: {
             id: string;
             name: string;
-            captain: components["schemas"]["Player"];
-            coach: components["schemas"]["Player"];
+            captain: components["schemas"]["TPlayer"];
+            coach: components["schemas"]["TPlayer"];
             isVerified: boolean;
             isPlayingTournament: boolean;
             /** Format: date-time */
             verifiedAt: string;
-            mainPlayers: components["schemas"]["Player"][];
-            reservedPlayers: components["schemas"]["Player"][];
+            mainPlayers: components["schemas"]["TPlayer"][];
+            reservedPlayers: components["schemas"]["TPlayer"][];
             tournament: components["schemas"]["Tournament"] | null;
             matchesAsTeamA: components["schemas"]["Match"][];
             matchesAsTeamB: components["schemas"]["Match"][];
@@ -357,7 +357,7 @@ export interface components {
             id: string;
             name: string;
             isAdminRole: boolean;
-            player: components["schemas"]["Player"];
+            player: components["schemas"]["TPlayer"];
             tournaments: components["schemas"]["Tournament"][];
         };
         UpdatePlayerDto: {
@@ -520,7 +520,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Player"][];
+                    "application/json": components["schemas"]["TPlayer"][];
                 };
             };
         };
@@ -543,7 +543,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Player"];
+                    "application/json": components["schemas"]["TPlayer"];
                 };
             };
         };
@@ -564,7 +564,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Player"];
+                    "application/json": components["schemas"]["TPlayer"];
                 };
             };
         };
@@ -608,7 +608,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Player"];
+                    "application/json": components["schemas"]["TPlayer"];
                 };
             };
         };

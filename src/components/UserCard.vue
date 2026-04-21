@@ -41,7 +41,7 @@
     <div class="relative mb-15 mt-6">
       <el-avatar
         size="large"
-        :src="user.avatarUrl ? `${apiPublicUrl}${user.avatarUrl}` : ''"
+        :src="user.avatarUrl ?? ''"
         class="ring-2 ring-gray-800 shadow-md transition-all duration-300"
       >
         <template #default>
@@ -141,10 +141,10 @@ import {
   PhDotsThree
 } from '@phosphor-icons/vue'
 
-import type { TPlayer as Player } from '@/api/types/api.types'
+import type { TPlayer } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
-  user: Player
+  user: TPlayer
   width?: number
 }>(), {
   width: 210
@@ -158,9 +158,7 @@ const router = useRouter()
 const isMobile = computed(() => window.width.value < 850)
 const isVerified = computed(() => !!props.user.verifiedAt)
 
-const apiPublicUrl = import.meta.env.VITE_API_PUBLIC_URL
-
-function copyDiscordName (player: Player) {
+function copyDiscordName (player: TPlayer) {
   if (!player.discordUsername) return
   copy(player.discordUsername)
   ElMessage.success('Discord скопійовано')

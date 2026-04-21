@@ -44,14 +44,16 @@
       </div>
       <div class="flex items-center gap-30 border-b border-gray-800 pb-20">
         <el-avatar
-          :src="getImageUrl(user?.avatarUrl as string)"
+          :src="user?.avatarUrl ?? ''"
           size="large"
           class="ring-2 ring-gray-700 shadow-md"
         />
+
         <div class="flex flex-col justify-center">
           <h1 class="text-2xl font-semibold text-white leading-tight">
             {{ user?.discordName }}
           </h1>
+
           <p class="text-gray-400 text-sm">@{{ user?.discordUsername }}</p>
         </div>
       </div>
@@ -84,7 +86,7 @@
               </h2>
             </div>
           </div>
-          <!-- TODO: team info not in Player API schema yet -->
+          <!-- TODO: team info not in TPlayer API schema yet -->
           <div class="text-gray-500 text-sm italic">
             Ви ще не приєднані до жодної команди
           </div>
@@ -109,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { getDiscordProfileUrl, getDotabuffProfileUrl, getImageUrl, getSteamProfileUrl } from '@/core/helpers'
+import { getDiscordProfileUrl, getDotabuffProfileUrl, getSteamProfileUrl } from '@/core/helpers'
 import { Ellipsis } from 'lucide-vue-next'
 
 import steamImg from '@/assets/icons/steam-logo.svg'
@@ -120,10 +122,6 @@ const authStore = useAuthStore()
 
 const user = computed(() => {
   return authStore.user
-})
-
-onMounted(() => {
-  // TODO: endpoint not in API yet (fetchUser)
 })
 
 </script>

@@ -133,7 +133,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { tournamentFields } from '@/constants/tournaments'
-import { getImageUrl } from '@/core/helpers'
 import { queryCache } from '@/core/query-cache-client'
 import { tournamentStatuses } from '@/utils/formatters'
 import { Plus, Edit } from '@element-plus/icons-vue'
@@ -182,7 +181,7 @@ watch(() => showUpdateTournamentDrawer.value, (isOpen) => {
       registrationEndsAt: props.newTournamentData.registrationEndsAt || ''
     }
     if (props.newTournamentData.headerBannerUrl) {
-      preview.value = getImageUrl(props.newTournamentData.headerBannerUrl)
+      preview.value = props.newTournamentData.headerBannerUrl
     }
   }
 })

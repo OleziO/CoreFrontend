@@ -1,35 +1,35 @@
 import apiClient from '@/api/client'
 import { ElMessage } from 'element-plus'
-import type { TPlayer as Player, TUpdatePlayerDto as UpdatePlayerDto } from '@/api/types/api.types'
+import type { TPlayer, TUpdatePlayerDto as UpdatePlayerDto } from '@/api/types/api.types'
 
 class PlayersService {
-  async fetchPlayers (): Promise<Player[]> {
+  async fetchPlayers (): Promise<TPlayer[]> {
     try {
       const res = await apiClient.get('/players')
-      return res as Player[]
+      return res as TPlayer[]
     } catch (e) {
       ElMessage({ type: 'error', message: 'Не вдалося завантажити гравців' })
       throw e
     }
   }
 
-  async fetchPlayerItemById (id: string): Promise<Player | null> {
+  async fetchPlayerItemById (id: string): Promise<TPlayer | null> {
     try {
       const res = await apiClient.get('/players/{id}', {
         dynamicKeys: { id }
       })
-      return res as Player
+      return res as TPlayer
     } catch (e) {
       ElMessage.error('Гравця не знайдено')
       return null
     }
   }
 
-  async updatePlayer (id: string, data: UpdatePlayerDto): Promise<Player> {
+  async updatePlayer (id: string, data: UpdatePlayerDto): Promise<TPlayer> {
     const res = await apiClient.patch('/players/{id}', data, {
       dynamicKeys: { id }
     })
-    return res as Player
+    return res as TPlayer
   }
 
   async deletePlayer (id: string): Promise<void> {
