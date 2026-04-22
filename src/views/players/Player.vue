@@ -82,18 +82,16 @@
             </div>
 
             <div class="w-full flex items-center justify-between mt-20 gap-20 p-8">
-              <el-tooltip content="Функціонал в розробці">
-                <el-button
-                  v-if="showAdditionalInfo"
-                  type="primary"
-                  class="h-30 flex-1"
-                  @click="openEditProfileModal"
-                >
-                  <PhPencil />
+              <el-button
+                v-if="showAdditionalInfo"
+                type="primary"
+                class="h-30 flex-1"
+                @click="openEditProfileModal"
+              >
+                <PhPencil />
 
-                  <span class="ml-8">Редагувати {{ window.width.value > 650 ? ' профіль' : '' }}</span>
-                </el-button>
-              </el-tooltip>
+                <span class="ml-8">Редагувати {{ window.width.value > 650 ? ' профіль' : '' }}</span>
+              </el-button>
 
               <el-button
                 v-if="showAdditionalInfo && !player.steamId"
@@ -104,7 +102,7 @@
                 <Icon :size="16" name="steam" />
 
                 <span class="ml-8">
-                  Прив\'язати Steam
+                  Прив'язати Steam
                 </span>
               </el-button>
 
