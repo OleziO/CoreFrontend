@@ -197,6 +197,7 @@
                   <span class="text-xs uppercase text-center tracking-widest text-gray-400 cursor-default">
                     Порядність
                   </span>
+
                   <span class="mt-10 text-lg font-semibold text-white cursor-default">
                     {{ player?.rating || 0 }}
                   </span>
