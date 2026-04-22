@@ -156,6 +156,7 @@ const me = useAuthStore()
 const router = useRouter()
 
 const isMobile = computed(() => window.width.value < 850)
+
 const isVerified = computed(() => !!props.user.verifiedAt)
 
 function copyDiscordName (player: TPlayer) {
