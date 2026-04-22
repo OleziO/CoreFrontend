@@ -1,0 +1,10 @@
+RewriteEngine On
+
+RewriteCond %{HTTP_HOST} ^core-league-dota2\.org$ [NC]
+RewriteRule ^(.*)$ https://www.core-league-dota2.org/$1 [L,R=301]
+
+RewriteBase /
+RewriteRule ^index\.html$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
