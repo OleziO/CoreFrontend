@@ -1,5 +1,9 @@
 {
   "rewrites": [
+    {
+      "source": "/auth/steam/callback",
+      "destination": "https://api.core-league-dota2.org/auth/steam/callback"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

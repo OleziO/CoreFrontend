@@ -1,6 +1,6 @@
 import { ERole } from '@/types/general.types'
 import get from 'lodash/get'
-import type { LocationQueryValue } from 'vue-router'
+import type { LocationQueryValue, RouteLocationNormalized } from 'vue-router'
 import type { TPlayer, TUserRole as UserRole } from '@/api/types/api.types'
 
 export const createHashedObject = <
@@ -49,6 +49,15 @@ export function getSteamProfileUrl (steamId: string | null | undefined) {
 
 export function getDotabuffProfileUrl (dotabuffId: string | null | undefined) {
   return `https://dotabuff.com/players/${dotabuffId}`
+}
+
+/** Single value from vue-router query (handles `?code=a&code=b` → first). */
+export function firstQueryValue (value: RouteLocationNormalized['query'][string]) {
+  if (value == null) return undefined
+
+  const raw = Array.isArray(value) ? value[0] : value
+
+  return raw ?? undefined
 }
 
 export function parseQueryArray<T = string> (

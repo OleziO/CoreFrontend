@@ -1,12 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import type { RouteLocationNormalized } from 'vue-router'
-import { routes } from './route-names'
-
-function firstQueryValue (value: RouteLocationNormalized['query'][string]): string | undefined {
-  if (value == null) return undefined
-  const raw = Array.isArray(value) ? value[0] : value
-  return raw ?? undefined
-}
+import { firstQueryValue } from '@/core/helpers'
+import { routes, routeNames } from './route-names'
 
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,12 +11,24 @@ router.beforeEach(async (to, from, next) => { // Перед роутингом �
   // Discord (or backend) may use redirect URI = site root; callback UI lives at /auth/callback.
   const oauthCode = firstQueryValue(to.query.code)
   const oauthState = firstQueryValue(to.query.state)
-  if (oauthCode && oauthState && to.path !== '/auth/callback') {
+  if (oauthCode && oauthState && to.name !== routeNames.authCallback) {
     return next({
       path: '/auth/callback',
       query: { code: oauthCode, state: oauthState },
       replace: true
     })
+  }
+
+  // Після Steam OpenID бекенд редіректить з ?steam_linked або ?steam_error; UI обробляє це в /me (Player.vue).
+  const steamLinked = firstQueryValue(to.query.steam_linked)
+  const steamError = firstQueryValue(to.query.steam_error)
+  if (steamLinked !== undefined || steamError !== undefined) {
+    if (to.name !== routeNames.profile) {
+      const q: Record<string, string> = {}
+      if (steamLinked !== undefined) q.steam_linked = steamLinked
+      if (steamError !== undefined) q.steam_error = steamError
+      return next({ name: routeNames.profile, query: q, replace: true })
+    }
   }
 
   const authStore = useAuthStore()

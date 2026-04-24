@@ -24,6 +24,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted } from 'vue'
+import { firstQueryValue } from '@/core/helpers'
 import { useAuthStore } from '@/store/modules/auth'
 import { routeNames } from '@/router/route-names'
 import { PhWarningCircle } from '@phosphor-icons/vue'
@@ -33,8 +34,8 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 onMounted(async () => {
-  const code = route.query.code as string | undefined
-  const state = route.query.state as string | undefined
+  const code = firstQueryValue(route.query.code)
+  const state = firstQueryValue(route.query.state)
 
   if (!code || !state) {
     authStore.loginError = 'Відсутні параметри авторизації (code або state).'
