@@ -18,19 +18,20 @@
       rounded-xl
       bg-white/10
       border
+      px-0
       border-white/20
       backdrop-blur-md
-      shadow-none
-      transition-all
-      duration-200
-      ease-out;
+      shadow-none;
+    /* transition-all + backdrop-blur дає «блік» при blur — анімуємо лише фон і рамку */
+    transition: background-color 0.2s ease-out, border-color 0.2s ease-out;
 
     &:hover {
       @apply bg-white/15 border-white/30;
     }
 
     &:focus-within {
-      @apply border-white/40;
+      @apply border-white/40 shadow-none;
+      box-shadow: none;
     }
   }
 
@@ -44,16 +45,18 @@
       text-white
       placeholder-white/40
       outline-none
-      px-4
+      px-15
       py-10
       rounded-xl
       text-sm
       font-medium;
 
-    transition: all 0.2s ease-in-out;
+    transition: color 0.2s ease-out;
 
     &:focus {
-      @apply ring-0;
+      @apply ring-0 shadow-none;
+      outline: none;
+      box-shadow: none;
     }
 
     &::placeholder {
@@ -96,11 +99,9 @@
       border
       border-white/20
       backdrop-blur-md
-      transition-all
-      duration-200
-      ease-out
       px-10
       shadow-none;
+    transition: background-color 0.2s ease-out, border-color 0.2s ease-out;
   }
 
   .el-input-group__prepend {
@@ -177,7 +178,7 @@
 
       &:focus {
         border-color: #43bfee;
-        box-shadow: 0 0 8px rgba(67, 191, 238, 0.4);
+        box-shadow: none;
       }
 
       &::placeholder {

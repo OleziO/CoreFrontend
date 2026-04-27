@@ -86,6 +86,7 @@ export function searchPlayer (player: TPlayer, search = '') {
 
 function checkRoles (roles: UserRole[], roleName: ERole) {
   if (!roles?.length || !roleName) return false
+
   return roles.some(role => role.name === roleName)
 }
 

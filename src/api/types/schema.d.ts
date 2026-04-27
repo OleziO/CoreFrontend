@@ -52,6 +52,130 @@ export interface paths {
         patch: operations["PlayersController_update"];
         trace?: never;
     };
+    "/auth/discord/url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Discord OAuth2 URL
+         * @description Redirect the browser to the returned URL. After login, Discord redirects to DISCORD_REDIRECT_URI with ?code=...&state=...; send those to POST /auth/discord/token.
+         */
+        get: operations["AuthController_getDiscordAuthorizeUrl"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/discord/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exchange Discord OAuth code for app JWT
+         * @description Body must include code and state exactly as returned by Discord on your redirect URI.
+         */
+        post: operations["AuthController_exchangeDiscordToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/steam/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Steam OpenID link URL
+         * @description Returns a URL to redirect the authenticated user to for Steam account linking. No Valve partnership required — uses public Steam OpenID. After the user approves, Steam GET-redirects to STEAM_CALLBACK_URI where the account is linked server-side.
+         */
+        get: operations["AuthController_getSteamLinkUrl"];
+        put?: never;
+        post?: never;
+        /**
+         * Unlink Steam account
+         * @description Clears the steamId on the current player.
+         */
+        delete: operations["AuthController_unlinkSteam"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/steam/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify linked Steam account
+         * @description Calls the Steam API to confirm the linked account still exists. Clears steamId automatically if the account is gone. Requires STEAM_API_KEY env var.
+         */
+        post: operations["AuthController_verifySteamAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/steam/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Steam OpenID callback (server-side)
+         * @description Validates the Steam OpenID response, links the SteamID to the player, then redirects to STEAM_FRONTEND_REDIRECT.
+         */
+        get: operations["AuthController_steamCallback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Current player profile
+         * @description Returns the Player row for the JWT subject. Send Authorization: Bearer <access_token>.
+         */
+        get: operations["AuthController_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/user-roles": {
         parameters: {
             query?: never;
@@ -180,27 +304,7 @@ export interface paths {
         patch: operations["MatchesController_update"];
         trace?: never;
     };
-    "/auth/discord/url": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Discord OAuth2 URL
-         * @description Redirect the browser to the returned URL. After login, Discord redirects to DISCORD_REDIRECT_URI with ?code=...&state=...; send those to POST /auth/discord/token.
-         */
-        get: operations["AuthController_getDiscordAuthorizeUrl"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/discord/token": {
+    "/admin/players/{playerId}/verify": {
         parameters: {
             query?: never;
             header?: never;
@@ -210,71 +314,15 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Exchange Discord OAuth code for app JWT
-         * @description Body must include code and state exactly as returned by Discord on your redirect URI.
+         * Verify a player
+         * @description Sets the player's role to 'user' and stamps verifiedAt. Requires admin role.
          */
-        post: operations["AuthController_exchangeDiscordToken"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/steam/link": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
+        post: operations["AdminController_verifyPlayer"];
         /**
-         * Get Steam OpenID link URL
-         * @description Returns a URL to redirect the authenticated user to for Steam account linking. No Valve partnership required — uses public Steam OpenID. After the user approves, Steam GET-redirects to STEAM_CALLBACK_URI where the account is linked server-side.
+         * Unverify a player
+         * @description Reverts the player's role to 'guest' and clears verifiedAt. Requires admin role.
          */
-        get: operations["AuthController_getSteamLinkUrl"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/steam/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Steam OpenID callback (server-side)
-         * @description Validates the Steam OpenID response, links the SteamID to the player, then redirects to STEAM_FRONTEND_REDIRECT.
-         */
-        get: operations["AuthController_steamCallback"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Current player profile
-         * @description Returns the TPlayer row for the JWT subject. Send Authorization: Bearer <access_token>.
-         */
-        get: operations["AuthController_me"];
-        put?: never;
-        post?: never;
-        delete?: never;
+        delete: operations["AdminController_unverifyPlayer"];
         options?: never;
         head?: never;
         patch?: never;
@@ -295,8 +343,10 @@ export interface components {
             discordUsername: string;
             /** @default 0 */
             rating: number;
+            /** @description Dota map / roles (1–5); omit or null when unset */
+            positions?: (1 | 2 | 3 | 4 | 5)[] | null;
         };
-        TPlayer: {
+        Player: {
             id: string;
             steamId: string | null;
             discordId: string | null;
@@ -305,8 +355,10 @@ export interface components {
             discordName: string | null;
             discordUsername: string | null;
             rating: number;
+            /** @description Dota map / roles (1–5); null when unset */
+            positions: (1 | 2 | 3 | 4 | 5)[] | null;
             /** Format: date-time */
-            verifiedAt: string;
+            verifiedAt: string | null;
             roles: components["schemas"]["UserRoles"][];
         };
         Match: {
@@ -319,14 +371,14 @@ export interface components {
         Team: {
             id: string;
             name: string;
-            captain: components["schemas"]["TPlayer"];
-            coach: components["schemas"]["TPlayer"];
+            captain: components["schemas"]["Player"];
+            coach: components["schemas"]["Player"];
             isVerified: boolean;
             isPlayingTournament: boolean;
             /** Format: date-time */
             verifiedAt: string;
-            mainPlayers: components["schemas"]["TPlayer"][];
-            reservedPlayers: components["schemas"]["TPlayer"][];
+            mainPlayers: components["schemas"]["Player"][];
+            reservedPlayers: components["schemas"]["Player"][];
             tournament: components["schemas"]["Tournament"] | null;
             matchesAsTeamA: components["schemas"]["Match"][];
             matchesAsTeamB: components["schemas"]["Match"][];
@@ -357,7 +409,7 @@ export interface components {
             id: string;
             name: string;
             isAdminRole: boolean;
-            player: components["schemas"]["TPlayer"];
+            player: components["schemas"]["Player"];
             tournaments: components["schemas"]["Tournament"][];
         };
         UpdatePlayerDto: {
@@ -371,6 +423,34 @@ export interface components {
             discordUsername?: string;
             /** @default 0 */
             rating: number;
+            /** @description Dota map / roles (1–5); omit or null when unset */
+            positions?: (1 | 2 | 3 | 4 | 5)[] | null;
+        };
+        DiscordExchangeDto: {
+            /** @description Authorization code from Discord redirect */
+            code: string;
+            /** @description State value returned by Discord (signed by this API) */
+            state: string;
+        };
+        CurrentPlayerRoleDto: {
+            id: string;
+            name: string;
+            isAdminRole: boolean;
+        };
+        CurrentPlayerDto: {
+            id: string;
+            steamId?: string | null;
+            discordId?: string | null;
+            telegramId?: string | null;
+            avatarUrl?: string | null;
+            discordName?: string | null;
+            discordUsername?: string | null;
+            rating: number;
+            /** @description Dota map / roles (1–5) */
+            positions?: (1 | 2 | 3 | 4 | 5)[] | null;
+            /** Format: date-time */
+            verifiedAt?: string | null;
+            roles: components["schemas"]["CurrentPlayerRoleDto"][];
         };
         CreateUserRoleDto: {
             name: string;
@@ -456,30 +536,6 @@ export interface components {
             winnerId?: string;
             dotaMatchId?: string;
         };
-        DiscordExchangeDto: {
-            /** @description Authorization code from Discord redirect */
-            code: string;
-            /** @description State value returned by Discord (signed by this API) */
-            state: string;
-        };
-        CurrentPlayerRoleDto: {
-            id: string;
-            name: string;
-            isAdminRole: boolean;
-        };
-        CurrentPlayerDto: {
-            id: string;
-            steamId?: string | null;
-            discordId?: string | null;
-            telegramId?: string | null;
-            avatarUrl?: string | null;
-            discordName?: string | null;
-            discordUsername?: string | null;
-            rating: number;
-            /** Format: date-time */
-            verifiedAt?: string | null;
-            roles: components["schemas"]["CurrentPlayerRoleDto"][];
-        };
     };
     responses: never;
     parameters: never;
@@ -520,7 +576,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TPlayer"][];
+                    "application/json": components["schemas"]["Player"][];
                 };
             };
         };
@@ -543,7 +599,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TPlayer"];
+                    "application/json": components["schemas"]["Player"];
                 };
             };
         };
@@ -564,7 +620,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TPlayer"];
+                    "application/json": components["schemas"]["Player"];
                 };
             };
         };
@@ -608,7 +664,132 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TPlayer"];
+                    "application/json": components["schemas"]["Player"];
+                };
+            };
+        };
+    };
+    AuthController_getDiscordAuthorizeUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_exchangeDiscordToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscordExchangeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_getSteamLinkUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_unlinkSteam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_verifySteamAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_steamCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentPlayerDto"];
                 };
             };
         };
@@ -1041,83 +1222,34 @@ export interface operations {
             };
         };
     };
-    AuthController_getDiscordAuthorizeUrl: {
+    AdminController_verifyPlayer: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                playerId: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_exchangeDiscordToken: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DiscordExchangeDto"];
-            };
-        };
         responses: {
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-        };
-    };
-    AuthController_getSteamLinkUrl: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
+                content: {
+                    "application/json": Record<string, never>;
                 };
-                content?: never;
             };
         };
     };
-    AuthController_steamCallback: {
+    AdminController_unverifyPlayer: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
+            path: {
+                playerId: string;
             };
-        };
-    };
-    AuthController_me: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -1127,7 +1259,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CurrentPlayerDto"];
+                    "application/json": Record<string, never>;
                 };
             };
         };

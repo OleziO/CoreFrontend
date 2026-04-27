@@ -1,6 +1,6 @@
 import apiClient from '@/api/client'
 import { ElMessage } from 'element-plus'
-import type { TPlayer, TUpdatePlayerDto as UpdatePlayerDto } from '@/api/types/api.types'
+import type { TPlayer, TUpdatePlayerDto } from '@/api/types/api.types'
 
 class PlayersService {
   async fetchPlayers (): Promise<TPlayer[]> {
@@ -25,7 +25,7 @@ class PlayersService {
     }
   }
 
-  async updatePlayer (id: string, data: UpdatePlayerDto): Promise<TPlayer> {
+  async updatePlayer (id: string, data: Partial<TUpdatePlayerDto>): Promise<TPlayer> {
     const res = await apiClient.patch('/players/{id}', data, {
       dynamicKeys: { id }
     })
@@ -69,13 +69,7 @@ class PlayersService {
   // async verifyPlayer (playerId: number) { ... }
 
   // TODO: endpoint not in API yet
-  // async updateUserGameData (data: { mmr: number; positions: number[] }) { ... }
-
-  // TODO: endpoint not in API yet
   // async updatePlayerMmrByAdmin (playerId: number, mmr: number) { ... }
-
-  // TODO: endpoint not in API yet
-  // async updateMyMMPAndPositions (mmr: number, positions?: number[]) { ... }
 
   // TODO: endpoint not in API yet
   // async toggleDiscordNotification (isTrue: boolean) { ... }

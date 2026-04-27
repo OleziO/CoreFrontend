@@ -390,7 +390,16 @@ async function handleSteamLink () {
 function openEditProfileModal () {
   if (!player.value) return
 
-  open('PLayerEditProfileModal', { player: player.value })
+  open('PLayerEditProfileModal', {
+    player: player.value,
+    onUpdated: async (updated: TPlayer) => {
+      player.value = updated
+      if (route.name === routeNames.profile) {
+        await me.fetchUser()
+        player.value = me.user as TPlayer
+      }
+    }
+  })
 }
 
 onMounted(async () => {

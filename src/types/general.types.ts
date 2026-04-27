@@ -5,7 +5,7 @@ export enum ERole {
   MEDIA = 'media',
   CAP = 'cap',
   PLAYER = 'player',
-  GUEST = 'unverified',
+  GUEST = 'guest',
   BLOCKED = 'blocked',
 
   // FE only

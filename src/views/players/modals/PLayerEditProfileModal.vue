@@ -8,6 +8,7 @@
     @close="onClose"
   >
     <el-form
+      v-loading="loadingPlayer"
       :model="form"
       label-position="top"
       class="flex flex-col gap-16"
@@ -18,12 +19,10 @@
           type="text"
           inputmode="numeric"
           placeholder="0 – 22000"
+          :disabled="mmrInputDisabled"
           @input="onMmrInput"
         />
       </el-form-item>
-      <el-button v-else type="primary" @click="openRequestMmrModal">
-        Надіслати запит на оновлення MMP
-      </el-button>
 
       <!-- Positions -->
       <el-form-item label="Позиції">
@@ -51,47 +50,39 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item label="Отримувати сповіщення Discord">
-        <el-switch
-          v-model="form.isNotification"
-          style="--el-switch-on-color: #43bfee; --el-switch-off-color: #ff4949; --el-text-color-primary: #fff"
-          active-text="Отримувати"
-          inactive-text="Не отримувати"
-        />
-      </el-form-item>
-
-      <!-- Discord -->
-      <el-form-item label="Discord">
+      <!-- Steam -->
+      <el-form-item label="Steam">
         <div
           class="flex items-center justify-between w-full
                  rounded-12 border border-white/10
                  bg-white/5 px-16 py-12"
         >
           <div class="flex items-center gap-8">
-            <PhDiscordLogo size="20" class="text-indigo-500" />
+            <Icon :size="20" name="steam" />
 
             <span
-              v-if="hasDiscord"
+              v-if="hasSteam"
               class="text-sm text-green-500 font-medium"
             >
-              Discord приєднано
+              Steam приєднано
             </span>
 
             <span
               v-else
               class="text-sm text-gray-400"
             >
-              Discord не приєднано
+              Steam не приєднано
             </span>
           </div>
 
           <el-button
-            v-if="!hasDiscord"
+            v-if="!hasSteam"
             type="primary"
             size="small"
-            @click="onConnectDiscord"
+            :loading="linkingSteam"
+            @click="onConnectSteam"
           >
-            Приєднати
+            Приєднати Steam
           </el-button>
         </div>
       </el-form-item>
@@ -107,6 +98,7 @@
         <el-button
           type="primary"
           :disabled="!isValid"
+          :loading="saving"
           @click="onSubmit"
         >
           Зберегти
@@ -117,14 +109,13 @@
 </template>
 
 <script setup lang="ts">
-import { PhDiscordLogo } from '@phosphor-icons/vue'
 import { ElMessage } from 'element-plus'
 import { positionOptions } from '@/components/player-tags/player.constants'
 import checkRoles from '@/core/helpers'
 import { ERole } from '@/types/general.types'
 import { useAuthStore } from '@/store/modules/auth'
-import { useAppModals } from '@/composables/use-app-modals'
-import type { TPlayer, TUserRole as UserRole } from '@/api/types/api.types'
+import { playersService } from '@/views/players/players.service'
+import type { TPlayer, TUserRole as UserRole, TUpdatePlayerDto } from '@/api/types/api.types'
 
 interface IEditProfileForm {
   mmr: number | null
@@ -132,11 +123,71 @@ interface IEditProfileForm {
   isNotification?: boolean
 }
 
+type TPositionSlot = 1 | 2 | 3 | 4 | 5
+
+/**
+ * Підтримка відповіді GET: масив `positions` + рідкісні/legacy-поля.
+ * `TPlayer` з OpenAPI — `positions: (1..5)[] | null`
+ */
+type TPlayerWithOptionalLegacy = TPlayer & {
+  position?: TPositionSlot | null
+  positionIds?: number[] | string[]
+  preferredPositions?: number[] | string[]
+}
+
+const SLOT: TPositionSlot[] = [1, 2, 3, 4, 5]
+
+function toSlot (n: number): n is TPositionSlot {
+  return SLOT.includes(n as TPositionSlot)
+}
+
+function pickPositions (p: TPlayerWithOptionalLegacy): number[] {
+  const fromApi = p.positions
+  if (Array.isArray(fromApi) && fromApi.length) {
+    return fromApi
+      .map((x) => (typeof x === 'string' ? parseInt(x, 10) : x))
+      .filter((n): n is number => Number.isInteger(n) && toSlot(n))
+  }
+
+  const one = p.position
+  if (one != null && toSlot(one)) {
+    return [one]
+  }
+
+  const raw = p.positionIds ?? p.preferredPositions
+  if (!raw || !Array.isArray(raw) || !raw.length) return []
+  return raw
+    .map((x) => (typeof x === 'string' ? parseInt(x, 10) : x))
+    .filter((n): n is number => Number.isInteger(n) && toSlot(n))
+}
+
+/** PATCH/PUT: `positions: (1–5)[] | null` — `null` якщо прибрати всі. */
+function formPositionsToApi (selected: number[]): TPositionSlot[] | null {
+  const out: TPositionSlot[] = []
+  const seen = new Set<number>()
+  for (const n of selected) {
+    if (toSlot(n) && !seen.has(n)) {
+      seen.add(n)
+      out.push(n)
+    }
+  }
+  out.sort((a, b) => a - b)
+  return out.length ? out : null
+}
+
+function applyFormFromPlayer (p: TPlayer) {
+  const positions = pickPositions(p as TPlayerWithOptionalLegacy)
+  form.value = {
+    mmr: p.rating ?? null,
+    positions: positions.length ? positions : [],
+    isNotification: true
+  }
+}
+
 const modelValue = defineModel<boolean>({ default: false })
 
 const emit = defineEmits<{
   (e: 'submit', payload: IEditProfileForm): void
-  (e: 'connect-discord'): void
   (e: 'updated', player: TPlayer): void
 }>()
 
@@ -148,19 +199,36 @@ const props = defineProps<{
 const authStore = useAuthStore()
 // const playersStore = usePlayersStore()
 
-const { open: openModal } = useAppModals()
-// const playerStore = usePlayersStore()
-
 const form = ref<IEditProfileForm>({
   mmr: props.player.rating ?? null,
-  positions: [],
+  positions: pickPositions(props.player as TPlayerWithOptionalLegacy),
   isNotification: true
 })
 
-const hasDiscord = computed(() => !!props.player.discordId)
+const saving = ref(false)
+const loadingPlayer = ref(false)
+const linkingSteam = ref(false)
+
+watch(modelValue, async (open) => {
+  if (!open) return
+  loadingPlayer.value = true
+  try {
+    const fresh = await playersService.fetchPlayerItemById(props.player.id)
+    applyFormFromPlayer(fresh ?? props.player)
+  } finally {
+    loadingPlayer.value = false
+  }
+})
+
+const hasSteam = computed(() => !!props.player.steamId)
+
+const mmrInputDisabled = computed(
+  () => isVerified.value && !isAdmin.value
+)
 
 const isVerified = computed(() => {
   const roles = props.player.roles || []
+
   return !checkRoles(roles, ERole.GUEST)
 })
 
@@ -170,7 +238,6 @@ const isAdmin = computed(() => {
 })
 
 const isValid = computed(() => {
-  // Для верифицированных пользователей валидация MMP не требуется
   if (isVerified.value) {
     return true
   }
@@ -194,34 +261,40 @@ function onMmrInput () {
 //   form.value.isNotification = isTrue
 // }
 
-function onConnectDiscord () {
-  const apiPublicUrl = import.meta.env.VITE_API_PUBLIC_URL
-  const token = authStore.token
-
-  if (!token) {
-    ElMessage.error('Помилка: токен авторизації не знайдено')
-    return
+async function onConnectSteam () {
+  linkingSteam.value = true
+  try {
+    await authStore.linkSteam()
+  } catch {
+    ElMessage.error('Не вдалося отримати посилання для Steam. Спробуйте ще раз.')
+    linkingSteam.value = false
   }
-
-  window.location.href = `${apiPublicUrl}/api/v1/discord/login?token=${token}`
-}
-
-function openRequestMmrModal () {
-  modelValue.value = false
-
-  nextTick(() => {
-    openModal('ProfileRequestMmrModal')
-  })
 }
 
 async function onSubmit () {
   if (!isValid.value) return
 
-  // TODO: endpoint not in API yet (updateMyProfileData)
-  ElMessage.info('Функціонал оновлення профілю ще не реалізований в API')
+  const payload: Partial<TUpdatePlayerDto> = {
+    positions: formPositionsToApi(form.value.positions)
+  }
+  if (!mmrInputDisabled.value) {
+    payload.rating = form.value.mmr ?? 0
+  }
 
-  emit('submit', form.value)
-  modelValue.value = false
+  saving.value = true
+  try {
+    const updated = await playersService.updatePlayer(props.player.id, payload)
+    ElMessage.success('Профіль оновлено')
+    emit('submit', form.value)
+    emit('updated', updated)
+    props.onUpdated?.(updated)
+    modelValue.value = false
+  } catch (e) {
+    const data = (e as { response?: { data?: { message?: string } } })?.response?.data
+    ElMessage.error(data?.message || 'Не вдалося оновити профіль')
+  } finally {
+    saving.value = false
+  }
 }
 
 function onClose () {
