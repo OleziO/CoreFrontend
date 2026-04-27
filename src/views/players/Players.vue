@@ -37,36 +37,9 @@
               </el-button>
             </el-badge>
 
-            <el-tooltip
-              v-if="hasAccess"
-              :content="`Кількість гравців: ${filteredPlayers.length}`"
-              placement="top"
-              :disabled="filteredPlayers.length < 100"
-              effect="dark"
-              :show-arrow="false"
-            >
-              <el-badge
-                :value="filteredPlayers.length"
-                :hidden="!filteredPlayers.length"
-                class="cursor-pointer"
-                :class="{'cursor-default': filteredPlayers.length < 100}"
-              >
-                <el-button
-                  type="primary"
-                  class="h-full w-fit"
-                  @click="openPlayersCallModal"
-                >
-                  <PhCallBell size="20" weight="bold" />
-                  <span v-if="window.width.value > 1400" class="ml-10 text-sm font-medium">
-                    Звʼязатися з гравцями
-                  </span>
-                </el-button>
-              </el-badge>
-            </el-tooltip>
-
             <el-input
               v-model="search"
-              class="flex-1 !ml-15"
+              class="flex-1"
               placeholder="Пошук по ніку..."
             >
               <template #prepend>
@@ -100,23 +73,6 @@
                 >
                   <PhSlidersHorizontal size="20" weight="bold" />
                   <span class="text-sm font-medium">Фільтрувати</span>
-                </el-button>
-              </el-badge>
-            </el-carousel-item>
-
-            <!-- Кнопка Зв'язатися з гравцями -->
-            <el-carousel-item class="flex mx-auto  items-center justify-center">
-              <el-badge
-                :value="filteredPlayers.length"
-                :hidden="!filteredPlayers.length"
-              >
-                <el-button
-                  type="primary"
-                  class="flex h-full items-center justify-center gap-2"
-                  @click="openPlayersCallModal"
-                >
-                  <PhCallBell size="20" weight="bold" />
-                  <span class="text-sm font-medium">Звʼязатися з гравцями</span>
                 </el-button>
               </el-badge>
             </el-carousel-item>
@@ -158,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhSlidersHorizontal, PhCallBell, PhMagnifyingGlass } from '@phosphor-icons/vue'
+import { PhSlidersHorizontal, PhMagnifyingGlass } from '@phosphor-icons/vue'
 import type { LocationQuery } from 'vue-router'
 import type { TPlayer } from '@/api/types/api.types'
 
@@ -173,12 +129,7 @@ const isMobile = computed(() => window.width.value < 850)
 const playersStore = usePlayersStore()
 const { open } = useAppModals()
 const route = useRoute()
-const authStore = useAuthStore()
 const search = ref('')
-
-const hasAccess = computed(() => {
-  return authStore.user?.id && authStore.isAdmin.isAdmin
-})
 
 const filteredPlayers = computed(() => {
   const query = route.query
@@ -221,11 +172,6 @@ function searchPlayer (player: TPlayer) {
 
 function openPlayersFilterModal () {
   open('PlayersFilterModal')
-}
-
-function openPlayersCallModal () {
-  const playerIds = filteredPlayers.value.map(player => player.id)
-  open('PlayersCallModal', { playerIds })
 }
 
 onMounted(playersStore.getPlayers)

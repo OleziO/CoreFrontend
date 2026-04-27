@@ -2,6 +2,7 @@ import { ERole } from '@/types/general.types'
 import get from 'lodash/get'
 import type { LocationQueryValue, RouteLocationNormalized } from 'vue-router'
 import type { TPlayer, TUserRole as UserRole } from '@/api/types/api.types'
+import { getDotaPositionLabel, roleLabelMap } from '@/components/player-tags/player.constants'
 
 export const createHashedObject = <
   T extends TIndexedObject,
@@ -84,6 +85,53 @@ export function searchPlayer (player: TPlayer, search = '') {
          player.steamId?.toLowerCase().includes(search.toLowerCase())
 }
 
+const basePublicUrl = () => import.meta.env.BASE_URL.replace(/\/?$/, '/')
+
+/** Шлях до PNG рангу в `public/images/ranks/{numericName}.png`. Порожній рядок, якщо `numericName` не задано. */
+export function getPlayerRankImageSrc (numericName: number | null | undefined): string {
+  if (numericName == null) return ''
+  return `${basePublicUrl()}images/ranks/${numericName}.png`
+}
+
+export function formatPlayerRatingMmr (rating: number | null | undefined): string {
+  if (rating == null) return '— MMR'
+  return `${rating} MMR`
+}
+
+/**
+ * Позиції 1–5 Dota з поля `positions` у відповіді API.
+ * У схемі TPlayer `positions` може бути `Record<never>[]`, на рантаймі — масив чисел.
+ */
+export function getPlayerDotaPositions (p: { positions?: unknown } | null | undefined): number[] {
+  if (!p?.positions) return []
+  const raw = p.positions
+  if (!Array.isArray(raw) || !raw.length) return []
+  return raw
+    .map(n => Number(n))
+    .filter(n => n >= 1 && n <= 5)
+    .sort((a, b) => a - b)
+}
+
+export type TPlayerPositionsSummary = {
+  hasPositions: boolean
+  oneLine: string
+  rows: { id: number; label: string }[]
+}
+
+/** Текст для tooltip: «1. Carry · 2. Mid» або повідомлення, якщо позицій немає. */
+export function formatPlayerPositionsSummary (p: { positions?: unknown } | null | undefined): TPlayerPositionsSummary {
+  const ids = getPlayerDotaPositions(p)
+  if (!ids.length) {
+    return { hasPositions: false, oneLine: 'Позиції не вказані', rows: [] }
+  }
+  const rows = ids.map(id => ({ id, label: getDotaPositionLabel(id) }))
+  return {
+    hasPositions: true,
+    oneLine: rows.map(r => `${r.id}. ${r.label}`).join(' · '),
+    rows
+  }
+}
+
 /** totalWinMatches / totalLostMatches з беку (роль гравця). */
 export type TPlayerMatchRecord = {
   totalWinMatches?: number | null
@@ -94,9 +142,9 @@ export type TPlayerMatchRecord = {
  * total матчів = перемоги + поразки; у дужках відсоток перемог: >50% зелений, <50% червоний, рівно 50% сірий.
  * Без матчів — 0%.
  */
-export function getPlayerMatchStats (p: TPlayerMatchRecord | null | undefined) {
-  const wins = Math.max(0, Number(p?.totalWinMatches ?? 0) || 0)
-  const losses = Math.max(0, Number(p?.totalLostMatches ?? 0) || 0)
+export function getPlayerMatchStats (p: (TPlayer | TPlayerMatchRecord) | null | undefined) {
+  const wins = Math.max(0, Number((p as TPlayerMatchRecord)?.totalWinMatches ?? 0) || 0)
+  const losses = Math.max(0, Number((p as TPlayerMatchRecord)?.totalLostMatches ?? 0) || 0)
   const total = wins + losses
 
   let winrateClass = 'text-red-400/90'
@@ -117,10 +165,29 @@ export function getPlayerMatchStats (p: TPlayerMatchRecord | null | undefined) {
   return { wins, losses, total, winrateText, winrateClass }
 }
 
-function checkRoles (roles: UserRole[], roleName: ERole) {
-  if (!roles?.length || !roleName) return false
+/**
+ * `role.name` з API може збігатися з slug у `ERole` або з українським `roleLabelMap`.
+ */
+export function hasPlayerRole (roles: UserRole[] | undefined | null, role: ERole): boolean {
+  if (!roles?.length || !role) return false
 
-  return roles.some(role => role.name === roleName)
+  const labelUk = roleLabelMap[role]
+  return roles.some(r => r.name === role || r.name === labelUk)
+}
+
+/**
+ * Видимість «верифікований»: timestamp від беку або роль гравця («Гравець» / PLAYER).
+ */
+export function isPlayerVerified (
+  player: { roles?: UserRole[] | null; verifiedAt?: string | null } | null | undefined
+): boolean {
+  if (!player) return false
+  if (player.verifiedAt) return true
+  return hasPlayerRole(player.roles, ERole.PLAYER)
+}
+
+function checkRoles (roles: UserRole[], roleName: ERole): boolean {
+  return hasPlayerRole(roles, roleName)
 }
 
 export function getCopy (data: number | string | undefined | null, message: string) {

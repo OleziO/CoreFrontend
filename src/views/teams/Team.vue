@@ -160,6 +160,7 @@
                 v-for="player in team?.mainPlayers"
                 :key="player.id"
                 :player="player"
+                @player-updated="onPlayerVerificationUpdated"
               />
 
               <template v-if="isAdmin">
@@ -197,6 +198,7 @@
                 v-for="player in team?.reservedPlayers"
                 :key="player.id"
                 :player="player"
+                @player-updated="onPlayerVerificationUpdated"
               />
 
               <template v-if="isAdmin">
@@ -234,7 +236,7 @@ import { PhDotsThree, PhCalendarDots, PhPencil } from '@phosphor-icons/vue'
 import { useWindowSize } from '@vueuse/core'
 import dayjs from 'dayjs'
 import 'dayjs/locale/uk'
-import type { TTeam as Team, TUpdateTeamDto as UpdateTeamDto } from '@/api/types/api.types'
+import type { TTeam as Team, TPlayer, TUpdateTeamDto as UpdateTeamDto } from '@/api/types/api.types'
 dayjs.locale('uk')
 
 const route = useRoute()
@@ -282,6 +284,19 @@ function changeCapTeam () {
 
 function handleOpenAddPlayer (isMain: boolean) {
   open('PlayerAddToTeamModal', { team: team.value, isMain })
+}
+
+function onPlayerVerificationUpdated (updated: TPlayer) {
+  if (!team.value) return
+  for (const key of ['mainPlayers', 'reservedPlayers'] as const) {
+    const list = team.value[key]
+    if (!list?.length) continue
+    const ix = list.findIndex(p => p.id === updated.id)
+    if (ix !== -1) {
+      list.splice(ix, 1, updated)
+      break
+    }
+  }
 }
 
 async function handleTeamUpdate (payload: UpdateTeamDto) {

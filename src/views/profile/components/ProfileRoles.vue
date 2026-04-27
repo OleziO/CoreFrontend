@@ -1,5 +1,7 @@
 <template>
-  <PlayerRoleTag :roles="roles" :max="12" />
+  <div class="min-w-0 flex-1">
+    <PlayerRoleTag :roles="roles" :max="12" no-wrap />
+  </div>
 </template>
 
 <script lang="ts" setup>

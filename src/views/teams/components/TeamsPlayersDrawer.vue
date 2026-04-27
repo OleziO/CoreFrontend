@@ -24,6 +24,7 @@
               v-for="player in team.mainPlayers"
               :key="player.id"
               :player="player"
+              @player-updated="onPlayerVerificationUpdated"
             />
             <div v-for="index in mainSlotCounts" :key="index">
               <button
@@ -63,6 +64,7 @@
               v-for="player in team.reservedPlayers"
               :key="player.id"
               :player="player"
+              @player-updated="onPlayerVerificationUpdated"
             />
 
             <div v-for="index in reserveSlotCounts" :key="index">
@@ -100,7 +102,7 @@
 
 <script setup lang="ts">
 import { Plus } from 'lucide-vue-next'
-import type { TTeam as Team } from '@/api/types/api.types'
+import type { TTeam as Team, TPlayer } from '@/api/types/api.types'
 
 const props = defineProps<{
   team: Team
@@ -117,6 +119,19 @@ function onAddPlayerClick (isMain: boolean) {
     team: props.team,
     isMain
   })
+}
+
+function onPlayerVerificationUpdated (updated: TPlayer) {
+  const t = props.team
+  for (const key of ['mainPlayers', 'reservedPlayers'] as const) {
+    const list = t[key]
+    if (!list?.length) continue
+    const ix = list.findIndex(p => p.id === updated.id)
+    if (ix !== -1) {
+      list.splice(ix, 1, updated)
+      break
+    }
+  }
 }
 
 const mainSlotCounts = computed(() => {

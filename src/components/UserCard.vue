@@ -21,18 +21,21 @@
       <PhDotsThree size="20" weight="bold" @click.stop />
 
       <template #dropdown>
-        <div class="w-[200px] flex flex-col gap-10 p-10 rounded-lg shadow-lg">
-          <el-tooltip content="Функціонал в розробці">
-            <el-button disabled type="success" class="h-30">
-              Верифікувати
-            </el-button>
-          </el-tooltip>
-
-          <el-tooltip content="Функціонал в розробці">
-            <el-button disabled type="danger" class="h-30">
-              Заблокувати
-            </el-button>
-          </el-tooltip>
+        <div class="w-[220px] flex flex-col gap-10 p-10 rounded-lg shadow-lg">
+          <el-button
+            :type="isVerified ? 'warning' : 'success'"
+            class="h-30 w-full justify-center shrink-0 max-sm:text-xs max-sm:!px-8"
+            :loading="verificationLoading"
+            @click.stop="toggleVerificationFromMenu"
+          >
+            <component
+              :is="isVerified ? PhSealWarning : PhSealCheck"
+              class="mr-8 shrink-0"
+              weight="bold"
+              size="16"
+            />
+            {{ isVerified ? 'Зняти верифікацію' : 'Верифікувати' }}
+          </el-button>
         </div>
       </template>
     </el-dropdown>
@@ -97,31 +100,79 @@
 
     <!-- Role tags -->
     <div
-      class="mt-10 flex w-full gap-10 border-t border-dashed py-16"
+      class="mt-10 flex w-full min-w-0 items-stretch gap-10 border-t border-dashed py-16"
       :class="isVerified
         ? 'border-green-800/60'
         : 'border-red-800/60'"
     >
-      <PlayerTeamTag :user />
-      <PlayerRoleTag :user />
+      <div class="min-w-0 flex-1">
+        <PlayerTeamTag :user />
+      </div>
+      <div class="min-w-0 max-w-[55%] shrink-0">
+        <PlayerRoleTag :user no-wrap />
+      </div>
     </div>
 
-    <!-- Stats -->
+    <!-- Рейтинг (ранг) + позиції -->
     <div
-      class="mt-8 flex w-full justify-around rounded-xl
+      class="mt-8 flex w-full items-stretch justify-center gap-20 rounded-xl
              border border-gray-800/60
              bg-gradient-to-br from-gray-900/70 via-gray-900/40 to-gray-950/70
-             pt-16 pb-14 shadow-inner"
+             py-12 px-10 shadow-inner"
       :class="isVerified
         ? 'border-green-800/60'
         : 'border-red-800/60'"
     >
-      <div class="flex flex-col items-center">
-        <span class="text-sm text-white/70">{{ user.rating }}</span>
-        <span class="text-[10px] uppercase tracking-widest text-gray-400/80">
-          Rating
-        </span>
-      </div>
+      <el-tooltip
+        v-if="rankImageSrc"
+        :content="ratingMmrLabel"
+        placement="top"
+        effect="dark"
+      >
+        <div class="flex min-w-0 flex-1 flex-col items-center justify-center gap-4 cursor-default">
+          <img
+            :src="rankImageSrc"
+            alt=""
+            class="h-36 w-auto max-w-[72px] object-contain select-none"
+            width="72"
+            height="36"
+            loading="lazy"
+            draggable="false"
+          >
+          <span class="text-[10px] uppercase tracking-widest text-gray-400/80">Рейтинг</span>
+        </div>
+      </el-tooltip>
+      <el-tooltip
+        v-else
+        :content="ratingMmrLabel"
+        placement="top"
+        effect="dark"
+      >
+        <div class="flex min-w-0 flex-1 flex-col items-center justify-center gap-4">
+          <span class="text-sm text-white/90 tabular-nums">{{ user.rating }}</span>
+          <span class="text-[10px] uppercase tracking-widest text-gray-400/80">Рейтинг</span>
+        </div>
+      </el-tooltip>
+
+      <div
+        class="w-px shrink-0 self-stretch min-h-[40px] bg-white/10"
+        aria-hidden="true"
+      />
+
+      <PlayerPositionsTooltip :summary="positionsSummary" placement="top">
+        <div
+          class="flex min-w-0 flex-1 flex-col items-center justify-center gap-4 cursor-default"
+        >
+          <div
+            class="flex h-40 w-40 items-center justify-center
+                   text-white/70 transition-colors hover:text-primary"
+            :class="!positionsSummary.hasPositions ? 'opacity-50' : ''"
+          >
+            <PhCompassRose :size="22" weight="duotone" />
+          </div>
+          <span class="text-[10px] uppercase tracking-widest text-gray-400/80">Позиції</span>
+        </div>
+      </PlayerPositionsTooltip>
     </div>
   </div>
 </template>
@@ -132,16 +183,18 @@ import { useClipboard, useWindowSize } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 
 import { routeNames } from '@/router/route-names'
-
+import { formatPlayerPositionsSummary, formatPlayerRatingMmr, getPlayerRankImageSrc, isPlayerVerified } from '@/core/helpers'
 import {
   PhCopy,
   PhSealCheck,
   PhUser,
   PhSealWarning,
-  PhDotsThree
+  PhDotsThree,
+  PhCompassRose
 } from '@phosphor-icons/vue'
 
 import type { TPlayer } from '@/api/types/api.types'
+import { playersService } from '@/views/players/players.service'
 
 const props = withDefaults(defineProps<{
   user: TPlayer
@@ -154,10 +207,18 @@ const { copy } = useClipboard({ legacy: true })
 const window = useWindowSize()
 const me = useAuthStore()
 const router = useRouter()
+const playersStore = usePlayersStore()
 
 const isMobile = computed(() => window.width.value < 850)
+const verificationLoading = ref(false)
 
-const isVerified = computed(() => !!props.user.verifiedAt)
+const isVerified = computed(() => isPlayerVerified(props.user))
+
+const rankImageSrc = computed(() => getPlayerRankImageSrc(props.user.rank?.numericName))
+
+const ratingMmrLabel = computed(() => formatPlayerRatingMmr(props.user.rating))
+
+const positionsSummary = computed(() => formatPlayerPositionsSummary(props.user))
 
 function copyDiscordName (player: TPlayer) {
   if (!player.discordUsername) return
@@ -167,5 +228,23 @@ function copyDiscordName (player: TPlayer) {
 
 function goToPlayerPage (id: string) {
   router.push({ name: routeNames.player, params: { id } })
+}
+
+async function toggleVerificationFromMenu () {
+  const u = props.user
+  if (!u || verificationLoading.value) return
+  verificationLoading.value = true
+  try {
+    const wantVerified = !isVerified.value
+    const updated = await playersService.setPlayerVerificationByAdmin(u.id, wantVerified)
+    if (!updated) return
+    const list = playersStore.players
+    const ix = list.findIndex(p => p.id === updated.id)
+    if (ix !== -1) {
+      list.splice(ix, 1, updated)
+    }
+  } finally {
+    verificationLoading.value = false
+  }
 }
 </script>

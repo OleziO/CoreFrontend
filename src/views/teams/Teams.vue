@@ -95,17 +95,6 @@
                 </el-badge>
               </el-tooltip>
             </el-carousel-item>
-
-            <!-- Кнопка Зв'язатися з гравцями -->
-            <el-carousel-item class="flex items-center justify-center">
-              <el-input v-model="search" class="w-[240px]" v-bind="$attrs" placeholder="Введіть назву команди">
-                <template #prepend>
-                  <el-icon>
-                    <Search />
-                  </el-icon>
-                </template>
-              </el-input>
-            </el-carousel-item>
           </el-carousel>
         </div>
       </div>

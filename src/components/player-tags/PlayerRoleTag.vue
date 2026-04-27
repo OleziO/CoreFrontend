@@ -1,5 +1,8 @@
 <template>
-  <div class="flex flex-wrap items-center gap-6">
+  <div
+    class="flex items-center gap-6"
+    :class="noWrap ? 'w-full min-w-0 flex-nowrap overflow-x-auto' : 'flex-wrap'"
+  >
     <el-tag
       v-for="role in visibleRoles"
       :key="role.id"
@@ -56,8 +59,10 @@ const props = withDefaults(
     /** Якщо задано (наприклад, з /auth/me), ігнорується `user` для списку ролей. */
     roles?: TAnyRoleForTag[]
     max?: number
+    /** Один рядок без переносу; при переповненні — горизонтальний скрол (напр. UserCard). */
+    noWrap?: boolean
   }>(),
-  { max: 1 }
+  { max: 1, noWrap: false }
 )
 
 const allRoles = computed((): TAnyRoleForTag[] => {

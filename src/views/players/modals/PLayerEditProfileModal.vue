@@ -8,12 +8,11 @@
     @close="onClose"
   >
     <el-form
-      v-loading="loadingPlayer"
       :model="form"
       label-position="top"
       class="flex flex-col gap-16"
     >
-      <el-form-item v-if="!isVerified || isAdmin" label="MMR">
+      <el-form-item v-if="showMmrField" label="MMR">
         <el-input
           v-model="form.mmr"
           type="text"
@@ -111,11 +110,10 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
 import { positionOptions } from '@/components/player-tags/player.constants'
-import checkRoles from '@/core/helpers'
-import { ERole } from '@/types/general.types'
+import { isPlayerVerified } from '@/core/helpers'
 import { useAuthStore } from '@/store/modules/auth'
 import { playersService } from '@/views/players/players.service'
-import type { TPlayer, TUserRole as UserRole, TUpdatePlayerDto } from '@/api/types/api.types'
+import type { TPlayer, TUpdatePlayerDto } from '@/api/types/api.types'
 
 interface IEditProfileForm {
   mmr: number | null
@@ -206,39 +204,35 @@ const form = ref<IEditProfileForm>({
 })
 
 const saving = ref(false)
-const loadingPlayer = ref(false)
 const linkingSteam = ref(false)
 
-watch(modelValue, async (open) => {
+watch(modelValue, (open) => {
   if (!open) return
-  loadingPlayer.value = true
-  try {
-    const fresh = await playersService.fetchPlayerItemById(props.player.id)
-    applyFormFromPlayer(fresh ?? props.player)
-  } finally {
-    loadingPlayer.value = false
-  }
+  applyFormFromPlayer(props.player)
 })
 
 const hasSteam = computed(() => !!props.player.steamId)
 
-const mmrInputDisabled = computed(
-  () => isVerified.value && !isAdmin.value
+/** Статус «верифікований» у гравця, чий профіль редагується (як і в картках / Player.vue). */
+const targetPlayerVerified = computed(() => isPlayerVerified(props.player))
+
+/** Адмін/модератор можуть змінити MMR у будь-кого (відкритий профіль / інший користувач через кнопку з Player.vue). */
+const viewerCanEditAnyoneMmr = computed(
+  () => authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator
 )
 
-const isVerified = computed(() => {
-  const roles = props.player.roles || []
+/** Гість редагує власний MMR; верифікованому поле приховано, окрім випадку перегляду стаффом чужого / свого профілю. */
+const showMmrField = computed(
+  () => !targetPlayerVerified.value || viewerCanEditAnyoneMmr.value
+)
 
-  return !checkRoles(roles, ERole.GUEST)
-})
-
-const isAdmin = computed(() => {
-  return checkRoles((authStore.user?.roles || []) as UserRole[], ERole.MODERATOR) ||
-  checkRoles(props.player.roles || [], ERole.ADMIN)
-})
+/** Верифікований звичайний користувач не може міняти власний MMR вручну (інпут не показуємо). */
+const mmrInputDisabled = computed(
+  () => targetPlayerVerified.value && !viewerCanEditAnyoneMmr.value
+)
 
 const isValid = computed(() => {
-  if (isVerified.value) {
+  if (!showMmrField.value || mmrInputDisabled.value) {
     return true
   }
   return form.value.mmr !== null &&

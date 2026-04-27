@@ -315,12 +315,12 @@ export interface paths {
         put?: never;
         /**
          * Verify a player
-         * @description Sets the player's role to 'user' and stamps verifiedAt. Requires admin role.
+         * @description Sets the player's role to «Гравець» and stamps verifiedAt. Requires admin role.
          */
         post: operations["AdminController_verifyPlayer"];
         /**
          * Unverify a player
-         * @description Reverts the player's role to 'guest' and clears verifiedAt. Requires admin role.
+         * @description Reverts the player's role to «Гість» and clears verifiedAt. Requires admin role.
          */
         delete: operations["AdminController_unverifyPlayer"];
         options?: never;
@@ -355,12 +355,9 @@ export interface components {
             discordName: string | null;
             discordUsername: string | null;
             rating: number;
-            /** @description Dota map / roles (1–5); null when unset */
-            positions: (1 | 2 | 3 | 4 | 5)[] | null;
-            /** @default 0 */
-            totalWinMatches?: number;
-            /** @default 0 */
-            totalLostMatches?: number;
+            /** @description Коли API повертає список/картку — як у PlayerResponseDto */
+            rank?: components["schemas"]["PlayerRankDto"];
+            positions: Record<string, never>[] | null;
             /** Format: date-time */
             verifiedAt: string | null;
             roles: components["schemas"]["UserRoles"][];
@@ -413,10 +410,42 @@ export interface components {
             id: string;
             name: string;
             isAdminRole: boolean;
-            /** @description Accent color for tags (e.g. #43bfee) */
-            color?: string | null;
-            player: components["schemas"]["Player"];
+            player: components["schemas"]["Player"] | null;
             tournaments: components["schemas"]["Tournament"][];
+        };
+        PlayerRankDto: {
+            rankNumber: number;
+            /** @description 1–5 */
+            stars: number;
+            /** @description Код рангу для UI (рівняння rank*10+stars, напр. Легенда 3 зорі = 53; Титан завжди 81) */
+            numericName: number;
+            nameUk: string;
+        };
+        PlayerRolePublicDto: {
+            id: string;
+            name: string;
+            isAdminRole: boolean;
+            /**
+             * @description CSS hex #RRGGBB (для parseHexColor на клієнті)
+             * @example #2563EB
+             */
+            color: string;
+        };
+        PlayerResponseDto: {
+            id: string;
+            steamId?: string | null;
+            discordId?: string | null;
+            telegramId?: string | null;
+            avatarUrl?: string | null;
+            discordName?: string | null;
+            discordUsername?: string | null;
+            rating: number;
+            rank: components["schemas"]["PlayerRankDto"];
+            /** @description Dota map / roles (1–5) */
+            positions?: (1 | 2 | 3 | 4 | 5)[] | null;
+            /** Format: date-time */
+            verifiedAt?: string | null;
+            roles: components["schemas"]["PlayerRolePublicDto"][];
         };
         UpdatePlayerDto: {
             /** @description Optional until linked; omit for Discord-only placeholder flows */
@@ -442,8 +471,11 @@ export interface components {
             id: string;
             name: string;
             isAdminRole: boolean;
-            /** @description Accent color for tags (e.g. #43bfee) */
-            color?: string | null;
+            /**
+             * @description CSS hex #RRGGBB (для parseHexColor на клієнті)
+             * @example #2563EB
+             */
+            color: string;
         };
         CurrentPlayerDto: {
             id: string;
@@ -454,27 +486,34 @@ export interface components {
             discordName?: string | null;
             discordUsername?: string | null;
             rating: number;
+            rank: components["schemas"]["PlayerRankDto"];
             /** @description Dota map / roles (1–5) */
             positions?: (1 | 2 | 3 | 4 | 5)[] | null;
-            /** @default 0 */
-            totalWinMatches?: number;
-            /** @default 0 */
-            totalLostMatches?: number;
             /** Format: date-time */
             verifiedAt?: string | null;
             roles: components["schemas"]["CurrentPlayerRoleDto"][];
         };
         CreateUserRoleDto: {
-            name: string;
+            /** @enum {string} */
+            name: "Гість" | "Гравець" | "Капітан" | "Адмін";
             isAdminRole: boolean;
-            /** @description UUID of the player */
-            playerId: string;
+        };
+        UserRoleResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            name: "Гість" | "Гравець" | "Капітан" | "Адмін";
+            isAdminRole: boolean;
+            /**
+             * @description CSS hex #RRGGBB (для parseHexColor на клієнті)
+             * @example #2563EB
+             */
+            color: string;
         };
         UpdateUserRoleDto: {
-            name?: string;
+            /** @enum {string} */
+            name?: "Гість" | "Гравець" | "Капітан" | "Адмін";
             isAdminRole?: boolean;
-            /** @description UUID of the player */
-            playerId?: string;
         };
         CreateTeamDto: {
             name: string;
@@ -588,7 +627,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Player"][];
+                    "application/json": components["schemas"]["PlayerResponseDto"][];
                 };
             };
         };
@@ -632,7 +671,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Player"];
+                    "application/json": components["schemas"]["PlayerResponseDto"];
                 };
             };
         };
@@ -820,7 +859,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserRoles"][];
+                    "application/json": components["schemas"]["UserRoleResponseDto"][];
                 };
             };
         };
@@ -843,7 +882,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserRoles"];
+                    "application/json": components["schemas"]["UserRoleResponseDto"];
                 };
             };
         };
@@ -864,7 +903,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserRoles"];
+                    "application/json": components["schemas"]["UserRoleResponseDto"];
                 };
             };
         };
@@ -908,7 +947,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserRoles"];
+                    "application/json": components["schemas"]["UserRoleResponseDto"];
                 };
             };
         };

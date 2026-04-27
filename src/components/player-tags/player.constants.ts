@@ -35,6 +35,10 @@ export const positionOptions = [
   { label: 'Support', value: 5, icon: PhHandHeart }
 ]
 
+export function getDotaPositionLabel (positionId: number): string {
+  return positionOptions.find(p => p.value === positionId)?.label ?? String(positionId)
+}
+
 export const teamStatusOptions = [
   { label: 'В команді', value: true },
   { label: 'Не в команді', value: false }

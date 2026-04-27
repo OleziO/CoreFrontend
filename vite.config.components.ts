@@ -6,7 +6,8 @@ import { IconsResolverCustom } from './vite.config.icons'
 
 /* CONFIGURATION FOR COMPONENTS AUTO-IMPORT */
 export const ComponentsBuilder = () => Components({
-  dts: './dts/components.d.ts',
+  /* У межах src/ — генеровані `import()` не виходять за корінь `include` tsconfig (TS6059 / ESLint vue). */
+  dts: './src/vite-components.d.ts',
   dirs: [
     './src/components',
     ...buildViewsComponents()
