@@ -52,7 +52,7 @@ declare module 'vue' {
     MmrRequestsTab: typeof import('./../src/views/admin-panel/components/tabs/MmrRequestsTab.vue')['default']
     MobileMenu: typeof import('./../src/components/MobileMenu.vue')['default']
     Modals: typeof import('./../src/components/modals/Modals.vue')['default']
-    PhDiscordLogo: typeof import('~icons/ph/discord-logo')['default']
+    PhUser: typeof import('~icons/ph/user')['default']
     PlayerAddToTeamModal: typeof import('./../src/components/modals/PlayerAddToTeamModal.vue')['default']
     PlayerCard: typeof import('./../src/components/PlayerCard.vue')['default']
     PlayerRoleTag: typeof import('./../src/components/player-tags/PlayerRoleTag.vue')['default']

@@ -54,19 +54,6 @@ export const verificationOptions = [
   { label: 'Не верифікований', value: ERole.GUEST }
 ]
 
-export const roleClassMap: Record<ERole, string> = {
-  [ERole.ADMIN]: 'border-red-500/40 bg-red-500/15 text-red-300',
-  [ERole.MODERATOR]: 'border-yellow-500/40 bg-yellow-500/15 text-yellow-300',
-  [ERole.MEDIA]: 'border-blue-500/40 bg-blue-500/15 text-blue-300',
-  [ERole.DEV]: 'border-orange-500/40 bg-orange-500/15 text-orange-300',
-  [ERole.CAP]: 'border-purple-500/40 bg-purple-500/15 text-purple-300',
-  [ERole.PLAYER]: 'border-gray-500/40 bg-gray-500/10 text-gray-300',
-  [ERole.GUEST]: 'border-dashed border-gray-500/60 bg-gray-500/10 text-gray-200',
-  [ERole.BLOCKED]: 'border-gray-600/40 bg-gray-600/15 text-gray-400',
-
-  [ERole.DEFAULT]: 'border-blue-500/40 bg-blue-500/15 text-blue-300'
-}
-
 export const hasTeamClassMap = {
   [EUserIsTeam.HAS_TEAM]: 'border-green-500/40 bg-green-500/15 text-green-300',
   [EUserIsTeam.NO_TEAM]: 'border-gray-500/40 bg-gray-500/10 text-gray-300'

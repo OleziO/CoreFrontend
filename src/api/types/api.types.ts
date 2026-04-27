@@ -6,6 +6,7 @@ export type TTeam = components['schemas']['Team']
 export type TTournament = components['schemas']['Tournament']
 export type TMatch = components['schemas']['Match']
 export type TUserRole = components['schemas']['UserRoles']
+export type TCurrentPlayerRole = components['schemas']['CurrentPlayerRoleDto']
 // export type TTournamentStatus = components['schemas']['TournamentStatus']
 
 // export type TCreatePlayerDto = components['schemas']['CreatePlayerDto']

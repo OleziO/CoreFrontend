@@ -357,6 +357,10 @@ export interface components {
             rating: number;
             /** @description Dota map / roles (1–5); null when unset */
             positions: (1 | 2 | 3 | 4 | 5)[] | null;
+            /** @default 0 */
+            totalWinMatches?: number;
+            /** @default 0 */
+            totalLostMatches?: number;
             /** Format: date-time */
             verifiedAt: string | null;
             roles: components["schemas"]["UserRoles"][];
@@ -409,6 +413,8 @@ export interface components {
             id: string;
             name: string;
             isAdminRole: boolean;
+            /** @description Accent color for tags (e.g. #43bfee) */
+            color?: string | null;
             player: components["schemas"]["Player"];
             tournaments: components["schemas"]["Tournament"][];
         };
@@ -436,6 +442,8 @@ export interface components {
             id: string;
             name: string;
             isAdminRole: boolean;
+            /** @description Accent color for tags (e.g. #43bfee) */
+            color?: string | null;
         };
         CurrentPlayerDto: {
             id: string;
@@ -448,6 +456,10 @@ export interface components {
             rating: number;
             /** @description Dota map / roles (1–5) */
             positions?: (1 | 2 | 3 | 4 | 5)[] | null;
+            /** @default 0 */
+            totalWinMatches?: number;
+            /** @default 0 */
+            totalLostMatches?: number;
             /** Format: date-time */
             verifiedAt?: string | null;
             roles: components["schemas"]["CurrentPlayerRoleDto"][];

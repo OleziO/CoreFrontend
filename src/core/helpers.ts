@@ -84,6 +84,39 @@ export function searchPlayer (player: TPlayer, search = '') {
          player.steamId?.toLowerCase().includes(search.toLowerCase())
 }
 
+/** totalWinMatches / totalLostMatches з беку (роль гравця). */
+export type TPlayerMatchRecord = {
+  totalWinMatches?: number | null
+  totalLostMatches?: number | null
+}
+
+/**
+ * total матчів = перемоги + поразки; у дужках відсоток перемог: >50% зелений, <50% червоний, рівно 50% сірий.
+ * Без матчів — 0%.
+ */
+export function getPlayerMatchStats (p: TPlayerMatchRecord | null | undefined) {
+  const wins = Math.max(0, Number(p?.totalWinMatches ?? 0) || 0)
+  const losses = Math.max(0, Number(p?.totalLostMatches ?? 0) || 0)
+  const total = wins + losses
+
+  let winrateClass = 'text-red-400/90'
+  let winrateText = '0'
+
+  if (total > 0) {
+    const pct = Math.round((wins * 100) / total)
+    winrateText = String(pct)
+    if (wins * 2 === total) {
+      winrateClass = 'text-gray-400'
+    } else if (wins * 2 > total) {
+      winrateClass = 'text-emerald-400'
+    } else {
+      winrateClass = 'text-red-400'
+    }
+  }
+
+  return { wins, losses, total, winrateText, winrateClass }
+}
+
 function checkRoles (roles: UserRole[], roleName: ERole) {
   if (!roles?.length || !roleName) return false
 

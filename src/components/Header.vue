@@ -103,10 +103,20 @@
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item
-                class="!ext-red-400"
+                :class="{
+                  'header-user-menu__item--active': $route.name === routeNames.profile
+                }"
+                @click="$router.push({ name: routeNames.profile })"
+              >
+                <PhUser :size="20" />
+                <span class="ml-8">Профіль</span>
+              </el-dropdown-item>
+              <el-dropdown-item
+                class="header-user-menu__item--danger"
+                divided
                 @click="authStore.logout"
               >
-                <PhSignOut />
+                <PhSignOut :size="20" />
                 <span class="ml-8">Вийти з аккаунту</span>
               </el-dropdown-item>
             </el-dropdown-menu>
@@ -137,55 +147,16 @@
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
 import logo from '@/assets/LongLogo.png'
-import { PhDiscordLogo, PhSignOut } from '@phosphor-icons/vue'
+import { PhDiscordLogo, PhSignOut, PhUser } from '@phosphor-icons/vue'
 import RoleGuard from '@/guards/RoleGuard.vue'
 
 const authStore = useAuthStore()
 
-const navLinks = computed(() => {
-  const links: { name: string; label: string }[] = [
-    { name: routeNames.rootPage, label: 'Головна' },
-    { name: routeNames.tournaments, label: 'Турніри' },
-    { name: routeNames.teams, label: 'Команди' },
-    { name: routeNames.players, label: 'Гравці' }
-  ]
-  if (authStore.token) {
-    links.push({ name: routeNames.profile, label: 'Профіль' })
-  }
-  return links
-})
+const navLinks: { name: string; label: string }[] = [
+  { name: routeNames.rootPage, label: 'Головна' },
+  { name: routeNames.tournaments, label: 'Турніри' },
+  { name: routeNames.teams, label: 'Команди' },
+  { name: routeNames.players, label: 'Гравці' }
+]
 
 </script>
-
-<style>
-.header-dropdown {
-  @apply
-    rounded-2xl
-    border border-white/15
-    backdrop-blur-xl
-    shadow-[0_20px_50px_rgba(0,0,0,0.6)]
-    overflow-hidden;
-}
-
-.header-dropdown.el-popper.is-light.el-tooltip {
-  @apply p-0 border-none bg-[transparent];
-}
-
-.header-dropdown .el-dropdown-menu {
-  @apply p-0;
-}
-
-.header-dropdown .el-dropdown-menu__item {
-  @apply px-16 py-10 text-sm rounded-none text-white/80 transition-all duration-150;
-}
-
-.header-dropdown .el-dropdown-menu__item:not(.is-disabled):hover,
-.header-dropdown .el-dropdown-menu__item:not(.is-disabled):focus {
-  @apply bg-white/10 text-white;
-}
-
-.header-dropdown .el-dropdown-menu__item.is-disabled {
-  @apply opacity-40;
-}
-
-</style>

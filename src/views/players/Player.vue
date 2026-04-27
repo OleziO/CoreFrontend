@@ -161,100 +161,124 @@
             </div>
           </div>
 
-          <!-- ========== NEW BLOCK: MIX CAP POINTS & BALANCE (стилізований) ========== -->
+          <!-- Статистика матчів -->
           <div
             class="
               rounded-2xl
-              border-2 border-gray-800/80
-              bg-gradient-to-br from-gray-900/80 via-gray-900/40 to-gray-950/80
-              p-24
+              border border-gray-800/90
+              bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90
+              p-20 2md:p-24
               shadow-[0_10px_30px_rgba(0,0,0,0.35)] w-full
-              flex flex-col items-center gap-20
+              flex flex-col items-stretch gap-16
             "
           >
-            <span class="text-sm uppercase tracking-[0.2em] text-gray-400 mb-20 xl:mb-0">
+            <h3
+              class="text-center text-[14px] font-medium uppercase tracking-[0.22em] text-gray-500"
+            >
               Статистика
-            </span>
+            </h3>
 
             <div
-              class="flex gap-14 w-full justify-between flex-wrap h-full items-center mt-0 2md:-mt-20"
+              class="
+                grid w-full grid-cols-1 gap-10 mt-20
+                2md:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)_minmax(0,1fr)]
+                2md:items-stretch 2md:gap-10
+              "
             >
-              <!-- Порядність -->
-              <div class="flex flex-1 gap-14">
+              <!-- Матчі: ширша колонка; перемоги та поразки — по 1fr (однакова ширина) -->
+              <div
+                class="2md:min-w-0
+                  group flex min-h-0 min-w-0 flex-col
+                "
+              >
                 <div
                   class="
-                    group
-                    flex flex-col items-center justify-between
-                    h-96 min-w-96
-                    p-24 flex-1
-                    rounded-2xl
-                    bg-gray-800/60
-                    shadow-inner
-                    transition
-                    hover:-translate-y-1
+                    flex h-full min-h-[96px] flex-col items-center justify-center
+                    gap-8 rounded-xl border border-white/10
+                    bg-gradient-to-b from-white/[0.08] to-white/[0.02]
+                    px-14 py-16
+                    shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
+                    transition duration-200
+                    hover:-translate-y-px hover:border-white/15
                   "
                 >
-                  <span class="text-xs uppercase text-center tracking-widest text-gray-400 cursor-default">
-                    Порядність
-                  </span>
-
-                  <span class="mt-10 text-lg font-semibold text-white cursor-default">
-                    {{ player?.rating || 0 }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Core Points -->
-              <div
-                v-if="showAdditionalInfo"
-                class="
-                  group
-                  flex flex-col items-center justify-between
-                  h-96 min-w-[110px]
-                  rounded-2xl
-                  p-24 flex-1
-                  bg-gray-800/60
-                  shadow-inner
-                  transition
-                  hover:-translate-y-1
-                "
-              >
-                <span
-                  class="text-xs uppercase text-center tracking-widest
-                    whitespace-nowrap text-gray-400 cursor-default"
-                >
-                  Core Points
-                </span>
-
-                <div class="mt-10 flex gap-4 items-center">
-                  <span class="text-lg font-semibold text-white cursor-default">—</span>
-                </div>
-              </div>
-
-              <div
-                class="
-                  group
-                  flex flex-col items-center justify-between
-                  h-96 min-w-96
-                  rounded-2xl
-                  p-24 flex-1
-                  bg-gray-800/60
-                  shadow-inner
-                  transition
-                  hover:-translate-y-1
-                "
-              >
-                <el-tooltip content="Очки участі у подіях та турнірах" placement="top">
                   <span
-                    class="text-xs uppercase text-center tracking-widest
-                    whitespace-nowrap text-gray-400 cursor-default"
+                    class="text-center text-[10px] font-medium uppercase leading-tight
+                        tracking-widest text-gray-500"
                   >
-                    Участь
+                    Матчі
                   </span>
-                </el-tooltip>
 
-                <div class="mt-10 flex gap-4 items-center">
-                  <span class="text-lg font-semibold text-white cursor-default">—</span>
+                  <p
+                    class="inline-flex max-w-full flex-wrap items-baseline justify-center gap-x-1.5
+                      text-center text-base font-medium tabular-nums leading-none tracking-tight
+                      text-white/95"
+                  >
+                    <span>{{ matchStats.total }}</span>
+                    <span :class="matchStats.winrateClass">
+                      ({{ matchStats.winrateText }}%)
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <!-- Перемоги -->
+              <div
+                class="2md:min-w-0 group flex min-w-0 flex-col"
+              >
+                <div
+                  class="
+                    flex h-full min-h-[96px] flex-col items-center justify-center
+                    gap-8 rounded-xl border border-white/10
+                    bg-gradient-to-b from-white/[0.08] to-white/[0.02]
+                    px-14 py-16
+                    shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
+                    transition duration-200
+                    hover:-translate-y-px hover:border-white/15
+                  "
+                >
+                  <span
+                    class="text-center text-[10px] font-medium uppercase leading-tight
+                      tracking-widest text-gray-500"
+                  >
+                    Перемоги
+                  </span>
+                  <span
+                    class="text-base font-medium tabular-nums leading-none
+                      text-emerald-300/90"
+                  >
+                    {{ matchStats.wins }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Поразки -->
+              <div
+                class="2md:min-w-0 group flex min-w-0 flex-col"
+              >
+                <div
+                  class="
+                    flex h-full min-h-[96px] flex-col items-center justify-center
+                    gap-8 rounded-xl border border-white/10
+                    bg-gradient-to-b from-white/[0.08] to-white/[0.02]
+                    px-14 py-16
+                    shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
+                    transition duration-200
+                    hover:-translate-y-px hover:border-white/15
+                  "
+                >
+                  <span
+                    class="text-center text-[10px] font-medium uppercase leading-tight
+                      tracking-widest text-gray-500"
+                  >
+                    Поразки
+                  </span>
+                  <span
+                    class="text-base font-medium tabular-nums leading-none
+                      text-red-300/90"
+                  >
+                    {{ matchStats.losses }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -273,7 +297,7 @@
           "
         >
           <div class="w-full h-full flex flex-col justify-center items-center">
-            <div class="text-sm tracking-[0.2em] text-gray-400 my-20">
+            <div class="text-sm tracking-[0.2em] text-gray-400 my-20 text-center md:text-left">
               Інформація про команду недоступна
             </div>
           </div>
@@ -315,7 +339,7 @@ import {
   PhPencil
 } from '@phosphor-icons/vue'
 
-import { getCopy, getSteamProfileUrl, getDotabuffProfileUrl, getDiscordProfileUrl } from '@/core/helpers'
+import { getCopy, getSteamProfileUrl, getDotabuffProfileUrl, getDiscordProfileUrl, getPlayerMatchStats } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
 import type { TPlayer } from '@/api/types/api.types'
 
@@ -341,6 +365,8 @@ const links = computed(() => {
 })
 
 const isVerified = computed(() => !!player.value?.verifiedAt)
+
+const matchStats = computed(() => getPlayerMatchStats(player.value))
 
 const showAdditionalInfo = computed(() => {
   return route.name === routeNames.profile || me.isAdmin.isAdmin || me.isAdmin.isModerator

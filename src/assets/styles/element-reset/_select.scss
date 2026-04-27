@@ -1,4 +1,5 @@
 @use "element-plus/theme-chalk/src/select";
+@use "../variables/colors" as colors;
 
 /* ---------------- Popper / Tooltip ---------------- */
 .el-popper.is-pure.is-light,
@@ -64,7 +65,8 @@
 
   /* Active / Selected state */
   &.is-selected {
-    @apply text-primary font-semibold;
+    @apply font-semibold;
+    color: colors.$primary;
   }
 
   /* Disabled state */
@@ -104,7 +106,8 @@
   @apply bg-white/10 border-white/10 text-white rounded-lg;
 
   &.is-hit {
-    @apply bg-primary text-white;
+    background-color: colors.$primary;
+    @apply text-white;
   }
 
   &.is-disabled {
@@ -126,4 +129,81 @@
     transition
     duration-200
     ease-out;
+}
+
+/* ---------------- User menu in header: як у списку el-select (опції) ---------------- */
+.el-dropdown__popper.header-dropdown,
+.header-dropdown.el-popper {
+  @apply
+    rounded-xl
+    border
+    border-white/10
+    bg-white/5
+    backdrop-blur-xl
+    overflow-hidden
+    p-0
+    shadow-[0_20px_60px_rgba(0,0,0,0.55)];
+
+  --el-bg-color: transparent;
+  --el-fill-color-light: transparent;
+}
+
+/* Контейнер списку — як .el-select-dropdown (типу «тільки внутрішні відступи») */
+.header-dropdown .el-dropdown-menu {
+  @apply m-0 min-w-[200px] border-0 bg-transparent p-8 shadow-none;
+}
+
+/* Пункти — як .el-select-dropdown__item (без глобального drop-shadow з _dropdown) */
+.header-dropdown .el-dropdown-menu__item {
+  @apply
+    m-0
+    flex
+    min-h-0
+    items-center
+    gap-8
+    rounded-lg
+    border-0
+    px-12
+    py-8
+    text-sm
+    font-medium
+    leading-snug
+    text-white/80
+    transition-colors
+    duration-200
+    ease-out;
+
+  filter: none;
+  box-shadow: none;
+  outline: none;
+
+  &:not(.is-disabled):hover,
+  &:not(.is-disabled):focus {
+    @apply bg-white/10 text-white;
+  }
+
+  &.header-user-menu__item--active {
+    @apply font-semibold;
+    color: colors.$primary;
+  }
+
+  &.header-user-menu__item--danger {
+    @apply text-red-400/95;
+
+    &:not(.is-disabled):hover,
+    &:not(.is-disabled):focus {
+      @apply bg-white/10 text-red-300;
+    }
+  }
+}
+
+/* Розділювач: EP додає `&--divided`, тільки підлаштовуємо колір під селект */
+.header-dropdown .el-dropdown-menu__item--divided {
+  @apply border-t border-solid border-t-white/10;
+}
+
+/* Стрілка popper, як у селекта — не показувати */
+.header-dropdown .el-popper__arrow,
+.header-dropdown .el-popper__arrow::before {
+  @apply hidden;
 }

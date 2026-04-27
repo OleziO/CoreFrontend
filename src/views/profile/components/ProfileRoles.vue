@@ -1,16 +1,12 @@
 <template>
-  <div class="flex gap-10">
-    <div
-      v-for="role in authStore.user?.roles || []"
-      :key="role.id"
-    >
-      <el-tag type="primary">
-        {{ role.name }}
-      </el-tag>
-    </div>
-  </div>
+  <PlayerRoleTag :roles="roles" :max="12" />
 </template>
 
 <script lang="ts" setup>
+import PlayerRoleTag from '@/components/player-tags/PlayerRoleTag.vue'
+import type { TCurrentPlayerRole } from '@/api/types/api.types'
+
 const authStore = useAuthStore()
+
+const roles = computed((): TCurrentPlayerRole[] => authStore.user?.roles ?? [])
 </script>
