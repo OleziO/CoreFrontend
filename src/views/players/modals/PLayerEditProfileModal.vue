@@ -139,11 +139,17 @@ function toSlot (n: number): n is TPositionSlot {
   return SLOT.includes(n as TPositionSlot)
 }
 
+function coercePositionSlot (x: unknown): number {
+  if (typeof x === 'number') return x
+  if (typeof x === 'string') return parseInt(x, 10)
+  return NaN
+}
+
 function pickPositions (p: TPlayerWithOptionalLegacy): number[] {
   const fromApi = p.positions
   if (Array.isArray(fromApi) && fromApi.length) {
     return fromApi
-      .map((x) => (typeof x === 'string' ? parseInt(x, 10) : x))
+      .map(coercePositionSlot)
       .filter((n): n is number => Number.isInteger(n) && toSlot(n))
   }
 
@@ -155,7 +161,7 @@ function pickPositions (p: TPlayerWithOptionalLegacy): number[] {
   const raw = p.positionIds ?? p.preferredPositions
   if (!raw || !Array.isArray(raw) || !raw.length) return []
   return raw
-    .map((x) => (typeof x === 'string' ? parseInt(x, 10) : x))
+    .map(coercePositionSlot)
     .filter((n): n is number => Number.isInteger(n) && toSlot(n))
 }
 

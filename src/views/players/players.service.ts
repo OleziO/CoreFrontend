@@ -9,7 +9,7 @@ class PlayersService {
   async fetchPlayers (): Promise<TPlayer[]> {
     try {
       const res = await apiClient.get('/players')
-      return res as TPlayer[]
+      return res as unknown as TPlayer[]
     } catch (e) {
       ElMessage({ type: 'error', message: 'Не вдалося завантажити гравців' })
       throw e
@@ -21,7 +21,7 @@ class PlayersService {
       const res = await apiClient.get('/players/{id}', {
         dynamicKeys: { id }
       })
-      return res as TPlayer
+      return res as unknown as TPlayer
     } catch (e) {
       ElMessage.error('Гравця не знайдено')
       return null
@@ -32,7 +32,7 @@ class PlayersService {
     const res = await apiClient.patch('/players/{id}', data, {
       dynamicKeys: { id }
     })
-    return res as TPlayer
+    return res as unknown as TPlayer
   }
 
   async deletePlayer (id: string): Promise<void> {
@@ -83,7 +83,7 @@ class PlayersService {
       }
 
       if (Array.isArray(b.roles)) {
-        next.roles = b.roles as TPlayer['roles']
+        next.roles = b.roles as unknown as TPlayer['roles']
       }
 
       return next
@@ -116,7 +116,7 @@ class PlayersService {
     try {
       const res = await apiClient.get('/players/{id}', {
         dynamicKeys: { id: playerId }
-      }) as TPlayer
+      }) as unknown as TPlayer
       const merged = this.mergePlayerAfterVerifyMutation(res, verifyResponse)
 
       ElMessage.success(verified ? 'Гравця верифіковано' : 'Верифікацію знято')

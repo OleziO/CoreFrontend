@@ -164,7 +164,7 @@ const profilePositionRows = computed(() => {
       if (!opt) return null
       return { id, label: opt.label, icon: opt.icon }
     })
-    .filter((x): x is { id: number, label: string, icon: (typeof positionOptions)[0]['icon'] } => x != null)
+    .filter((x): x is { id: number; label: string; icon: (typeof positionOptions)[0]['icon'] } => x != null)
 })
 
 </script>
