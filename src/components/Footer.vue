@@ -78,7 +78,7 @@ const socialLinks: Array<{
   { name: 'telegram', url: 'https://t.me/s/core_league', icon: 'telegram' },
   { name: 'discord', url: 'https://discord.gg/QeDj9TjmgM', icon: 'discord' },
   { name: 'instagram', url: 'https://www.instagram.com/core__league/', icon: 'instagram' },
-  { name: 'tiktok', url: 'https://www.tiktok.com/@core_league', icon: 'tiktok' },
+  { name: 'tiktok', url: 'https://www.tiktok.com/@core_league_dota2', icon: 'tiktok' },
   { name: 'twitch', url: 'https://www.twitch.tv/core_league', icon: 'twitch' }
 ]
 
