@@ -1,10 +1,12 @@
-const modals = ref(new Map<PropertyKey, { component: any; props?: any; isOpen: boolean}>())
+import { computed, defineAsyncComponent, markRaw, ref, type Raw } from 'vue'
+
+const modals = ref(new Map<PropertyKey, { component: unknown; props?: unknown; isOpen: boolean}>())
 
 export function useModals<T extends Record<PropertyKey, ReturnType<typeof defineAsyncComponent>>> (_components: T) {
   type TComponentsType = typeof _components
   type TComponentNames = keyof TComponentsType
 
-  type TInferProps<T> = T extends new (...args: any[]) => infer R
+  type TInferProps<TComp> = TComp extends new (...args: unknown[]) => infer R
     ? R extends { $props: infer P } ? P: never
     : never
 
@@ -13,7 +15,17 @@ export function useModals<T extends Record<PropertyKey, ReturnType<typeof define
   }
 
   function open<K extends TComponentNames> (name: K, props?: TComponentProps[K]) {
-    modals.value.set(name, { component: markRaw(_components[name]), props, isOpen: true })
+    const comp = _components[name]
+    if (comp == null) {
+      console.error(`[useModals] Невідома модалка: ${String(name)}`)
+      return
+    }
+
+    modals.value.set(name, {
+      component: markRaw(comp) as Raw<typeof comp>,
+      props,
+      isOpen: true
+    })
   }
 
   function close (name: TComponentNames) {
@@ -25,12 +37,12 @@ export function useModals<T extends Record<PropertyKey, ReturnType<typeof define
 
   const isOpen = computed(() => {
     return [...modals.value.entries()].reduce((acc, [name, { isOpen }]) => {
-      acc[name] = isOpen
+      acc[name as string] = isOpen
       return acc
-    }, {} as Record<PropertyKey, boolean>) as Record<TComponentNames, boolean>
+    }, {} as Record<string, boolean>) as Record<TComponentNames, boolean>
   })
   return {
-    modals: modals as Ref<Map<TComponentNames, { component: any; props?: any; isOpen: boolean}>>,
+    modals: modals as Ref<Map<TComponentNames, { component: unknown; props?: unknown; isOpen: boolean}>>,
     isOpen,
     open,
     close

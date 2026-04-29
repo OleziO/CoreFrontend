@@ -5,10 +5,9 @@
     </router-view>
   </ElConfigProvider>
 
-  <Modals :modals="useAppModals()" />
+  <Modals :modals="appModals" />
 </template>
 
 <script setup lang="ts">
-import { useAppModals } from '@/composables/use-app-modals'
-
+import { appModals } from '@/composables/use-app-modals'
 </script>

@@ -175,6 +175,36 @@ export function hasPlayerRole (roles: UserRole[] | undefined | null, role: ERole
   return roles.some(r => r.name === role || r.name === labelUk)
 }
 
+/** UUID зі старих посилань; за `name` з фільтра достатньо звичайного збігу. */
+const ROLE_FILTER_UUID_RE =
+  /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i
+
+/**
+ * Значення в query для ролей — тепер `name` як у відповіді GET `/user-roles`; для сумісності залишені slug і рідкий збіг по id каталогу.
+ */
+export function playerMatchesRoleFilterToken (
+  player: { roles?: UserRole[] | null },
+  rawToken: string,
+  roleCatalog?: readonly { id: string; name: string }[]
+): boolean {
+  const token = rawToken.trim()
+  if (!token || !player.roles?.length) return false
+  const pr = player.roles
+
+  if (ROLE_FILTER_UUID_RE.test(token)) {
+    if (pr.some(r => r.id === token)) return true
+    const cat = roleCatalog?.find(c => c.id === token)
+    if (cat) return pr.some(r => r.name === cat.name)
+    return false
+  }
+
+  const asEnum = token as ERole
+  if (Object.values(ERole).includes(asEnum)) {
+    return hasPlayerRole(pr, asEnum)
+  }
+  return pr.some(r => r.name === token)
+}
+
 /**
  * Видимість «верифікований»: timestamp від беку або роль гравця («Гравець» / PLAYER).
  */

@@ -1,11 +1,50 @@
 import apiClient from '@/api/client'
 import { ElMessage } from 'element-plus'
+import { shallowRef } from 'vue'
 
 import { hasPlayerRole } from '@/core/helpers'
 import { ERole } from '@/types/general.types'
-import type { TPlayer, TUpdatePlayerDto } from '@/api/types/api.types'
+import type { TPlayer, TUpdatePlayerDto, TUserRoleCatalog } from '@/api/types/api.types'
+
+/** Каталог GET `/user-roles` — реактивний, щоб список після префетчу перерахував фільтр за query. */
+export const userRolesCatalogRef = shallowRef<TUserRoleCatalog[] | null>(null)
+
+/** Відповідь GET `/user-roles` — зазвичай масив `UserRoleResponseDto[]`. */
+function parseUserRolesList (raw: unknown): TUserRoleCatalog[] {
+  if (Array.isArray(raw)) return raw as TUserRoleCatalog[]
+  if (raw && typeof raw === 'object' && raw !== null && 'data' in raw) {
+    const inner = (raw as { data: unknown }).data
+    if (Array.isArray(inner)) return inner as TUserRoleCatalog[]
+  }
+  return []
+}
 
 class PlayersService {
+  /** Останній успішний кеш каталогу ролей (для підписів тегів без повторного GET). */
+  getCachedUserRoles (): TUserRoleCatalog[] {
+    return userRolesCatalogRef.value ?? []
+  }
+
+  /**
+   * Каталог ролей з бекенду (GET `/user-roles`). Кешується для селектів фільтрів.
+   */
+  async fetchUserRoles (opts?: { force?: boolean }): Promise<TUserRoleCatalog[]> {
+    const force = opts?.force ?? false
+    if (!force && userRolesCatalogRef.value !== null) {
+      return [...userRolesCatalogRef.value]
+    }
+    try {
+      const raw = await apiClient.get('/user-roles') as unknown
+      const list = parseUserRolesList(raw)
+      const copy = [...list]
+      userRolesCatalogRef.value = copy
+      return copy
+    } catch (e) {
+      ElMessage({ type: 'error', message: 'Не вдалося завантажити ролі' })
+      throw e
+    }
+  }
+
   async fetchPlayers (): Promise<TPlayer[]> {
     try {
       const res = await apiClient.get('/players')

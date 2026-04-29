@@ -334,6 +334,8 @@
     "useMixTournamentsListStore": true,
     "bugService": true,
     "userRolesService": true,
-    "matchesService": true
+    "matchesService": true,
+    "userRolesCatalogRef": true,
+    "appModals": true
   }
 }

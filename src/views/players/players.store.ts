@@ -1,8 +1,17 @@
-import type { TPlayer } from '@/api/types/api.types'
+import type { TPlayer, TUserRoleCatalog } from '@/api/types/api.types'
+
+import { playersService, userRolesCatalogRef } from '@/views/players/players.service'
 
 export const usePlayersStore = defineStore('players', () => {
   const players = ref<TPlayer[]>([])
   const loading = ref(false)
+
+  /** Останній GET `/user-roles` (живе з `players.service` → `userRolesCatalogRef`). */
+  const userRolesCatalog = computed((): TUserRoleCatalog[] => userRolesCatalogRef.value ?? [])
+
+  async function fetchUserRoles (opts?: { force?: boolean }) {
+    return playersService.fetchUserRoles(opts)
+  }
 
   async function findPlayer (playerId?: string | null) {
     if (!players.value.length) {
@@ -70,6 +79,8 @@ export const usePlayersStore = defineStore('players', () => {
   return {
     players,
     loading,
+    userRolesCatalog,
+    fetchUserRoles,
     findPlayer,
     // searchPlayer,
     getPlayers

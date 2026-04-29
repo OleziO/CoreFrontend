@@ -92,6 +92,7 @@ import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { roleLabelMap, EUserIsTeam, hasTeamLabelMap, verificationOptions, positionOptions } from '@/components/player-tags/player.constants'
+import { playersService } from '@/views/players/players.service'
 import type { ERole } from '@/types/general.types'
 
 interface IMessageForm {
@@ -133,8 +134,18 @@ const filterTags = computed<string[]>(() => {
   }
 
   if (query.roles) {
-    String(query.roles).split(',').forEach(r => {
-      if (r in roleLabelMap) tags.push(roleLabelMap[r as ERole])
+    const catalog = playersService.getCachedUserRoles()
+    const uuidRe = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i
+    String(query.roles).split(',').forEach(raw => {
+      const r = raw.trim()
+      if (!r) return
+      if (uuidRe.test(r)) {
+        tags.push(catalog.find(x => x.id === r)?.name ?? r)
+      } else if (r in roleLabelMap) {
+        tags.push(roleLabelMap[r as ERole])
+      } else {
+        tags.push(r)
+      }
     })
   }
 

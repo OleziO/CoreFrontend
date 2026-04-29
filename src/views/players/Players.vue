@@ -117,6 +117,22 @@
 import { PhSlidersHorizontal, PhMagnifyingGlass } from '@phosphor-icons/vue'
 import type { LocationQuery } from 'vue-router'
 import type { TPlayer } from '@/api/types/api.types'
+import { ERole } from '@/types/general.types'
+
+import {
+  getPlayerDotaPositions,
+  isPlayerVerified,
+  parseQueryArray,
+  playerMatchesRoleFilterToken
+} from '@/core/helpers'
+import { userRolesCatalogRef } from '@/views/players/players.service'
+
+function parseTeamStatusQuery (query: LocationQuery): boolean[] {
+  const raw = query.teamStatus
+  if (raw == null) return []
+  if (Array.isArray(raw)) return raw.map(v => Boolean(Number(v)))
+  return String(raw).split(',').filter(Boolean).map(v => Boolean(Number(v)))
+}
 
 const USER_CARD_WIDTH = 270
 const USER_CARD_HEIGHT = 360
@@ -148,8 +164,38 @@ function checkQueryFilter (player: TPlayer, query: LocationQuery) {
   if (rating < ratingFrom || rating > ratingTo) return false
 
   if (query.roles) {
-    const roles = query.roles.toString().split(',')
-    if (!roles.some(role => player.roles?.some(r => r.name === role))) return false
+    const tokens = String(query.roles).split(',').map(s => s.trim()).filter(Boolean)
+    const catalog = userRolesCatalogRef.value ?? []
+    if (tokens.length && !tokens.some(t => playerMatchesRoleFilterToken(player, t, catalog))) return false
+  }
+
+  if (query.positions) {
+    const wanted = parseQueryArray(query.positions, Number).filter(n => n >= 1 && n <= 5)
+    if (wanted.length) {
+      const have = new Set(getPlayerDotaPositions(player))
+      if (!wanted.some(w => have.has(w))) return false
+    }
+  }
+
+  if (query.teamStatus) {
+    const flags = parseTeamStatusQuery(query)
+    if (flags.length) {
+      const hasTeam = Boolean((player as { teamId?: string | null }).teamId)
+      if (!flags.includes(hasTeam)) return false
+    }
+  }
+
+  if (query.verificationStatus) {
+    const statuses = parseQueryArray(query.verificationStatus)
+    if (statuses.length) {
+      const verified = isPlayerVerified(player)
+      const ok = statuses.some((s) => {
+        if (s === ERole.PLAYER) return verified
+        if (s === ERole.GUEST) return !verified
+        return false
+      })
+      if (!ok) return false
+    }
   }
 
   return true
@@ -160,6 +206,9 @@ const activeFiltersCount = computed(() => {
   let count = 0
   if (query.ratingFrom != null || query.ratingTo != null) count += 1
   if (query.roles) count += 1
+  if (query.positions) count += 1
+  if (query.teamStatus) count += 1
+  if (query.verificationStatus) count += 1
   return count
 })
 
@@ -174,5 +223,8 @@ function openPlayersFilterModal () {
   open('PlayersFilterModal')
 }
 
-onMounted(playersStore.getPlayers)
+onMounted(() => {
+  void playersStore.getPlayers()
+  void playersStore.fetchUserRoles().catch(() => {})
+})
 </script>

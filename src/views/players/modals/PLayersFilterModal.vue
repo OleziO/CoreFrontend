@@ -4,7 +4,7 @@
     destroy-on-close
     width="600"
     title="Фільтри гравців"
-    @open="getFiltersFromQuery"
+    @open="onFilterModalOpen"
     @close="onReset"
   >
     <el-form
@@ -65,23 +65,23 @@
         </el-select>
       </el-form-item>
 
-      <!-- Roles -->
-      <el-form-item label="Теги">
+      <el-form-item label="Ролі">
         <el-select
           v-model="filters.roles"
+          :loading="rolesLoading"
           multiple
           collapse-tags
           :show-arrow="false"
           collapse-tags-tooltip
           :max-collapse-tags="2"
-          placeholder="Оберіть теги"
+          placeholder="Оберіть ролі"
           class="w-full"
         >
           <el-option
-            v-for="(label, value) in roleLabelMap"
-            :key="value"
-            :label="label"
-            :value="value"
+            v-for="role in playersStore.userRolesCatalog"
+            :key="role.id"
+            :label="role.name"
+            :value="role.name"
           />
         </el-select>
       </el-form-item>
@@ -162,7 +162,7 @@
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
 import { PhSealCheck, PhSealWarning, PhMagnifyingGlass } from '@phosphor-icons/vue'
-import { DEFAULT_PLAYER_FILTERS, MAX_RATING, positionOptions, roleLabelMap, teamStatusOptions, verificationOptions } from '@/components/player-tags/player.constants'
+import { DEFAULT_PLAYER_FILTERS, MAX_RATING, positionOptions, teamStatusOptions, verificationOptions } from '@/components/player-tags/player.constants'
 
 import { parseQueryArray } from '@/core/helpers'
 import { ERole } from '@/types/general.types'
@@ -184,6 +184,21 @@ const route = useRoute()
 
 const filters = ref<IPlayerFilters>(DEFAULT_PLAYER_FILTERS)
 
+const playersStore = usePlayersStore()
+const rolesLoading = ref(false)
+
+async function onFilterModalOpen () {
+  getFiltersFromQuery()
+  rolesLoading.value = true
+  try {
+    await playersStore.fetchUserRoles({ force: true })
+  } catch {
+    /* помилка вже в playersService */
+  } finally {
+    rolesLoading.value = false
+  }
+}
+
 function onReset (withClose = true) {
   filters.value.ratingFrom = null
   filters.value.ratingTo = null
@@ -198,12 +213,21 @@ function onReset (withClose = true) {
 function onApply () {
   const { ratingFrom, ratingTo, verificationStatus, teamStatus, positions, roles } = filters.value
 
-  const rating = [ratingFrom, ratingTo].filter((v) => v != null).sort((a, b) => a - b)
+  /** Не зводити до sorted [a,b] — інакше одне поле (лише «до») опиняється в `ratingFrom` у query. */
+  let qRatingFrom: number | undefined
+  let qRatingTo: number | undefined
+  if (ratingFrom != null && ratingTo != null) {
+    qRatingFrom = Math.min(ratingFrom, ratingTo)
+    qRatingTo = Math.max(ratingFrom, ratingTo)
+  } else {
+    if (ratingFrom != null) qRatingFrom = ratingFrom
+    if (ratingTo != null) qRatingTo = ratingTo
+  }
 
   const query = Object.fromEntries(
     Object.entries({
-      ratingFrom: rating[0],
-      ratingTo: rating[1],
+      ratingFrom: qRatingFrom,
+      ratingTo: qRatingTo,
       positions: positions?.length ? positions.join(',') : undefined,
       roles: roles?.length ? roles.join(',') : undefined,
       teamStatus: teamStatus?.filter((v) => v != null).map(Number).join(',') || undefined,
@@ -238,9 +262,5 @@ function getFiltersFromQuery () {
     verificationStatus: parseQueryArray(query.verificationStatus)
   }
 }
-
-onMounted(() => {
-  getFiltersFromQuery()
-})
 
 </script>
