@@ -1,10 +1,8 @@
 import { defineStore } from 'pinia'
-import { useRouter } from 'vue-router'
+import { router } from '@/router'
 import type { TTeam as Team, TUpdateTeamDto as UpdateTeamDto } from '@/api/types/api.types'
 
 export const useTeamsStore = defineStore('teams', () => {
-  const router = useRouter()
-
   const teams = ref<Team[]>([])
   const loading = ref(false)
 

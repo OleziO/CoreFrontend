@@ -4,9 +4,9 @@
     <MobileMenu />
 
     <main class="app-main">
-      <router-view #default="{ Component }">
+      <router-view v-slot="{ Component }">
         <transition name="fade">
-          <component :is="Component" />
+          <component :is="Component" v-if="Component" />
         </transition>
       </router-view>
     </main>

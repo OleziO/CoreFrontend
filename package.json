@@ -12,11 +12,11 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "api": "npx openapi-typescript https://api.core-league-dota2.org/api-json -o src/api/types/schema.d.ts",
     "api:local": "npx openapi-typescript http://localhost:3000/api-json -o src/api/types/schema.d.ts"
-
   },
   "dependencies": {
     "@phosphor-icons/vue": "^2.2.1",
     "@pinia/colada": "^0.17.8",
+    "@supabase/supabase-js": "^2.105.1",
     "@tailwindcss/container-queries": "^0.1.1",
     "@vueuse/core": "^10.11.0",
     "axios": "^1.7.2",

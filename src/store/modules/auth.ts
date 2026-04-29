@@ -1,16 +1,41 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { router } from '@/router'
+import { supabase } from '@/api/client'
 import type { TCurrentPlayer, TUserRole as UserRole } from '@/api/types/api.types'
 import { authService } from '@/services/auth.service'
 
+/** Сесія зберігається Supabase у `sb-<project-ref>-auth-token`; userToken більше не використовується. */
 export const useAuthStore = defineStore('auth', () => {
-  const router = useRouter()
-
-  const token = ref<string | null>(localStorage.getItem('userToken'))
+  const token = ref<string | null>(null)
   const user = ref<TCurrentPlayer | null>(null)
   const loginLoading = ref(false)
   const loginError = ref<string | null>(null)
+
+  async function hydrateSession () {
+    try {
+      const { data, error } = await supabase.auth.getSession()
+      if (error) {
+        console.warn('[auth] getSession:', error.message)
+        token.value = null
+        return
+      }
+      token.value = data?.session?.access_token ?? null
+    } catch (e) {
+      console.error('[auth] hydrateSession', e)
+      token.value = null
+    }
+  }
+
+  /** При ініціалізації стору та будь-якій зміні сесії (включно з refresh). */
+  hydrateSession().catch(() => {})
+  try {
+    localStorage.removeItem('userToken')
+  } catch { /* ignore */ }
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    token.value = session?.access_token ?? null
+  })
 
   const isAdmin = computed(() => {
     const roles: UserRole[] = (user.value as any)?.roles || []
@@ -24,14 +49,16 @@ export const useAuthStore = defineStore('auth', () => {
 
   const login = (newToken: string) => {
     token.value = newToken
-    localStorage.setItem('userToken', newToken)
     loginError.value = null
   }
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut()
     token.value = null
     user.value = null
-    localStorage.removeItem('userToken')
+    try {
+      localStorage.removeItem('userToken')
+    } catch { /* ignore */ }
     router.push('/')
   }
 
@@ -39,19 +66,24 @@ export const useAuthStore = defineStore('auth', () => {
     loginLoading.value = true
     loginError.value = null
     try {
-      const { url } = await authService.getDiscordAuthUrl()
-      window.location.href = url
+      const data = await authService.signInWithDiscord()
+      if (!data.url) {
+        loginError.value = 'Не вдалося отримати посилання для входу через Discord'
+        loginLoading.value = false
+        return
+      }
+      window.location.href = data.url
     } catch {
       loginError.value = 'Не вдалося отримати посилання для входу через Discord'
       loginLoading.value = false
     }
   }
 
-  async function handleDiscordCallback (code: string, state: string) {
+  async function handleDiscordCallback (code: string) {
     loginLoading.value = true
     loginError.value = null
     try {
-      const data = await authService.exchangeDiscordCode(code, state)
+      const data = await authService.exchangeDiscordCode(code)
       login(data.access_token)
       await fetchUser()
       return true
@@ -69,6 +101,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function fetchUser () {
+    await hydrateSession()
     if (!token.value) {
       user.value = null
       return null
@@ -95,6 +128,7 @@ export const useAuthStore = defineStore('auth', () => {
     startDiscordLogin,
     handleDiscordCallback,
     linkSteam,
-    fetchUser
+    fetchUser,
+    hydrateSession
   }
 })

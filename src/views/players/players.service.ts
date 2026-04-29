@@ -1,15 +1,67 @@
-import apiClient from '@/api/client'
+import { supabase } from '@/api/client'
 import { ElMessage } from 'element-plus'
 
 import { hasPlayerRole } from '@/core/helpers'
 import { ERole } from '@/types/general.types'
 import type { TPlayer, TUpdatePlayerDto } from '@/api/types/api.types'
 
+function mapRowToPlayer (row: Record<string, unknown>): TPlayer {
+  const rankRaw = (typeof row.rank === 'object' && row.rank !== null ? row.rank : {}) as Record<string, unknown>
+  const rolesRaw = row.roles
+  const roles: TPlayer['roles'] = Array.isArray(rolesRaw)
+    ? rolesRaw.map((r: Record<string, unknown>) => ({
+      id: String(r.id),
+      name: String(r.name),
+      isAdminRole: Boolean(r.is_admin_role ?? r.isAdminRole),
+      player: null,
+      tournaments: []
+    }))
+    : []
+
+  return {
+    id: String(row.id),
+    steamId: (row.steam_id ?? row.steamId) as string | null,
+    discordId: (row.discord_id ?? row.discordId) as string | null,
+    telegramId: (row.telegram_id ?? row.telegramId) as string | null,
+    avatarUrl: (row.avatar_url ?? row.avatarUrl) as string | null,
+    discordName: (row.discord_name ?? row.discordName) as string | null,
+    discordUsername: (row.discord_username ?? row.discordUsername) as string | null,
+    rating: Number(row.rating ?? 0),
+    rank: {
+      rankNumber: Number(rankRaw.rank_number ?? rankRaw.rankNumber ?? 0),
+      stars: Number(rankRaw.stars ?? 0),
+      numericName: Number(rankRaw.numeric_name ?? rankRaw.numericName ?? 0),
+      nameUk: String(rankRaw.name_uk ?? rankRaw.nameUk ?? '')
+    },
+    positions: (row.positions ?? null) as TPlayer['positions'],
+    verifiedAt: (row.verified_at ?? row.verifiedAt) as string | null,
+    roles
+  }
+}
+
+function updateDtoToPatch (data: Partial<TUpdatePlayerDto>): Record<string, unknown> {
+  const patch: Record<string, unknown> = {}
+  if (data.steamId !== undefined) patch.steam_id = data.steamId
+  if (data.discordId !== undefined) patch.discord_id = data.discordId
+  if (data.telegramId !== undefined) patch.telegram_id = data.telegramId
+  if (data.avatarUrl !== undefined) patch.avatar_url = data.avatarUrl
+  if (data.discordName !== undefined) patch.discord_name = data.discordName
+  if (data.discordUsername !== undefined) patch.discord_username = data.discordUsername
+  if (data.rating !== undefined) patch.rating = data.rating
+  if (data.positions !== undefined) patch.positions = data.positions
+  return patch
+}
+
+function throwIfError (error: { message: string } | null): asserts error is null {
+  if (error) throw new Error(error.message)
+}
+
 class PlayersService {
   async fetchPlayers (): Promise<TPlayer[]> {
     try {
-      const res = await apiClient.get('/players')
-      return res as unknown as TPlayer[]
+      const { data, error } = await supabase.from('players').select('*')
+      throwIfError(error)
+      return (data ?? []).map(r => mapRowToPlayer(r as Record<string, unknown>))
     } catch (e) {
       ElMessage({ type: 'error', message: 'Не вдалося завантажити гравців' })
       throw e
@@ -18,10 +70,10 @@ class PlayersService {
 
   async fetchPlayerItemById (id: string): Promise<TPlayer | null> {
     try {
-      const res = await apiClient.get('/players/{id}', {
-        dynamicKeys: { id }
-      })
-      return res as unknown as TPlayer
+      const { data, error } = await supabase.from('players').select('*').eq('id', id).maybeSingle()
+      throwIfError(error)
+      if (!data) return null
+      return mapRowToPlayer(data as Record<string, unknown>)
     } catch (e) {
       ElMessage.error('Гравця не знайдено')
       return null
@@ -29,21 +81,32 @@ class PlayersService {
   }
 
   async updatePlayer (id: string, data: Partial<TUpdatePlayerDto>): Promise<TPlayer> {
-    const res = await apiClient.patch('/players/{id}', data, {
-      dynamicKeys: { id }
-    })
-    return res as unknown as TPlayer
+    const patch = updateDtoToPatch(data)
+
+    const { data: row, error } = await supabase
+      .from('players')
+      .update(patch)
+      .eq('id', id)
+      .select()
+      .maybeSingle()
+
+    throwIfError(error)
+
+    if (!row) {
+      throw new Error(`Player not found: ${id}`)
+      // or return a 404 response, etc.
+    }
+
+    return mapRowToPlayer(row as Record<string, unknown>)
   }
 
   async deletePlayer (id: string): Promise<void> {
-    await apiClient.delete('/players/{id}', {
-      dynamicKeys: { id }
-    })
+    const { error } = await supabase.from('players').delete().eq('id', id)
+    throwIfError(error)
   }
 
   /**
-   * Відповідь POST/DELETE `/admin/players/:id/verify` звичайно містить `verified`
-   * (джерело істини після мутації). Зливаємо її із GET `/players/:id`, щоб кеш/UI не показували старий стан.
+   * Локальна логіка після верифікації (без окремого admin endpoint у Nest).
    */
   private mergePlayerAfterVerifyMutation (player: TPlayer, apiBody: unknown): TPlayer {
     if (apiBody == null || typeof apiBody !== 'object') {
@@ -57,12 +120,10 @@ class PlayersService {
         ? b.id === player.id
         : b.id === undefined
 
-    /** Повернення повної сутності з беку — приймаємо явні поля. */
     if (sameId && Array.isArray(b.roles)) {
       return { ...player, ...(b as Partial<TPlayer>) }
     }
 
-    /** Типові поля від бекенду після мутації: `verified`, опційно `verifiedAt`, `roles`. */
     if (typeof b.verified === 'boolean') {
       const verified = b.verified
       const next: TPlayer = { ...player }
@@ -97,32 +158,29 @@ class PlayersService {
   }
 
   async setPlayerVerificationByAdmin (playerId: string, verified: boolean): Promise<TPlayer | null> {
-    let verifyResponse: unknown
     try {
-      if (verified) {
-        verifyResponse = await apiClient.post('/admin/players/{playerId}/verify', {}, {
-          dynamicKeys: { playerId }
-        })
-      } else {
-        verifyResponse = await apiClient.delete('/admin/players/{playerId}/verify', {
-          dynamicKeys: { playerId }
-        })
+      const patch = {
+        verified_at: verified ? new Date().toISOString() : null
       }
-    } catch {
-      ElMessage.error(verified ? 'Не вдалося верифікувати гравця' : 'Не вдалося зняти верифікацію')
-      return null
-    }
+      const { data: updated, error } = await supabase
+        .from('players')
+        .update(patch)
+        .eq('id', playerId)
+        .select()
+        .single()
+      throwIfError(error)
 
-    try {
-      const res = await apiClient.get('/players/{id}', {
-        dynamicKeys: { id: playerId }
-      }) as unknown as TPlayer
-      const merged = this.mergePlayerAfterVerifyMutation(res, verifyResponse)
+      const res = mapRowToPlayer(updated as Record<string, unknown>)
+      const merged = this.mergePlayerAfterVerifyMutation(res, {
+        verified,
+        verifiedAt: patch.verified_at,
+        id: playerId
+      })
 
       ElMessage.success(verified ? 'Гравця верифіковано' : 'Верифікацію знято')
       return merged
     } catch {
-      ElMessage.error('Не вдалося оновити дані гравця')
+      ElMessage.error(verified ? 'Не вдалося верифікувати гравця' : 'Не вдалося зняти верифікацію')
       return null
     }
   }

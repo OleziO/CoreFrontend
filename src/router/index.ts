@@ -7,38 +7,41 @@ export const router = createRouter({
   routes
 })
 
-router.beforeEach(async (to, from, next) => { // Перед роутингом будет проверка есть ли юзер
-  // Discord (or backend) may use redirect URI = site root; callback UI lives at /auth/callback.
-  const oauthCode = firstQueryValue(to.query.code)
-  const oauthState = firstQueryValue(to.query.state)
-  if (oauthCode && oauthState && to.name !== routeNames.authCallback) {
-    return next({
-      path: '/auth/callback',
-      query: { code: oauthCode, state: oauthState },
-      replace: true
-    })
-  }
-
-  // Після Steam OpenID бекенд редіректить з ?steam_linked або ?steam_error; UI обробляє це в /me (Player.vue).
-  const steamLinked = firstQueryValue(to.query.steam_linked)
-  const steamError = firstQueryValue(to.query.steam_error)
-  if (steamLinked !== undefined || steamError !== undefined) {
-    if (to.name !== routeNames.profile) {
-      const q: Record<string, string> = {}
-      if (steamLinked !== undefined) q.steam_linked = steamLinked
-      if (steamError !== undefined) q.steam_error = steamError
-      return next({ name: routeNames.profile, query: q, replace: true })
+router.beforeEach(async (to, from, next) => {
+  try {
+    const oauthCode = firstQueryValue(to.query.code)
+    if (oauthCode && to.name !== routeNames.authCallback) {
+      return next({
+        path: '/auth/callback',
+        query: to.query,
+        replace: true
+      })
     }
-  }
 
-  const authStore = useAuthStore()
+    const steamLinked = firstQueryValue(to.query.steam_linked)
+    const steamError = firstQueryValue(to.query.steam_error)
+    if (steamLinked !== undefined || steamError !== undefined) {
+      if (to.name !== routeNames.profile) {
+        const q: Record<string, string> = {}
+        if (steamLinked !== undefined) q.steam_linked = steamLinked
+        if (steamError !== undefined) q.steam_error = steamError
+        return next({ name: routeNames.profile, query: q, replace: true })
+      }
+    }
 
-  if (!authStore.token && to.name === 'me') {
-    return next('/')
-  }
+    const authStore = useAuthStore()
+    await authStore.hydrateSession()
 
-  if (authStore.token && !authStore.user) {
-    await authStore.fetchUser()
+    if (!authStore.token && to.name === 'me') {
+      return next('/')
+    }
+
+    if (authStore.token && !authStore.user) {
+      await authStore.fetchUser()
+    }
+    next()
+  } catch (e) {
+    console.error('[router]', e)
+    next({ path: '/', replace: true })
   }
-  next()
 })

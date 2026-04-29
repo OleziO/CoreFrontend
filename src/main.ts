@@ -4,6 +4,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 import { router } from '@/router'
 import { store } from '@/store/create-store'
+import { registerSupabaseAuthGuildSync } from '@/boot/supabase-auth-listener'
 
 import '@/assets/styles/main.scss'
 
@@ -11,6 +12,8 @@ import VueVirtualScroller from 'vue-virtual-scroller'
 import PhosphorIcons from '@phosphor-icons/vue'
 
 const app = createApp(App)
+
+registerSupabaseAuthGuildSync()
 
 app
   .use(store)

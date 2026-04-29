@@ -575,7 +575,14 @@ async function onOpen () {
 
   loading.value = true
   try {
-    player.value = isMePage ? (me.user as unknown as TPlayer) : await playerStore.findPlayer(id)
+    if (isMePage) {
+      if (!me.user && me.token) {
+        await me.fetchUser()
+      }
+      player.value = me.user as unknown as TPlayer
+    } else {
+      player.value = await playerStore.findPlayer(id)
+    }
     if (!player.value) throw new Error()
   } catch {
     router.push('/')
