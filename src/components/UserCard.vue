@@ -98,18 +98,20 @@
       <PhCopy v-if="user.discordUsername" size="14" />
     </span>
 
-    <!-- Role tags -->
+    <!-- Командний статус і ролі — строга 50% / 50% на всю ширину картки -->
     <div
-      class="mt-10 flex w-full min-w-0 items-stretch gap-10 border-t border-dashed py-16"
+      class="
+        -mx-20 mt-10 grid w-[calc(100%+40px)] grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-0
+        border-t border-dashed py-16"
       :class="isVerified
         ? 'border-green-800/60'
         : 'border-red-800/60'"
     >
-      <div class="min-w-0 flex-1">
-        <PlayerTeamTag :user />
+      <div class="min-w-0 overflow-x-auto pl-20 pr-8 [scrollbar-width:thin]">
+        <PlayerTeamTag stretch-in-grid :user />
       </div>
-      <div class="min-w-0 max-w-[55%] shrink-0">
-        <PlayerRoleTag :user no-wrap />
+      <div class="min-w-0 overflow-x-auto pr-20 pl-8 [scrollbar-width:thin]">
+        <PlayerRoleTag stretch-in-grid :user />
       </div>
     </div>
 

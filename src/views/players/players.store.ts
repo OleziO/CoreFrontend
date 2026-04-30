@@ -1,5 +1,6 @@
 import type { TPlayer, TUserRoleCatalog } from '@/api/types/api.types'
 
+import { useAuthStore } from '@/store/modules/auth'
 import { playersService, userRolesCatalogRef } from '@/views/players/players.service'
 
 export const usePlayersStore = defineStore('players', () => {
@@ -21,6 +22,31 @@ export const usePlayersStore = defineStore('players', () => {
     if (!playerId) return null
 
     return players.value.find(player => player.id === playerId) || null
+  }
+
+  /** Після видалення/розпуску команди: у локальному кеші всім з цим teamId ставимо null + оновлення /me якщо треба */
+  function clearTeamMembershipClientside (releasedTeamId: string) {
+    const match = String(releasedTeamId)
+    for (const p of players.value) {
+      if (String(p.teamId ?? '') !== match) continue
+      p.teamId = null
+    }
+
+    const auth = useAuthStore()
+    if (auth.user?.teamId != null && String(auth.user.teamId) === match) {
+      auth.user.teamId = null
+    }
+  }
+
+  /**
+   * Вихід / виключення / зміна складу одного гравця: локальний teamId (+ поточний користувач).
+   */
+  function setPlayerTeamIdClientside (playerId: string, nextTeamId: string | null) {
+    const p = players.value.find(pl => pl.id === playerId)
+    if (p) p.teamId = nextTeamId
+
+    const auth = useAuthStore()
+    if (auth.user?.id === playerId) auth.user.teamId = nextTeamId
   }
 
   // function searchPlayer (player: TPlayer, search = '') {
@@ -82,6 +108,8 @@ export const usePlayersStore = defineStore('players', () => {
     userRolesCatalog,
     fetchUserRoles,
     findPlayer,
+    clearTeamMembershipClientside,
+    setPlayerTeamIdClientside,
     // searchPlayer,
     getPlayers
   }

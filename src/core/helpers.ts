@@ -36,8 +36,22 @@ export const createHashedObject = <
 //   router.back()
 // }
 
+/**
+ * Абсолютний URL ресурсу з бекенду: абсолютні `http(s)://` без змін;
+ * відносний шлях (напр. `/uploads/...`) — префікс `VITE_API_PUBLIC_URL`.
+ */
+export function resolvePublicOrApiUrl (path: string | null | undefined): string {
+  const raw = typeof path === 'string' ? path.trim() : ''
+  if (!raw) return ''
+  if (/^https?:\/\//i.test(raw)) return raw
+  if (raw.startsWith('//')) return `https:${raw}`
+  const base = String(import.meta.env.VITE_API_PUBLIC_URL ?? '').replace(/\/+$/, '')
+  const p = raw.startsWith('/') ? raw : `/${raw}`
+  return base ? `${base}${p}` : p
+}
+
 export function getImageUrl (imgUrl: string | null | undefined) {
-  return import.meta.env.VITE_API_PUBLIC_URL + imgUrl
+  return resolvePublicOrApiUrl(imgUrl)
 }
 
 export function getDiscordProfileUrl (discordId: string | null | undefined) {

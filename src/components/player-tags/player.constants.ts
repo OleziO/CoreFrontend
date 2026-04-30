@@ -15,6 +15,12 @@ export const hasTeamLabelMap: Record<EUserIsTeam, string> = {
   [EUserIsTeam.NO_TEAM]: 'Вільний'
 }
 
+/** Короткі підписи для пілюль без truncate; повний текст — у tooltip. */
+export const hasTeamBadgeLabelMap: Record<EUserIsTeam, string> = {
+  [EUserIsTeam.HAS_TEAM]: 'Склад',
+  [EUserIsTeam.NO_TEAM]: 'Вільний'
+}
+
 export const roleLabelMap: Record<ERole, string> = {
   [ERole.ADMIN]: 'Адмін',
   [ERole.DEV]: 'ІТ',
@@ -25,6 +31,37 @@ export const roleLabelMap: Record<ERole, string> = {
   [ERole.GUEST]: 'Гість',
   [ERole.BLOCKED]: 'Заблокований',
   [ERole.DEFAULT]: 'Інше'
+}
+
+/** Компактні підписи тих самих ролей (перед показом — звірка по roleLabelMap або name). */
+export const roleShortLabelMap: Record<ERole, string> = {
+  [ERole.ADMIN]: 'Адмін',
+  [ERole.DEV]: 'ІТ',
+  [ERole.MODERATOR]: 'Мод.',
+  [ERole.MEDIA]: 'Медіа',
+  [ERole.CAP]: 'Кеп',
+  [ERole.PLAYER]: 'Гр.',
+  [ERole.GUEST]: 'Гість',
+  [ERole.BLOCKED]: 'Блок.',
+  [ERole.DEFAULT]: 'Інше'
+}
+
+/** Стандартна назва ролі для тегів: roleLabelMap або name з API. */
+export function resolveRoleDisplayLabel (role: { name: string }): string {
+  for (const er of ROLES_ORDER) {
+    const longLabel = roleLabelMap[er]
+    if (longLabel === role.name || er === role.name) return longLabel
+  }
+  return role.name
+}
+
+/** Компактний підпис там, де треба вкоротити (наприклад, фільтри). */
+export function resolveRoleShortLabel (role: { name: string }): string {
+  for (const er of ROLES_ORDER) {
+    const longLabel = roleLabelMap[er]
+    if (longLabel === role.name || er === role.name) return roleShortLabelMap[er]
+  }
+  return role.name
 }
 
 export const positionOptions = [

@@ -336,6 +336,9 @@
     "userRolesService": true,
     "matchesService": true,
     "userRolesCatalogRef": true,
-    "appModals": true
+    "appModals": true,
+    "UPLOAD_ERROR": true,
+    "postTeamLogoUpload": true,
+    "validateImageFileForUpload": true
   }
 }

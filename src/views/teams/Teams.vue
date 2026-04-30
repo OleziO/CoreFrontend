@@ -129,7 +129,7 @@ import { useWindowSize } from '@vueuse/core'
 import { parseQueryArray } from '@/core/helpers'
 
 const TEAM_CARD_WIDTH = 300
-const TEAM_CARD_HEIGHT = 410
+const TEAM_CARD_HEIGHT = 366
 
 const teamsStore = useTeamsStore()
 const window = useWindowSize()
@@ -141,22 +141,23 @@ const showTeamPlayers = ref(false)
 
 const search = ref('')
 
-const filters = ref<Record<string, string[]>>({
-  status: [],
-  divisions: []
+const filters = ref<{ status: string[] }>({
+  status: []
 })
 
-const filteredTeams = computed(() => {
-  syncFiltersWithUrl()
+watch(
+  () => route.query,
+  () => syncFiltersWithUrl(),
+  { deep: true }
+)
 
+const filteredTeams = computed(() => {
   const searchValue = search.value.toLowerCase().trim()
 
   const mappedTeams = teamsStore.teams.filter(team => {
-    if (
-      filters.value.status.length
-    ) {
-      const isVerified = team.isVerified ? 'verified' : 'unverified'
-      if (!filters.value.status.includes(isVerified)) return false
+    if (filters.value.status.length) {
+      const statusKey = team.isVerified ? 'approved' : 'applied'
+      if (!filters.value.status.includes(statusKey)) return false
     }
 
     return true
@@ -174,10 +175,7 @@ function openTeamFiltersModal () {
 }
 
 function syncFiltersWithUrl () {
-  const query = route.query
-
-  filters.value.divisions = parseQueryArray(query.divisions)
-  filters.value.status = parseQueryArray(query.status)
+  filters.value.status = parseQueryArray(route.query.status)
 }
 
 onMounted(async () => {

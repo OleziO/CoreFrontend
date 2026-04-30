@@ -52,6 +52,22 @@ export interface paths {
         patch: operations["PlayersController_update"];
         trace?: never;
     };
+    "/players/me/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlayersController_uploadAvatar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/discord/url": {
         parameters: {
             query?: never;
@@ -240,6 +256,22 @@ export interface paths {
         patch: operations["TeamsController_update"];
         trace?: never;
     };
+    "/teams/{id}/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TeamsController_uploadLogo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tournaments": {
         parameters: {
             query?: never;
@@ -270,6 +302,54 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["TournamentsController_update"];
+        trace?: never;
+    };
+    "/tournaments/{id}/header-banner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TournamentsController_uploadHeaderBanner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/list-banner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TournamentsController_uploadListBanner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/grid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TournamentsController_uploadGrid"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/matches": {
@@ -355,11 +435,10 @@ export interface components {
             discordName: string | null;
             discordUsername: string | null;
             rating: number;
-            /** @description Коли API повертає список/картку — як у PlayerResponseDto */
-            rank?: components["schemas"]["PlayerRankDto"];
             positions: Record<string, never>[] | null;
             /** Format: date-time */
             verifiedAt: string | null;
+            teamId: string | null;
             roles: components["schemas"]["UserRoles"][];
         };
         Match: {
@@ -374,6 +453,8 @@ export interface components {
             name: string;
             captain: components["schemas"]["Player"];
             coach: components["schemas"]["Player"];
+            logoUrl: string | null;
+            dotaTeamId: string | null;
             isVerified: boolean;
             isPlayingTournament: boolean;
             /** Format: date-time */
@@ -445,6 +526,7 @@ export interface components {
             positions?: (1 | 2 | 3 | 4 | 5)[] | null;
             /** Format: date-time */
             verifiedAt?: string | null;
+            teamId?: string | null;
             roles: components["schemas"]["PlayerRolePublicDto"][];
         };
         UpdatePlayerDto: {
@@ -485,6 +567,10 @@ export interface components {
             avatarUrl?: string | null;
             discordName?: string | null;
             discordUsername?: string | null;
+            /** @description Команда гравця, якщо прив'язано */
+            teamId?: string | null;
+            /** @description Серверний nickname на DISCORD_SYNC_GUILD_ID; null якщо на сервері не заданий (показується global name / username) */
+            discordServerNickname?: string | null;
             rating: number;
             rank: components["schemas"]["PlayerRankDto"];
             /** @description Dota map / roles (1–5) */
@@ -517,19 +603,19 @@ export interface components {
         };
         CreateTeamDto: {
             name: string;
-            /** @description UUID of the captain player */
-            captainId: string;
             /** @description UUID of the coach player */
             coachId?: string;
+            /** @description Dota 2 team ID from the game API */
+            dotaTeamId?: string;
             isVerified: boolean;
             isPlayingTournament: boolean;
         };
         UpdateTeamDto: {
             name?: string;
-            /** @description UUID of the captain player */
-            captainId?: string;
             /** @description UUID of the coach player */
             coachId?: string;
+            /** @description Dota 2 team ID from the game API */
+            dotaTeamId?: string;
             isVerified?: boolean;
             isPlayingTournament?: boolean;
         };
@@ -715,8 +801,32 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Player"];
+                    "application/json": components["schemas"]["PlayerResponseDto"];
                 };
+            };
+        };
+    };
+    PlayersController_uploadAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1059,6 +1169,32 @@ export interface operations {
             };
         };
     };
+    TeamsController_uploadLogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     TournamentsController_findAll: {
         parameters: {
             query?: never;
@@ -1163,6 +1299,84 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Tournament"];
                 };
+            };
+        };
+    };
+    TournamentsController_uploadHeaderBanner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TournamentsController_uploadListBanner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TournamentsController_uploadGrid: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

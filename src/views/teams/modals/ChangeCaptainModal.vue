@@ -10,12 +10,20 @@
       <p class="text-sm text-gray-400">
         Оберіть гравця команди для передачі капітанства:
       </p>
-      <el-select-v2
+      <el-select
         v-model="selectedPlayerId"
-        :options="teamPlayers"
+        class="w-full"
         placeholder="Оберіть нового капітана"
-        :height="300"
-      />
+        clearable
+        filterable
+      >
+        <el-option
+          v-for="opt in teamPlayers"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
+        />
+      </el-select>
     </div>
 
     <template #footer>

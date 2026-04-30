@@ -8,7 +8,7 @@
     <template #header>
       <div class="flex flex-col gap-4">
         <h1 class="text-xl font-semibold text-white tracking-wide">
-          {{ team.name }}
+          {{ displayTeam.name }}
         </h1>
       </div>
     </template>
@@ -21,9 +21,10 @@
         <div class="bg-[rgba(24,24,27,0.6)] rounded-xl text-white p-16 border border-[rgba(255,255,255,0.08)]">
           <div class="flex flex-col gap-12">
             <PlayerCard
-              v-for="player in team.mainPlayers"
+              v-for="player in displayTeam.mainPlayers"
               :key="player.id"
               :player="player"
+              :is-captain="player.id === displayTeam.captain?.id"
               @player-updated="onPlayerVerificationUpdated"
             />
             <div v-for="index in mainSlotCounts" :key="index">
@@ -61,9 +62,10 @@
         <div class="bg-[rgba(24,24,27,0.2)] rounded-xl text-white p-16 border border-[rgba(255,255,255,0.04)]">
           <div class="flex flex-col gap-12">
             <PlayerCard
-              v-for="player in team.reservedPlayers"
+              v-for="player in displayTeam.reservedPlayers"
               :key="player.id"
               :player="player"
+              :is-captain="player.id === displayTeam.captain?.id"
               @player-updated="onPlayerVerificationUpdated"
             />
 
@@ -103,6 +105,7 @@
 <script setup lang="ts">
 import { Plus } from 'lucide-vue-next'
 import type { TTeam as Team, TPlayer } from '@/api/types/api.types'
+import { hydrateTeamPlayersRanks, shallowSnapshotTeamForHydrate } from '@/views/teams/team-roster-hydrate'
 
 const props = defineProps<{
   team: Team
@@ -110,9 +113,35 @@ const props = defineProps<{
 
 const modelValue = defineModel<boolean>({ default: false })
 
+const displayTeam = ref<Team>(props.team)
+
 const { open } = useAppModals()
 const authStore = useAuthStore()
 const isAdmin = computed(() => authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator)
+
+watch(
+  () => props.team,
+  () => {
+    displayTeam.value = props.team
+    if (modelValue.value) {
+      void loadHydratedRoster()
+    }
+  }
+)
+
+watch(modelValue, (open) => {
+  if (open) {
+    void loadHydratedRoster()
+  } else {
+    displayTeam.value = props.team
+  }
+})
+
+async function loadHydratedRoster () {
+  displayTeam.value = await hydrateTeamPlayersRanks(
+    shallowSnapshotTeamForHydrate(props.team)
+  )
+}
 
 function onAddPlayerClick (isMain: boolean) {
   open('PlayerAddToTeamModal', {
@@ -121,8 +150,7 @@ function onAddPlayerClick (isMain: boolean) {
   })
 }
 
-function onPlayerVerificationUpdated (updated: TPlayer) {
-  const t = props.team
+function applyVerificationToRoster (t: Team, updated: TPlayer) {
   for (const key of ['mainPlayers', 'reservedPlayers'] as const) {
     const list = t[key]
     if (!list?.length) continue
@@ -131,6 +159,14 @@ function onPlayerVerificationUpdated (updated: TPlayer) {
       list.splice(ix, 1, updated)
       break
     }
+  }
+}
+
+function onPlayerVerificationUpdated (updated: TPlayer) {
+  applyVerificationToRoster(props.team, updated)
+  const d = displayTeam.value
+  if (d !== props.team) {
+    applyVerificationToRoster(d, updated)
   }
 }
 

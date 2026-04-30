@@ -7,6 +7,7 @@ export {}
 declare global {
   const EffectScope: typeof import('vue')['EffectScope']
   const ElMessage: typeof import('element-plus/es')['ElMessage']
+  const UPLOAD_ERROR: typeof import('../src/services/image-upload.service')['UPLOAD_ERROR']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
   const adminPanelService: typeof import('../src/views/admin-panel/admin-panel.service')['adminPanelService']
   const appModals: typeof import('../src/composables/use-app-modals')['appModals']
@@ -84,6 +85,7 @@ declare global {
   const onUpdated: typeof import('vue')['onUpdated']
   const pausableWatch: typeof import('@vueuse/core')['pausableWatch']
   const playersService: typeof import('../src/views/players/players.service')['playersService']
+  const postTeamLogoUpload: typeof import('../src/services/image-upload.service')['postTeamLogoUpload']
   const provide: typeof import('vue')['provide']
   const provideLocal: typeof import('@vueuse/core')['provideLocal']
   const reactify: typeof import('@vueuse/core')['reactify']
@@ -316,6 +318,7 @@ declare global {
   const useWindowSize: typeof import('@vueuse/core')['useWindowSize']
   const userRolesCatalogRef: typeof import('../src/views/players/players.service')['userRolesCatalogRef']
   const userRolesService: typeof import('../src/services/user-roles.service')['userRolesService']
+  const validateImageFileForUpload: typeof import('../src/services/image-upload.service')['validateImageFileForUpload']
   const watch: typeof import('vue')['watch']
   const watchArray: typeof import('@vueuse/core')['watchArray']
   const watchAtMost: typeof import('@vueuse/core')['watchAtMost']

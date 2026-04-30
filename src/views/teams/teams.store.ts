@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
-import type { TTeam as Team, TUpdateTeamDto as UpdateTeamDto } from '@/api/types/api.types'
+import type { TTeam as Team } from '@/api/types/api.types'
+
+import { teamsService, type TCreateTeamPayload, type TUpdateTeamPayload } from '@/views/teams/teams.service'
 
 export const useTeamsStore = defineStore('teams', () => {
   const router = useRouter()
@@ -32,21 +34,26 @@ export const useTeamsStore = defineStore('teams', () => {
     }
   }
 
-  // async function createTeam (data: CreateTeamDto) {
-  //   loading.value = true
-  //   try {
-  //     const newTeam = await teamsService.createTeam(data)
-  //     teams.value.unshift(newTeam)
-  //     ElMessage.success('Команду успішно створено')
-  //     return newTeam
-  //   } catch (e: any) {
-  //     ElMessage.error(e.response?.data?.detail || 'Помилка при створенні команди')
-  //   } finally {
-  //     loading.value = false
-  //   }
-  // }
+  async function createTeam (data: TCreateTeamPayload) {
+    loading.value = true
+    try {
+      const newTeam = await teamsService.createTeam(data)
+      teams.value.unshift(newTeam)
+      ElMessage.success('Команду успішно створено')
+      return newTeam
+    } catch (e: unknown) {
+      const detail =
+        typeof e === 'object' && e !== null && 'response' in e
+          ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
+          : undefined
+      ElMessage.error(typeof detail === 'string' && detail ? detail : 'Не вдалося створити команду')
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
 
-  async function updateTeam (id: string, data: UpdateTeamDto) {
+  async function updateTeam (id: string, data: TUpdateTeamPayload) {
     loading.value = true
     try {
       const updatedTeam = await teamsService.updateTeam(id, data)
@@ -73,19 +80,22 @@ export const useTeamsStore = defineStore('teams', () => {
     loading.value = true
     try {
       await teamsService.dissolveTeam(id)
-      teams.value = teams.value.filter(t => t.id !== id)
-      router.replace('/teams')
-    } catch (e) {
-      if (e instanceof Error) { ElMessage.error(e.message) }
+    } catch {
+      return
     } finally {
       loading.value = false
     }
+
+    teams.value = teams.value.filter(t => t.id !== id)
+    usePlayersStore().clearTeamMembershipClientside(id)
+    router.replace('/teams')
   }
 
   // TODO: endpoint not in API yet
   // async function joinToTeam (playerId: string, teamId: string, isMain: boolean) { ... }
 
   // TODO: endpoint not in API yet
+  // Після виключення: usePlayersStore().setPlayerTeamIdClientside(playerId, null)
   // async function removePlayerFromTeam (teamId: string, playerId: string) { ... }
 
   // TODO: endpoint not in API yet
@@ -98,15 +108,15 @@ export const useTeamsStore = defineStore('teams', () => {
   // async function rejectTeamInvite (inviteId: string) { ... }
 
   // TODO: endpoint not in API yet
+  // Після успішного leave: usePlayersStore().setPlayerTeamIdClientside(playerId, null)
   // async function leaveFromTeam () { ... }
 
   return {
     teams,
     loading,
     getTeams,
-    // getTeam,
     findTeam,
-    // createTeam,
+    createTeam,
     updateTeam,
     deleteTeam
   }

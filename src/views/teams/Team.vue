@@ -14,36 +14,82 @@
           class="rounded-xl w-full bg-gray-900 p-20 flex flex-col gap-20 relative
                  border border-white/5 shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
         >
-          <div class="flex items-center gap-15">
-            <div>
-              <div class="flex items-center gap-10 mt-15">
-                <el-tooltip placement="top" :content="team?.name">
-                  <h1
-                    class="text-xl md:max-w-300 max-w-150 font-bold uppercase
-                      whitespace-nowrap leading-tight truncate"
-                  >
-                    {{ team?.name }}
-                  </h1>
-                </el-tooltip>
-
-                <el-button
-                  v-if="authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator"
-                  type="primary"
-                  class="px-10"
-                  @click="open('TeamCreateModal', {
-                    team,
-                    onSubmit: handleTeamUpdate
-                  })"
+          <div class="flex flex-col gap-14">
+            <div class="flex items-start gap-16">
+              <div
+                class="relative mt-15 size-[92px] shrink-0 overflow-hidden rounded-2xl bg-white/[0.06]
+                  shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] ring-2 ring-black/40"
+              >
+                <img
+                  v-if="teamLogoSrc"
+                  :src="teamLogoSrc"
+                  alt=""
+                  class="pointer-events-none h-full w-full object-cover"
                 >
-                  <PhPencil size="16" />
-                </el-button>
+                <div
+                  v-else
+                  class="flex h-full w-full items-center justify-center text-white/30"
+                >
+                  <PhUsersThree :size="38" weight="duotone" />
+                </div>
               </div>
 
-              <div class="w-full flex flex-wrap gap-10 mt-10">
-                <el-tag :type="team?.isVerified ? 'success' : 'danger'">
-                  {{ team?.isVerified ? 'Верифікована' : 'Не верифікована' }}
-                </el-tag>
+              <div class="flex flex-1 min-w-0 flex-col gap-6 mt-15">
+                <div class="flex flex-wrap items-center gap-10">
+                  <el-tooltip placement="top" :content="team?.name">
+                    <h1
+                      class="text-xl md:max-w-300 max-w-150 font-bold uppercase
+                        whitespace-nowrap leading-tight truncate"
+                    >
+                      {{ team?.name }}
+                    </h1>
+                  </el-tooltip>
+                </div>
+
+                <div class="flex min-w-0 flex-wrap items-center gap-3">
+                  <span class="text-[10px] shrink-0 font-semibold uppercase tracking-[0.16em] text-gray-600">
+                    Dota ID
+                  </span>
+                  <button
+                    type="button"
+                    class="group/dota-id inline-flex min-w-0 max-w-full cursor-pointer items-center gap-8
+                           rounded-lg border border-transparent px-8 py-4 font-mono text-xs tabular-nums
+                           outline-none transition-all duration-200
+                           hover:border-white/10 hover:bg-white/[0.04]"
+                    :class="dotaTeamIdTrimmed
+                      ? 'text-gray-400 hover:text-primary'
+                      : 'cursor-default text-gray-600'"
+                    @click="dotaTeamIdTrimmed && copyDotaTeamIdPage()"
+                  >
+                    <span class="min-w-0 truncate">{{ dotaTeamIdTrimmed || '—' }}</span>
+                    <PhCopy
+                      v-if="dotaTeamIdTrimmed"
+                      size="14"
+                      class="shrink-0 opacity-55 transition-opacity group-hover/dota-id:opacity-100"
+                    />
+                  </button>
+                </div>
               </div>
+            </div>
+
+            <div
+              v-if="authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator"
+              class="mt-12 flex w-full"
+            >
+              <el-button
+                type="primary"
+                class="h-30 w-full shrink-0 max-sm:text-xs max-sm:!px-8"
+                @click="open('TeamCreateModal', {
+                  team,
+                  onSubmit: handleTeamUpdate
+                })"
+              >
+                <PhPencil />
+
+                <span class="ml-8">
+                  Редагувати {{ currWindow.width.value > 650 ? ' команду' : '' }}
+                </span>
+              </el-button>
             </div>
           </div>
 
@@ -53,21 +99,27 @@
               v-if="isAdmin"
               trigger="click"
               :placement="isMobile ? 'left-start' : 'bottom'"
-              class="absolute top-10 right-15 text-white hover:text-white/50"
+              popper-class="header-dropdown"
+              class="absolute top-10 right-15 cursor-pointer text-white hover:text-white/50"
               @click.stop
             >
               <PhDotsThree size="26" weight="bold" @click.stop />
 
               <template #dropdown>
-                <div class="flex flex-col gap-10 p-2 rounded-lg shadow-lg bg-gray-900">
-                  <el-button type="primary" @click="teamsStore.deleteTeam(team?.id!)">Розпустити команду</el-button>
-                  <el-button
-                    class="w-max px-10 rounded-md"
-                    type="primary" @click="changeCapTeam"
+                <el-dropdown-menu>
+                  <el-dropdown-item @click="changeCapTeam">
+                    <PhCrown :size="20" />
+                    <span class="ml-8">Передати капітанство</span>
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    class="header-user-menu__item--danger"
+                    divided
+                    @click="handleDisbandTeam"
                   >
-                    <span class="">Передати капітанство</span>
-                  </el-button>
-                </div>
+                    <PhTrash :size="20" />
+                    <span class="ml-8">Розпустити команду</span>
+                  </el-dropdown-item>
+                </el-dropdown-menu>
               </template>
             </el-dropdown>
 
@@ -160,6 +212,7 @@
                 v-for="player in team?.mainPlayers"
                 :key="player.id"
                 :player="player"
+                :is-captain="player.id === team?.captain?.id"
                 @player-updated="onPlayerVerificationUpdated"
               />
 
@@ -198,6 +251,7 @@
                 v-for="player in team?.reservedPlayers"
                 :key="player.id"
                 :player="player"
+                :is-captain="player.id === team?.captain?.id"
                 @player-updated="onPlayerVerificationUpdated"
               />
 
@@ -232,11 +286,15 @@
 </template>
 
 <script setup lang="ts">
-import { PhDotsThree, PhCalendarDots, PhPencil } from '@phosphor-icons/vue'
-import { useWindowSize } from '@vueuse/core'
+import { PhCopy, PhCrown, PhDotsThree, PhCalendarDots, PhPencil, PhTrash, PhUsersThree } from '@phosphor-icons/vue'
+import { useClipboard, useWindowSize } from '@vueuse/core'
 import dayjs from 'dayjs'
 import 'dayjs/locale/uk'
-import type { TTeam as Team, TPlayer, TUpdateTeamDto as UpdateTeamDto } from '@/api/types/api.types'
+import { resolvePublicOrApiUrl } from '@/core/helpers'
+import type { TTeam as Team, TPlayer } from '@/api/types/api.types'
+import type { TUpdateTeamPayload } from '@/views/teams/teams.service'
+import { teamsService } from '@/views/teams/teams.service'
+import { hydrateTeamPlayersRanks } from '@/views/teams/team-roster-hydrate'
 dayjs.locale('uk')
 
 const route = useRoute()
@@ -253,9 +311,21 @@ const playersStore = usePlayersStore()
 
 const team = ref<Team | null>(null)
 
+const teamLogoSrc = computed(() => resolvePublicOrApiUrl(team.value?.logoUrl))
+
+const dotaTeamIdTrimmed = computed(() => team.value?.dotaTeamId?.trim() ?? '')
+
+const { copy } = useClipboard({ legacy: true })
 const isAdmin = computed(() => {
   return authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator
 })
+
+function copyDotaTeamIdPage () {
+  const id = dotaTeamIdTrimmed.value
+  if (!id) return
+  copy(id)
+  ElMessage.success('Dota ID скопійовано')
+}
 
 // TODO: endpoint not in API yet
 // const isTeamPlayer = computed(() => false)
@@ -282,6 +352,12 @@ function changeCapTeam () {
   open('ChangeCaptainModal', { team: team.value, teamId: team.value.id })
 }
 
+function handleDisbandTeam () {
+  const tid = team.value?.id
+  if (!tid) return
+  void teamsStore.deleteTeam(tid)
+}
+
 function handleOpenAddPlayer (isMain: boolean) {
   open('PlayerAddToTeamModal', { team: team.value, isMain })
 }
@@ -299,9 +375,11 @@ function onPlayerVerificationUpdated (updated: TPlayer) {
   }
 }
 
-async function handleTeamUpdate (payload: UpdateTeamDto) {
+async function handleTeamUpdate (payload: TUpdateTeamPayload) {
   try {
-    await teamsStore.updateTeam(team.value!.id, payload)
+    const tid = team.value!.id
+    const updatedTeam = await teamsStore.updateTeam(tid, payload)
+    team.value = await hydrateTeamPlayersRanks(updatedTeam)
     close('TeamCreateModal')
   } catch (e) {
     if (e instanceof Error) {
@@ -311,6 +389,15 @@ async function handleTeamUpdate (payload: UpdateTeamDto) {
 }
 
 onMounted(async () => {
-  team.value = await teamsStore.findTeam(id)
+  let t = await teamsStore.findTeam(id)
+  if (!t) {
+    try {
+      t = await teamsService.fetchTeam(id)
+    } catch {
+      team.value = null
+      return
+    }
+  }
+  team.value = await hydrateTeamPlayersRanks(t)
 })
 </script>

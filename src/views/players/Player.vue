@@ -151,28 +151,28 @@
               </el-button>
             </div>
 
-            <!-- FOOTER -->
+            <!-- Ролі + посилання (висота тегів як на картці; кнопки трохи вищі — по центру рядка) -->
             <div
-              class="flex items-center justify-between gap-20
-                border-t border-gray-800/60 pt-16 px-10"
+              class="-mx-20 flex w-[calc(100%+40px)] flex-wrap items-center justify-between
+                gap-x-88 gap-y-32 border-t border-gray-800/60 px-20 pt-16 md:flex-nowrap"
             >
-              <!-- Roles: один рядок; при переповненні — горизонтальний скрол у PlayerRoleTag -->
               <div
-                v-if="player"
-                class="min-w-0 flex flex-1 items-center gap-8"
+                class="flex min-w-0 flex-1 items-center overflow-x-auto px-12 [scrollbar-width:thin]"
               >
                 <PlayerRoleTag
+                  v-if="player"
+                  stretch-in-grid
                   :user="player"
-                  :max="window.width.value < 1280 ? 1 : 2"
-                  no-wrap
                 />
               </div>
 
-              <!-- Socials: Steam та Dotabuff лише за наявності steamId -->
-              <div class="flex shrink-0 gap-8">
+              <div
+                class="flex shrink-0 items-center justify-end gap-10
+                  max-sm:w-full max-sm:justify-end max-sm:flex-wrap"
+              >
                 <el-button
                   v-if="player.steamId"
-                  class="!size-36 hover:bg-white/10"
+                  class="!size-36 shrink-0 hover:bg-white/10"
                   tag="a"
                   target="_blank"
                   :href="links.steam"
@@ -182,7 +182,7 @@
 
                 <el-button
                   v-if="player.steamId"
-                  class="!size-36 hover:bg-white/10"
+                  class="!size-36 shrink-0 hover:bg-white/10"
                   tag="a"
                   target="_blank"
                   :href="links.dotabuff"
@@ -192,7 +192,7 @@
 
                 <el-button
                   v-if="player.discordId"
-                  class="!size-36 hover:bg-white/10"
+                  class="!size-36 shrink-0 hover:bg-white/10"
                   tag="a"
                   target="_blank"
                   :href="links.discord"
@@ -330,118 +330,229 @@
         <!-- Профіль /me: команда (50%) + позиції (50%); на мобільному — стовпчик -->
         <div
           v-if="isProfilePage && player"
-          class="grid w-full grid-cols-1 gap-20 md:grid-cols-2 md:items-stretch"
+          class="grid w-full grid-cols-1 gap-16 md:grid-cols-2 md:items-stretch"
         >
           <div
-            class="flex h-full min-h-0 min-w-0 flex-col items-center justify-center gap-14
-              rounded-2xl border border-gray-800/90
-              bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90
-              p-20 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)] 2md:p-24"
+            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-gray-800/90
+              bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 md:h-full
+              px-16 py-14 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)] 2md:px-18 2md:py-16"
           >
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500">
+            <h2 class="shrink-0 text-sm font-semibold uppercase tracking-wider text-gray-500">
               Команда
             </h2>
-            <div class="max-w-[90%] text-sm leading-relaxed text-gray-400">
-              Інформація про команду недоступна
+            <div
+              v-loading="profileTeamLoading"
+              class="
+                flex w-full min-w-0 flex-1 flex-col items-stretch justify-center gap-10 text-left text-sm
+                leading-relaxed text-gray-400
+              "
+            >
+              <template v-if="playerTeamLinkId">
+                <RouterLink
+                  :to="{ name: routeNames.team, params: { id: playerTeamLinkId } }"
+                  class="group flex w-full max-w-full min-w-0 cursor-pointer items-start gap-16 rounded-xl
+                    border border-white/10 bg-white/[0.03] px-12 py-12 no-underline
+                    transition hover:border-white/15 hover:bg-white/[0.06]
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                >
+                  <div
+                    class="relative h-56 w-56 shrink-0 overflow-hidden rounded-xl bg-white/[0.06]
+                      shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] ring-1 ring-gray-800/80"
+                  >
+                    <img
+                      v-if="profileTeamLogoSrc"
+                      :src="profileTeamLogoSrc"
+                      alt=""
+                      class="pointer-events-none h-full w-full object-cover"
+                    >
+                    <div
+                      v-else
+                      class="flex h-full w-full items-center justify-center text-white/35"
+                    >
+                      <PhUsersThree :size="24" weight="duotone" />
+                    </div>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <h3
+                      class="truncate text-lg font-semibold text-white transition group-hover:text-primary/90"
+                    >
+                      {{ profileTeam?.name ?? 'Команда' }}
+                    </h3>
+                    <span
+                      v-if="profileTeamDotaTeamIdDisplay"
+                      class="mt-4 flex w-fit max-w-full items-center gap-6 text-xs text-gray-400
+                        transition hover:text-primary cursor-pointer"
+                      @click.stop.prevent="
+                        getCopy(profileTeamDotaTeamIdDisplay, 'Dota ID команди скопійовано')
+                      "
+                    >
+                      {{ profileTeamDotaTeamIdDisplay }}
+                      <PhCopy size="13" />
+                    </span>
+                  </div>
+                </RouterLink>
+              </template>
+              <template v-else>
+                <div class="flex w-full justify-center">
+                  <el-button type="primary" @click="openCreateTeamModal">
+                    Створити команду
+                  </el-button>
+                </div>
+              </template>
             </div>
           </div>
 
           <div
-            class="flex h-full min-h-0 min-w-0 flex-col items-center justify-center gap-14
-              rounded-2xl border border-gray-800/90
-              bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90
-              p-20 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)] 2md:p-24"
+            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-gray-800/90
+              bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 md:h-full
+              px-16 py-14 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)] 2md:px-18 2md:py-16"
           >
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500">
+            <h2 class="shrink-0 text-sm font-semibold uppercase tracking-wider text-gray-500">
               Позиції
             </h2>
             <div
-              v-if="profilePositionRows.length"
-              class="flex w-full flex-wrap justify-center gap-10"
+              class="flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-center gap-8"
             >
               <div
-                v-for="row in profilePositionRows"
-                :key="row.id"
-                class="inline-flex items-center gap-10 rounded-xl border border-white/10
-                  bg-gradient-to-b from-white/[0.08] to-white/[0.02]
-                  px-14 py-10 text-left
-                  shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
-                  transition duration-200 hover:-translate-y-px hover:border-white/15"
+                v-if="profilePositionRows.length"
+                class="flex w-full flex-wrap justify-center gap-8"
               >
-                <component
-                  :is="row.icon"
-                  :size="22"
-                  weight="duotone"
-                  class="shrink-0 text-primary"
-                />
-                <span class="text-sm font-medium leading-tight text-white">{{ row.label }}</span>
+                <div
+                  v-for="row in profilePositionRows"
+                  :key="row.id"
+                  class="inline-flex items-center gap-8 rounded-lg border border-white/10
+                    bg-gradient-to-b from-white/[0.08] to-white/[0.02]
+                    px-12 py-7 text-left
+                    shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
+                    transition duration-200 hover:-translate-y-px hover:border-white/15"
+                >
+                  <component
+                    :is="row.icon"
+                    :size="22"
+                    weight="duotone"
+                    class="shrink-0 text-primary"
+                  />
+                  <span class="text-sm font-medium leading-tight text-white">{{ row.label }}</span>
+                </div>
               </div>
+              <p
+                v-else
+                class="mx-auto max-w-[90%] text-center text-sm text-gray-500"
+              >
+                Позиції не вказані. Їх можна додати при редагуванні профілю.
+              </p>
             </div>
-            <p
-              v-else
-              class="max-w-[90%] text-sm text-gray-500"
-            >
-              Позиції не вказані. Їх можна додати при редагуванні профілю.
-            </p>
           </div>
         </div>
 
         <!-- Чужий профіль `/players/:id`: команда + позиції (публічно), як layout на `/me` -->
         <div
           v-else-if="player && !isProfilePage"
-          class="grid w-full grid-cols-1 gap-20 md:grid-cols-2 md:items-stretch"
+          class="grid w-full grid-cols-1 gap-16 md:grid-cols-2 md:items-stretch"
         >
           <div
-            class="flex h-full min-h-0 min-w-0 flex-col items-center justify-center gap-14
-              rounded-2xl border border-gray-800/90
-              bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90
-              p-20 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)] 2md:p-24"
+            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-gray-800/90
+              bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 md:h-full
+              px-16 py-14 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)] 2md:px-18 2md:py-16"
           >
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500">
+            <h2 class="shrink-0 text-sm font-semibold uppercase tracking-wider text-gray-500">
               Команда
             </h2>
-            <div class="max-w-[90%] text-sm leading-relaxed text-gray-400">
-              Інформація про команду недоступна
+            <div
+              v-loading="profileTeamLoading"
+              class="
+                flex w-full min-w-0 flex-1 flex-col items-stretch justify-center gap-10 text-left text-sm
+                leading-relaxed text-gray-400
+              "
+            >
+              <RouterLink
+                v-if="playerTeamLinkId"
+                :to="{ name: routeNames.team, params: { id: playerTeamLinkId } }"
+                class="group flex w-full max-w-full min-w-0 cursor-pointer items-start gap-16 rounded-xl
+                  border border-white/10 bg-white/[0.03] px-12 py-12 no-underline
+                  transition hover:border-white/15 hover:bg-white/[0.06]
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              >
+                <div
+                  class="relative h-56 w-56 shrink-0 overflow-hidden rounded-xl bg-white/[0.06]
+                    shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] ring-1 ring-gray-800/80"
+                >
+                  <img
+                    v-if="profileTeamLogoSrc"
+                    :src="profileTeamLogoSrc"
+                    alt=""
+                    class="pointer-events-none h-full w-full object-cover"
+                  >
+                  <div
+                    v-else
+                    class="flex h-full w-full items-center justify-center text-white/35"
+                  >
+                    <PhUsersThree :size="24" weight="duotone" />
+                  </div>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <h3 class="truncate text-lg font-semibold text-white transition group-hover:text-primary/90">
+                    {{ profileTeam?.name ?? 'Команда' }}
+                  </h3>
+                  <span
+                    v-if="profileTeamDotaTeamIdDisplay"
+                    class="mt-4 flex w-fit max-w-full items-center gap-6 text-xs text-gray-400
+                      transition hover:text-primary cursor-pointer"
+                    @click.stop.prevent="
+                      getCopy(profileTeamDotaTeamIdDisplay, 'Dota ID команди скопійовано')
+                    "
+                  >
+                    {{ profileTeamDotaTeamIdDisplay }}
+                    <PhCopy size="13" />
+                  </span>
+                </div>
+              </RouterLink>
+              <span v-else class="block w-full text-center text-sm text-gray-500">
+                Інформація про команду недоступна
+              </span>
             </div>
           </div>
 
           <div
-            class="flex h-full min-h-0 min-w-0 flex-col items-center justify-center gap-14
-              rounded-2xl border border-gray-800/90
-              bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90
-              p-20 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)] 2md:p-24"
+            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-gray-800/90
+              bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 md:h-full
+              px-16 py-14 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)] 2md:px-18 2md:py-16"
           >
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500">
+            <h2 class="shrink-0 text-sm font-semibold uppercase tracking-wider text-gray-500">
               Позиції
             </h2>
             <div
-              v-if="profilePositionRows.length"
-              class="flex w-full flex-wrap justify-center gap-10"
+              class="flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-center gap-8"
             >
               <div
-                v-for="row in profilePositionRows"
-                :key="row.id"
-                class="inline-flex items-center gap-10 rounded-xl border border-white/10
-                  bg-gradient-to-b from-white/[0.08] to-white/[0.02]
-                  px-14 py-10 text-left
-                  shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
-                  transition duration-200 hover:-translate-y-px hover:border-white/15"
+                v-if="profilePositionRows.length"
+                class="flex w-full flex-wrap justify-center gap-8"
               >
-                <component
-                  :is="row.icon"
-                  :size="22"
-                  weight="duotone"
-                  class="shrink-0 text-primary"
-                />
-                <span class="text-sm font-medium leading-tight text-white">{{ row.label }}</span>
+                <div
+                  v-for="row in profilePositionRows"
+                  :key="row.id"
+                  class="inline-flex items-center gap-8 rounded-lg border border-white/10
+                    bg-gradient-to-b from-white/[0.08] to-white/[0.02]
+                    px-12 py-7 text-left
+                    shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
+                    transition duration-200 hover:-translate-y-px hover:border-white/15"
+                >
+                  <component
+                    :is="row.icon"
+                    :size="22"
+                    weight="duotone"
+                    class="shrink-0 text-primary"
+                  />
+                  <span class="text-sm font-medium leading-tight text-white">{{ row.label }}</span>
+                </div>
               </div>
+              <p
+                v-else
+                class="mx-auto max-w-[90%] text-center text-sm text-gray-500"
+              >
+                Позиції не вказані
+              </p>
             </div>
-            <p
-              v-else
-              class="max-w-[90%] text-sm text-gray-500"
-            >
-              Позиції не вказані
-            </p>
           </div>
         </div>
 
@@ -470,7 +581,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, shallowRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   PhCopy,
@@ -478,7 +589,8 @@ import {
   // PhInfo,
   PhUser,
   PhSealWarning,
-  PhPencil
+  PhPencil,
+  PhUsersThree
 } from '@phosphor-icons/vue'
 
 import {
@@ -490,21 +602,25 @@ import {
   getPlayerRankImageSrc,
   formatPlayerRatingMmr,
   getPlayerDotaPositions,
-  isPlayerVerified
+  isPlayerVerified,
+  resolvePublicOrApiUrl
 } from '@/core/helpers'
 import { positionOptions } from '@/components/player-tags/player.constants'
 import { routeNames } from '@/router/route-names'
 import { playersService } from '@/views/players/players.service'
-import type { TPlayer } from '@/api/types/api.types'
+import type { TPlayer, TTeam } from '@/api/types/api.types'
+import type { TCreateTeamPayload } from '@/views/teams/teams.service'
+import { teamsService } from '@/views/teams/teams.service'
 
 const route = useRoute()
 const router = useRouter()
 const player = ref<TPlayer | null>(null)
 
-const { open } = useAppModals()
+const { open, close } = useAppModals()
 const window = useWindowSize()
 
 const playerStore = usePlayersStore()
+const teamsStore = useTeamsStore()
 const me = useAuthStore()
 
 const loading = ref(false)
@@ -540,6 +656,44 @@ const showAdminVerificationActions = computed(() => {
 })
 
 const isProfilePage = computed(() => route.name === routeNames.profile)
+
+const playerTeamLinkId = computed(() => {
+  const id = player.value?.teamId
+  if (id == null || id === '') return null
+  return String(id)
+})
+
+/** Командний профіль із бекенду для картки в профілі гравця. */
+const profileTeam = shallowRef<TTeam | null>(null)
+const profileTeamLoading = ref(false)
+
+watch(
+  playerTeamLinkId,
+  async (teamId) => {
+    profileTeam.value = null
+    if (!teamId) return
+    profileTeamLoading.value = true
+    try {
+      profileTeam.value = await teamsService.fetchTeam(teamId)
+    } catch {
+      profileTeam.value = null
+    } finally {
+      profileTeamLoading.value = false
+    }
+  },
+  { immediate: true }
+)
+
+const profileTeamLogoSrc = computed(() =>
+  resolvePublicOrApiUrl(profileTeam.value?.logoUrl)
+)
+
+/** Dota Team ID з API для підпису та копіювання */
+const profileTeamDotaTeamIdDisplay = computed(() => {
+  const raw = profileTeam.value?.dotaTeamId
+  if (raw == null || String(raw).trim() === '') return null
+  return String(raw).trim()
+})
 
 /** Позиції Dota з `positionOptions` (ті самі іконки, що в фільтрах) — для /me */
 const profilePositionRows = computed(() => {
@@ -616,6 +770,23 @@ async function togglePlayerVerification () {
   } finally {
     verifyLoading.value = false
   }
+}
+
+async function handleCreateTeam (dto: TCreateTeamPayload) {
+  const created = await teamsStore.createTeam(dto)
+  if (!created) {
+    throw new Error('CREATE_TEAM_FAILED')
+  }
+  close('TeamCreateModal')
+  await me.fetchUser()
+  player.value = me.user as unknown as TPlayer
+  await router.push({ name: routeNames.team, params: { id: created.id } })
+}
+
+function openCreateTeamModal () {
+  open('TeamCreateModal', {
+    onSubmit: handleCreateTeam
+  })
 }
 
 function openEditProfileModal () {

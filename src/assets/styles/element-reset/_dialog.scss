@@ -33,7 +33,7 @@
 }
 /* Сам діалог */
 .el-dialog {
-  @apply relative rounded-2xl m-auto border border-white/20 bg-white/10 backdrop-blur-xl max-h-[70vh] overflow-hidden flex flex-col pr-0;
+  @apply relative rounded-2xl m-auto border border-white/20 bg-white/10 backdrop-blur-xl max-h-[70vh] overflow-hidden flex flex-col px-0;
 
   &::focus,
   &:focus-visible {
@@ -48,10 +48,21 @@
   }
 
   // TODO: Fix divider
-  &__header { @apply pr-16 pb-10 #{!important}; }
-  &__title { @apply text-white text-xl font-semibold pr-16; }
-  &__body { @apply py-10 text-white/90 overflow-auto flex-1 pr-16; }
-  &__footer { @apply pr-16 pt-10 #{!important}; }
+  &__header {
+    @apply px-16 pt-16 pb-10 #{!important};
+  }
+
+  &__title {
+    @apply text-white text-xl font-semibold pr-16;
+  }
+
+  &__body {
+    @apply px-16 py-10 text-white/90 overflow-auto flex-1 #{!important};
+  }
+
+  &__footer {
+    @apply px-16 pt-10 pb-16 #{!important};
+  }
 
   /* Buttons */
   .el-button {
@@ -272,15 +283,31 @@
     &:hover {
       @apply bg-white/10 border-white/40 text-white;
     }
+
+    &:active {
+      box-shadow: 0 0 12px #43bfee;
+    }
+
+    &:focus-visible {
+      @apply outline-none ring-2;
+    }
+
+    &.is-dragover {
+      @apply bg-white/15 border-primary text-white;
+      box-shadow: 0 0 18px rgba(67, 191, 238, 0.45);
+    }
+
+    &.is-success {
+      @apply border-green-400/40;
+    }
+
+    &.is-error {
+      @apply border-red-400/40;
+    }
   }
 
   .el-form-item--label-top label {
     @apply flex;
-  }
-
-  .el-upload-dragger.is-dragover {
-    @apply bg-white/15 border-primary text-white;
-    box-shadow: 0 0 18px rgba(67,191,238,0.45);
   }
 
   .el-upload__icon {
@@ -297,25 +324,7 @@
 
   .el-upload__tip {
     @apply mt-8 text-xs text-white/40;
-    }
-
-    &:active {
-      box-shadow: 0 0 12px #43bfee;
-    }
-
-    &:focus-visible {
-      @apply outline-none ring-2;
-    }
-
-    &.is-success {
-      @apply border-green-400/40;
-    }
-
-    &.is-error {
-      @apply border-red-400/40;
-    }
   }
-
   .el-upload-list--text .el-upload-list__item-name {
     @apply flex-1 truncate text-sm text-white cursor-pointer;
 
@@ -353,4 +362,4 @@
   .el-upload-list--text .el-progress-bar__inner {
     @apply bg-primary;
   }
-
+}

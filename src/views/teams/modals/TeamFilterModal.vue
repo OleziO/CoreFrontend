@@ -9,27 +9,6 @@
     @close="onReset"
   >
     <el-form label-position="top" class="flex flex-col" @submit.prevent>
-      <el-form-item label="Дивізіон">
-        <el-select
-          v-model="localFilters.divisions"
-          multiple
-          collapse-tags
-          :show-arrow="false"
-          collapse-tags-tooltip
-          :max-collapse-tags="3"
-          placeholder="Оберіть дивізіони"
-          class="w-full"
-          :loading="isLoading"
-        >
-          <el-option
-            v-for="div in divisionOptions"
-            :key="div.key"
-            :label="div.label"
-            :value="div.key"
-          />
-        </el-select>
-      </el-form-item>
-
       <el-form-item label="Статус команди">
         <el-select
           v-model="localFilters.status"
@@ -66,56 +45,41 @@
 import { PhMagnifyingGlass } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import { parseQueryArray } from '@/core/helpers'
-// TODO: endpoint not in API yet
-// import { useGetDivisions } from '@/composables/query/use-divisions'
 import { teamStatus } from '@/constants/teams'
 
 const modelValue = defineModel<boolean>({ default: false })
 const router = useRouter()
 const route = useRoute()
 
-// TODO: endpoint not in API yet (divisions)
-const divisions = ref<any[]>([])
-const isLoading = ref(false)
-const divisionOptions = computed(() => {
-  return divisions.value.map((item: any) => ({ key: item.name, label: item.name }))
-})
-
 const localFilters = ref<{
-  divisions: string[]
   status: string[]
 }>({
-  divisions: [],
   status: []
 })
 
 function onReset (withClose = true) {
-  localFilters.value.divisions = []
   localFilters.value.status = []
 
   if (withClose) modelValue.value = false
 }
 
 function onApply () {
-  const { divisions, status } = localFilters.value
+  const { status } = localFilters.value
 
-  const query = {
-    ...route.query,
-    divisions: divisions?.length ? divisions.join(',') : undefined,
-    status: status?.length ? status.join(',') : undefined
-  }
+  const query: Record<string, string | string[] | undefined> = { ...route.query }
+  delete query.divisions
+  query.status = status?.length ? status.join(',') : undefined
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const cleanQuery = Object.fromEntries(Object.entries(query).filter(([_, v]) => v != null))
+  const cleanQuery = Object.fromEntries(
+    Object.entries(query).filter(([_, v]) => v != null && v !== '')
+  ) as Record<string, string>
 
   router.push({ name: routeNames.teams, query: cleanQuery })
   modelValue.value = false
 }
 
 function initFilters () {
-  const query = route.query
-  localFilters.value.divisions = parseQueryArray(query.divisions)
-  localFilters.value.status = parseQueryArray(query.status)
+  localFilters.value.status = parseQueryArray(route.query.status)
 }
 
 onMounted(initFilters)

@@ -23,10 +23,30 @@
                 <div>
                   <h3
                     class="text-white truncate font-semibold leading-tight
-                           group-hover:text-primary transition-colors duration-300 flex gap-5 items-center"
+                           group-hover:text-primary transition-colors duration-300 flex gap-8 items-center min-w-0"
                   >
+                    <el-tooltip
+                      v-if="isCaptain"
+                      placement="top"
+                      effect="dark"
+                      content="Капітан команди"
+                    >
+                      <span
+                        class="inline-flex shrink-0 cursor-default text-[#e8b931]
+                               drop-shadow-[0_0_8px_rgba(232,185,49,0.55)]
+                               [&_svg]:block"
+                        role="img"
+                        aria-label="Капітан команди"
+                      >
+                        <PhCrown
+                          weight="fill"
+                          :size="18"
+                        />
+                      </span>
+                    </el-tooltip>
+
                     <el-tooltip :content="player.discordName || '-'" placement="top">
-                      <span class="max-w-[100px] truncate">{{ player.discordName }}</span>
+                      <span class="max-w-[100px] min-w-0 truncate">{{ player.discordName }}</span>
                     </el-tooltip>
                   </h3>
 
@@ -43,21 +63,20 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-8 shrink-0">
-              <!-- 1. Ранг (картинка) + MMR у tooltip -->
+            <div class="flex shrink-0 items-center">
               <el-tooltip
                 v-if="rankImageSrc"
                 :content="ratingMmrLabel"
                 effect="dark"
                 placement="top"
               >
-                <div class="flex flex-col items-center min-w-[44px] cursor-default">
+                <div class="flex min-w-[60px] cursor-default items-center justify-center">
                   <img
                     :src="rankImageSrc"
                     alt=""
-                    class="h-28 w-auto max-w-[52px] object-contain select-none"
-                    width="52"
-                    height="28"
+                    class="h-44 w-auto max-w-[72px] object-contain select-none"
+                    width="72"
+                    height="44"
                     loading="lazy"
                     draggable="false"
                   >
@@ -69,21 +88,10 @@
                 effect="dark"
                 placement="top"
               >
-                <div class="flex flex-col items-center min-w-[36px] tabular-nums">
-                  <span class="text-sm font-medium text-white/90">{{ player.rating }}</span>
+                <div class="flex min-w-[40px] cursor-default items-center justify-center tabular-nums">
+                  <span class="text-base font-semibold text-white/90">{{ player.rating }}</span>
                 </div>
               </el-tooltip>
-
-              <!-- 2. Позиції -->
-              <PlayerPositionsTooltip :summary="positionsSummary" placement="top">
-                <div
-                  class="flex h-32 w-32 items-center justify-center
-                         text-white/70 transition-colors hover:text-primary cursor-default"
-                  :class="!positionsSummary.hasPositions ? 'opacity-50' : ''"
-                >
-                  <PhCompassRose :size="20" weight="duotone" />
-                </div>
-              </PlayerPositionsTooltip>
             </div>
           </div>
         </div>
@@ -109,17 +117,19 @@ import { RouterLink } from 'vue-router'
 
 import { routeNames } from '@/router/route-names'
 import { playersService } from '@/views/players/players.service'
-import { getCopy, formatPlayerPositionsSummary, formatPlayerRatingMmr, getPlayerRankImageSrc, isPlayerVerified } from '@/core/helpers'
-import { PhCompassRose } from '@phosphor-icons/vue'
+import { PhCrown } from '@phosphor-icons/vue'
+import { getCopy, formatPlayerRatingMmr, getPlayerRankImageSrc, isPlayerVerified } from '@/core/helpers'
 import type { TPlayer } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
   player: TPlayer | null
+  isCaptain?: boolean
   showStatusGlow?: boolean
   showRegularCap?: boolean
   skipTeamFetch?: boolean
   isMixCap?: boolean
 }>(), {
+  isCaptain: false,
   showStatusGlow: true,
   showRegularCap: true,
   skipTeamFetch: false
@@ -148,11 +158,11 @@ async function onVerificationClick () {
   }
 }
 
+type TPlayerWithRank = TPlayer & { rank?: { numericName?: number } | null }
+
 const rankImageSrc = computed(() =>
-  props.player ? getPlayerRankImageSrc(props.player.rank?.numericName) : ''
+  props.player ? getPlayerRankImageSrc((props.player as TPlayerWithRank).rank?.numericName) : ''
 )
 
 const ratingMmrLabel = computed(() => formatPlayerRatingMmr(props.player?.rating))
-
-const positionsSummary = computed(() => formatPlayerPositionsSummary(props.player))
 </script>

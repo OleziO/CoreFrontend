@@ -1,60 +1,97 @@
 <template>
-  <div class="w-full min-w-0">
-    <el-tag
-      effect="plain"
-      disable-transitions
-      :class="[
-        'player-team-tag',
-        hasTeam ? 'player-team-tag--in' : 'player-team-tag--out'
-      ]"
-    >
-      <span class="player-team-tag__inner">
-        <span
-          class="player-team-tag__status"
-          aria-hidden="true"
-        />
-        <el-tooltip :content="hasTeam ? 'В команді' : 'Без команди'" placement="top">
-          <span class="player-team-tag__text">
-            {{ hasTeam ? 'В команді' : 'Без команди' }}
+  <div class="player-team-tag-wrap" :class="{ 'player-team-tag-wrap--stretch': stretchInGrid }">
+    <el-tooltip :content="tooltipText" placement="top">
+      <div
+        class="min-w-0"
+        :class="stretchInGrid ? 'block w-full' : 'inline-block max-w-full'"
+      >
+        <el-tag
+          effect="plain"
+          disable-transitions
+          :class="[
+            'player-team-tag',
+            stretchInGrid && 'player-team-tag--stretch',
+            hasTeam ? 'player-team-tag--in' : 'player-team-tag--out'
+          ]"
+        >
+          <span class="player-team-tag__inner">
+            <span class="player-team-tag__status" aria-hidden="true" />
+            <span class="player-team-tag__text">{{ badgeText }}</span>
           </span>
-        </el-tooltip>
-      </span>
-    </el-tag>
+        </el-tag>
+      </div>
+    </el-tooltip>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { TPlayer } from '@/api/types/api.types'
+import { EUserIsTeam, hasTeamBadgeLabelMap, hasTeamLabelMap } from '@/components/player-tags/player.constants'
 
-const props = defineProps<{ user: TPlayer }>()
+const props = withDefaults(
+  defineProps<{
+    user: TPlayer
+    /** Колонка 50% у grid: розтягнути пілюлю на всю ширину клітинки. */
+    stretchInGrid?: boolean
+  }>(),
+  { stretchInGrid: false }
+)
 
 const hasTeam = computed(() => {
   return !!(props.user as any)?.teamId || false
 })
+
+const teamFlag = computed((): EUserIsTeam =>
+  hasTeam.value ? EUserIsTeam.HAS_TEAM : EUserIsTeam.NO_TEAM
+)
+
+const badgeText = computed(() => hasTeamBadgeLabelMap[teamFlag.value])
+
+const tooltipText = computed(() => hasTeamLabelMap[teamFlag.value])
 </script>
 
 <style scoped>
+.player-team-tag-wrap {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.player-team-tag-wrap--stretch {
+  display: flex;
+  width: 100%;
+}
+
 /* Без el-type: кастомні стани, щоб виглядало цільно з role-tag / карткою */
 .player-team-tag {
-  @apply !m-0 !h-auto;
-  @apply !w-full !min-w-0;
-  @apply !flex !items-center !justify-center;
-  @apply !box-border;
-  @apply !rounded-lg;
-  @apply !border;
-  @apply !px-10 !py-5;
-  @apply !text-[12px] !font-semibold;
-  @apply !leading-tight;
-  @apply !shadow-none;
+  @apply !m-0 !box-border !h-28 !min-h-28 !max-h-28 shrink-0;
+  @apply !inline-flex !w-max !max-w-full !min-w-0 !items-center !justify-center !rounded-lg !border !px-10 !py-0
+    !text-[12px] !font-semibold !leading-tight !shadow-none;
   letter-spacing: 0.04em;
 }
 
+/* Після базових правил: у grid-колонці тягнеться на всю доступну ширину */
+.player-team-tag--stretch {
+  width: 100% !important;
+  max-width: none !important;
+  @apply !inline-flex !min-w-0 !justify-center;
+}
+
+.player-team-tag--stretch :deep(.el-tag__content) {
+  @apply inline-flex max-w-full w-full min-h-0 !p-0 justify-center;
+}
+
 .player-team-tag :deep(.el-tag__content) {
-  @apply w-full;
+  @apply inline-flex max-w-full min-h-0 !p-0 !leading-none;
 }
 
 .player-team-tag__inner {
-  @apply flex w-full min-w-0 items-center justify-center gap-6;
+  @apply inline-flex max-w-full min-h-0 items-center justify-center gap-6 leading-tight;
+}
+
+.player-team-tag--stretch .player-team-tag__inner {
+  @apply w-full;
 }
 
 .player-team-tag__status {
@@ -62,7 +99,7 @@ const hasTeam = computed(() => {
 }
 
 .player-team-tag__text {
-  @apply truncate;
+  @apply whitespace-nowrap;
 }
 
 /* У складі: зелений акцент; градієнти — звичайний CSS (Tailwind from-color/opacity у @apply не підходить) */
