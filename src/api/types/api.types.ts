@@ -1,6 +1,11 @@
 import type { components } from './schema'
 
-export type TPlayer = components['schemas']['Player']
+export type TPlayerRankDto = components['schemas']['PlayerRankDto']
+
+/** У ростері /teams `rank` може бути відсутній; після GET /players/:id з’являється. */
+export type TPlayer = components['schemas']['Player'] & {
+  rank?: TPlayerRankDto | null
+}
 export type TCurrentPlayer = components['schemas']['CurrentPlayerDto']
 export type TTeam = components['schemas']['Team']
 export type TTournament = components['schemas']['Tournament']

@@ -158,10 +158,8 @@ async function onVerificationClick () {
   }
 }
 
-type TPlayerWithRank = TPlayer & { rank?: { numericName?: number } | null }
-
 const rankImageSrc = computed(() =>
-  props.player ? getPlayerRankImageSrc((props.player as TPlayerWithRank).rank?.numericName) : ''
+  props.player ? getPlayerRankImageSrc(props.player.rank?.numericName) : ''
 )
 
 const ratingMmrLabel = computed(() => formatPlayerRatingMmr(props.player?.rating))

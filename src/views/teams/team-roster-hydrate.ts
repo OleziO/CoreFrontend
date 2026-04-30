@@ -1,8 +1,6 @@
 import apiClient from '@/api/client'
 import type { TTeam as Team, TPlayer } from '@/api/types/api.types'
 
-export type TPlayerWithRank = TPlayer & { rank?: { numericName?: number } | null }
-
 /** Швидке клонування топ-рівня ростеру для безпечного злиття без мутацій вихідного `team`. */
 export function shallowSnapshotTeamForHydrate (t: Team): Team {
   return {
@@ -24,7 +22,9 @@ export async function hydrateTeamPlayersRanks (t: Team): Promise<Team> {
   const loaded = await Promise.all(
     ids.map(async pid => {
       try {
-        return await apiClient.get('/players/{id}', { dynamicKeys: { id: pid } }) as TPlayerWithRank
+        return (await apiClient.get('/players/{id}', {
+          dynamicKeys: { id: pid }
+        })) as unknown as TPlayer
       } catch {
         return null
       }
@@ -35,7 +35,7 @@ export async function hydrateTeamPlayersRanks (t: Team): Promise<Team> {
   const mergeList = (list: TPlayer[] | undefined) =>
     (list ?? []).map(p => {
       const full = byId.get(p.id)
-      return (full ? { ...p, ...full } : p) as TPlayerWithRank
+      return (full ? { ...p, ...full } : p) as TPlayer
     })
 
   return {
