@@ -599,7 +599,7 @@ import {
   getDotabuffProfileUrl,
   getDiscordProfileUrl,
   getPlayerMatchStats,
-  getPlayerRankImageSrc,
+  getPlayerRankImageSrcFromPlayerRank,
   formatPlayerRatingMmr,
   getPlayerDotaPositions,
   isPlayerVerified,
@@ -635,7 +635,7 @@ const links = computed(() => {
   }
 })
 
-const rankImageSrc = computed(() => getPlayerRankImageSrc(player.value?.rank?.numericName))
+const rankImageSrc = computed(() => getPlayerRankImageSrcFromPlayerRank(player.value?.rank))
 const ratingMmrLabel = computed(() => formatPlayerRatingMmr(player.value?.rating))
 
 const isVerified = computed(() => isPlayerVerified(player.value))

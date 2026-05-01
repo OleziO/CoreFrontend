@@ -105,7 +105,7 @@ import { RouterLink } from 'vue-router'
 
 import { routeNames } from '@/router/route-names'
 import { PhCrown } from '@phosphor-icons/vue'
-import { getCopy, formatPlayerRatingMmr, getPlayerRankImageSrc, isPlayerVerified } from '@/core/helpers'
+import { getCopy, formatPlayerRatingMmr, getPlayerRankImageSrcFromPlayerRank, isPlayerVerified } from '@/core/helpers'
 import type { TPlayer } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
@@ -125,7 +125,7 @@ const props = withDefaults(defineProps<{
 const isVerified = computed(() => isPlayerVerified(props.player))
 
 const rankImageSrc = computed(() =>
-  props.player ? getPlayerRankImageSrc(props.player.rank?.numericName) : ''
+  props.player ? getPlayerRankImageSrcFromPlayerRank(props.player.rank) : ''
 )
 
 const ratingMmrLabel = computed(() => formatPlayerRatingMmr(props.player?.rating))

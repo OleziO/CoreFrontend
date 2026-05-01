@@ -1,5 +1,6 @@
 import apiClient from '@/api/client'
 import type { TTeam as Team, TPlayer } from '@/api/types/api.types'
+import { coercePlayerRankFromApi } from '@/core/helpers'
 
 /** Швидке клонування топ-рівня ростеру для безпечного злиття без мутацій вихідного `team`. */
 export function shallowSnapshotTeamForHydrate (t: Team): Team {
@@ -30,12 +31,19 @@ export async function hydrateTeamPlayersRanks (t: Team): Promise<Team> {
       }
     })
   )
-  const byId = new Map(loaded.filter(Boolean).map(p => [p!.id, p!]))
+  const byId = new Map<string, TPlayer>()
+  for (const pl of loaded) {
+    if (pl) byId.set(String(pl.id), pl)
+  }
 
   const mergeList = (list: TPlayer[] | undefined) =>
     (list ?? []).map(p => {
-      const full = byId.get(p.id)
-      return (full ? { ...p, ...full } : p) as TPlayer
+      const full = byId.get(String(p.id))
+      if (!full) return p as TPlayer
+      const merged = { ...p, ...full } as TPlayer
+      const rank = coercePlayerRankFromApi(merged.rank)
+      if (rank) merged.rank = rank
+      return merged
     })
 
   return {

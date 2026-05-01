@@ -14,7 +14,11 @@
     </template>
 
     <div class="flex flex-col h-full relative justify-between overflow-auto">
-      <div class="flex flex-col gap-20 relative pb-16">
+      <div
+        v-loading="rosterHydrating"
+        element-loading-background="rgba(24,24,27,0.75)"
+        class="relative flex min-h-[100px] flex-col gap-20 pb-16"
+      >
         <h2 class="text-md font-bold text-gray-300">
           Основний склад
         </h2>
@@ -113,6 +117,8 @@ const modelValue = defineModel<boolean>({ default: false })
 
 const displayTeam = ref<Team>(props.team)
 
+const rosterHydrating = ref(false)
+
 const { open } = useAppModals()
 const authStore = useAuthStore()
 const isAdmin = computed(() => authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator)
@@ -122,23 +128,36 @@ watch(
   () => {
     displayTeam.value = props.team
     if (modelValue.value) {
-      void loadHydratedRoster()
+      loadHydratedRoster().catch(() => undefined)
     }
   }
 )
 
-watch(modelValue, (open) => {
-  if (open) {
-    void loadHydratedRoster()
-  } else {
-    displayTeam.value = props.team
-  }
-})
+watch(
+  modelValue,
+  (open) => {
+    if (open) {
+      loadHydratedRoster().catch(() => undefined)
+    } else {
+      displayTeam.value = props.team
+    }
+  },
+  /**
+   * Модалка LazyComponent перший раз монтується вже відкритою (`isOpen: true`).
+   * Без `immediate` watcher не збігається з початковим `true`, і roster не гідратиться — лишаються лише дані без `rank`.
+   */
+  { immediate: true }
+)
 
 async function loadHydratedRoster () {
-  displayTeam.value = await hydrateTeamPlayersRanks(
-    shallowSnapshotTeamForHydrate(props.team)
-  )
+  rosterHydrating.value = true
+  try {
+    displayTeam.value = await hydrateTeamPlayersRanks(
+      shallowSnapshotTeamForHydrate(props.team)
+    )
+  } finally {
+    rosterHydrating.value = false
+  }
 }
 
 function onAddPlayerClick (isMain: boolean) {

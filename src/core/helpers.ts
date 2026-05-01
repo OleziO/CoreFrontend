@@ -1,7 +1,7 @@
 import { ERole } from '@/types/general.types'
 import get from 'lodash/get'
 import type { LocationQueryValue, RouteLocationNormalized } from 'vue-router'
-import type { TPlayer, TUserRole as UserRole } from '@/api/types/api.types'
+import type { TPlayer, TPlayerRankDto, TUserRole as UserRole } from '@/api/types/api.types'
 import { getDotaPositionLabel, roleLabelMap } from '@/components/player-tags/player.constants'
 
 export const createHashedObject = <
@@ -100,6 +100,44 @@ export function searchPlayer (player: TPlayer, search = '') {
 }
 
 const basePublicUrl = () => import.meta.env.BASE_URL.replace(/\/?$/, '/')
+
+function coerceFiniteRankInt (value: unknown): number | null {
+  if (value == null) return null
+  if (typeof value === 'number' && Number.isFinite(value)) return Math.trunc(value)
+  if (typeof value === 'string' && value.trim() !== '') {
+    const n = Number(value)
+    return Number.isFinite(n) ? Math.trunc(n) : null
+  }
+  return null
+}
+
+/** Код медалі для іконки: OpenAPI використовує `numericName`; API часто надсилає `numeric_name`. */
+export function resolvePlayerRankNumericName (rank: unknown): number | null {
+  if (rank == null || typeof rank !== 'object') return null
+  const r = rank as Record<string, unknown>
+  return coerceFiniteRankInt(r.numericName ?? r.numeric_name)
+}
+
+/** Після зливу даних із бекенду тримаємо ранг у передбаченій схемою формі. */
+export function coercePlayerRankFromApi (rank: unknown): TPlayerRankDto | null {
+  const numericName = resolvePlayerRankNumericName(rank)
+  if (numericName == null) return null
+  if (rank == null || typeof rank !== 'object') {
+    return { numericName, rankNumber: 0, stars: 0, nameUk: '' }
+  }
+  const r = rank as Record<string, unknown>
+  return {
+    numericName,
+    rankNumber: coerceFiniteRankInt(r.rankNumber ?? r.rank_number) ?? 0,
+    stars: coerceFiniteRankInt(r.stars) ?? 0,
+    nameUk: typeof r.nameUk === 'string' ? r.nameUk : typeof r.name_uk === 'string' ? r.name_uk : ''
+  }
+}
+
+/** PNG рангу з об'єкта `rank` незалежно від кейсу ключів із бекенду. */
+export function getPlayerRankImageSrcFromPlayerRank (rank: unknown): string {
+  return getPlayerRankImageSrc(resolvePlayerRankNumericName(rank))
+}
 
 /** Шлях до PNG рангу в `public/images/ranks/{numericName}.png`. Порожній рядок, якщо `numericName` не задано. */
 export function getPlayerRankImageSrc (numericName: number | null | undefined): string {

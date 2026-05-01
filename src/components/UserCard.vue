@@ -185,7 +185,7 @@ import { useClipboard, useWindowSize } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 
 import { routeNames } from '@/router/route-names'
-import { formatPlayerPositionsSummary, formatPlayerRatingMmr, getPlayerRankImageSrc, isPlayerVerified } from '@/core/helpers'
+import { formatPlayerPositionsSummary, formatPlayerRatingMmr, getPlayerRankImageSrcFromPlayerRank, isPlayerVerified } from '@/core/helpers'
 import {
   PhCopy,
   PhSealCheck,
@@ -216,7 +216,7 @@ const verificationLoading = ref(false)
 
 const isVerified = computed(() => isPlayerVerified(props.user))
 
-const rankImageSrc = computed(() => getPlayerRankImageSrc(props.user.rank?.numericName))
+const rankImageSrc = computed(() => getPlayerRankImageSrcFromPlayerRank(props.user.rank))
 
 const ratingMmrLabel = computed(() => formatPlayerRatingMmr(props.user.rating))
 
