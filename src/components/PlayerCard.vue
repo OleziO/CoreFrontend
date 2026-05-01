@@ -97,18 +97,6 @@
         </div>
       </div>
     </RouterLink>
-
-    <!-- Адмін/модер: без переходу за посиланням картки -->
-    <el-button
-      v-if="showAdminVerificationActions"
-      :loading="verifyLoading"
-      :type="isVerified ? 'warning' : 'success'"
-      size="small"
-      class="!absolute bottom-12 right-12 z-20 shadow-md max-[480px]:!text-[11px] max-[480px]:!px-10"
-      @click.stop.prevent="onVerificationClick"
-    >
-      {{ isVerified ? 'Зняти' : 'Верифікація' }}
-    </el-button>
   </div>
 </template>
 
@@ -116,7 +104,6 @@
 import { RouterLink } from 'vue-router'
 
 import { routeNames } from '@/router/route-names'
-import { playersService } from '@/views/players/players.service'
 import { PhCrown } from '@phosphor-icons/vue'
 import { getCopy, formatPlayerRatingMmr, getPlayerRankImageSrc, isPlayerVerified } from '@/core/helpers'
 import type { TPlayer } from '@/api/types/api.types'
@@ -135,28 +122,7 @@ const props = withDefaults(defineProps<{
   skipTeamFetch: false
 })
 
-const emit = defineEmits<{ playerUpdated: [player: TPlayer] }>()
-
-const me = useAuthStore()
-const verifyLoading = ref(false)
-
 const isVerified = computed(() => isPlayerVerified(props.player))
-
-const showAdminVerificationActions = computed(() => {
-  if (!(me.isAdmin.isAdmin || me.isAdmin.isModerator) || !props.player || !me.user) return false
-  return props.player.id !== me.user.id
-})
-
-async function onVerificationClick () {
-  if (!props.player || verifyLoading.value) return
-  verifyLoading.value = true
-  try {
-    const updated = await playersService.setPlayerVerificationByAdmin(props.player.id, !isVerified.value)
-    if (updated) emit('playerUpdated', updated)
-  } finally {
-    verifyLoading.value = false
-  }
-}
 
 const rankImageSrc = computed(() =>
   props.player ? getPlayerRankImageSrc(props.player.rank?.numericName) : ''

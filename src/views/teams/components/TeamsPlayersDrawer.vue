@@ -25,7 +25,6 @@
               :key="player.id"
               :player="player"
               :is-captain="player.id === displayTeam.captain?.id"
-              @player-updated="onPlayerVerificationUpdated"
             />
             <div v-for="index in mainSlotCounts" :key="index">
               <button
@@ -66,7 +65,6 @@
               :key="player.id"
               :player="player"
               :is-captain="player.id === displayTeam.captain?.id"
-              @player-updated="onPlayerVerificationUpdated"
             />
 
             <div v-for="index in reserveSlotCounts" :key="index">
@@ -104,7 +102,7 @@
 
 <script setup lang="ts">
 import { Plus } from 'lucide-vue-next'
-import type { TTeam as Team, TPlayer } from '@/api/types/api.types'
+import type { TTeam as Team } from '@/api/types/api.types'
 import { hydrateTeamPlayersRanks, shallowSnapshotTeamForHydrate } from '@/views/teams/team-roster-hydrate'
 
 const props = defineProps<{
@@ -148,26 +146,6 @@ function onAddPlayerClick (isMain: boolean) {
     team: props.team,
     isMain
   })
-}
-
-function applyVerificationToRoster (t: Team, updated: TPlayer) {
-  for (const key of ['mainPlayers', 'reservedPlayers'] as const) {
-    const list = t[key]
-    if (!list?.length) continue
-    const ix = list.findIndex(p => p.id === updated.id)
-    if (ix !== -1) {
-      list.splice(ix, 1, updated)
-      break
-    }
-  }
-}
-
-function onPlayerVerificationUpdated (updated: TPlayer) {
-  applyVerificationToRoster(props.team, updated)
-  const d = displayTeam.value
-  if (d !== props.team) {
-    applyVerificationToRoster(d, updated)
-  }
 }
 
 const mainSlotCounts = computed(() => {

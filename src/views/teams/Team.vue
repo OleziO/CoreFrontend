@@ -213,7 +213,6 @@
                 :key="player.id"
                 :player="player"
                 :is-captain="player.id === team?.captain?.id"
-                @player-updated="onPlayerVerificationUpdated"
               />
 
               <template v-if="isAdmin">
@@ -252,7 +251,6 @@
                 :key="player.id"
                 :player="player"
                 :is-captain="player.id === team?.captain?.id"
-                @player-updated="onPlayerVerificationUpdated"
               />
 
               <template v-if="isAdmin">
@@ -291,7 +289,7 @@ import { useClipboard, useWindowSize } from '@vueuse/core'
 import dayjs from 'dayjs'
 import 'dayjs/locale/uk'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
-import type { TTeam as Team, TPlayer } from '@/api/types/api.types'
+import type { TTeam as Team } from '@/api/types/api.types'
 import type { TUpdateTeamPayload } from '@/views/teams/teams.service'
 import { teamsService } from '@/views/teams/teams.service'
 import { hydrateTeamPlayersRanks } from '@/views/teams/team-roster-hydrate'
@@ -360,19 +358,6 @@ function handleDisbandTeam () {
 
 function handleOpenAddPlayer (isMain: boolean) {
   open('PlayerAddToTeamModal', { team: team.value, isMain })
-}
-
-function onPlayerVerificationUpdated (updated: TPlayer) {
-  if (!team.value) return
-  for (const key of ['mainPlayers', 'reservedPlayers'] as const) {
-    const list = team.value[key]
-    if (!list?.length) continue
-    const ix = list.findIndex(p => p.id === updated.id)
-    if (ix !== -1) {
-      list.splice(ix, 1, updated)
-      break
-    }
-  }
 }
 
 async function handleTeamUpdate (payload: TUpdateTeamPayload) {
