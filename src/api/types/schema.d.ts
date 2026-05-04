@@ -240,6 +240,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/teams/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TeamsController_search"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/teams/{id}": {
         parameters: {
             query?: never;
@@ -302,6 +318,54 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["TournamentsController_update"];
+        trace?: never;
+    };
+    "/tournaments/{id}/qualification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TournamentsController_getQualification"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TournamentsController_join"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/qualification/matches/{matchId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TournamentsController_submitMatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/tournaments/{id}/header-banner": {
@@ -452,7 +516,7 @@ export interface components {
             id: string;
             name: string;
             captain: components["schemas"]["Player"];
-            coach: components["schemas"]["Player"];
+            coach: components["schemas"]["Player"] | null;
             logoUrl: string | null;
             dotaTeamId: string | null;
             isVerified: boolean;
@@ -469,7 +533,9 @@ export interface components {
         Tournament: {
             id: string;
             name: string;
-            prizePool: number;
+            prizePool: number | null;
+            /** @enum {string|null} */
+            division: "DIVISION_I" | "DIVISION_II" | "DIVISION_III" | null;
             headerBannerUrl: string;
             listBannerUrl: string;
             tournamentSlots: number;
@@ -567,8 +633,6 @@ export interface components {
             avatarUrl?: string | null;
             discordName?: string | null;
             discordUsername?: string | null;
-            /** @description Команда гравця, якщо прив'язано */
-            teamId?: string | null;
             /** @description Серверний nickname на DISCORD_SYNC_GUILD_ID; null якщо на сервері не заданий (показується global name / username) */
             discordServerNickname?: string | null;
             rating: number;
@@ -577,18 +641,20 @@ export interface components {
             positions?: (1 | 2 | 3 | 4 | 5)[] | null;
             /** Format: date-time */
             verifiedAt?: string | null;
+            /** @description UUID команди або null поза складом */
+            teamId?: string | null;
             roles: components["schemas"]["CurrentPlayerRoleDto"][];
         };
         CreateUserRoleDto: {
             /** @enum {string} */
-            name: "Гість" | "Гравець" | "Капітан" | "Адмін";
+            name: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін";
             isAdminRole: boolean;
         };
         UserRoleResponseDto: {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            name: "Гість" | "Гравець" | "Капітан" | "Адмін";
+            name: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін";
             isAdminRole: boolean;
             /**
              * @description CSS hex #RRGGBB (для parseHexColor на клієнті)
@@ -598,7 +664,7 @@ export interface components {
         };
         UpdateUserRoleDto: {
             /** @enum {string} */
-            name?: "Гість" | "Гравець" | "Капітан" | "Адмін";
+            name?: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін";
             isAdminRole?: boolean;
         };
         CreateTeamDto: {
@@ -610,6 +676,10 @@ export interface components {
             isVerified: boolean;
             isPlayingTournament: boolean;
         };
+        SearchTeamsDto: {
+            /** @description When true, each team includes `tournaments`: array built from its linked tournament (0 or 1 item). */
+            withTournaments?: boolean;
+        };
         UpdateTeamDto: {
             name?: string;
             /** @description UUID of the coach player */
@@ -620,10 +690,13 @@ export interface components {
             isPlayingTournament?: boolean;
         };
         /** @enum {string} */
+        TournamentDivision: "DIVISION_I" | "DIVISION_II" | "DIVISION_III";
+        /** @enum {string} */
         TournamentStatus: "REGISTRATION_OPEN" | "REGISTRATION_CLOSED" | "IN_PROGRESS" | "COMPLETED" | "SCHEDULED";
         CreateTournamentDto: {
             name: string;
-            prizePool: number;
+            prizePool?: number | null;
+            division: components["schemas"]["TournamentDivision"];
             headerBannerUrl?: string;
             listBannerUrl?: string;
             tournamentSlots?: number;
@@ -640,7 +713,8 @@ export interface components {
         };
         UpdateTournamentDto: {
             name?: string;
-            prizePool?: number;
+            prizePool?: number | null;
+            division?: components["schemas"]["TournamentDivision"];
             headerBannerUrl?: string;
             listBannerUrl?: string;
             tournamentSlots?: number;
@@ -654,6 +728,29 @@ export interface components {
             tournamentEndsAt?: string;
             tournamentStatus?: components["schemas"]["TournamentStatus"];
             tournamentGridUrl?: string;
+        };
+        Qualification: {
+            id: string;
+            tournament: components["schemas"]["Tournament"];
+            /** Format: date-time */
+            startTime: string;
+            /** Format: date-time */
+            endTime: string;
+            nodeGroupId: string;
+            matches: components["schemas"]["QualificationMatch"][];
+        };
+        QualificationMatch: {
+            id: string;
+            qualification: components["schemas"]["Qualification"];
+            teamA: components["schemas"]["Team"];
+            teamB: components["schemas"]["Team"];
+            winner: components["schemas"]["Team"] | null;
+            dotaMatchId: string | null;
+            nodeGroupId: string;
+        };
+        SubmitMatchDto: {
+            /** @description Dota2 match ID from the played game */
+            dotaMatchId: string;
         };
         CreateMatchDto: {
             /** @description UUID of team A */
@@ -1104,6 +1201,29 @@ export interface operations {
             };
         };
     };
+    TeamsController_search: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SearchTeamsDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
+                };
+            };
+        };
+    };
     TeamsController_findOne: {
         parameters: {
             query?: never;
@@ -1298,6 +1418,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Tournament"];
+                };
+            };
+        };
+    };
+    TournamentsController_getQualification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Qualification"];
+                };
+            };
+        };
+    };
+    TournamentsController_join: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TournamentsController_submitMatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                matchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitMatchDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationMatch"];
                 };
             };
         };

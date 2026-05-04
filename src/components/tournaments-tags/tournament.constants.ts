@@ -18,6 +18,40 @@ export const tournamentStatusLabelMap: Record<string, string> = {
   COMPLETED: 'Завершено'
 }
 
+/** Значення `division` з API турніру. */
+export const TOURNAMENT_DIVISION_VALUES = [
+  'DIVISION_I',
+  'DIVISION_II',
+  'DIVISION_III'
+] as const
+
+export type TTournamentDivisionValue = typeof TOURNAMENT_DIVISION_VALUES[number]
+
+/** Підпис дивізіону та пояснення MMR для tooltip (узгоджено з описом турніру). */
+export const tournamentDivisionLabelMap: Record<TTournamentDivisionValue, string> = {
+  DIVISION_I: 'Division I',
+  DIVISION_II: 'Division II',
+  DIVISION_III: 'Division III'
+}
+
+export const tournamentDivisionMmrHintMap: Record<TTournamentDivisionValue, string> = {
+  DIVISION_I: 'Середній 0–2500 MMR, максимум гравця 3500',
+  DIVISION_II: 'Середній 2500–4500 MMR, максимум гравця 5500',
+  DIVISION_III: 'Середній 4500–7000 MMR, без обмеження максимуму гравця'
+}
+
+/** Ролі профілю (GET /auth/me → CurrentPlayerDto.roles[].name). */
+export const PROFILE_CAPTAIN_ROLE_UA = 'Капітан'
+
+/** Значення `tournamentStatus` для створення турніру (Nest). */
+export const tournamentAdminStatusOptions = [
+  { key: 'SCHEDULED', label: 'Анонс' },
+  { key: 'REGISTRATION_OPEN', label: 'Реєстрація відкрита' },
+  { key: 'REGISTRATION_CLOSED', label: 'Реєстрація закрита' },
+  { key: 'IN_PROGRESS', label: 'Триває' },
+  { key: 'COMPLETED', label: 'Завершено' }
+] as const satisfies ReadonlyArray<{ key: keyof typeof tournamentStatusLabelMap; label: string }>
+
 export const tournamentStatusClassMap: Record<string, string> = {
   SCHEDULED: `
     !border !border-gray-500/40 !bg-gray-500/10 !text-gray-400

@@ -73,7 +73,7 @@
             </div>
 
             <div
-              v-if="authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator"
+              v-if="canEditTeamProfile"
               class="mt-12 flex w-full"
             >
               <el-button
@@ -91,12 +91,27 @@
                 </span>
               </el-button>
             </div>
+
+            <div
+              v-if="isAdmin && team && !team.isVerified"
+              class="mt-10 flex w-full shrink-0"
+            >
+              <el-button
+                type="success"
+                class="h-30 w-full max-sm:text-xs max-sm:!px-8"
+                :loading="verifyTeamLoading"
+                @click="handleVerifyTeam"
+              >
+                <PhSealCheck :size="20" class="shrink-0" />
+                <span class="ml-8">Верифікувати команду</span>
+              </el-button>
+            </div>
           </div>
 
           <!-- ACTIONS -->
           <div class="flex flex-col gap-10">
             <el-dropdown
-              v-if="isAdmin"
+              v-if="canEditTeamRoster"
               trigger="click"
               :placement="isMobile ? 'left-start' : 'bottom'"
               popper-class="header-dropdown"
@@ -151,7 +166,7 @@
               <RouterLink
                 v-for="tournament in teamTournaments"
                 :key="tournament.id"
-                :to="{ name: 'tournament', params: { id: tournament.id } }"
+                :to="{ name: routeNames.tournament, params: { id: tournament.id } }"
                 class="flex items-center gap-20 p-15 shrink-0 min-w-0
                 rounded-xl bg-gray-800/50 hover:bg-gray-800 transition-colors backdrop-blur-sm"
               >
@@ -208,14 +223,28 @@
             <el-divider class="mt-15" />
 
             <div class="mr-0 xl:mr-10 rounded-xl bg-gray-800/50 p-16 flex flex-col gap-20 min-h-0 justify-between">
-              <PlayerCard
+              <div
                 v-for="player in team?.mainPlayers"
                 :key="player.id"
-                :player="player"
-                :is-captain="player.id === team?.captain?.id"
-              />
+                class="relative overflow-visible rounded-2xl"
+              >
+                <PlayerCard
+                  :player="player"
+                  :is-captain="player.id === team?.captain?.id"
+                />
+                <button
+                  v-if="canEditTeamRoster"
+                  type="button"
+                  class="player-remove-from-team-btn"
+                  :disabled="removePlayerLoadingId === player.id"
+                  aria-label="Прибрати з команди"
+                  @click.stop="handleRemovePlayerFromTeam(player.id)"
+                >
+                  <PhX :size="20" weight="bold" class="pointer-events-none" />
+                </button>
+              </div>
 
-              <template v-if="isAdmin">
+              <template v-if="canEditTeamRoster">
                 <button
                   v-for="i in mainSlotCounts"
                   :key="i"
@@ -246,14 +275,28 @@
             <el-divider class="mt-15" />
 
             <div class="ml-0 xl:ml-10 rounded-xl bg-gray-800/30 p-16 flex flex-col gap-20 min-h-0">
-              <PlayerCard
+              <div
                 v-for="player in team?.reservedPlayers"
                 :key="player.id"
-                :player="player"
-                :is-captain="player.id === team?.captain?.id"
-              />
+                class="relative overflow-visible rounded-2xl"
+              >
+                <PlayerCard
+                  :player="player"
+                  :is-captain="player.id === team?.captain?.id"
+                />
+                <button
+                  v-if="canEditTeamRoster"
+                  type="button"
+                  class="player-remove-from-team-btn"
+                  :disabled="removePlayerLoadingId === player.id"
+                  aria-label="Прибрати з команди"
+                  @click.stop="handleRemovePlayerFromTeam(player.id)"
+                >
+                  <PhX :size="20" weight="bold" class="pointer-events-none" />
+                </button>
+              </div>
 
-              <template v-if="isAdmin">
+              <template v-if="canEditTeamRoster">
                 <button
                   v-for="i in reserveSlotCounts"
                   :key="i"
@@ -284,7 +327,10 @@
 </template>
 
 <script setup lang="ts">
-import { PhCopy, PhCrown, PhDotsThree, PhCalendarDots, PhPencil, PhTrash, PhUsersThree } from '@phosphor-icons/vue'
+import { getApiErrorMessage } from '@/utils/api-errors'
+import { routeNames } from '@/router/route-names'
+import { ElMessageBox } from 'element-plus'
+import { PhCopy, PhCrown, PhDotsThree, PhCalendarDots, PhPencil, PhSealCheck, PhTrash, PhUsersThree, PhX } from '@phosphor-icons/vue'
 import { useClipboard, useWindowSize } from '@vueuse/core'
 import dayjs from 'dayjs'
 import 'dayjs/locale/uk'
@@ -317,6 +363,13 @@ const { copy } = useClipboard({ legacy: true })
 const isAdmin = computed(() => {
   return authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator
 })
+
+const rosterLockedForEdits = computed(() => !!team.value?.tournament)
+
+/** Склад/капітанство: блокується під час участі команди у турнірі (бекенд 403 на зміну ростера). */
+const canEditTeamRoster = computed(() => isAdmin.value && !rosterLockedForEdits.value)
+
+const canEditTeamProfile = computed(() => canEditTeamRoster.value)
 
 function copyDotaTeamIdPage () {
   const id = dotaTeamIdTrimmed.value
@@ -356,15 +409,85 @@ function handleDisbandTeam () {
   void teamsStore.deleteTeam(tid)
 }
 
+const verifyTeamLoading = ref(false)
+const removePlayerLoadingId = ref<string | null>(null)
+
+async function handleVerifyTeam () {
+  const tid = team.value?.id
+  if (!tid || team.value?.isVerified) return
+  verifyTeamLoading.value = true
+  try {
+    const updated = await teamsStore.updateTeam(tid, { isVerified: true })
+    team.value = hydrateTeamPlayersRanks(updated)
+    teamsStore.patchTeamInList(team.value)
+    ElMessage.success('Команду верифіковано')
+  } catch (e: unknown) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося верифікувати команду'))
+  } finally {
+    verifyTeamLoading.value = false
+  }
+}
+
+async function refreshTeamFromServer () {
+  const tid = team.value?.id ?? id
+  let t = await teamsStore.findTeam(tid)
+  if (!t) {
+    try {
+      t = await teamsService.fetchTeam(tid)
+    } catch {
+      return
+    }
+  }
+  team.value = hydrateTeamPlayersRanks(t)
+  teamsStore.patchTeamInList(team.value)
+}
+
 function handleOpenAddPlayer (isMain: boolean) {
-  open('PlayerAddToTeamModal', { team: team.value, isMain })
+  open('PlayerAddToTeamModal', {
+    team: team.value,
+    isMain,
+    onAdded: refreshTeamFromServer
+  })
+}
+
+async function handleRemovePlayerFromTeam (playerId: string) {
+  const tid = team.value?.id
+  if (!tid) return
+  try {
+    await ElMessageBox.confirm(
+      'Гравця буде прибрано зі складу цієї команди.',
+      'Прибрати з команди?',
+      {
+        confirmButtonText: 'Прибрати',
+        cancelButtonText: 'Скасувати',
+        type: 'warning',
+        distinguishCancelAndClose: true
+      }
+    )
+  } catch {
+    return
+  }
+
+  removePlayerLoadingId.value = playerId
+  try {
+    const updated = await teamsService.removePlayerFromTeam(tid, playerId)
+    playersStore.setPlayerTeamIdClientside(playerId, null)
+    team.value = hydrateTeamPlayersRanks(updated)
+    teamsStore.patchTeamInList(team.value)
+    ElMessage.success('Гравця прибрано з команди')
+  } catch (e: unknown) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося прибрати гравця'))
+  } finally {
+    removePlayerLoadingId.value = null
+  }
 }
 
 async function handleTeamUpdate (payload: TUpdateTeamPayload) {
   try {
     const tid = team.value!.id
     const updatedTeam = await teamsStore.updateTeam(tid, payload)
-    team.value = await hydrateTeamPlayersRanks(updatedTeam)
+    team.value = hydrateTeamPlayersRanks(updatedTeam)
+    teamsStore.patchTeamInList(team.value)
     close('TeamCreateModal')
   } catch (e) {
     if (e instanceof Error) {
@@ -383,6 +506,64 @@ onMounted(async () => {
       return
     }
   }
-  team.value = await hydrateTeamPlayersRanks(t)
+  team.value = hydrateTeamPlayersRanks(t)
+  teamsStore.patchTeamInList(team.value)
 })
 </script>
+
+<style scoped>
+/* Центр кнопки = верхній правий кут контейнера: left 100% + translate(-50%, -50%). */
+.player-remove-from-team-btn {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  background: linear-gradient(155deg, rgb(24 24 27 / 0.97) 0%, rgb(9 9 11 / 0.98) 100%);
+  color: rgb(212 212 216);
+  box-shadow:
+    0 4px 14px rgb(0 0 0 / 0.5),
+    inset 0 1px 0 rgb(255 255 255 / 0.07);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.2, 0.64, 1),
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.player-remove-from-team-btn:hover:not(:disabled) {
+  transform: translate(-50%, -50%) scale(1.07);
+  border-color: rgb(248 113 113 / 0.45);
+  color: rgb(254 226 226);
+  background: linear-gradient(155deg, rgb(69 10 10 / 0.92) 0%, rgb(9 9 11 / 0.98) 100%);
+  box-shadow:
+    0 6px 22px rgb(127 29 29 / 0.35),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+.player-remove-from-team-btn:active:not(:disabled) {
+  transform: translate(-50%, -50%) scale(0.94);
+}
+
+.player-remove-from-team-btn:focus-visible {
+  outline: 2px solid rgb(59 130 246 / 0.75);
+  outline-offset: 3px;
+}
+
+.player-remove-from-team-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+  pointer-events: none;
+}
+</style>

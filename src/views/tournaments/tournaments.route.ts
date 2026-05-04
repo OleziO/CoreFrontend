@@ -1,8 +1,10 @@
 import type { RouteRecordRaw } from 'vue-router'
+
+/** Імена маршрутів (узгоджено з teams/players: список — множина, картка — однина). */
 export const tournamentRouteNames = {
   tournaments: 'tournaments',
-  teamTournament: 'tournament'
-}
+  tournament: 'tournament'
+} as const
 
 export const tournamentRoutes: RouteRecordRaw[] = [
   {
@@ -12,7 +14,7 @@ export const tournamentRoutes: RouteRecordRaw[] = [
   },
   {
     path: 'tournaments/:id',
-    name: tournamentRouteNames.teamTournament,
+    name: tournamentRouteNames.tournament,
     component: () => import('@/views/tournaments/Tournament.vue')
   }
 ]

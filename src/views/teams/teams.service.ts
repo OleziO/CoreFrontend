@@ -1,6 +1,11 @@
 import apiClient from '@/api/client'
 import { ElMessage } from 'element-plus'
-import type { TTeam as Team, TCreateTeamDto as CreateTeamDto, TUpdateTeamDto as UpdateTeamDto } from '@/api/types/api.types'
+import type {
+  TTeam as Team,
+  TCreateTeamDto as CreateTeamDto,
+  TUpdateTeamDto as UpdateTeamDto,
+  TAddTeamPlayerDto as AddTeamPlayerDto
+} from '@/api/types/api.types'
 
 import { postTeamLogoUpload } from '@/services/image-upload.service'
 
@@ -24,14 +29,16 @@ class TeamsService {
     }
   }
 
-  async fetchTeam (id: string): Promise<Team> {
+  async fetchTeam (id: string, options?: { silent?: boolean }): Promise<Team> {
     try {
       const res = await apiClient.get('/teams/{id}', {
         dynamicKeys: { id }
       })
       return res as Team
     } catch (e) {
-      ElMessage.error('Помилка')
+      if (!options?.silent) {
+        ElMessage.error('Помилка')
+      }
       throw e
     }
   }
@@ -62,6 +69,28 @@ class TeamsService {
     }
 
     return await this.fetchTeam(id)
+  }
+
+  /** POST /teams/:id/players — додати гравця в основу або запас (адмін). */
+  async addPlayerToTeam (teamId: string, body: AddTeamPlayerDto): Promise<Team> {
+    const res = await apiClient.post('/teams/{id}/players', body, {
+      dynamicKeys: { id: teamId }
+    })
+    if (res && typeof res === 'object' && 'id' in res) {
+      return res as Team
+    }
+    return await this.fetchTeam(teamId)
+  }
+
+  /** DELETE /teams/:id/players/:playerId — прибрати гравця з команди (у відповіді зазвичай повна команда). */
+  async removePlayerFromTeam (teamId: string, playerId: string): Promise<Team> {
+    const res = await apiClient.delete('/teams/{id}/players/{playerId}', {
+      dynamicKeys: { id: teamId, playerId }
+    }) as unknown
+    if (res && typeof res === 'object' && 'id' in res) {
+      return res as Team
+    }
+    return await this.fetchTeam(teamId)
   }
 
   async dissolveTeam (id: string): Promise<void> {
@@ -106,9 +135,6 @@ class TeamsService {
 
   // TODO: endpoint not in API yet
   // async acceptTeamInvite (inviteId: number) { ... }
-
-  // TODO: endpoint not in API yet
-  // async removePlayerFromTeam (teamId: number, playerId: number) { ... }
 
   // TODO: endpoint not in API yet
   // async rejectTeamInvite (inviteId: number) { ... }

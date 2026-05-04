@@ -107,6 +107,7 @@
 <script setup lang="ts">
 import { Plus } from 'lucide-vue-next'
 import type { TTeam as Team } from '@/api/types/api.types'
+import { teamsService } from '@/views/teams/teams.service'
 import { hydrateTeamPlayersRanks, shallowSnapshotTeamForHydrate } from '@/views/teams/team-roster-hydrate'
 
 const props = defineProps<{
@@ -120,6 +121,7 @@ const displayTeam = ref<Team>(props.team)
 const rosterHydrating = ref(false)
 
 const { open } = useAppModals()
+const teamsStore = useTeamsStore()
 const authStore = useAuthStore()
 const isAdmin = computed(() => authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator)
 
@@ -152,7 +154,7 @@ watch(
 async function loadHydratedRoster () {
   rosterHydrating.value = true
   try {
-    displayTeam.value = await hydrateTeamPlayersRanks(
+    displayTeam.value = hydrateTeamPlayersRanks(
       shallowSnapshotTeamForHydrate(props.team)
     )
   } finally {
@@ -160,19 +162,34 @@ async function loadHydratedRoster () {
   }
 }
 
+/** Після зміни складу — актуальний GET /teams/:id (для модалки та лічильників слотів). */
+async function loadFreshTeamFromApi () {
+  const tid = props.team?.id
+  if (!tid) return
+  rosterHydrating.value = true
+  try {
+    const hydrated = hydrateTeamPlayersRanks(await teamsService.fetchTeam(tid))
+    displayTeam.value = hydrated
+    teamsStore.patchTeamInList(hydrated)
+  } finally {
+    rosterHydrating.value = false
+  }
+}
+
 function onAddPlayerClick (isMain: boolean) {
   open('PlayerAddToTeamModal', {
-    team: props.team,
-    isMain
+    team: displayTeam.value,
+    isMain,
+    onAdded: loadFreshTeamFromApi
   })
 }
 
 const mainSlotCounts = computed(() => {
-  return Math.max(0, 5 - (props.team.mainPlayers?.length ?? 0))
+  return Math.max(0, 5 - (displayTeam.value.mainPlayers?.length ?? 0))
 })
 
 const reserveSlotCounts = computed(() => {
-  return Math.max(0, 3 - (props.team.reservedPlayers?.length ?? 0))
+  return Math.max(0, 3 - (displayTeam.value.reservedPlayers?.length ?? 0))
 })
 
 function close () {

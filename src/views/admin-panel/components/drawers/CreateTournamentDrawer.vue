@@ -2,127 +2,144 @@
   <el-drawer
     v-model="showCreateTournamentDrawer"
     title="Додати турнір"
-    size="500"
+    size="520"
     class="custom-drawer"
     destroy-on-close
   >
     <div class="h-full overflow-y-auto px-1 custom-scroll pb-6">
-      <el-form :model="tournamentData" label-position="top" @submit.prevent="handleSubmit">
-        <el-form-item
-          v-for="field in fields"
-          :key="field.model"
-          :label="field.label"
-        >
+      <el-form :model="form" label-position="top" @submit.prevent="handleSubmit">
+        <el-form-item label="Назва" required>
+          <el-input v-model="form.name" placeholder="Назва турніру" size="large" />
+        </el-form-item>
+
+        <el-form-item label="Дивізіон" required>
+          <el-select v-model="form.division" placeholder="Оберіть дивізіон" size="large" class="w-full">
+            <el-option
+              v-for="d in TOURNAMENT_DIVISION_VALUES"
+              :key="d"
+              :value="d"
+              :label="tournamentDivisionLabelMap[d]"
+            >
+              <div class="flex flex-col">
+                <span>{{ tournamentDivisionLabelMap[d] }}</span>
+                <span class="text-xs text-gray-500">{{ tournamentDivisionMmrHintMap[d] }}</span>
+              </div>
+            </el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="Статус турніру" required>
+          <el-select v-model="form.tournamentStatus" size="large" class="w-full">
+            <el-option
+              v-for="s in tournamentAdminStatusOptions"
+              :key="s.key"
+              :value="s.key"
+              :label="tournamentStatusLabelMap[s.key]"
+            />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="Призовий фонд (опціонально)">
+          <el-input
+            v-model="prizePoolText"
+            inputmode="numeric"
+            placeholder="Напр. 5000"
+            size="large"
+            @input="prizePoolText = String($event).replace(/\D+/g, '')"
+          />
+        </el-form-item>
+
+        <el-form-item label="Слоти команд (опціонально)">
+          <el-input
+            v-model="slotsText"
+            inputmode="numeric"
+            placeholder="Напр. 16"
+            size="large"
+            @input="slotsText = String($event).replace(/\D+/g, '')"
+          />
+        </el-form-item>
+
+        <el-form-item label="Початок реєстрації" required>
           <el-date-picker
-            v-if="isDateField(field.model)"
-            v-model="(tournamentData[field.model as keyof typeof tournamentData] as string)"
-            :placeholder="field.placeholder"
+            v-model="form.registrationStartsAt"
             type="datetime"
             size="large"
             class="w-full"
             format="YYYY-MM-DD HH:mm"
             value-format="YYYY-MM-DD HH:mm"
           />
-          <el-input
-            v-else
-            v-model="(tournamentData[field.model as keyof typeof tournamentData] as string)"
-            :placeholder="field.placeholder"
+        </el-form-item>
+
+        <el-form-item label="Кінець реєстрації" required>
+          <el-date-picker
+            v-model="form.registrationEndsAt"
+            type="datetime"
             size="large"
+            class="w-full"
+            format="YYYY-MM-DD HH:mm"
+            value-format="YYYY-MM-DD HH:mm"
           />
         </el-form-item>
 
-        <el-form-item label="Статус">
-          <el-select
-            v-model="tournamentData.status"
+        <el-form-item label="Початок плей-оф" required>
+          <el-date-picker
+            v-model="form.tournamentStartsAt"
+            type="datetime"
             size="large"
             class="w-full"
-          >
-            <el-option
-              v-for="status in tournamentStatuses"
-              :key="status.key"
-              :value="status.key"
-              :label="status.label"
-            />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item
-          label="Дивізіон (опціонально)"
-        >
-          <el-select
-            v-model="tournamentData.division_id"
-            placeholder="Оберіть дивізіон"
-            size="large"
-            class="w-full"
-            clearable
-          >
-            <el-option
-              v-for="division in divisions"
-              :key="division.id"
-              :value="String(division.id)"
-              :label="division.name"
-            />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="Ліміт учасників (опціонально)">
-          <el-input
-            v-model="tournamentData.limit"
-            type="text"
-            inputmode="numeric"
-            placeholder="Ліміт учасників"
-            size="large"
-            @input="onNumericInput($event)"
+            format="YYYY-MM-DD HH:mm"
+            value-format="YYYY-MM-DD HH:mm"
           />
         </el-form-item>
 
-        <el-form-item label="Зображення турніру" required>
-          <div class="flex items-center gap-4 w-full">
-            <el-upload
-              class="avatar-uploader"
-              action="#"
-              :auto-upload="false"
-              :show-file-list="false"
-              :on-change="handleImageChange"
-              accept="image/*"
+        <el-form-item label="Кінець турніру" required>
+          <el-date-picker
+            v-model="form.tournamentEndsAt"
+            type="datetime"
+            size="large"
+            class="w-full"
+            format="YYYY-MM-DD HH:mm"
+            value-format="YYYY-MM-DD HH:mm"
+          />
+        </el-form-item>
+
+        <el-divider content-position="left">
+          Зображення (опціонально, окремі запити після створення)
+        </el-divider>
+
+        <el-form-item v-for="u in uploads" :key="u.key" :label="u.label">
+          <el-upload
+            class="avatar-uploader"
+            action="#"
+            :auto-upload="false"
+            :show-file-list="false"
+            accept="image/*"
+            @change="(f: UploadFile) => handlePick(u.key, f)"
+          >
+            <div
+              v-if="previews[u.key]"
+              class="w-full max-w-[22rem] h-40 rounded-lg border border-white/10 overflow-hidden relative group"
             >
-              <div
-                v-if="preview"
-                class="w-96 h-48 rounded-lg border border-white/10 overflow-hidden relative group"
-              >
-                <img :src="preview" class="w-full h-full object-cover">
-                <div
-                  class="absolute inset-0 bg-black/50 flex items-center
-                justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <el-icon class="text-white text-xl"><Edit /></el-icon>
-                </div>
+              <img :src="previews[u.key]" class="w-full h-full object-cover" alt="">
+              <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                <el-icon class="text-white text-xl"><Edit /></el-icon>
               </div>
-              <div
-                v-else
-                class="w-24 h-24 rounded-lg border border-dashed border-white/20
-                flex flex-col items-center justify-center cursor-pointer hover:border-cyan-500
-                hover:text-cyan-500 transition-colors bg-white/5"
-              >
-                <el-icon class="text-2xl mb-1"><Plus /></el-icon>
-                <el-button
-                  class="w-full !h-30 !bg-cyan-600 !border-cyan-600 hover:!bg-cyan-500
-           text-white font-medium !rounded-lg mt-2 shadow-lg shadow-cyan-900/20"
-                  type="primary"
-                >
-                  Upload
-                </el-button>
-              </div>
-            </el-upload>
-          </div>
+            </div>
+            <div
+              v-else
+              class="rounded-lg border border-dashed border-white/20 px-10 py-8 flex flex-col items-center gap-2 cursor-pointer hover:border-cyan-500"
+            >
+              <el-icon class="text-2xl"><Plus /></el-icon>
+              <span class="text-sm text-gray-400">JPEG/PNG тощо, до 10 МБ</span>
+            </div>
+          </el-upload>
         </el-form-item>
 
         <el-button
           :disabled="!isFormValid"
           :loading="loading"
           native-type="submit"
-          class="w-full !h-30 !bg-cyan-600 !border-cyan-600 hover:!bg-cyan-500
-           text-white font-medium !rounded-lg mt-2 shadow-lg shadow-cyan-900/20"
+          class="w-full !h-30 !bg-cyan-600 !border-cyan-600 hover:!bg-cyan-500 text-white font-medium !rounded-lg mt-6"
           type="primary"
           @click="handleSubmit"
         >
@@ -134,108 +151,162 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { tournamentFields } from '@/constants/tournaments'
-import { queryCache } from '@/core/query-cache-client'
-import { tournamentStatuses } from '@/utils/formatters'
-import { Plus, Edit } from '@element-plus/icons-vue'
+import { computed, reactive, watch } from 'vue'
+import dayjs from 'dayjs'
 import type { UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
+import { Edit, Plus } from '@element-plus/icons-vue'
+import { queryCache } from '@/core/query-cache-client'
+import { getApiErrorMessage } from '@/utils/api-errors'
+import { UPLOAD_ERROR, validateImageFileForUpload } from '@/services/image-upload.service'
+import {
+  TOURNAMENT_DIVISION_VALUES,
+  tournamentAdminStatusOptions,
+  tournamentDivisionLabelMap,
+  tournamentDivisionMmrHintMap,
+  tournamentStatusLabelMap
+} from '@/components/tournaments-tags/tournament.constants'
 import type { TCreateTournamentDto as CreateTournamentDto } from '@/api/types/api.types'
 
-interface ITournamentFormData extends Partial<CreateTournamentDto> {
-  status?: string
-  division_id?: string | null
-  limit?: number | null
-}
-
 const showCreateTournamentDrawer = defineModel<boolean>()
-const loading = ref<boolean>(false)
+const loading = ref(false)
 
-// TODO: endpoint not in API yet (divisions)
-const divisions = ref<any[]>([])
+const prizePoolText = ref('')
+const slotsText = ref('')
 
-const isFormValid = computed(() =>
-  tournamentData.value.name !== '' &&
-    tournamentData.value.tournamentStartsAt !== '' &&
-    file.value !== null
-)
+type UploadKey = 'header' | 'list' | 'grid'
 
-const { file, preview, reset } = useGetFile()
-
-const defaultTournamentData = (): ITournamentFormData => ({
-  name: '',
-  tournamentStartsAt: '',
-  tournamentEndsAt: '',
-  registrationStartsAt: '',
-  registrationEndsAt: '',
-  status: '',
-  division_id: null,
-  limit: null
+const files = reactive<Record<UploadKey, File | null>>({
+  header: null,
+  list: null,
+  grid: null
 })
 
-const tournamentData = ref<ITournamentFormData>(defaultTournamentData())
+const previews = reactive<Record<UploadKey, string>>({
+  header: '',
+  list: '',
+  grid: ''
+})
+
+const uploads: { key: UploadKey; label: string }[] = [
+  { key: 'header', label: 'Банер у шапці' },
+  { key: 'list', label: 'Банер у списку' },
+  { key: 'grid', label: 'Сітка турніру' }
+]
+
+const form = reactive({
+  name: '',
+  division: '' as CreateTournamentDto['division'] | '',
+  tournamentStatus: 'SCHEDULED' as CreateTournamentDto['tournamentStatus'],
+  registrationStartsAt: '',
+  registrationEndsAt: '',
+  tournamentStartsAt: '',
+  tournamentEndsAt: ''
+})
+
+const isFormValid = computed(() =>
+  form.name.trim() !== '' &&
+    form.division !== '' &&
+    form.registrationStartsAt !== '' &&
+    form.registrationEndsAt !== '' &&
+    form.tournamentStartsAt !== '' &&
+    form.tournamentEndsAt !== ''
+)
 
 function clearData () {
-  reset()
-  tournamentData.value = defaultTournamentData()
+  form.name = ''
+  form.division = ''
+  form.tournamentStatus = 'SCHEDULED'
+  form.registrationStartsAt = ''
+  form.registrationEndsAt = ''
+  form.tournamentStartsAt = ''
+  form.tournamentEndsAt = ''
+  prizePoolText.value = ''
+  slotsText.value = ''
+  for (const k of Object.keys(files) as UploadKey[]) {
+    if (previews[k]) URL.revokeObjectURL(previews[k])
+    files[k] = null
+    previews[k] = ''
+  }
 }
 
 watch(() => showCreateTournamentDrawer.value, (isOpen) => {
   if (!isOpen) clearData()
 })
 
-function handleImageChange (uploadFile: UploadFile) {
-  if (uploadFile.raw) {
-    file.value = uploadFile.raw
-    if (preview.value) URL.revokeObjectURL(preview.value)
-    preview.value = URL.createObjectURL(uploadFile.raw)
+function translateUploadErr (msg: string) {
+  if (msg === UPLOAD_ERROR.notImage) return 'Дозволені лише файли зображень'
+  if (msg === UPLOAD_ERROR.tooLarge) return 'Файл завеликий (максимум 10 МБ)'
+  if (msg === UPLOAD_ERROR.network) return 'Не вдалося завантажити зображення, спробуйте ще раз'
+  return msg
+}
+
+function handlePick (key: UploadKey, uploadFile: UploadFile) {
+  if (!uploadFile.raw) return
+  const raw = uploadFile.raw
+  const v = validateImageFileForUpload(raw)
+  if (v !== null) {
+    ElMessage.error(translateUploadErr(v))
+    return
   }
+  if (previews[key]) URL.revokeObjectURL(previews[key])
+  files[key] = raw
+  previews[key] = URL.createObjectURL(raw)
+}
+
+function toIsoUtc (pickerValue: string): string {
+  return dayjs(pickerValue, 'YYYY-MM-DD HH:mm').toISOString()
 }
 
 const handleSubmit = async () => {
-  if (!file.value) {
-    ElMessage({ message: 'Будь ласка, оберіть зображення турніру', type: 'error' })
-    return
+  if (!isFormValid.value || !form.division) return
+
+  const payload: CreateTournamentDto = {
+    name: form.name.trim(),
+    division: form.division as CreateTournamentDto['division'],
+    tournamentStatus: form.tournamentStatus,
+    registrationStartsAt: toIsoUtc(form.registrationStartsAt),
+    registrationEndsAt: toIsoUtc(form.registrationEndsAt),
+    tournamentStartsAt: toIsoUtc(form.tournamentStartsAt),
+    tournamentEndsAt: toIsoUtc(form.tournamentEndsAt)
   }
+
+  if (prizePoolText.value !== '') payload.prizePool = Number(prizePoolText.value)
+  if (slotsText.value !== '') payload.tournamentSlots = Number(slotsText.value)
 
   loading.value = true
   try {
-    await tournamentsService.createTournament(tournamentData.value as unknown as CreateTournamentDto)
-    ElMessage({ message: 'Турнір успішно створено', type: 'success' })
+    const created = await tournamentsService.createTournament(payload)
+    const id = created.id
+
+    try {
+      if (files.header) await tournamentsService.uploadHeaderBanner(id, files.header)
+      if (files.list) await tournamentsService.uploadListBanner(id, files.list)
+      if (files.grid) await tournamentsService.uploadGrid(id, files.grid)
+    } catch (up: unknown) {
+      const um = up instanceof Error ? up.message : String(up)
+      ElMessage.warning(`Турнір створено, але зображення не завантажились: ${translateUploadErr(um)}`)
+      showCreateTournamentDrawer.value = false
+      queryCache.invalidateQueries({ key: ['tournaments'] })
+      clearData()
+      return
+    }
+
+    ElMessage.success('Турнір успішно створено')
     showCreateTournamentDrawer.value = false
     queryCache.invalidateQueries({ key: ['tournaments'] })
-  } catch (e: any) {
-    console.log(e)
-    const errorMessage = e?.response?.data?.detail || e?.response?.data?.message || 'Помилка при створенні турніру'
-    ElMessage({ message: errorMessage, type: 'error' })
+  } catch (e: unknown) {
+    ElMessage.error(getApiErrorMessage(e, 'Помилка при створенні турніру'))
   } finally {
     loading.value = false
   }
 }
-
-const fields = tournamentFields.filter(field => field.model !== 'division_id')
-
-const dateFields = ['start_time', 'end_time', 'start_registration', 'end_registration']
-
-function isDateField (model: string): boolean {
-  return dateFields.includes(model)
-}
-
-function onNumericInput (newValue: number | string) {
-  const value = String(newValue ?? '')
-
-  const numeric = value.replace(/\D+/g, '')
-
-  tournamentData.value.limit = numeric === '' ? null : Number(numeric)
-}
-
 </script>
 
 <style scoped>
 /* Стилізація Drawer */
 :deep(.custom-drawer) {
-  background-color: #111827 !important; /* Темний фон */
+  background-color: #111827 !important;
   border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -253,12 +324,11 @@ function onNumericInput (newValue: number | string) {
 
 :deep(.el-drawer__body) {
   padding: 0 24px 20px;
-  overflow: hidden; /* Важливо для внутрішнього скролу */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-/* Кастомний скролбар */
 .custom-scroll::-webkit-scrollbar {
   width: 6px;
 }

@@ -10,6 +10,19 @@ export const useTeamsStore = defineStore('teams', () => {
   const teams = ref<Team[]>([])
   const loading = ref(false)
 
+  /**
+   * Оновити кеш команди після мутації ростера (POST/DELETE players, GET тощо).
+   * Якщо команди ще немає в списку — додає запис (наприклад після прямого заходу на картку).
+   */
+  function patchTeamInList (next: Team) {
+    const i = teams.value.findIndex(t => t.id === next.id)
+    if (i >= 0) {
+      teams.value[i] = next
+    } else {
+      teams.value.push(next)
+    }
+  }
+
   async function findTeam (teamId?: string | null) {
     if (!teams.value.length) {
       await getTeams()
@@ -116,6 +129,7 @@ export const useTeamsStore = defineStore('teams', () => {
     loading,
     getTeams,
     findTeam,
+    patchTeamInList,
     createTeam,
     updateTeam,
     deleteTeam

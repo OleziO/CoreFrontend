@@ -43,7 +43,7 @@
             transition-colors !h-full
           "
           :class="{
-            '!border-b-2 !border-b-primary': $route.name === link.name
+            '!border-b-2 !border-b-primary': isNavActive(link.name)
           }"
           @click="$router.push({ name: link.name })"
         >
@@ -111,6 +111,16 @@
                 <PhUser :size="20" />
                 <span class="ml-8">Профіль</span>
               </el-dropdown-item>
+
+              <el-dropdown-item
+                v-if="hasAdminUaRole"
+                divided
+                @click.stop="showCreateTournamentDrawer = true"
+              >
+                <PhTrophy :size="20" />
+                <span class="ml-8">Створити турнір</span>
+              </el-dropdown-item>
+
               <el-dropdown-item
                 class="header-user-menu__item--danger"
                 divided
@@ -142,15 +152,31 @@
       </div>
     </div>
   </header>
+
+  <CreateTournamentDrawer
+    v-if="authStore.token && hasAdminUaRole"
+    v-model="showCreateTournamentDrawer"
+  />
 </template>
 
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
 import logo from '@/assets/LongLogo.png'
-import { PhDiscordLogo, PhSignOut, PhUser } from '@phosphor-icons/vue'
+import { PhDiscordLogo, PhSignOut, PhUser, PhTrophy } from '@phosphor-icons/vue'
 import RoleGuard from '@/guards/RoleGuard.vue'
+import CreateTournamentDrawer from '@/views/admin-panel/components/drawers/CreateTournamentDrawer.vue'
 
 const authStore = useAuthStore()
+const showCreateTournamentDrawer = ref(false)
+
+/** Тільки роль «Адмін» за назвою з API (згідно з UserRoleResponseDto). */
+const ADMIN_ROLE_API_NAME = 'Адмін'
+
+const hasAdminUaRole = computed(() =>
+  !!(authStore.user?.roles ?? []).some((r) => r.name === ADMIN_ROLE_API_NAME)
+)
+
+const route = useRoute()
 
 const navLinks: { name: string; label: string }[] = [
   { name: routeNames.rootPage, label: 'Головна' },
@@ -158,5 +184,13 @@ const navLinks: { name: string; label: string }[] = [
   { name: routeNames.teams, label: 'Команди' },
   { name: routeNames.players, label: 'Гравці' }
 ]
+
+function isNavActive (linkName: string): boolean {
+  if (route.name === linkName) return true
+  if (linkName === routeNames.tournaments && route.name === routeNames.tournament) return true
+  if (linkName === routeNames.teams && route.name === routeNames.team) return true
+  if (linkName === routeNames.players && route.name === routeNames.player) return true
+  return false
+}
 
 </script>

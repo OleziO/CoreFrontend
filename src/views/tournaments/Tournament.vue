@@ -29,6 +29,14 @@
                 :status="tournament?.tournamentStatus"
                 class="shadow-lg flex-1 shadow-black/20 justify-center"
               />
+              <el-tooltip v-if="tournamentDivisionKey" placement="bottom" effect="dark" :show-after="200">
+                <template #content>
+                  <span class="text-xs">{{ divisionMmrHint }}</span>
+                </template>
+                <span class="inline-flex cursor-default items-center rounded-lg border border-white/15 bg-black/35 px-10 py-6 text-xs font-semibold uppercase tracking-wide text-blue-300">
+                  {{ divisionLabel }}
+                </span>
+              </el-tooltip>
             </div>
 
             <!-- tournament.description not in new API schema -->
@@ -87,19 +95,43 @@
               </div>
 
               <div class="flex flex-col gap-3">
-                <el-button
-                  v-if="authStore.token"
-                  :disabled="isDisabledActionButton"
-                  type="primary"
-                  size="large"
-                  class="!h-[52px] !w-full !text-base !font-bold !rounded-xl
-                   shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:-translate-y-0.5
-                    transition-all border-none"
-                  style="background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);"
-                  @click="registerOnTeamTournament"
-                >
-                  {{ actionButtonText }}
-                </el-button>
+                <template v-if="authStore.token">
+                  <template v-if="captainJoinContextOk">
+                    <el-button
+                      v-if="showJoinPrimary"
+                      type="primary"
+                      size="large"
+                      :loading="joinLoading"
+                      class="!h-[52px] !w-full !text-base !font-bold !rounded-xl
+                       shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:-translate-y-0.5
+                        transition-all border-none"
+                      style="background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);"
+                      @click="registerOnTeamTournament"
+                    >
+                      Приєднатися до турніру
+                    </el-button>
+                    <p v-else class="text-sm text-center px-10 leading-snug rounded-xl border border-white/10 bg-black/25 py-10 text-gray-300">
+                      {{ joinSecondaryHint }}
+                    </p>
+                  </template>
+                  <template v-else>
+                    <el-button
+                      v-if="inactiveTournamentBanner"
+                      :disabled="true"
+                      type="info"
+                      size="large"
+                      class="!h-[52px] !w-full !text-base !font-bold !rounded-xl !opacity-85"
+                    >
+                      {{ inactiveTournamentBanner }}
+                    </el-button>
+                    <p
+                      v-if="mutedRegistrationHintForLoggedUser"
+                      class="text-xs text-center text-gray-500 leading-snug px-14"
+                    >
+                      {{ mutedRegistrationHintForLoggedUser }}
+                    </p>
+                  </template>
+                </template>
 
                 <el-button
                   v-else
@@ -125,12 +157,12 @@
     <div class="w-full max-w-7xl mx-auto px-10 sm:px-15 lg:px-20 xl:px-40 py-8 pb-20">
       <div class="flex items-center gap-16 border-b border-white/10 overflow-x-auto no-scrollbar relative">
         <el-tabs v-model="activeTab" class="border-b border-white/10 w-full" tab-position="top" stretch>
-          <el-tab-pane v-for="(tab, index) in tabs" :key="tab.value" :name="tab.value">
+          <el-tab-pane v-for="tab in tabs" :key="tab.value" :name="tab.value">
             <template #label>
               <div class="relative flex gap-4 sm:gap-6 items-center">
                 <span class="text-sm sm:text-base">{{ tab.label }}</span>
                 <el-tag
-                  v-if="!index"
+                  v-if="tab.value === 'teams'"
                   type="danger"
                   round
                   class="border border-blue-500/40 bg-blue-500/15 text-blue-300
@@ -148,6 +180,14 @@
       <div class="min-h-[400px]">
         <div v-if="activeTab === 'teams'">
           <TournamentParcitipantsTab :tournament="tournament" />
+        </div>
+
+        <div v-if="activeTab === 'qualification'">
+          <TournamentQualificationTab
+            :tournament-id="tournamentId"
+            :tournament="tournament"
+            @patch-tournament="patchTournament"
+          />
         </div>
 
         <div
@@ -189,12 +229,26 @@
 <script setup lang="ts">
 import { Trophy, Calendar, User } from '@element-plus/icons-vue'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
+import TournamentQualificationTab from '@/views/tournaments/components/TournamentQualificationTab.vue'
+import {
+  PROFILE_CAPTAIN_ROLE_UA,
+  TOURNAMENT_DIVISION_VALUES,
+  tournamentDivisionLabelMap,
+  tournamentDivisionMmrHintMap
+} from '@/components/tournaments-tags/tournament.constants'
+import type { TTournamentDivision } from '@/api/types/api.types'
+import type { TTournament as Tournament, TTeam as Team } from '@/api/types/api.types'
 import { formatDate } from '@/core/helpers'
+import { teamsService } from '@/views/teams/teams.service'
 import { PhBracketsCurly, PhSteamLogo } from '@phosphor-icons/vue'
-import type { TTournament as Tournament } from '@/api/types/api.types'
+import { getApiErrorMessage } from '@/utils/api-errors'
 
 const tournament = ref<Tournament | null>(null)
 const activeTab = ref('teams')
+const myTeam = shallowRef<Team | null>(null)
+const joinLoading = ref(false)
+const joinHiddenRegClosedByApi = ref(false)
+const joinHiddenCaptainByApi = ref(false)
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -209,6 +263,7 @@ const canManagePlayers = computed(() => {
 const tabs = computed(() => {
   const items = [
     { label: 'Команди', value: 'teams' },
+    { label: 'Кваліфікація', value: 'qualification' },
     { label: 'Сітка', value: 'bracket' }
   ]
 
@@ -219,37 +274,206 @@ const tabs = computed(() => {
   return items
 })
 
-// TODO: endpoint not in API yet (registerInTeamTournament, unRegisterInTeamTournament)
-const isTeamRegistered = computed(() => false)
-const isCaptain = computed(() => false)
+async function hydrateMyTeam () {
+  const tid = authStore.user?.teamId
+  if (!tid) {
+    myTeam.value = null
+    return
+  }
+  try {
+    myTeam.value = await teamsService.fetchTeam(tid, { silent: true })
+  } catch {
+    myTeam.value = null
+  }
+}
+
+const hasCaptainUserRole = computed(() =>
+  !!(authStore.user?.roles ?? []).some((r) => r.name === PROFILE_CAPTAIN_ROLE_UA)
+)
+
+watch(
+  () => [authStore.user?.teamId, authStore.token],
+  () => {
+    void hydrateMyTeam()
+  },
+  { immediate: true }
+)
+
+watch(() => tournament.value?.tournamentStatus, () => {
+  joinHiddenRegClosedByApi.value = false
+  joinHiddenCaptainByApi.value = false
+})
+
+function isDivisionKnown (v: string | undefined | null): v is TTournamentDivision {
+  return !!v && (TOURNAMENT_DIVISION_VALUES as readonly string[]).includes(v)
+}
+
+const tournamentDivisionKey = computed(() => {
+  const d = tournament.value?.division
+  return isDivisionKnown(d) ? d : null
+})
+
+const divisionLabel = computed(() =>
+  tournamentDivisionKey.value ? tournamentDivisionLabelMap[tournamentDivisionKey.value] : ''
+)
+
+const divisionMmrHint = computed(() =>
+  tournamentDivisionKey.value ? tournamentDivisionMmrHintMap[tournamentDivisionKey.value] : ''
+)
+
+const myTeamId = computed(() => authStore.user?.teamId ?? null)
+
+const isMyTeamInThisTournament = computed(() =>
+  !!(myTeamId.value && tournament.value?.teams?.some((t) => t.id === myTeamId.value))
+)
 
 const freeSlots = computed(() => {
   if (!tournament.value?.tournamentSlots) return true
   return tournament.value.tournamentSlots - (tournament.value.teams?.length ?? 0) > 0
 })
 
-const actionButtonText = computed(() => {
-  if (tournament.value?.tournamentStatus === 'COMPLETED') return 'Турнір завершено'
-  if (tournament.value?.tournamentStatus === 'IN_PROGRESS') return 'Турнір вже триває'
-  if (isTeamRegistered.value && isCaptain.value) return 'Відмінити реєстрацію'
-  if (isTeamRegistered.value) return 'Ваша команда вже зареєстрована'
-  if (!freeSlots.value) return 'Вільних слотів більше немає'
-  return 'Зареєструвати команду'
-})
+const captainJoinContextOk = computed(() =>
+  !!(authStore.token &&
+    tournament.value?.tournamentStatus === 'REGISTRATION_OPEN' &&
+    hasCaptainUserRole.value &&
+    !joinHiddenRegClosedByApi.value &&
+    !joinHiddenCaptainByApi.value)
+)
 
-const isDisabledActionButton = computed(() => {
-  if (tournament.value?.tournamentStatus === 'IN_PROGRESS') return true
-  if (tournament.value?.tournamentStatus === 'COMPLETED') return true
-  if (isTeamRegistered.value && isCaptain.value) return false
-  if (!freeSlots.value) return true
-  if (!isCaptain.value) return true
-  return false
-})
+const occupiedByAnotherTournament = computed(() =>
+  !!(myTeam.value?.tournament && myTeam.value.tournament.id !== tournament.value?.id)
+)
 
-// TODO: endpoint not in API yet
-async function registerOnTeamTournament () {
-  ElMessage.info('Функціонал реєстрації в турнір ще не реалізований в API')
+const showJoinPrimary = computed(() =>
+  captainJoinContextOk.value &&
+    !!myTeam.value &&
+    !myTeam.value.tournament &&
+    !isMyTeamInThisTournament.value &&
+    freeSlots.value &&
+    !occupiedByAnotherTournament.value
+)
+
+function joinFriendlyHintFromApi (msg: string): string {
+  const hints: Partial<Record<string, string>> = {
+    'Реєстрація на турнір закрита': 'Реєстрація на цей турнір закрита.',
+    'Тільки капітан команди може приєднатися до турніру': 'До турніру може приєднатися лише капітан команди.',
+    'Команда вже бере участь у турнірі': 'Ваша команда вже записана.',
+    'Команда не верифікована': 'Спочатку підтвердьте верифікацію команди.',
+    'Команда не має Dota2 Team ID': 'Для участі потрібен Dota2 Team ID у профілі команди.',
+    'Команда повинна мати рівно 5 основних гравців': 'У основному складі має бути рівно 5 гравців.',
+    'Всі основні гравці повинні бути верифіковані': 'Усі основні гравці мають бути верифіковані.',
+    'Рейтинг команди виходить за межі дозволених дивізіонів': 'Середній MMR команди не відповідає дивізіону турніру.',
+    'Дозволено не більшше 3 запасних гравців': 'У команді занадто багато запасних гравців.',
+    'Усі місця в турнірі зайняті': 'Ліміт учасників турніру вже вичерпано.'
+  }
+
+  const direct = hints[msg.trim()]
+  if (direct) return direct
+
+  if (msg.startsWith('Дивізіон команди') && msg.includes('не відповідає'))
+    return 'Дивізіон вашої команди не збігається з дивізіоном турніру.'
+
+  if (msg.includes('Запасний гравець') && msg.includes('не верифікований'))
+    return 'Є не верифікований запасний гравець — перевірте заявку.'
+
+  return msg
 }
+
+async function reloadTournament () {
+  const data = await tournamentStore.findTournament(tournamentId)
+  if (data) tournament.value = data
+}
+
+function patchTournament (next: Tournament) {
+  tournament.value = next
+}
+
+function handleJoinTransportError (raw: string) {
+  const norm = raw.trim()
+  if (norm.includes('Реєстрація на турнір закрита')) {
+    joinHiddenRegClosedByApi.value = true
+    ElMessage.warning(joinFriendlyHintFromApi('Реєстрація на турнір закрита'))
+    return true
+  }
+  if (norm.includes('Тільки капітан команди може приєднатися до турніру')) {
+    joinHiddenCaptainByApi.value = true
+    ElMessage.warning(joinFriendlyHintFromApi('Тільки капітан команди може приєднатися до турніру'))
+    return true
+  }
+  return false
+}
+
+async function registerOnTeamTournament () {
+  joinLoading.value = true
+  try {
+    await tournamentsService.joinTournament(tournamentId)
+    ElMessage.success('Команда успішно зареєстрована')
+    await reloadTournament()
+    await hydrateMyTeam()
+  } catch (e: unknown) {
+    const msg = getApiErrorMessage(e, 'Не вдалося приєднатися до турніру')
+    if (!handleJoinTransportError(msg))
+      ElMessage.error(joinFriendlyHintFromApi(msg))
+    if (
+      msg.includes('Команда вже бере участь у турнірі')
+    )
+      await reloadTournament()
+  } finally {
+    joinLoading.value = false
+  }
+}
+
+const joinSecondaryHint = computed(() => {
+  if (!captainJoinContextOk.value) return ''
+
+  if (isMyTeamInThisTournament.value)
+    return 'Ваша команда вже бере участь у цьому турнірі.'
+
+  if (occupiedByAnotherTournament.value)
+    return 'Склад команди заблоковано — команда бере участь в іншому турнірі.'
+
+  if (!myTeam.value)
+    return 'Щоб зареєструватися, спочатку приєднайтесь або створіть команду як капітан.'
+
+  if (!freeSlots.value)
+    return 'Усі місця в турнірі вже зайняті.'
+
+  return ''
+})
+
+const mutedRegistrationHintForLoggedUser = computed(() => {
+  if (!authStore.token || captainJoinContextOk.value) return ''
+  const st = tournament.value?.tournamentStatus
+  if (st === 'REGISTRATION_OPEN' && !hasCaptainUserRole.value)
+    return 'Реєстрацію виконує капітан команди з роллю «Капітан» у профілі.'
+
+  return ''
+})
+
+const inactiveTournamentBanner = computed(() => {
+  if (!authStore.token) return ''
+
+  if (joinHiddenRegClosedByApi.value)
+    return 'Реєстрація на турнір закрита'
+
+  if (joinHiddenCaptainByApi.value)
+    return 'Приєднання для цього акаунту неможливе'
+
+  switch (tournament.value?.tournamentStatus) {
+    case 'COMPLETED':
+      return 'Турнір завершено'
+    case 'IN_PROGRESS':
+      return 'Турнір вже триває'
+    case 'REGISTRATION_CLOSED':
+      return 'Реєстрацію закрито'
+    case 'SCHEDULED':
+      return 'Турнір ще анонсується — реєстрація не відкрита'
+    default:
+      return tournament.value?.tournamentStatus !== 'REGISTRATION_OPEN'
+        ? 'Реєстрація на турнір недоступна'
+        : ''
+  }
+})
 
 function getBracketUrl (url: string) {
   if (!url) return ''
@@ -261,9 +485,8 @@ function getBracketUrl (url: string) {
 
 onMounted(async () => {
   const data = await tournamentStore.findTournament(tournamentId)
-  if (data) {
-    tournament.value = data
-  }
+  if (data) tournament.value = data
+  await hydrateMyTeam()
 })
 
 </script>

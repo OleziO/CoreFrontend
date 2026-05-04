@@ -170,6 +170,6 @@ const dateInfo = computed(() => {
 })
 
 function toTournamentPage (id: string) {
-  router.push({ name: routeNames.teamTournament, params: { id } })
+  router.push({ name: routeNames.tournament, params: { id } })
 }
 </script>

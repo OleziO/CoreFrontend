@@ -1,4 +1,3 @@
-import apiClient from '@/api/client'
 import type { TTeam as Team, TPlayer } from '@/api/types/api.types'
 import { coercePlayerRankFromApi } from '@/core/helpers'
 
@@ -11,44 +10,19 @@ export function shallowSnapshotTeamForHydrate (t: Team): Team {
   }
 }
 
+function mergePlayerRankFromPayload (p: TPlayer): TPlayer {
+  const rank = coercePlayerRankFromApi(p.rank)
+  if (rank == null) return { ...p }
+  return { ...p, rank }
+}
+
 /**
- * У відповіді GET /teams гравці — схема `Player` без `rank`; тягнемо GET /players/:id і зливаємо, як на сторінці команди.
+ * Нормалізує `rank` у гравцях ростеру з відповіді команди (без GET /players на кожного).
  */
-export async function hydrateTeamPlayersRanks (t: Team): Promise<Team> {
-  const main = t.mainPlayers ?? []
-  const reserved = t.reservedPlayers ?? []
-  const ids = [...new Set([...main, ...reserved].map(p => p.id))]
-  if (ids.length === 0) return t
-
-  const loaded = await Promise.all(
-    ids.map(async pid => {
-      try {
-        return (await apiClient.get('/players/{id}', {
-          dynamicKeys: { id: pid }
-        })) as unknown as TPlayer
-      } catch {
-        return null
-      }
-    })
-  )
-  const byId = new Map<string, TPlayer>()
-  for (const pl of loaded) {
-    if (pl) byId.set(String(pl.id), pl)
-  }
-
-  const mergeList = (list: TPlayer[] | undefined) =>
-    (list ?? []).map(p => {
-      const full = byId.get(String(p.id))
-      if (!full) return p as TPlayer
-      const merged = { ...p, ...full } as TPlayer
-      const rank = coercePlayerRankFromApi(merged.rank)
-      if (rank) merged.rank = rank
-      return merged
-    })
-
+export function hydrateTeamPlayersRanks (t: Team): Team {
   return {
     ...t,
-    mainPlayers: mergeList(t.mainPlayers) as Team['mainPlayers'],
-    reservedPlayers: mergeList(t.reservedPlayers) as Team['reservedPlayers']
+    mainPlayers: (t.mainPlayers ?? []).map(mergePlayerRankFromPayload) as Team['mainPlayers'],
+    reservedPlayers: (t.reservedPlayers ?? []).map(mergePlayerRankFromPayload) as Team['reservedPlayers']
   }
 }
