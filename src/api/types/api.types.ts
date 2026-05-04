@@ -11,8 +11,9 @@ export type TTeam = components['schemas']['Team']
 
 export type TTournamentDivision = components['schemas']['TournamentDivision']
 export type TTournament = components['schemas']['Tournament']
-export type TQualificationMatch = components['schemas']['QualificationMatchDto']
-export type TQualificationPhase = components['schemas']['QualificationPhaseDto']
+export type TQualificationMatch = components['schemas']['QualificationMatch']
+/** Тіло GET /tournaments/:id/qualification — у OpenAPI це `Qualification`. */
+export type TQualificationPhase = components['schemas']['Qualification']
 export type TCreateTournamentDto = components['schemas']['CreateTournamentDto']
 export type TMatch = components['schemas']['Match']
 export type TUserRole = components['schemas']['UserRoles']

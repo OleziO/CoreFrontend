@@ -288,6 +288,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/teams/{id}/players": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TeamsController_addPlayer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/teams/{id}/players/{playerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["TeamsController_removePlayer"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tournaments": {
         parameters: {
             query?: never;
@@ -552,6 +584,8 @@ export interface components {
             tournamentGridUrl: string;
             teams: components["schemas"]["Team"][];
             eligibleRoles: components["schemas"]["UserRoles"][];
+            /** Опційно в GET /tournaments/:id або після клієнтського patch */
+            qualification?: components["schemas"]["Qualification"] | null;
         };
         UserRoles: {
             id: string;
@@ -688,6 +722,11 @@ export interface components {
             dotaTeamId?: string;
             isVerified?: boolean;
             isPlayingTournament?: boolean;
+        };
+        AddTeamPlayerDto: {
+            playerId: string;
+            /** @enum {string} */
+            slot: "main" | "reserved";
         };
         /** @enum {string} */
         TournamentDivision: "DIVISION_I" | "DIVISION_II" | "DIVISION_III";
@@ -1312,6 +1351,61 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    TeamsController_addPlayer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddTeamPlayerDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Team"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Team"];
+                };
+            };
+        };
+    };
+    TeamsController_removePlayer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                playerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Team"];
+                };
             };
         };
     };

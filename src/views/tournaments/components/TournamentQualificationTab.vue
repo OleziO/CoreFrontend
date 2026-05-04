@@ -243,13 +243,15 @@ function openModal (row: QualificationMatch) {
 }
 
 function onSubmitted (updated: QualificationMatch) {
-  const q = qualificationPhase.value ?? {}
+  const q = qualificationPhase.value
+  if (!q) return
   const list = [...(q.matches ?? [])]
   const i = list.findIndex((m) => m.id === updated.id)
   if (i >= 0) list[i] = updated
-  qualificationPhase.value = { ...q, matches: list }
+  const nextPhase: QualificationPhase = { ...q, matches: list }
+  qualificationPhase.value = nextPhase
   const t = props.tournament
-  if (t) emit('patch-tournament', { ...t, qualification: qualificationPhase.value! })
+  if (t) emit('patch-tournament', { ...t, qualification: nextPhase })
 }
 </script>
 

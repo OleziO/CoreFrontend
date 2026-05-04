@@ -60,9 +60,9 @@ class TournamentsService {
     dotaMatchId: string
   ): Promise<TQualificationMatch> {
     const res = await apiClient.post(
-      '/tournaments/{tournamentId}/qualification/matches/{qualMatchId}/submit',
+      '/tournaments/{id}/qualification/matches/{matchId}/submit',
       { dotaMatchId },
-      { dynamicKeys: { tournamentId, qualMatchId } }
+      { dynamicKeys: { id: tournamentId, matchId: qualMatchId } }
     )
     return res as TQualificationMatch
   }
