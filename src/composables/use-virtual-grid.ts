@@ -5,8 +5,11 @@ type TVirtualGridLayoutOptions = {
   cardWidth: number
 }
 
+/** Відстань між картками у сітці списків (Teams, Players, …), px — збігається з `gap-20` у Tailwind. */
+export const VIRTUAL_GRID_CARD_GAP_PX = 20
+
 export function useVirtualGridLayout ({ cardWidth }: TVirtualGridLayoutOptions) {
-  const gap = 20
+  const gap = VIRTUAL_GRID_CARD_GAP_PX
 
   const { width: windowWidth } = useWindowSize()
 

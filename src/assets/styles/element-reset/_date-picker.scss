@@ -1,6 +1,8 @@
 @use "element-plus/theme-chalk/src/date-picker-panel";
 
+@use "../variables/colors" as palette;
 
+/* Тригер у формі — без зайвої тіні фокусу */
 .el-date-editor.is-focus .el-input__wrapper {
   @apply shadow-none;
 }
@@ -13,3 +15,381 @@
   }
 }
 
+/* ==========================================================================
+   Панель дати/часу (монтується в body) — тема під «скляні» інпути + primary
+   Додавайте: popper-class="core-date-picker-popper"
+   ========================================================================== */
+
+.core-date-picker-popper.el-popper.is-pure {
+  padding: 0;
+}
+
+.core-date-picker-popper.el-popper {
+  /* Токени Element Plus — підвищений контраст для читабельності на темному тлі */
+  --el-datepicker-text-color: #f8fafc;
+  --el-datepicker-off-text-color: #9ca9bb;
+  --el-datepicker-header-text-color: #d8dee9;
+  --el-datepicker-icon-color: #ffffff;
+  --el-datepicker-border-color: rgb(255 255 255 / 0.1);
+  --el-datepicker-inner-border-color: rgb(255 255 255 / 0.08);
+  --el-datepicker-in-range-bg-color: rgb(67 191 238 / 0.14);
+  --el-datepicker-in-range-hover-bg-color: rgb(67 191 238 / 0.22);
+  --el-datepicker-active-color: #{palette.$primary};
+  --el-datepicker-hover-text-color: #ffffff;
+
+  background: linear-gradient(180deg, #161e2e 0%, #0f1729 100%) !important;
+  border: 1px solid rgb(255 255 255 / 0.12) !important;
+  border-radius: 16px !important;
+  box-shadow:
+    0 28px 56px rgb(0 0 0 / 0.55),
+    0 12px 24px rgb(0 0 0 / 0.35),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+.core-date-picker-popper .el-picker-panel__body-wrapper {
+  background: transparent !important;
+}
+
+.core-date-picker-popper .el-picker-panel__content {
+  margin: 0 !important;
+  padding: 0 4px 6px !important;
+}
+
+/* Заголовок місяця / року + стрілки */
+.core-date-picker-popper .el-date-picker__header {
+  padding: 14px 14px 10px !important;
+}
+
+.core-date-picker-popper .el-date-picker__header-label {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  color: #eef2f7 !important;
+  border-radius: 8px;
+  padding-inline: 8px !important;
+
+  &:hover {
+    background-color: rgb(255 255 255 / 0.06);
+  }
+}
+
+.core-date-picker-popper .el-picker-panel__icon-btn {
+  margin-top: 0 !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 10px !important;
+  color: var(--el-datepicker-icon-color) !important;
+
+  &:hover {
+    color: var(--el-datepicker-hover-text-color) !important;
+    background-color: rgb(255 255 255 / 0.1) !important;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgb(67 191 238 / 0.5);
+    outline-offset: 1px;
+  }
+
+  .el-icon {
+    font-size: 15px !important;
+  }
+}
+
+/* Ряд днів тижня */
+.core-date-picker-popper .el-date-table th {
+  padding: 10px 0 12px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase;
+  color: #b8c2d4 !important;
+  border-bottom: 1px solid var(--el-datepicker-inner-border-color) !important;
+}
+
+/* Клітинки календаря — розмір таргета */
+.core-date-picker-popper .el-date-table td {
+  width: 40px !important;
+  height: 38px !important;
+  padding: 2px 0 !important;
+}
+
+.core-date-picker-popper .el-date-table-cell {
+  height: 34px !important;
+  padding: 2px 0 !important;
+}
+
+.core-date-picker-popper .el-date-table-cell__text {
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: inherit;
+  border-radius: 10px !important;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* Основний місяць — явно світліший текст (td інколи успадковує побліділий колір) */
+.core-date-picker-popper .el-date-table td.available .el-date-table-cell__text {
+  color: #f1f5f9 !important;
+}
+
+.core-date-picker-popper .el-date-table td.prev-month .el-date-table-cell__text,
+.core-date-picker-popper .el-date-table td.next-month .el-date-table-cell__text {
+  color: #8d9bb0 !important;
+  font-weight: 400 !important;
+}
+
+/* Hover після базових кольорів: prev/next з !important інакше глушили б підсвітку */
+.core-date-picker-popper .el-date-table td.available:hover:not(.disabled):not(.prev-month):not(.next-month) .el-date-table-cell__text {
+  background-color: rgb(255 255 255 / 0.12) !important;
+  color: #ffffff !important;
+}
+
+.core-date-picker-popper .el-date-table td.available.prev-month:hover:not(.disabled) .el-date-table-cell__text,
+.core-date-picker-popper .el-date-table td.available.next-month:hover:not(.disabled) .el-date-table-cell__text {
+  background-color: rgb(255 255 255 / 0.07) !important;
+  color: #d1dbeb !important;
+}
+
+.core-date-picker-popper .el-date-table td.current:not(.disabled) .el-date-table-cell__text,
+.core-date-picker-popper .el-date-table td.selected .el-date-table-cell__text {
+  background: linear-gradient(145deg, #{palette.$primary} 0%, #2aa3d4 100%) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgb(67 191 238 / 0.35);
+}
+
+.core-date-picker-popper .el-date-table td.today:not(.current):not(.disabled) .el-date-table-cell__text {
+  color: #{palette.$primary} !important;
+  font-weight: 700 !important;
+  box-shadow: inset 0 0 0 2px rgb(67 191 238 / 0.45);
+  background-color: rgb(67 191 238 / 0.08) !important;
+}
+
+.core-date-picker-popper .el-date-table td.today:not(.current):not(.disabled):hover:not(.prev-month):not(.next-month) .el-date-table-cell__text {
+  background-color: rgb(67 191 238 / 0.22) !important;
+  color: #e0f7ff !important;
+}
+
+.core-date-picker-popper .el-date-table td.current:not(.disabled):hover .el-date-table-cell__text,
+.core-date-picker-popper .el-date-table td.selected:hover:not(.disabled) .el-date-table-cell__text {
+  filter: brightness(1.08);
+}
+
+/* Верхня смуга дати/часу (datetime) */
+.core-date-picker-popper .el-date-picker__time-header {
+  padding: 14px 12px 12px !important;
+  border-bottom: 1px solid var(--el-datepicker-inner-border-color) !important;
+  background: rgb(0 0 0 / 0.12);
+}
+
+.core-date-picker-popper .el-date-picker__editor-wrap {
+  padding: 0 6px !important;
+}
+
+.core-date-picker-popper .el-date-picker__editor-wrap .el-input__wrapper {
+  min-height: 42px !important;
+  background: rgb(255 255 255 / 0.07) !important;
+  border: 1px solid rgb(255 255 255 / 0.14) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+
+  &:hover {
+    background: rgb(255 255 255 / 0.1) !important;
+    border-color: rgb(255 255 255 / 0.2) !important;
+  }
+
+  &.is-focus {
+    border-color: rgb(67 191 238 / 0.55) !important;
+    box-shadow: 0 0 0 1px rgb(67 191 238 / 0.2) !important;
+  }
+}
+
+.core-date-picker-popper .el-date-picker__editor-wrap .el-input__inner {
+  color: #f8fafc !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.core-date-picker-popper .el-date-picker__editor-wrap .el-input__inner::placeholder {
+  color: #9eb0c9 !important;
+}
+
+/* Футер */
+.core-date-picker-popper .el-picker-panel__footer {
+  padding: 10px 14px !important;
+  background: rgb(0 0 0 / 0.22) !important;
+  border-top: 1px solid var(--el-datepicker-inner-border-color) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+}
+
+/* «Зараз» та «ОК»: однакова «вага», компактний pill-ish / soft pill */
+$core-dtp-footer-radius: 9999px;
+$core-dtp-footer-height: 34px;
+
+/* «Зараз»: вторинна кнопка, симетрично з ОК по висоті */
+.core-date-picker-popper .el-picker-panel__footer .el-picker-panel__link-btn.el-button.is-text {
+  height: #{$core-dtp-footer-height} !important;
+  min-height: #{$core-dtp-footer-height} !important;
+  padding: 0 16px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #e8edf6 !important;
+  border-radius: #{$core-dtp-footer-radius} !important;
+  border: 1px solid rgb(255 255 255 / 0.14) !important;
+  background: rgb(255 255 255 / 0.06) !important;
+  box-shadow: none !important;
+
+  &:hover:not(:disabled) {
+    color: #ffffff !important;
+    border-color: rgb(255 255 255 / 0.2) !important;
+    background: rgb(255 255 255 / 0.11) !important;
+  }
+
+  &:disabled {
+    opacity: 0.45 !important;
+  }
+}
+
+/*
+  OK підтвердження: у EP — el-button plain (не primary!)
+*/
+@mixin core-date-picker-ok-fill {
+  height: #{$core-dtp-footer-height} !important;
+  min-height: #{$core-dtp-footer-height} !important;
+  padding: 0 18px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  border-radius: #{$core-dtp-footer-radius} !important;
+  border: 1px solid rgb(0 0 0 / 0.12) !important;
+  background: #{palette.$primary} !important;
+  color: #082030 !important;
+  box-shadow: none !important;
+  line-height: 1 !important;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background: color-mix(in srgb, #{palette.$primary} 90%, #ffffff) !important;
+    color: #050f18 !important;
+    border-color: rgb(0 0 0 / 0.16) !important;
+  }
+
+  &:active:not(:disabled) {
+    background: color-mix(in srgb, #{palette.$primary} 82%, #0a1628) !important;
+  }
+
+  &:disabled {
+    opacity: 0.45 !important;
+  }
+}
+
+.core-date-picker-popper .el-picker-panel__footer .el-picker-panel__link-btn.el-button.is-plain {
+  @include core-date-picker-ok-fill;
+}
+
+/* На випадок якщо десь лишиться primary variant */
+.core-date-picker-popper .el-picker-panel__footer .el-button.el-button--primary {
+  @include core-date-picker-ok-fill;
+}
+
+/* Панель вибору часу */
+.core-date-picker-popper .el-time-panel {
+  background: linear-gradient(180deg, #151d2e 0%, #0f1729 100%) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgb(255 255 255 / 0.1) !important;
+  box-shadow: 0 16px 32px rgb(0 0 0 / 0.45) !important;
+}
+
+.core-date-picker-popper .el-scrollbar__thumb {
+  background: rgb(255 255 255 / 0.18);
+}
+
+.core-date-picker-popper .el-time-spinner__item {
+  color: #dde5f2 !important;
+}
+
+.core-date-picker-popper .el-time-spinner__item:hover:not(.is-disabled):not(.is-active),
+.core-date-picker-popper .el-time-spinner__item.active:not(.is-disabled) {
+  color: #ffffff !important;
+  background-color: rgb(255 255 255 / 0.08) !important;
+}
+
+/* Стрілки вгору/вниз у time-spinner (arrow-control) */
+.core-date-picker-popper .el-time-spinner__arrow {
+  color: #ffffff !important;
+
+  &:hover {
+    color: #{palette.$primary} !important;
+  }
+
+  svg {
+    fill: currentcolor;
+  }
+}
+
+$core-dtp-time-footer-h: 32px;
+
+/* Нативні кнопки футера часової панелі — компактна сітка, м’якший destructive */
+.core-date-picker-popper .el-time-panel__footer {
+  padding: 8px 10px !important;
+  height: auto !important;
+  line-height: normal !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+}
+
+.core-date-picker-popper .el-time-panel__btn {
+  margin: 0 !important;
+  width: 100% !important;
+  height: #{$core-dtp-time-footer-h} !important;
+  min-height: #{$core-dtp-time-footer-h} !important;
+  padding: 0 10px !important;
+  border-radius: 9999px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.core-date-picker-popper .el-time-panel__btn.cancel {
+  color: #fecaca !important;
+  background: rgb(239 68 68 / 0.1) !important;
+  border: 1px solid rgb(248 113 113 / 0.42) !important;
+  box-shadow: none;
+
+  &:hover {
+    color: #fff7f7 !important;
+    background: rgb(239 68 68 / 0.22) !important;
+    border-color: rgb(252 165 165 / 0.55) !important;
+  }
+}
+
+.core-date-picker-popper .el-time-panel__btn.confirm {
+  @include core-date-picker-ok-fill;
+  width: 100% !important;
+  height: #{$core-dtp-time-footer-h} !important;
+  min-height: #{$core-dtp-time-footer-h} !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  letter-spacing: 0.03em !important;
+}

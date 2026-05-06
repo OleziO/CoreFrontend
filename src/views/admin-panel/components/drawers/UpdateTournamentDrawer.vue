@@ -19,6 +19,7 @@
             :placeholder="field.placeholder"
             size="large"
             class="w-full"
+            popper-class="core-date-picker-popper"
             format="YYYY-MM-DD HH:mm"
             value-format="YYYY-MM-DD HH:mm"
             type="datetime"

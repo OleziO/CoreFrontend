@@ -54,15 +54,19 @@ class TournamentsService {
     )
   }
 
+  /** POST /tournaments/:id/leave — зняти команду поточного капітана з турніру (під час кваліфікації). */
+  async leaveTournament (tournamentId: string): Promise<void> {
+    await apiClient.post('/tournaments/{id}/leave', {}, { dynamicKeys: { id: tournamentId } })
+  }
+
   async submitQualificationMatch (
     tournamentId: string,
-    qualMatchId: string,
     dotaMatchId: string
   ): Promise<TQualificationMatch> {
     const res = await apiClient.post(
-      '/tournaments/{id}/qualification/matches/{matchId}/submit',
+      '/tournaments/{id}/qualification/submit',
       { dotaMatchId },
-      { dynamicKeys: { id: tournamentId, matchId: qualMatchId } }
+      { dynamicKeys: { id: tournamentId } }
     )
     return res as TQualificationMatch
   }

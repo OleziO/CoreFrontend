@@ -5,8 +5,8 @@ export const tournamentFields = [
   { label: 'ID Дівізіону', model: 'division_id', placeholder: 'ID Дівізіону турніру' },
   { label: 'Початок турніру', model: 'start_time', placeholder: '2025-01-01' },
   { label: 'Кінець турніру', model: 'end_time', placeholder: '2025-01-02' },
-  { label: 'Старт реєстрації', model: 'start_registration', placeholder: '2025-01-01' },
-  { label: 'Кінець реєстрації', model: 'end_registration', placeholder: '2025-01-02' }
+  { label: 'Початок кваліфікації', model: 'start_registration', placeholder: '2025-01-01' },
+  { label: 'Кінець кваліфікації', model: 'end_registration', placeholder: '2025-01-02' }
 ] as const
 
 export const tournamentByStatus = {

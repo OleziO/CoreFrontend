@@ -272,22 +272,6 @@ export interface paths {
         patch: operations["TeamsController_update"];
         trace?: never;
     };
-    "/teams/{id}/logo": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["TeamsController_uploadLogo"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/teams/{id}/players": {
         parameters: {
             query?: never;
@@ -315,6 +299,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["TeamsController_removePlayer"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/teams/{id}/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TeamsController_uploadLogo"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -384,7 +384,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/tournaments/{id}/qualification/matches/{matchId}/submit": {
+    "/tournaments/{id}/qualification/submit": {
         parameters: {
             query?: never;
             header?: never;
@@ -519,8 +519,11 @@ export interface components {
             discordUsername: string;
             /** @default 0 */
             rating: number;
-            /** @description Dota map / roles (1–5); omit or null when unset */
-            positions?: (1 | 2 | 3 | 4 | 5)[] | null;
+            /**
+             * @description Dota map / roles (1–5); omit or null when unset
+             * @enum {array|null}
+             */
+            positions?: 1 | 2 | 3 | 4 | 5 | null;
         };
         Player: {
             id: string;
@@ -580,12 +583,10 @@ export interface components {
             /** Format: date-time */
             tournamentEndsAt: string;
             /** @enum {string} */
-            tournamentStatus: "REGISTRATION_OPEN" | "REGISTRATION_CLOSED" | "IN_PROGRESS" | "COMPLETED" | "SCHEDULED";
+            tournamentStatus: "QUALIFICATIONS" | "PLAYOFF" | "COMPLETED";
             tournamentGridUrl: string;
             teams: components["schemas"]["Team"][];
             eligibleRoles: components["schemas"]["UserRoles"][];
-            /** Опційно в GET /tournaments/:id або після клієнтського patch */
-            qualification?: components["schemas"]["Qualification"] | null;
         };
         UserRoles: {
             id: string;
@@ -640,8 +641,11 @@ export interface components {
             discordUsername?: string;
             /** @default 0 */
             rating: number;
-            /** @description Dota map / roles (1–5); omit or null when unset */
-            positions?: (1 | 2 | 3 | 4 | 5)[] | null;
+            /**
+             * @description Dota map / roles (1–5); omit or null when unset
+             * @enum {array|null}
+             */
+            positions?: 1 | 2 | 3 | 4 | 5 | null;
         };
         DiscordExchangeDto: {
             /** @description Authorization code from Discord redirect */
@@ -703,7 +707,10 @@ export interface components {
         };
         CreateTeamDto: {
             name: string;
-            /** @description UUID of the coach player */
+            /**
+             * Format: uuid
+             * @description UUID of the coach player
+             */
             coachId?: string;
             /** @description Dota 2 team ID from the game API */
             dotaTeamId?: string;
@@ -716,22 +723,29 @@ export interface components {
         };
         UpdateTeamDto: {
             name?: string;
-            /** @description UUID of the coach player */
+            /**
+             * Format: uuid
+             * @description UUID of the coach player
+             */
             coachId?: string;
             /** @description Dota 2 team ID from the game API */
             dotaTeamId?: string;
             isVerified?: boolean;
             isPlayingTournament?: boolean;
         };
-        AddTeamPlayerDto: {
+        AddPlayerDto: {
+            /** Format: uuid */
             playerId: string;
             /** @enum {string} */
             slot: "main" | "reserved";
         };
         /** @enum {string} */
         TournamentDivision: "DIVISION_I" | "DIVISION_II" | "DIVISION_III";
-        /** @enum {string} */
-        TournamentStatus: "REGISTRATION_OPEN" | "REGISTRATION_CLOSED" | "IN_PROGRESS" | "COMPLETED" | "SCHEDULED";
+        /**
+         * @description COMPLETED cannot be set on creation
+         * @enum {string}
+         */
+        TournamentStatus: "QUALIFICATIONS" | "PLAYOFF";
         CreateTournamentDto: {
             name: string;
             prizePool?: number | null;
@@ -739,14 +753,11 @@ export interface components {
             headerBannerUrl?: string;
             listBannerUrl?: string;
             tournamentSlots?: number;
-            /** Format: date-time */
             registrationStartsAt: string;
-            /** Format: date-time */
             registrationEndsAt: string;
-            /** Format: date-time */
             tournamentStartsAt: string;
-            /** Format: date-time */
             tournamentEndsAt: string;
+            /** @description COMPLETED cannot be set on creation */
             tournamentStatus: components["schemas"]["TournamentStatus"];
             tournamentGridUrl?: string;
         };
@@ -757,14 +768,11 @@ export interface components {
             headerBannerUrl?: string;
             listBannerUrl?: string;
             tournamentSlots?: number;
-            /** Format: date-time */
             registrationStartsAt?: string;
-            /** Format: date-time */
             registrationEndsAt?: string;
-            /** Format: date-time */
             tournamentStartsAt?: string;
-            /** Format: date-time */
             tournamentEndsAt?: string;
+            /** @description COMPLETED cannot be set on creation */
             tournamentStatus?: components["schemas"]["TournamentStatus"];
             tournamentGridUrl?: string;
         };
@@ -787,25 +795,50 @@ export interface components {
             dotaMatchId: string | null;
             nodeGroupId: string;
         };
+        JoinTournamentDto: {
+            /**
+             * Format: uuid
+             * @description Admin-only: join a specific team by ID instead of the requester's team
+             */
+            teamId?: string;
+        };
         SubmitMatchDto: {
-            /** @description Dota2 match ID from the played game */
+            /** @description Dota2 numeric match ID from the played game */
             dotaMatchId: string;
         };
         CreateMatchDto: {
-            /** @description UUID of team A */
+            /**
+             * Format: uuid
+             * @description UUID of team A
+             */
             teamAId: string;
-            /** @description UUID of team B */
+            /**
+             * Format: uuid
+             * @description UUID of team B
+             */
             teamBId: string;
-            /** @description UUID of the winning team */
+            /**
+             * Format: uuid
+             * @description UUID of the winning team
+             */
             winnerId: string;
             dotaMatchId: string;
         };
         UpdateMatchDto: {
-            /** @description UUID of team A */
+            /**
+             * Format: uuid
+             * @description UUID of team A
+             */
             teamAId?: string;
-            /** @description UUID of team B */
+            /**
+             * Format: uuid
+             * @description UUID of team B
+             */
             teamBId?: string;
-            /** @description UUID of the winning team */
+            /**
+             * Format: uuid
+             * @description UUID of the winning team
+             */
             winnerId?: string;
             dotaMatchId?: string;
         };
@@ -1211,9 +1244,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["Team"][];
-                };
+                content?: never;
             };
         };
     };
@@ -1234,9 +1265,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["Team"];
-                };
+                content?: never;
             };
         };
     };
@@ -1257,9 +1286,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": Record<string, never>[];
-                };
+                content?: never;
             };
         };
     };
@@ -1278,9 +1305,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["Team"];
-                };
+                content?: never;
             };
         };
     };
@@ -1322,9 +1347,50 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["Team"];
+                content?: never;
+            };
+        };
+    };
+    TeamsController_addPlayer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddPlayerDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
                 };
+                content?: never;
+            };
+        };
+    };
+    TeamsController_removePlayer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                playerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1351,61 +1417,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    TeamsController_addPlayer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AddTeamPlayerDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Team"];
-                };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Team"];
-                };
-            };
-        };
-    };
-    TeamsController_removePlayer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                playerId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Team"];
-                };
             };
         };
     };
@@ -1546,7 +1557,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinTournamentDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {
@@ -1562,7 +1577,6 @@ export interface operations {
             header?: never;
             path: {
                 id: string;
-                matchId: string;
             };
             cookie?: never;
         };

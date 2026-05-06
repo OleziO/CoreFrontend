@@ -363,3 +363,15 @@
     @apply bg-primary;
   }
 }
+
+/*
+  el-drawer не вкладений у `.el-dialog`, тому глобальне приховування `.el-upload__input`
+  з блоку вище тут не працювало — показувалась нативна кнопка «Вибрати файл».
+*/
+.el-drawer .el-upload {
+  @apply w-full;
+
+  .el-upload__input {
+    @apply hidden;
+  }
+}

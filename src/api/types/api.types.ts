@@ -7,9 +7,12 @@ export type TPlayer = components['schemas']['Player'] & {
   rank?: TPlayerRankDto | null
 }
 export type TCurrentPlayer = components['schemas']['CurrentPlayerDto']
-export type TTeam = components['schemas']['Team']
-
 export type TTournamentDivision = components['schemas']['TournamentDivision']
+
+export type TTeam = components['schemas']['Team'] & {
+  /** Є у відповіді бекенда для команд; у згенерованій OpenAPI поки може бути лише у розширених DTO. */
+  division?: TTournamentDivision | null
+}
 export type TTournament = components['schemas']['Tournament']
 export type TQualificationMatch = components['schemas']['QualificationMatch']
 /** Тіло GET /tournaments/:id/qualification — у OpenAPI це `Qualification`. */

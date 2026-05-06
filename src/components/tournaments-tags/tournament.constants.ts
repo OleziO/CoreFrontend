@@ -2,21 +2,37 @@
 export const tournamentTypeLabelMap: Record<string, string> = {}
 export const tournamentTypeClassMap: Record<string, string> = {}
 
+/** Усі значення `tournamentStatus` з API (POST/PATCH — лише ці два). */
+export const TOURNAMENT_STATUS_VALUES = ['QUALIFICATIONS', 'PLAYOFF'] as const
+export type TTournamentStatusValue = (typeof TOURNAMENT_STATUS_VALUES)[number]
+
 export enum ETournamentStatus {
-  SCHEDULED = 'SCHEDULED',
-  REGISTRATION = 'REGISTRATION_OPEN',
-  PRE_REGISTRATION = 'REGISTRATION_CLOSED',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED'
+  QUALIFICATIONS = 'QUALIFICATIONS',
+  PLAYOFF = 'PLAYOFF'
 }
 
-export const tournamentStatusLabelMap: Record<string, string> = {
-  SCHEDULED: 'Анонс',
-  REGISTRATION_OPEN: 'Реєстрація відкрита',
-  REGISTRATION_CLOSED: 'Реєстрація закрита',
-  IN_PROGRESS: '◉ Live',
-  COMPLETED: 'Завершено'
+export const tournamentStatusLabelMap: Record<TTournamentStatusValue, string> = {
+  QUALIFICATIONS: 'Кваліфікація',
+  PLAYOFF: 'Плей-оф'
 }
+
+/** Значення статусу при створенні турніру. */
+export const tournamentCreateStatusOptions: ReadonlyArray<{
+  key: TTournamentStatusValue
+  label: string
+}> = [
+  { key: 'QUALIFICATIONS', label: 'Кваліфікація' },
+  { key: 'PLAYOFF', label: 'Плей-оф' }
+]
+
+/** Статуси для фільтрів / оновлення в адмінці. */
+export const tournamentAdminStatusOptions: ReadonlyArray<{
+  key: TTournamentStatusValue
+  label: string
+}> = [
+  { key: 'QUALIFICATIONS', label: 'Кваліфікація' },
+  { key: 'PLAYOFF', label: 'Плей-оф' }
+]
 
 /** Значення `division` з API турніру. */
 export const TOURNAMENT_DIVISION_VALUES = [
@@ -27,11 +43,33 @@ export const TOURNAMENT_DIVISION_VALUES = [
 
 export type TTournamentDivisionValue = typeof TOURNAMENT_DIVISION_VALUES[number]
 
-/** Підпис дивізіону та пояснення MMR для tooltip (узгоджено з описом турніру). */
+/** Підпис дивізіону (ключі як у API турніру / команди). */
 export const tournamentDivisionLabelMap: Record<TTournamentDivisionValue, string> = {
-  DIVISION_I: 'Division I',
-  DIVISION_II: 'Division II',
-  DIVISION_III: 'Division III'
+  DIVISION_I: 'Дивізіон I',
+  DIVISION_II: 'Дивізіон II',
+  DIVISION_III: 'Дивізіон III'
+}
+
+/** Стилі тега дивізіону — в дусі TournamentStatusTag: рамка, легкий внутрішній градієнт, glow. */
+export const tournamentDivisionTagClassMap: Record<TTournamentDivisionValue, string> = {
+  DIVISION_I: `
+    border border-sky-400/35
+    bg-gradient-to-b from-sky-500/[0.20] via-sky-950/35 to-black/35
+    text-sky-100
+    shadow-[0_0_18px_rgba(56,189,248,0.22)]
+  `,
+  DIVISION_II: `
+    border border-violet-400/38
+    bg-gradient-to-b from-violet-500/[0.22] via-violet-950/35 to-black/35
+    text-violet-100
+    shadow-[0_0_20px_rgba(167,139,250,0.24)]
+  `,
+  DIVISION_III: `
+    border border-amber-400/40
+    bg-gradient-to-b from-amber-500/[0.20] via-amber-950/35 to-black/35
+    text-amber-100
+    shadow-[0_0_22px_rgba(251,191,36,0.28)]
+  `
 }
 
 export const tournamentDivisionMmrHintMap: Record<TTournamentDivisionValue, string> = {
@@ -43,35 +81,14 @@ export const tournamentDivisionMmrHintMap: Record<TTournamentDivisionValue, stri
 /** Ролі профілю (GET /auth/me → CurrentPlayerDto.roles[].name). */
 export const PROFILE_CAPTAIN_ROLE_UA = 'Капітан'
 
-/** Значення `tournamentStatus` для створення турніру (Nest). */
-export const tournamentAdminStatusOptions = [
-  { key: 'SCHEDULED', label: 'Анонс' },
-  { key: 'REGISTRATION_OPEN', label: 'Реєстрація відкрита' },
-  { key: 'REGISTRATION_CLOSED', label: 'Реєстрація закрита' },
-  { key: 'IN_PROGRESS', label: 'Триває' },
-  { key: 'COMPLETED', label: 'Завершено' }
-] as const satisfies ReadonlyArray<{ key: keyof typeof tournamentStatusLabelMap; label: string }>
-
 export const tournamentStatusClassMap: Record<string, string> = {
-  SCHEDULED: `
-    !border !border-gray-500/40 !bg-gray-500/10 !text-gray-400
-    rounded-lg !px-10 !py-6 text-sm font-semibold uppercase tracking-wide
-  `,
-  REGISTRATION_OPEN: `
+  QUALIFICATIONS: `
     !border !border-green-500/40 !bg-green-500/10 !text-green-400
     rounded-lg !px-10 !py-6 text-sm font-semibold uppercase tracking-wide
     shadow-[0_0_12px_rgba(34,197,94,0.2)]
   `,
-  REGISTRATION_CLOSED: `
-    !border !border-orange-500/40 !bg-orange-500/10 !text-orange-400
-    rounded-lg !px-10 !py-6 text-sm font-semibold uppercase tracking-wide
-  `,
-  IN_PROGRESS: `
+  PLAYOFF: `
     !border !border-red-500/40 !bg-red-500/10 !text-red-400
     rounded-lg !px-10 !py-6 text-sm font-semibold uppercase tracking-wide animate-pulse
-  `,
-  COMPLETED: `
-    !border !border-yellow-500/40 !bg-yellow-500/10 !text-yellow-400
-    rounded-lg px-10 py-6 text-sm font-semibold uppercase tracking-wide
   `
 }

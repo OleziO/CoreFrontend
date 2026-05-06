@@ -9,16 +9,18 @@
            overflow-hidden cursor-pointer"
     @click="toTournamentPage(tournament.id)"
   >
-    <!-- === OVERLAY ДЛЯ ЗАВЕРШЕНОГО ТУРНІРУ === -->
+    <!-- === OVERLAY після кінця турніру за датою (API статусів лише QUALIFICATIONS | PLAYOFF) === -->
     <div
-      v-if="tournament.tournamentStatus === 'COMPLETED'"
+      v-if="isEndedBySchedule"
       class="absolute inset-0 bg-black/70
              backdrop-blur-[4px] z-20 flex items-center justify-center transition-opacity duration-300"
     >
-      <TournamentStatusTag
-        :status="tournament.tournamentStatus"
-        class="shadow-lg mx-50 !rounded-lg text-xs !px-20 !py-10 text-white animate-none"
-      />
+      <span
+        class="shadow-lg mx-50 rounded-lg text-xs px-20 py-10 text-white font-semibold uppercase
+               tracking-wide border border-slate-500/40 bg-slate-500/15"
+      >
+        Завершено
+      </span>
     </div>
 
     <!-- === ЗОБРАЖЕННЯ === -->
@@ -29,10 +31,10 @@
           fit="cover"
           class="w-full aspect-video object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <!-- === СТАТУС (якщо не COMPLETED) === -->
+        <!-- === Статус API (до завершення за датою) === -->
         <div class="absolute right-0 top-5 flex justify-between gap-1 z-10">
           <TournamentStatusTag
-            v-if="tournament.tournamentStatus && tournament.tournamentStatus !== 'COMPLETED'"
+            v-if="tournament.tournamentStatus && !isEndedBySchedule"
             :status="tournament.tournamentStatus"
             class="shadow-md backdrop-blur-sm
              text-xs text-white/90 hover:text-cyan-300 transition-colors duration-300"
@@ -131,6 +133,13 @@ const props = withDefaults(
   }>(),
   { width: 250 }
 )
+
+const isEndedBySchedule = computed(() => {
+  const end = props.tournament.tournamentEndsAt
+  if (!end) return false
+  return dayjs(end).isBefore(dayjs())
+})
+
 const participantsCount = computed(() => {
   return props.tournament.teams?.length ?? 0
 })
@@ -143,27 +152,25 @@ const dateInfo = computed(() => {
     tournamentStatus, registrationStartsAt, registrationEndsAt, tournamentStartsAt, tournamentEndsAt
   } = props.tournament
 
+  if (isEndedBySchedule.value) {
+    return [
+      {
+        label: 'Турнір проходив:',
+        date: dayjs(tournamentStartsAt).isSame(tournamentEndsAt, 'day')
+          ? `${fmt(tournamentEndsAt, 'D MMM YYYY')}`
+          : `${fmt(tournamentStartsAt, 'D')}—${fmt(tournamentEndsAt, 'D MMM YYYY')}`
+      }
+    ]
+  }
+
   switch (tournamentStatus) {
-    case 'SCHEDULED':
-      return [{ label: 'Реєстрація від:', date: fmt(registrationStartsAt) }]
-    case 'REGISTRATION_OPEN':
+    case 'QUALIFICATIONS':
       return [
         { label: 'Реєстрація до:', date: fmt(registrationEndsAt) },
-        { label: 'Початок:', date: fmt(tournamentStartsAt) }
+        { label: 'Плей-оф з:', date: fmt(tournamentStartsAt) }
       ]
-    case 'REGISTRATION_CLOSED':
-      return [{ label: 'Початок:', date: fmt(tournamentStartsAt) }]
-    case 'IN_PROGRESS':
-      return [{ label: 'Кінець:', date: fmt(tournamentEndsAt) }]
-    case 'COMPLETED':
-      return [
-        {
-          label: 'Турнір проходив:',
-          date: dayjs(tournamentStartsAt).isSame(tournamentEndsAt, 'day')
-            ? `${fmt(tournamentEndsAt, 'D MMM YYYY')}`
-            : `${fmt(tournamentStartsAt, 'D')}—${fmt(tournamentEndsAt, 'D MMM YYYY')}`
-        }
-      ]
+    case 'PLAYOFF':
+      return [{ label: 'Фінал:', date: fmt(tournamentEndsAt) }]
     default:
       return [{ label: 'Початок:', date: fmt(tournamentStartsAt) }]
   }

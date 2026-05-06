@@ -34,10 +34,12 @@
 //   return tournamentType[name as keyof typeof tournamentType]
 // }
 
-export const tournamentStatuses = [
-  { key: 'pre-registration', label: 'Пре-реєстрація' },
-  { key: 'registration', label: 'Реєстрація' },
-  /* { key: 'team-creation', label: 'Створення команд' }, */
-  { key: 'in-progress', label: 'В процесі' },
-  { key: 'ended', label: 'Завершено' }
-]
+import {
+  tournamentAdminStatusOptions
+} from '@/components/tournaments-tags/tournament.constants'
+
+/** Статуси турніру для фільтрів списку та застарілого UpdateTournamentDrawer. */
+export const tournamentStatuses = tournamentAdminStatusOptions.map(({ key, label }) => ({
+  key,
+  label
+}))

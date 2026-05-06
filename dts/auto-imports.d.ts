@@ -8,6 +8,7 @@ declare global {
   const EffectScope: typeof import('vue')['EffectScope']
   const ElMessage: typeof import('element-plus/es')['ElMessage']
   const UPLOAD_ERROR: typeof import('../src/services/image-upload.service')['UPLOAD_ERROR']
+  const VIRTUAL_GRID_CARD_GAP_PX: typeof import('../src/composables/use-virtual-grid')['VIRTUAL_GRID_CARD_GAP_PX']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
   const adminPanelService: typeof import('../src/views/admin-panel/admin-panel.service')['adminPanelService']
   const appModals: typeof import('../src/composables/use-app-modals')['appModals']

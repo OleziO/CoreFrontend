@@ -7,8 +7,12 @@ import { store } from '@/store/create-store'
 
 import '@/assets/styles/main.scss'
 
+import { installTimeSpinnerDiscreteWheel } from '@/core/time-spinner-discrete-wheel'
+
 import VueVirtualScroller from 'vue-virtual-scroller'
 import PhosphorIcons from '@phosphor-icons/vue'
+
+installTimeSpinnerDiscreteWheel()
 
 const app = createApp(App)
 

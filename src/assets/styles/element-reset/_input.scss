@@ -144,13 +144,58 @@
 
   /* =========================
      PREFIX / SUFFIX ICONS
+     (spacing-токени проєкту — у px; не використовуємо «px-3» як 12px тощо)
      ========================= */
+  /* Не додаємо py на префікс/суфікс — висоту задає лише `.el-input__inner`, інакше рядок із іконкою стає вищим */
   .el-input__prefix,
   .el-input__suffix {
-    @apply flex items-center justify-center text-white/70 px-3 py-2;
+    @apply flex shrink-0 items-center self-center text-white/70 py-0;
+    line-height: 1;
     background: transparent;
     border: none;
     box-shadow: none;
+  }
+
+  .el-input__prefix {
+    padding-left: 14px;
+    padding-right: 0;
+    margin-inline-end: 8px;
+    @apply justify-start;
+  }
+
+  .el-input__suffix {
+    padding-right: 14px;
+    padding-left: 0;
+    margin-inline-start: 8px;
+    @apply justify-end;
+  }
+
+  .el-input__prefix-inner {
+    @apply flex items-center leading-none;
+
+    /* як у drawer-date-picker: без зайвого margin від EP і легкий зсув іконки */
+    > :first-child {
+      margin: 0;
+      margin-inline-start: 2px;
+    }
+  }
+
+  .el-input__suffix-inner {
+    @apply flex items-center leading-none;
+
+    > :first-child {
+      margin: 0;
+      margin-inline-end: 2px;
+    }
+  }
+
+  /* Компактніший текст відносно префікса/суфікса — inner не суміжний із prefix-inner у DOM */
+  &:has(.el-input__prefix) .el-input__inner {
+    padding-left: 12px;
+  }
+
+  &:has(.el-input__suffix) .el-input__inner {
+    padding-right: 12px;
   }
 
   /* =========================

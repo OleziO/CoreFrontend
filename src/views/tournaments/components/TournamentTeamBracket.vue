@@ -1,8 +1,7 @@
 <template>
   <div
     v-if="tournament?.tournamentGridUrl &&
-      tournament?.tournamentStatus !== ETournamentStatus.REGISTRATION &&
-      tournament?.tournamentStatus !== ETournamentStatus.PRE_REGISTRATION"
+      (tournament.tournamentStatus === ETournamentStatus.PLAYOFF || isEndedBySchedule(tournament))"
     class="w-full h-full"
   >
     <iframe
@@ -25,7 +24,12 @@
 import { ETournamentStatus } from '@/components/tournaments-tags/tournament.constants'
 import type { TTournament as Tournament } from '@/api/types/api.types'
 
-defineProps<{tournament: Tournament | undefined}>()
+defineProps<{ tournament: Tournament | undefined }>()
+
+function isEndedBySchedule (t: Tournament): boolean {
+  if (!t.tournamentEndsAt) return false
+  return Date.parse(t.tournamentEndsAt) < Date.now()
+}
 
 function getBracketUrl (url: string) {
   if (!url) return ''

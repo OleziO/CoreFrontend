@@ -24,19 +24,16 @@
               {{ tournament?.name }}
             </h1>
 
-            <div class="flex md:flex-nowrap flex-wrap gap-10 max-w-lg">
+            <div class="flex md:flex-nowrap flex-wrap items-stretch gap-10 max-w-lg">
               <TournamentStatusTag
                 :status="tournament?.tournamentStatus"
                 class="shadow-lg flex-1 shadow-black/20 justify-center"
               />
-              <el-tooltip v-if="tournamentDivisionKey" placement="bottom" effect="dark" :show-after="200">
-                <template #content>
-                  <span class="text-xs">{{ divisionMmrHint }}</span>
-                </template>
-                <span class="inline-flex cursor-default items-center rounded-lg border border-white/15 bg-black/35 px-10 py-6 text-xs font-semibold uppercase tracking-wide text-blue-300">
-                  {{ divisionLabel }}
-                </span>
-              </el-tooltip>
+              <DivisionTag
+                :division="tournament?.division"
+                variant="hero"
+                class="shrink-0 self-center shadow-lg shadow-black/25"
+              />
             </div>
 
             <!-- tournament.description not in new API schema -->
@@ -110,7 +107,28 @@
                     >
                       Приєднатися до турніру
                     </el-button>
-                    <p v-else class="text-sm text-center px-10 leading-snug rounded-xl border border-white/10 bg-black/25 py-10 text-gray-300">
+                    <div
+                      v-else-if="isMyTeamInThisTournament"
+                      class="flex flex-col gap-10 rounded-xl border border-white/10 bg-black/25 px-10 py-10"
+                    >
+                      <p class="text-sm text-center leading-snug text-gray-300">
+                        {{ joinSecondaryHint }}
+                      </p>
+                      <el-button
+                        type="danger"
+                        plain
+                        size="large"
+                        :loading="leaveTournamentLoading"
+                        class="!h-[48px] !w-full !text-base !font-semibold !rounded-xl"
+                        @click="confirmLeaveTournament"
+                      >
+                        Покинути турнір
+                      </el-button>
+                    </div>
+                    <p
+                      v-else
+                      class="text-sm text-center px-10 leading-snug rounded-xl border border-white/10 bg-black/25 py-10 text-gray-300"
+                    >
                       {{ joinSecondaryHint }}
                     </p>
                   </template>
@@ -196,7 +214,7 @@
             flex items-center justify-center relative overflow-hidden"
         >
           <iframe
-            v-if="tournament?.tournamentGridUrl"
+            v-if="showBracketIframe"
             :src="getBracketUrl(tournament?.tournamentGridUrl || '')"
             width="100%"
             height="500"
@@ -206,12 +224,23 @@
             allowtransparency="true"
           />
           <div
-            v-else class="w-full py-20 flex justify-center items-center flex-col text-center
+            v-else-if="!tournament?.tournamentGridUrl"
+            class="w-full py-20 flex justify-center items-center flex-col text-center
             border border-dashed border-white/10 rounded-xl bg-white/5"
           >
             <PhBracketsCurly :size="40" class="text-gray-600 mb-3" />
             <p class="text-gray-400">
               Сітка турніру ще не готова
+            </p>
+          </div>
+          <div
+            v-else
+            class="w-full py-20 flex justify-center items-center flex-col text-center
+            border border-dashed border-white/10 rounded-xl bg-white/5"
+          >
+            <PhBracketsCurly :size="40" class="text-gray-600 mb-3" />
+            <p class="text-gray-400">
+              Сітка доступна під час плей-оф
             </p>
           </div>
         </div>
@@ -230,23 +259,20 @@
 import { Trophy, Calendar, User } from '@element-plus/icons-vue'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
 import TournamentQualificationTab from '@/views/tournaments/components/TournamentQualificationTab.vue'
-import {
-  PROFILE_CAPTAIN_ROLE_UA,
-  TOURNAMENT_DIVISION_VALUES,
-  tournamentDivisionLabelMap,
-  tournamentDivisionMmrHintMap
-} from '@/components/tournaments-tags/tournament.constants'
-import type { TTournamentDivision } from '@/api/types/api.types'
+import { PROFILE_CAPTAIN_ROLE_UA } from '@/components/tournaments-tags/tournament.constants'
 import type { TTournament as Tournament, TTeam as Team } from '@/api/types/api.types'
+
 import { formatDate } from '@/core/helpers'
 import { teamsService } from '@/views/teams/teams.service'
 import { PhBracketsCurly, PhSteamLogo } from '@phosphor-icons/vue'
 import { getApiErrorMessage } from '@/utils/api-errors'
+import { ElMessageBox } from 'element-plus'
 
 const tournament = ref<Tournament | null>(null)
 const activeTab = ref('teams')
 const myTeam = shallowRef<Team | null>(null)
 const joinLoading = ref(false)
+const leaveTournamentLoading = ref(false)
 const joinHiddenRegClosedByApi = ref(false)
 const joinHiddenCaptainByApi = ref(false)
 
@@ -255,6 +281,15 @@ const authStore = useAuthStore()
 const tournamentStore = useTournamentStore()
 const tournamentId = String(route.params.id)
 const apiBaseUrl = import.meta.env.VITE_API_PUBLIC_URL
+
+function isTournamentEndedByDate (tt: Tournament | null | undefined): boolean {
+  if (!tt?.tournamentEndsAt) return false
+  return Date.parse(tt.tournamentEndsAt) < Date.now()
+}
+
+const showBracketIframe = computed(() =>
+  !!(tournament.value?.tournamentGridUrl &&
+    (tournament.value.tournamentStatus === 'PLAYOFF' || isTournamentEndedByDate(tournament.value))))
 
 const canManagePlayers = computed(() => {
   return authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator
@@ -304,23 +339,6 @@ watch(() => tournament.value?.tournamentStatus, () => {
   joinHiddenCaptainByApi.value = false
 })
 
-function isDivisionKnown (v: string | undefined | null): v is TTournamentDivision {
-  return !!v && (TOURNAMENT_DIVISION_VALUES as readonly string[]).includes(v)
-}
-
-const tournamentDivisionKey = computed(() => {
-  const d = tournament.value?.division
-  return isDivisionKnown(d) ? d : null
-})
-
-const divisionLabel = computed(() =>
-  tournamentDivisionKey.value ? tournamentDivisionLabelMap[tournamentDivisionKey.value] : ''
-)
-
-const divisionMmrHint = computed(() =>
-  tournamentDivisionKey.value ? tournamentDivisionMmrHintMap[tournamentDivisionKey.value] : ''
-)
-
 const myTeamId = computed(() => authStore.user?.teamId ?? null)
 
 const isMyTeamInThisTournament = computed(() =>
@@ -334,7 +352,7 @@ const freeSlots = computed(() => {
 
 const captainJoinContextOk = computed(() =>
   !!(authStore.token &&
-    tournament.value?.tournamentStatus === 'REGISTRATION_OPEN' &&
+    tournament.value?.tournamentStatus === 'QUALIFICATIONS' &&
     hasCaptainUserRole.value &&
     !joinHiddenRegClosedByApi.value &&
     !joinHiddenCaptainByApi.value)
@@ -360,7 +378,6 @@ function joinFriendlyHintFromApi (msg: string): string {
     'Команда вже бере участь у турнірі': 'Ваша команда вже записана.',
     'Команда не верифікована': 'Спочатку підтвердьте верифікацію команди.',
     'Команда не має Dota2 Team ID': 'Для участі потрібен Dota2 Team ID у профілі команди.',
-    'Команда повинна мати рівно 5 основних гравців': 'У основному складі має бути рівно 5 гравців.',
     'Всі основні гравці повинні бути верифіковані': 'Усі основні гравці мають бути верифіковані.',
     'Рейтинг команди виходить за межі дозволених дивізіонів': 'Середній MMR команди не відповідає дивізіону турніру.',
     'Дозволено не більшше 3 запасних гравців': 'У команді занадто багато запасних гравців.',
@@ -370,11 +387,9 @@ function joinFriendlyHintFromApi (msg: string): string {
   const direct = hints[msg.trim()]
   if (direct) return direct
 
-  if (msg.startsWith('Дивізіон команди') && msg.includes('не відповідає'))
-    return 'Дивізіон вашої команди не збігається з дивізіоном турніру.'
+  if (msg.startsWith('Дивізіон команди') && msg.includes('не відповідає')) { return 'Дивізіон вашої команди не збігається з дивізіоном турніру.' }
 
-  if (msg.includes('Запасний гравець') && msg.includes('не верифікований'))
-    return 'Є не верифікований запасний гравець — перевірте заявку.'
+  if (msg.includes('Запасний гравець') && msg.includes('не верифікований')) { return 'Є не верифікований запасний гравець — перевірте заявку.' }
 
   return msg
 }
@@ -412,31 +427,50 @@ async function registerOnTeamTournament () {
     await hydrateMyTeam()
   } catch (e: unknown) {
     const msg = getApiErrorMessage(e, 'Не вдалося приєднатися до турніру')
-    if (!handleJoinTransportError(msg))
-      ElMessage.error(joinFriendlyHintFromApi(msg))
+    if (!handleJoinTransportError(msg)) { ElMessage.error(joinFriendlyHintFromApi(msg)) }
     if (
       msg.includes('Команда вже бере участь у турнірі')
-    )
-      await reloadTournament()
+    ) { await reloadTournament() }
   } finally {
     joinLoading.value = false
+  }
+}
+
+async function confirmLeaveTournament () {
+  try {
+    await ElMessageBox.confirm(
+      'Команду буде знято з участі в цьому турнірі. Продовжити?',
+      'Покинути турнір?',
+      {
+        confirmButtonText: 'Так, покинути',
+        cancelButtonText: 'Скасувати',
+        type: 'warning',
+        distinguishCancelAndClose: true
+      }
+    )
+  } catch {
+    return
+  }
+
+  leaveTournamentLoading.value = true
+  try {
+    await tournamentsService.leaveTournament(tournamentId)
+    ElMessage.success('Команда покинула турнір')
+    await reloadTournament()
+    await hydrateMyTeam()
+  } catch (e: unknown) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося покинути турнір'))
+  } finally {
+    leaveTournamentLoading.value = false
   }
 }
 
 const joinSecondaryHint = computed(() => {
   if (!captainJoinContextOk.value) return ''
 
-  if (isMyTeamInThisTournament.value)
-    return 'Ваша команда вже бере участь у цьому турнірі.'
+  if (!myTeam.value) { return 'Щоб зареєструватися, спочатку приєднайтесь або створіть команду як капітан.' }
 
-  if (occupiedByAnotherTournament.value)
-    return 'Склад команди заблоковано — команда бере участь в іншому турнірі.'
-
-  if (!myTeam.value)
-    return 'Щоб зареєструватися, спочатку приєднайтесь або створіть команду як капітан.'
-
-  if (!freeSlots.value)
-    return 'Усі місця в турнірі вже зайняті.'
+  if (!freeSlots.value) { return 'Усі місця в турнірі вже зайняті.' }
 
   return ''
 })
@@ -444,8 +478,7 @@ const joinSecondaryHint = computed(() => {
 const mutedRegistrationHintForLoggedUser = computed(() => {
   if (!authStore.token || captainJoinContextOk.value) return ''
   const st = tournament.value?.tournamentStatus
-  if (st === 'REGISTRATION_OPEN' && !hasCaptainUserRole.value)
-    return 'Реєстрацію виконує капітан команди з роллю «Капітан» у профілі.'
+  if (st === 'QUALIFICATIONS' && !hasCaptainUserRole.value) { return 'Реєстрацію виконує капітан команди з роллю «Капітан» у профілі.' }
 
   return ''
 })
@@ -453,23 +486,19 @@ const mutedRegistrationHintForLoggedUser = computed(() => {
 const inactiveTournamentBanner = computed(() => {
   if (!authStore.token) return ''
 
-  if (joinHiddenRegClosedByApi.value)
-    return 'Реєстрація на турнір закрита'
+  if (joinHiddenRegClosedByApi.value) { return 'Реєстрація на турнір закрита' }
 
-  if (joinHiddenCaptainByApi.value)
-    return 'Приєднання для цього акаунту неможливе'
+  if (joinHiddenCaptainByApi.value) { return 'Приєднання для цього акаунту неможливе' }
+
+  if (isTournamentEndedByDate(tournament.value)) return 'Турнір завершено'
 
   switch (tournament.value?.tournamentStatus) {
-    case 'COMPLETED':
-      return 'Турнір завершено'
-    case 'IN_PROGRESS':
-      return 'Турнір вже триває'
-    case 'REGISTRATION_CLOSED':
-      return 'Реєстрацію закрито'
-    case 'SCHEDULED':
-      return 'Турнір ще анонсується — реєстрація не відкрита'
+    case 'PLAYOFF':
+      return 'Триває плей-оф — запис на турнір недоступний'
+    case 'QUALIFICATIONS':
+      return ''
     default:
-      return tournament.value?.tournamentStatus !== 'REGISTRATION_OPEN'
+      return tournament.value?.tournamentStatus !== 'QUALIFICATIONS'
         ? 'Реєстрація на турнір недоступна'
         : ''
   }

@@ -128,9 +128,11 @@ function computeDivision (mainPlayers: { rating: number }[]): string | null {
 const eligibleTeams = computed(() => {
   const tournamentDivision = props.tournament?.division ?? null
   return allTeams.value.filter((t) => {
-    if (!t.isVerified || (t.mainPlayers?.length ?? 0) !== 5) return false
+    if (!t.isVerified) return false
     if (!tournamentDivision) return true
-    return computeDivision(t.mainPlayers) === tournamentDivision
+    const main = t.mainPlayers ?? []
+    if (main.length === 0) return false
+    return computeDivision(main) === tournamentDivision
   })
 })
 
