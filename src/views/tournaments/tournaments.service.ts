@@ -46,10 +46,10 @@ class TournamentsService {
     return res as Tournament
   }
 
-  async joinTournament (tournamentId: string): Promise<void> {
+  async joinTournament (tournamentId: string, teamId?: string): Promise<void> {
     await apiClient.post(
       '/tournaments/{id}/join',
-      {},
+      teamId ? { teamId } : {},
       { dynamicKeys: { id: tournamentId } }
     )
   }

@@ -219,7 +219,7 @@
         <div
           v-if="activeTab === 'admin'"
         >
-          <TournamentAdminTab :tournament="tournament" />
+          <TournamentAdminTab :tournament="tournament" @refresh="reloadTournament" />
         </div>
       </div>
     </div>
