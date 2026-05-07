@@ -284,6 +284,7 @@ type UploadKey = 'header' | 'list'
 
 const showCreateTournamentDrawer = defineModel<boolean>()
 const loading = ref(false)
+const tournamentStore = useTournamentStore()
 
 const elementPlusUk = uk
 
@@ -410,12 +411,14 @@ const handleSubmit = async () => {
     } catch (up: unknown) {
       const um = up instanceof Error ? up.message : String(up)
       ElMessage.warning(`Турнір створено, але зображення не завантажились: ${translateUploadErr(um)}`)
+      tournamentStore.patchTournamentInList(created)
       showCreateTournamentDrawer.value = false
       queryCache.invalidateQueries({ key: ['tournaments'] })
       clearData()
       return
     }
 
+    tournamentStore.patchTournamentInList(created)
     ElMessage.success('Турнір успішно створено')
     showCreateTournamentDrawer.value = false
     queryCache.invalidateQueries({ key: ['tournaments'] })

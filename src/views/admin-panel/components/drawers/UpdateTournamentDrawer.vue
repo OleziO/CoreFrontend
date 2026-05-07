@@ -170,6 +170,7 @@ const tournamentData = ref<ITournamentUpdateFormData>(defaultTournamentData())
 
 const showUpdateTournamentDrawer = defineModel<boolean>()
 const loading = ref<boolean>(false)
+const tournamentStore = useTournamentStore()
 
 watch(() => showUpdateTournamentDrawer.value, (isOpen) => {
   if (isOpen && props.newTournamentData) {
@@ -198,10 +199,11 @@ function handleImageChange (uploadFile: UploadFile) {
 const handleSubmit = async () => {
   loading.value = true
   try {
-    await tournamentsService.updateTournament(
+    const updated = await tournamentsService.updateTournament(
       props.newTournamentData?.id ?? '',
       tournamentData.value as unknown as UpdateTournamentDto
     )
+    tournamentStore.patchTournamentInList(updated)
     ElMessage({ message: 'Турнір успішно оновлено', type: 'success' })
     showUpdateTournamentDrawer.value = false
     queryCache.invalidateQueries({ key: ['tournaments'] })

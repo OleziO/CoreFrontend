@@ -33,8 +33,8 @@ export const useTeamsStore = defineStore('teams', () => {
     return teams.value.find(team => team.id === teamId) || null
   }
 
-  async function getTeams () {
-    if (teams.value.length) return
+  async function getTeams (opts?: { force?: boolean }) {
+    if (!opts?.force && teams.value.length) return
 
     loading.value = true
     try {

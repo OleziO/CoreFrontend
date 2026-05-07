@@ -109,6 +109,7 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'refresh'): void }>()
 
 const router = useRouter()
+const tournamentStore = useTournamentStore()
 const deleteLoading = ref(false)
 const joinLoading = ref(false)
 const selectedTeamId = ref<string>('')
@@ -180,6 +181,7 @@ async function deleteTournament () {
   deleteLoading.value = true
   try {
     await tournamentsService.deleteTournament(props.tournament.id)
+    tournamentStore.removeTournamentFromList(props.tournament.id)
     ElMessage.success('Турнір видалено')
     router.push('/tournaments')
   } catch {

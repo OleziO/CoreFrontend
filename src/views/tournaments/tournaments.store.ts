@@ -5,8 +5,21 @@ export const useTournamentStore = defineStore('tournaments', () => {
   const tournamentsData = ref<Tournament[]>([])
   const loading = ref(false)
 
-  async function getTournaments () {
-    if (tournamentsData.value.length) return
+  function patchTournamentInList (next: Tournament) {
+    const i = tournamentsData.value.findIndex(t => t.id === next.id)
+    if (i >= 0) {
+      tournamentsData.value[i] = next
+    } else {
+      tournamentsData.value.unshift(next)
+    }
+  }
+
+  function removeTournamentFromList (id: string) {
+    tournamentsData.value = tournamentsData.value.filter(t => t.id !== id)
+  }
+
+  async function getTournaments (opts?: { force?: boolean }) {
+    if (!opts?.force && tournamentsData.value.length) return
 
     loading.value = true
     try {
@@ -60,6 +73,8 @@ export const useTournamentStore = defineStore('tournaments', () => {
     tournamentsData,
     loading,
     getTournaments,
-    findTournament
+    findTournament,
+    patchTournamentInList,
+    removeTournamentFromList
   }
 })

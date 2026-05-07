@@ -61,8 +61,8 @@ export const usePlayersStore = defineStore('players', () => {
   //   )
   // }
 
-  async function getPlayers () {
-    if (players.value.length) return players.value
+  async function getPlayers (opts?: { force?: boolean }) {
+    if (!opts?.force && players.value.length) return players.value
 
     loading.value = true
 
