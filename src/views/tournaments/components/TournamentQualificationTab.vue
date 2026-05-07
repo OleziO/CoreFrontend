@@ -26,6 +26,7 @@
 
     <QualificationMatchesList
       :matches="sortedDisplayMatches"
+      :tournament-teams="tournament?.teams ?? null"
       :loading="qualificationHydrateInFlight"
       :show-add-result-button="showAddResultButton"
       @add-result="openAddModal"
@@ -161,13 +162,21 @@ function updateCountdown () {
   }
   const diff = dayjs(end).diff(dayjs(), 'second')
   if (diff <= 0) {
-    countdownLabel.value = '00:00:00'
+    countdownLabel.value = '0 г 0 хв 0 с'
     return
   }
   const h = Math.floor(diff / 3600)
   const m = Math.floor((diff % 3600) / 60)
   const s = diff % 60
-  countdownLabel.value = `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  const mLabel = `${String(m).padStart(2, '0')} хв`
+  const sLabel = `${String(s).padStart(2, '0')} с`
+  if (h >= 24) {
+    const days = Math.floor(h / 24)
+    const remH = h % 24
+    countdownLabel.value = `${days} дн ${remH} г ${mLabel} ${sLabel}`
+  } else {
+    countdownLabel.value = `${h} г ${mLabel} ${sLabel}`
+  }
 }
 
 updateCountdown()
