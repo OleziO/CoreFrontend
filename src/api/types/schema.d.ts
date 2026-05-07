@@ -272,6 +272,22 @@ export interface paths {
         patch: operations["TeamsController_update"];
         trace?: never;
     };
+    "/teams/{id}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TeamsController_createInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/teams/{id}/players": {
         parameters: {
             query?: never;
@@ -314,6 +330,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["TeamsController_uploadLogo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invites/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["InvitesController_getInviteInfo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invites/{token}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["InvitesController_acceptInvite"];
         delete?: never;
         options?: never;
         head?: never;
@@ -535,11 +583,8 @@ export interface components {
             discordUsername: string;
             /** @default 0 */
             rating: number;
-            /**
-             * @description Dota map / roles (1–5); omit or null when unset
-             * @enum {array|null}
-             */
-            positions?: 1 | 2 | 3 | 4 | 5 | null;
+            /** @description Dota map / roles (1–5); omit or null when unset */
+            positions?: (1 | 2 | 3 | 4 | 5)[] | null;
         };
         Player: {
             id: string;
@@ -657,7 +702,7 @@ export interface components {
             discordUsername?: string;
             /** @default 0 */
             rating: number;
-            /** @description Dota map / roles (1–5) */
+            /** @description Dota map / roles (1–5); omit or null when unset */
             positions?: (1 | 2 | 3 | 4 | 5)[] | null;
         };
         DiscordExchangeDto: {
@@ -745,6 +790,10 @@ export interface components {
             dotaTeamId?: string;
             isVerified?: boolean;
             isPlayingTournament?: boolean;
+        };
+        CreateInviteDto: {
+            /** @enum {string} */
+            slot: "main" | "reserved" | "coach";
         };
         AddPlayerDto: {
             /** Format: uuid */
@@ -1364,6 +1413,29 @@ export interface operations {
             };
         };
     };
+    TeamsController_createInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInviteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     TeamsController_addPlayer: {
         parameters: {
             query?: never;
@@ -1424,6 +1496,44 @@ export interface operations {
                 };
             };
         };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    InvitesController_getInviteInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    InvitesController_acceptInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             201: {
                 headers: {
@@ -1593,7 +1703,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinTournamentDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {
