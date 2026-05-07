@@ -14,6 +14,7 @@ export const appModals = useModals({
   PLayerEditProfileModal: defineAsyncComponent(() => import('@/views/players/modals/PLayerEditProfileModal.vue')) as Component,
   AdminAddPointsModal: defineAsyncComponent(() => import('@/views/players/modals/AdminAddPointsModal.vue')) as Component,
   ChangeCaptainModal: defineAsyncComponent(() => import('@/views/teams/modals/ChangeCaptainModal.vue')) as Component,
+  CreateInviteModal: defineAsyncComponent(() => import('@/views/teams/modals/CreateInviteModal.vue')) as Component,
   ProfileRequestMmrModal: defineAsyncComponent(() => import('@/views/players/modals/ProfileRequestMmrModal.vue')) as Component,
   AdminUpdateMmrModal: defineAsyncComponent(() => import('@/views/players/modals/AdminUpdateMmrModal.vue')) as Component
 })

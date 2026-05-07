@@ -272,7 +272,7 @@
                   :key="i"
                   class="h-48 rounded-lg border border-dashed
                    border-gray-600 text-gray-400 hover:border-primary hover:text-primary"
-                  @click="handleOpenAddPlayer(true)"
+                  @click="handleOpenAddPlayer('main')"
                 >
                   + Додати гравця
                 </button>
@@ -346,7 +346,7 @@
                   :key="i"
                   class="h-48 rounded-lg border border-dashed
                    border-gray-600 text-gray-400 hover:border-primary hover:text-primary"
-                  @click="handleOpenAddPlayer(false)"
+                  @click="handleOpenAddPlayer('reserved')"
                 >
                   + Додати гравця
                 </button>
@@ -505,12 +505,19 @@ async function refreshTeamFromServer () {
   teamsStore.patchTeamInList(team.value)
 }
 
-function handleOpenAddPlayer (isMain: boolean) {
-  open('PlayerAddToTeamModal', {
-    team: team.value,
-    isMain,
-    onAdded: refreshTeamFromServer
-  })
+function handleOpenAddPlayer (slot: 'main' | 'reserved') {
+  if (isAdmin.value) {
+    open('PlayerAddToTeamModal', {
+      team: team.value,
+      isMain: slot === 'main',
+      onAdded: refreshTeamFromServer
+    })
+  } else {
+    open('CreateInviteModal', {
+      teamId: team.value?.id,
+      slot
+    })
+  }
 }
 
 async function runRemovePlayerFromTeam (playerId: string) {
