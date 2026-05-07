@@ -340,6 +340,7 @@
     "UPLOAD_ERROR": true,
     "postTeamLogoUpload": true,
     "validateImageFileForUpload": true,
-    "VIRTUAL_GRID_CARD_GAP_PX": true
+    "VIRTUAL_GRID_CARD_GAP_PX": true,
+    "ElMessageBox": true
   }
 }

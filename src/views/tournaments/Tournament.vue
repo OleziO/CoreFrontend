@@ -120,7 +120,7 @@
                         size="large"
                         :loading="leaveTournamentLoading"
                         class="!h-[48px] !w-full !text-base !font-semibold !rounded-xl"
-                        @click="confirmLeaveTournament"
+                        @click="handleLeaveTournament"
                       >
                         Покинути турнір
                       </el-button>
@@ -266,7 +266,6 @@ import { formatDate } from '@/core/helpers'
 import { teamsService } from '@/views/teams/teams.service'
 import { PhBracketsCurly, PhSteamLogo } from '@phosphor-icons/vue'
 import { getApiErrorMessage } from '@/utils/api-errors'
-import { ElMessageBox } from 'element-plus'
 
 const tournament = ref<Tournament | null>(null)
 const activeTab = ref('teams')
@@ -395,8 +394,17 @@ function joinFriendlyHintFromApi (msg: string): string {
 }
 
 async function reloadTournament () {
-  const data = await tournamentStore.findTournament(tournamentId)
-  if (data) tournament.value = data
+  try {
+    const data = await tournamentsService.fetchTournament(tournamentId)
+    tournament.value = data
+    const list = tournamentStore.tournamentsData
+    const idx = list.findIndex((t) => t.id === tournamentId)
+    if (idx >= 0) {
+      list[idx] = data
+    }
+  } catch (e: unknown) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося оновити дані турніру'))
+  }
 }
 
 function patchTournament (next: Tournament) {
@@ -436,22 +444,7 @@ async function registerOnTeamTournament () {
   }
 }
 
-async function confirmLeaveTournament () {
-  try {
-    await ElMessageBox.confirm(
-      'Команду буде знято з участі в цьому турнірі. Продовжити?',
-      'Покинути турнір?',
-      {
-        confirmButtonText: 'Так, покинути',
-        cancelButtonText: 'Скасувати',
-        type: 'warning',
-        distinguishCancelAndClose: true
-      }
-    )
-  } catch {
-    return
-  }
-
+async function handleLeaveTournament () {
   leaveTournamentLoading.value = true
   try {
     await tournamentsService.leaveTournament(tournamentId)

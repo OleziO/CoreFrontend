@@ -7,6 +7,7 @@ export {}
 declare global {
   const EffectScope: typeof import('vue')['EffectScope']
   const ElMessage: typeof import('element-plus/es')['ElMessage']
+  const ElMessageBox: typeof import('element-plus/es')['ElMessageBox']
   const UPLOAD_ERROR: typeof import('../src/services/image-upload.service')['UPLOAD_ERROR']
   const VIRTUAL_GRID_CARD_GAP_PX: typeof import('../src/composables/use-virtual-grid')['VIRTUAL_GRID_CARD_GAP_PX']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
