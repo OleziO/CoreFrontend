@@ -27,7 +27,6 @@
         >
           Команда
         </span>
-
         <span
           class="text-[10px] mr-14 font-bold uppercase tracking-[0.16em] text-gray-500 text-right leading-none pb-1
             tabular-nums"
