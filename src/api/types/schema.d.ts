@@ -384,6 +384,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tournaments/{id}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TournamentsController_leave"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tournaments/{id}/qualification/submit": {
         parameters: {
             query?: never;
@@ -641,11 +657,8 @@ export interface components {
             discordUsername?: string;
             /** @default 0 */
             rating: number;
-            /**
-             * @description Dota map / roles (1–5); omit or null when unset
-             * @enum {array|null}
-             */
-            positions?: 1 | 2 | 3 | 4 | 5 | null;
+            /** @description Dota map / roles (1–5) */
+            positions?: (1 | 2 | 3 | 4 | 5)[] | null;
         };
         DiscordExchangeDto: {
             /** @description Authorization code from Discord redirect */
@@ -1562,6 +1575,25 @@ export interface operations {
                 "application/json": components["schemas"]["JoinTournamentDto"];
             };
         };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TournamentsController_leave: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             201: {
                 headers: {

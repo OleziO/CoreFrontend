@@ -498,9 +498,7 @@ const inactiveTournamentBanner = computed(() => {
     case 'QUALIFICATIONS':
       return ''
     default:
-      return tournament.value?.tournamentStatus !== 'QUALIFICATIONS'
-        ? 'Реєстрація на турнір недоступна'
-        : ''
+      return 'Реєстрація на турнір недоступна'
   }
 })
 

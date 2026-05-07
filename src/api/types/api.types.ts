@@ -13,10 +13,13 @@ export type TTeam = components['schemas']['Team'] & {
   /** Є у відповіді бекенда для команд; у згенерованій OpenAPI поки може бути лише у розширених DTO. */
   division?: TTournamentDivision | null
 }
-export type TTournament = components['schemas']['Tournament']
 export type TQualificationMatch = components['schemas']['QualificationMatch']
 /** Тіло GET /tournaments/:id/qualification — у OpenAPI це `Qualification`. */
 export type TQualificationPhase = components['schemas']['Qualification']
+export type TTournament = components['schemas']['Tournament'] & {
+  /** Підмішується з GET /tournaments/:id/qualification на клієнті; у базовій схемі турніру може не бути. */
+  qualification?: TQualificationPhase | null
+}
 export type TCreateTournamentDto = components['schemas']['CreateTournamentDto']
 export type TMatch = components['schemas']['Match']
 export type TUserRole = components['schemas']['UserRoles']
@@ -27,7 +30,8 @@ export type TCurrentPlayerRole = components['schemas']['CurrentPlayerRoleDto']
 export type TUpdatePlayerDto = components['schemas']['UpdatePlayerDto']
 export type TCreateTeamDto = components['schemas']['CreateTeamDto']
 export type TUpdateTeamDto = components['schemas']['UpdateTeamDto']
-export type TAddTeamPlayerDto = components['schemas']['AddTeamPlayerDto']
+/** У OpenAPI схема називається `AddPlayerDto` (POST /teams/:id/players). */
+export type TAddTeamPlayerDto = components['schemas']['AddPlayerDto']
 export type TUpdateTournamentDto = components['schemas']['UpdateTournamentDto']
 export type TCreateMatchDto = components['schemas']['CreateMatchDto']
 export type TUpdateMatchDto = components['schemas']['UpdateMatchDto']
