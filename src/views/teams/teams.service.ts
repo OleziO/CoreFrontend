@@ -127,6 +127,14 @@ class TeamsService {
   // TODO: endpoint not in API yet
   // async transferCaptaincy (teamId: number, newCaptainId: number) { ... }
 
+  /** POST /teams/:id/invites — створити запрошення до команди (тільки капітан). */
+  async createInvite (teamId: string, slot: 'main' | 'reserved' | 'coach'): Promise<{ token: string; expiresAt: string }> {
+    const res = await apiClient.post('/teams/{id}/invites', { slot }, {
+      dynamicKeys: { id: teamId }
+    } as any)
+    return res as { token: string; expiresAt: string }
+  }
+
   // TODO: endpoint not in API yet
   // async getTeamInvites (teamId: number) { ... }
 

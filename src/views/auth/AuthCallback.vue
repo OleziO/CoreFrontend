@@ -28,6 +28,7 @@ import { firstQueryValue } from '@/core/helpers'
 import { useAuthStore } from '@/store/modules/auth'
 import { routeNames } from '@/router/route-names'
 import { PhWarningCircle } from '@phosphor-icons/vue'
+import { POST_LOGIN_REDIRECT_KEY } from '@/views/invites/invites.service'
 
 const route = useRoute()
 const router = useRouter()
@@ -46,7 +47,9 @@ onMounted(async () => {
   const success = await authStore.handleDiscordCallback(code, state)
 
   if (success) {
-    router.replace({ name: routeNames.rootPage })
+    const redirect = sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY)
+    sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY)
+    router.replace(redirect ?? { name: routeNames.rootPage })
   }
 })
 

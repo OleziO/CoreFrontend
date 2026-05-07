@@ -6,6 +6,7 @@ import { tournamentRouteNames, tournamentRoutes } from '@/views/tournaments/tour
 import { profileRouteNames, profileRoutes } from '@/views/profile/profile.route'
 import { adminPanelRouteNames, adminPanelRoutes } from '@/views/admin-panel/admin-panel.route'
 import { authRouteNames, authRoutes } from '@/views/auth/auth.route'
+import { inviteRouteNames, inviteRoutes } from '@/views/invites/invites.route'
 
 export const routeNames = {
   ...playersRouteNames,
@@ -14,6 +15,7 @@ export const routeNames = {
   ...profileRouteNames,
   ...adminPanelRouteNames,
   ...authRouteNames,
+  ...inviteRouteNames,
   rootPage: '/',
   loginSuccess: 'login-success'
 }
@@ -34,6 +36,7 @@ export const routes = [
         component: () => import('@/views/login-success/LoginSuccess.vue')
       },
       ...authRoutes,
+      ...inviteRoutes,
       ...tournamentRoutes,
       ...teamsRoutes,
       ...playersRoutes,
