@@ -1,125 +1,110 @@
 <template>
   <div
-    class="relative group flex flex-col justify-between rounded-2xl
-           bg-gradient-to-br from-gray-900 via-gray-850 to-gray-950
-           border border-gray-700 h-[400px] w-[360px]
-           hover:border-cyan-400/50
-           shadow-[0_0_25px_rgba(0,0,0,0.5)]
-           transition-all duration-400 ease-out
-           overflow-hidden cursor-pointer"
+    class="relative group flex w-full flex-col rounded-2xl border border-gray-700/90
+           bg-gradient-to-b from-gray-900 to-gray-950
+           overflow-hidden cursor-pointer shadow-lg shadow-black/45
+           transition-[border-color,box-shadow] duration-300 ease-out
+           hover:border-cyan-400/45 hover:shadow-[0_16px_48px_-12px_rgba(6,182,212,0.28)]"
+    :style="{ maxWidth: `${width}px`, height: `${TOURNAMENT_CARD_HEIGHT}px` }"
     @click="toTournamentPage(tournament.id)"
   >
-    <!-- === OVERLAY після кінця турніру за датою (API статусів лише QUALIFICATIONS | PLAYOFF) === -->
     <div
       v-if="isEndedBySchedule"
-      class="absolute inset-0 bg-black/70
-             backdrop-blur-[4px] z-20 flex items-center justify-center transition-opacity duration-300"
+      class="absolute inset-0 z-20 flex items-center justify-center bg-black/72 backdrop-blur-[3px] transition-opacity duration-300"
     >
       <span
-        class="shadow-lg mx-50 rounded-lg text-xs px-20 py-10 text-white font-semibold uppercase
-               tracking-wide border border-slate-500/40 bg-slate-500/15"
+        class="rounded-lg border border-slate-500/45 bg-slate-900/50 px-16 py-8 text-xs font-semibold uppercase
+               tracking-wide text-white shadow-lg"
       >
         Завершено
       </span>
     </div>
 
-    <!-- === ЗОБРАЖЕННЯ === -->
-    <div class="p-10 flex flex-col items-center w-full">
-      <div class="overflow-hidden w-full relative rounded-lg shadow-lg transition-all duration-500">
-        <el-image
-          :src="tournament.listBannerUrl"
-          fit="cover"
-          class="w-full aspect-video object-cover transition-transform duration-500 group-hover:scale-105"
+    <div class="flex min-h-0 flex-1 flex-col px-14 pt-14 pb-10">
+      <div class="relative w-full overflow-hidden rounded-xl ring-1 ring-white/10">
+        <TournamentBannerImage
+          :url="tournament.listBannerUrl"
+          variant="card"
+          :lazy="true"
+          scale-on-hover
         />
-        <!-- === Статус API (до завершення за датою) === -->
-        <div class="absolute right-0 top-5 flex justify-between gap-1 z-10">
+        <div class="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent" />
+        <div class="absolute right-10 top-10 z-10 flex justify-end gap-6">
           <TournamentStatusTag
             v-if="tournament.tournamentStatus && !isEndedBySchedule"
             :status="tournament.tournamentStatus"
-            class="shadow-md backdrop-blur-sm
-             text-xs text-white/90 hover:text-cyan-300 transition-colors duration-300"
+            class="shadow-md backdrop-blur-sm text-xs text-white/90"
           />
         </div>
       </div>
 
-      <!-- === Нагорода === -->
-      <div class="text-center w-full flex flex-col mt-5">
-        <div class="flex justify-between items-start w-full my-10 gap-10">
-          <el-tag
-            class="shadow-lg backdrop-blur-md text-xs !px-10 !py-15 !animate-none
-            !border !border-orange-500/40 !bg-orange-500/10 !text-orange-400
-            rounded-lg font-semibold uppercase tracking-wide flex-1"
-          >
-            <span class="ml-1">{{ tournament.name }}</span>
-          </el-tag>
+      <h2
+        class="mt-14 line-clamp-2 px-6 text-center text-[15px] font-semibold uppercase leading-snug tracking-wide
+               text-white/95 lg:text-[16px]"
+      >
+        {{ tournament.name }}
+      </h2>
 
-          <el-tag
-            class="shadow-lg backdrop-blur-md text-xs !px-10 !py-15 !animate-none
-                   !border !border-yellow-500/50 !bg-yellow-500/15 !text-yellow-400
-                   rounded-lg flex items-center transition-transform duration-300 flex-1"
-          >
-            <div class="flex items-center">
-              <span class="mr-5">Приз:</span>
-              <PhTrophy />
-              <span class="ml-2">{{ tournament.prizePool }}</span>
-            </div>
-          </el-tag>
+      <div class="mx-6 mt-12 shrink-0">
+        <div
+          class="flex items-center justify-center gap-10 rounded-xl border border-amber-500/25 bg-amber-950/20
+                 px-12 py-10 text-[13px] text-amber-100/95 backdrop-blur-sm"
+        >
+          <PhTrophy :size="18" weight="duotone" class="shrink-0 text-amber-400/90" />
+          <span class="text-[11px] font-semibold uppercase tracking-widest text-amber-200/65">Приз</span>
+          <span class="truncate font-semibold tabular-nums text-amber-100">{{ formatTournamentPrizeUah(tournament.prizePool) }}</span>
         </div>
       </div>
     </div>
 
-    <!-- === СЕКЦІЯ ЧАСУ === -->
     <div
-      class="relative w-full p-20 !max-h-[90px] !h-[90px]
-             bg-white/10 backdrop-blur-xl
-             border border-white/20
-             rounded-xl flex items-center
-             shadow-[0_0_20px_rgba(0,255,255,0.15)]
-             transition-all duration-300
-             before:absolute
-             before:inset-0 before:bg-gradient-to-br
-             before:from-cyan-500/10 before:to-transparent before:pointer-events-none
-             text-sm"
+      class="relative mx-12 mb-12 mt-auto max-h-[88px] min-h-[88px] shrink-0 rounded-xl border border-white/10
+             bg-black/45 px-12 py-10 backdrop-blur-md"
     >
-      <div class="relative z-10 flex w-full flex-col gap-3 text-white">
+      <div
+        class="flex h-full w-full flex-col justify-center gap-6 text-[13px] text-white"
+        :class="participantsCount > 0 ? 'pr-[2.375rem]' : ''"
+      >
         <div
           v-for="(item, index) in dateInfo"
           :key="index"
-          class="flex justify-between items-center py-1.5
-                 border-b border-white/5 last:border-none
-                 transition-all duration-300 hover:bg-white/5 rounded-lg px-2"
+          class="flex items-center justify-between gap-16 border-b border-white/[0.06] pb-6 last:border-0 last:pb-0"
         >
-          <span class="text-white/40 text-xs sm:text-sm tracking-wide">{{ item.label }}</span>
-          <span class="font-semibold text-white/90 sm:text-sm text-xs drop-shadow-[0_0_6px_rgba(0,255,255,0.5)]">
+          <span class="shrink-0 text-[11px] font-medium uppercase tracking-wide text-white/45">
+            {{ item.label }}
+          </span>
+          <span class="min-w-0 truncate text-right text-[12px] font-semibold tabular-nums text-white/90">
             {{ item.date }}
           </span>
         </div>
       </div>
 
-      <div
-        class="absolute top-0 left-0 w-full h-[2px]
-               bg-gradient-to-r from-transparent via-cyan-300 to-transparent opacity-50"
-      />
-      <el-badge
-        :value="participantsCount"
-        :hidden="participantsCount === 0"
-        class="absolute -top-5 -right-0"
-      />
+      <span
+        v-if="participantsCount > 0"
+        class="pointer-events-none absolute right-11 top-8 z-10 inline-flex h-[22px] min-w-[22px] shrink-0 items-center justify-center rounded-full border border-black/35 bg-[var(--el-color-primary)] px-6 text-[11px]
+               font-semibold tabular-nums leading-none text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] select-none ring-2 ring-black/45"
+        :title="`Команд учасників: ${participantsCount}`"
+      >
+        {{ participantsBadgeText }}
+      </span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { formatTournamentPrizeUah } from '@/views/tournaments/utils/tournament-prize-format'
+import TournamentBannerImage from '@/components/tournaments/TournamentBannerImage.vue'
+import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
+import { TOURNAMENT_CARD_HEIGHT, TOURNAMENT_CARD_WIDTH } from '@/constants/tournaments'
+import { routeNames } from '@/router/route-names'
+import type { TTournament as Tournament } from '@/api/types/api.types'
 import { PhTrophy } from '@phosphor-icons/vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/uk'
-import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
-import { routeNames } from '@/router/route-names'
+import utc from 'dayjs/plugin/utc'
 import { useRouter } from 'vue-router'
-import type { TTournament as Tournament } from '@/api/types/api.types'
 
-const router = useRouter()
 dayjs.extend(utc)
 dayjs.extend(timezone)
 dayjs.locale('uk')
@@ -131,8 +116,10 @@ const props = withDefaults(
     tournament: Tournament
     width?: number
   }>(),
-  { width: 250 }
+  { width: TOURNAMENT_CARD_WIDTH }
 )
+
+const router = useRouter()
 
 const isEndedBySchedule = computed(() => {
   const end = props.tournament.tournamentEndsAt
@@ -140,8 +127,12 @@ const isEndedBySchedule = computed(() => {
   return dayjs(end).isBefore(dayjs())
 })
 
-const participantsCount = computed(() => {
-  return props.tournament.teams?.length ?? 0
+const participantsCount = computed(() => props.tournament.teams?.length ?? 0)
+
+const participantsBadgeText = computed(() => {
+  const n = participantsCount.value
+  if (n > 99) return '99+'
+  return String(n)
 })
 
 const fmt = (date: string | Date, format: string = 'D MMM YYYY, HH:mm') =>
@@ -149,7 +140,7 @@ const fmt = (date: string | Date, format: string = 'D MMM YYYY, HH:mm') =>
 
 const dateInfo = computed(() => {
   const {
-    tournamentStatus, registrationStartsAt, registrationEndsAt, tournamentStartsAt, tournamentEndsAt
+    tournamentStatus, registrationEndsAt, tournamentStartsAt, tournamentEndsAt
   } = props.tournament
 
   if (isEndedBySchedule.value) {
@@ -166,7 +157,7 @@ const dateInfo = computed(() => {
   switch (tournamentStatus) {
     case 'QUALIFICATIONS':
       return [
-        { label: 'Реєстрація до:', date: fmt(registrationEndsAt) },
+        { label: 'Кваліфікація до:', date: fmt(registrationEndsAt) },
         { label: 'Плей-оф з:', date: fmt(tournamentStartsAt) }
       ]
     case 'PLAYOFF':

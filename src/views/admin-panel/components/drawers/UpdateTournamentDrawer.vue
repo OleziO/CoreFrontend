@@ -142,6 +142,7 @@ import type { UploadFile } from 'element-plus'
 // import { useGetDivisions } from '@/composables/query/use-divisions'
 import { ElMessage } from 'element-plus'
 import type { TTournament as Tournament, TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
+import { getImageUrl } from '@/core/helpers'
 
 interface ITournamentUpdateFormData extends Partial<UpdateTournamentDto> {
   status?: string
@@ -183,7 +184,7 @@ watch(() => showUpdateTournamentDrawer.value, (isOpen) => {
       registrationEndsAt: props.newTournamentData.registrationEndsAt || ''
     }
     if (props.newTournamentData.headerBannerUrl) {
-      preview.value = props.newTournamentData.headerBannerUrl
+      preview.value = getImageUrl(props.newTournamentData.headerBannerUrl)
     }
   }
 })

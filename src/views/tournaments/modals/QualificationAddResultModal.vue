@@ -42,7 +42,7 @@ import type { TQualificationMatch as QualificationMatch } from '@/api/types/api.
 const props = defineProps<{
   modelValue: boolean
   tournamentId: string
-  pastRegistrationEnd: boolean
+  pastQualificationsEnd: boolean
 }>()
 
 const emit = defineEmits<{
@@ -71,7 +71,7 @@ function onDialogVisible (v: boolean) {
 }
 
 function validate (): boolean {
-  if (props.pastRegistrationEnd) {
+  if (props.pastQualificationsEnd) {
     ElMessage.warning('Строк подачі результату завершено.')
     return false
   }

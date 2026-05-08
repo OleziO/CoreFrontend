@@ -66,8 +66,8 @@
                 py-10 sm:py-11 transition-colors duration-150"
             >
               <span
-                class="shrink-0 flex size-7 items-center justify-center text-[11px] font-bold
-                  tabular-nums border rounded-md justify-self-start"
+                class="shrink-0 flex size-24 rounded-full items-center justify-center text-[12px] font-bold
+                border justify-self-start"
                 :class="block.rankBadgeClass"
               >
                 {{ block.startRank + idx }}

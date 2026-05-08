@@ -58,7 +58,7 @@ export const useTournamentStore = defineStore('tournaments', () => {
   // const startTournament = async (tournamentId: string) => { ... }
 
   // TODO: endpoint not in API yet
-  // const openRegistrationTournament = async (tournamentId: string) => { ... }
+  // const openQualificationsTournament = async (tournamentId: string) => { ... }
 
   // TODO: endpoint not in API yet
   // const endTournament = async (tournamentId: string, winnerId: string, _points: number) => { ... }

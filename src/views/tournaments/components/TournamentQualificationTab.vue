@@ -11,14 +11,14 @@
         <div v-if="phaseWindowText" class="text-sm text-gray-300 mt-4">
           {{ phaseWindowText }}
         </div>
-        <div v-else-if="registrationEndsIso" class="text-sm text-gray-300 mt-4">
-          Межа для подань (кінець кваліфікації): {{ formatUk(registrationEndsIso) }}
+        <div v-else-if="qualificationSubmissionDeadlineIso" class="text-sm text-gray-300 mt-4">
+          Межа для подань (кінець кваліфікації): {{ formatUk(qualificationSubmissionDeadlineIso) }}
         </div>
         <div v-if="pastSubmissionWindow" class="text-amber-400 text-sm mt-6">
           Термін подачі результату завершено — сервер може відхилити нові матчі (після кінця вікна кваліфікації).
         </div>
       </div>
-      <div v-if="registrationEndsIso" class="flex flex-col items-start md:items-end gap-6">
+      <div v-if="qualificationSubmissionDeadlineIso" class="flex flex-col items-start md:items-end gap-6">
         <span class="text-xs text-gray-500 uppercase font-bold tracking-wider">Залишилось до кінця кваліфікації</span>
         <span class="font-mono text-lg text-cyan-300">{{ countdownLabel }}</span>
       </div>
@@ -35,7 +35,7 @@
     <QualificationAddResultModal
       v-model="modalOpen"
       :tournament-id="tournamentId"
-      :past-registration-end="pastSubmissionWindow"
+      :past-qualifications-end="pastSubmissionWindow"
       @submitted="onSubmitted"
     />
   </div>
@@ -129,11 +129,12 @@ const sortedDisplayMatches = computed(() => {
   return list
 })
 
-const registrationEndsIso = computed(() => props.tournament?.registrationEndsAt ?? '')
+/** UTC кінець вікна кваліфікаційних подань (`registrationEndsAt` у відповіді API). */
+const qualificationSubmissionDeadlineIso = computed(() => props.tournament?.registrationEndsAt ?? '')
 
 /** Клієнтська перевірка: після цього UTC бекенд відхиляє подані матчі події (згідно з ТЗ — registrationEndsAt). */
 const pastSubmissionWindow = computed(() => {
-  const end = registrationEndsIso.value
+  const end = qualificationSubmissionDeadlineIso.value
   if (!end) return false
   return dayjs().isAfter(dayjs(end))
 })
@@ -155,7 +156,7 @@ function formatUk (iso: string) {
 const countdownLabel = ref('—')
 
 function updateCountdown () {
-  const end = registrationEndsIso.value
+  const end = qualificationSubmissionDeadlineIso.value
   if (!end) {
     countdownLabel.value = '—'
     return

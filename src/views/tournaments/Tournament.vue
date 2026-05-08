@@ -4,27 +4,32 @@
       <AppBackButton class="top-24 left-20 lg:left-40" />
 
       <div class="absolute inset-0 z-0 select-none">
-        <el-image
-          v-if="tournament?.headerBannerUrl"
-          class="w-full h-full object-cover"
-          fit="cover"
-          :src="tournament.headerBannerUrl"
+        <TournamentBannerImage
+          :url="tournament?.headerBannerUrl"
+          variant="hero"
+          :lazy="false"
         />
-        <div class="absolute inset-0 bg-gradient-to-t from-[#0b1121] via-[#0b1121]/80 to-transparent" />
-        <div class="absolute inset-0 bg-gradient-to-r from-[#0b1121]/80 via-transparent to-transparent" />
+        <div
+          class="absolute inset-0 bg-gradient-to-t from-[#0b1121]
+           via-[#0b1121]/80 to-transparent pointer-events-none"
+        />
+        <div
+          class="absolute inset-0 bg-gradient-to-r from-[#0b1121]/80
+           via-transparent to-transparent pointer-events-none"
+        />
       </div>
 
-      <div class="relative z-10 pt-24 w-full max-w-7xl mx-auto px-20 sm:px-15 lg:px-20 xl:px-40 pb-12 lg:pb-16">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-18 lg:gap-12 items-end">
-          <div class="lg:col-span-7 gap-20 flex flex-col animate-fade-in-up">
+      <div class="relative z-10 pt-24 w-full max-w-7xl mx-auto px-20 sm:px-15 lg:px-20 xl:px-40 pb-14 lg:pb-16">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-14 xl:gap-16 items-end">
+          <div class="lg:col-span-7 flex flex-col gap-12 lg:gap-16 animate-fade-in-up">
             <h1
-              class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black
-               text-white tracking-tight leading-[1] drop-shadow-2xllg:mb-10"
+              class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white
+               tracking-tight leading-[1.05] drop-shadow-2xl lg:mb-2"
             >
               {{ tournament?.name }}
             </h1>
 
-            <div class="flex md:flex-nowrap flex-wrap items-stretch gap-10 max-w-lg">
+            <div class="flex md:flex-nowrap flex-wrap items-stretch gap-8 lg:gap-10 max-w-lg">
               <TournamentStatusTag
                 :status="tournament?.tournamentStatus"
                 class="shadow-lg flex-1 shadow-black/20 justify-center"
@@ -41,25 +46,25 @@
 
           <div class="lg:col-span-5 flex justify-center lg:justify-end w-full">
             <div
-              class="w-full bg-[#111827]/60 backdrop-blur-xl
-            border border-white/10 rounded-2xl p-6 sm:p-8 shadow-[0_0_40px_rgba(0,0,0,0.3)]
-            flex flex-col gap-6 transition-transform"
+              class="w-full bg-[#111827]/70 backdrop-blur-xl border border-white/[0.08]
+               rounded-2xl p-7 sm:p-8 shadow-xl shadow-black/30 ring-1 ring-white/[0.04]
+               flex flex-col gap-6 sm:gap-7 transition-[box-shadow,border-color] duration-300"
             >
-              <div class="lg:grid lg:grid-cols-2 h-full flex flex-col gap-6 sm:gap-10">
+              <div class="lg:grid lg:grid-cols-2 h-full flex flex-col gap-5 sm:gap-8">
                 <div
-                  class="bg-black/20 rounded-xl p-10 border border-white/5 flex
-                 flex-col items-center  gap-1"
+                  class="bg-black/25 rounded-xl p-8 sm:p-10 border border-white/[0.06]
+                   flex flex-col items-center gap-1.5"
                 >
                   <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Призовий фонд</span>
                   <div class="flex items-center gap-2 text-yellow-400 font-bold text-lg">
                     <el-icon><Trophy /></el-icon>
-                    <span class="truncate">{{ tournament?.prizePool || '—' }}</span>
+                    <span class="truncate">{{ formatTournamentPrizeUah(tournament?.prizePool) }}</span>
                   </div>
                 </div>
 
                 <div
-                  class="bg-black/20 rounded-xl p-10 border border-white/5 flex
-                 flex-col items-center  gap-1 "
+                  class="bg-black/25 rounded-xl p-8 sm:p-10 border border-white/[0.06]
+                   flex flex-col items-center gap-1.5"
                 >
                   <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Дата початку</span>
                   <div class="flex items-center gap-5 text-cyan-400 font-bold text-lg">
@@ -71,8 +76,8 @@
                 </div>
 
                 <div
-                  class="col-span-2 bg-black/20 rounded-xl p-10 border
-                 border-white/5 flex flex-col items-center gap-1"
+                  class="col-span-2 bg-black/25 rounded-xl p-8 sm:p-10 border border-white/[0.06]
+                   flex flex-col items-center gap-1.5"
                 >
                   <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Учасники</span>
                   <div class="flex items-center gap-2 text-purple-400 font-bold text-lg">
@@ -127,7 +132,8 @@
                     </div>
                     <p
                       v-else
-                      class="text-sm text-center px-10 leading-snug rounded-xl border border-white/10 bg-black/25 py-10 text-gray-300"
+                      class="text-sm text-center px-10 leading-snug rounded-xl border border-white/10
+                       bg-black/25 py-10 text-gray-300"
                     >
                       {{ joinSecondaryHint }}
                     </p>
@@ -143,10 +149,10 @@
                       {{ inactiveTournamentBanner }}
                     </el-button>
                     <p
-                      v-if="mutedRegistrationHintForLoggedUser"
+                      v-if="mutedQualificationsHintForLoggedUser"
                       class="text-xs text-center text-gray-500 leading-snug px-14"
                     >
-                      {{ mutedRegistrationHintForLoggedUser }}
+                      {{ mutedQualificationsHintForLoggedUser }}
                     </p>
                   </template>
                 </template>
@@ -172,13 +178,13 @@
       </div>
     </div>
 
-    <div class="w-full max-w-7xl mx-auto px-10 sm:px-15 lg:px-20 xl:px-40 py-8 pb-20">
-      <div class="flex items-center gap-16 border-b border-white/10 overflow-x-auto no-scrollbar relative">
-        <el-tabs v-model="activeTab" class="border-b border-white/10 w-full" tab-position="top" stretch>
+    <div class="w-full max-w-7xl mx-auto px-10 sm:px-15 lg:px-20 xl:px-40 py-10 pb-20">
+      <div class="flex items-center gap-12 overflow-x-auto no-scrollbar relative border-b border-white/[0.08]">
+        <el-tabs v-model="activeTab" class="tournament-detail-tabs w-full" tab-position="top" stretch>
           <el-tab-pane v-for="tab in tabs" :key="tab.value" :name="tab.value">
             <template #label>
-              <div class="relative flex gap-4 sm:gap-6 items-center">
-                <span class="text-sm sm:text-base">{{ tab.label }}</span>
+              <div class="relative flex gap-4 sm:gap-6 items-center py-2">
+                <span class="text-sm sm:text-[15px] font-medium text-white/85">{{ tab.label }}</span>
                 <el-tag
                   v-if="tab.value === 'teams'"
                   type="danger"
@@ -226,20 +232,20 @@
           <div
             v-else-if="!tournament?.tournamentGridUrl"
             class="w-full py-20 flex justify-center items-center flex-col text-center
-            border border-dashed border-white/10 rounded-xl bg-white/5"
+            border border-dashed border-white/[0.07] rounded-2xl bg-white/[0.04]"
           >
-            <PhBracketsCurly :size="40" class="text-gray-600 mb-3" />
-            <p class="text-gray-400">
+            <PhBracketsCurly :size="40" class="text-gray-600 mb-4" />
+            <p class="text-sm text-gray-400 max-w-sm">
               Сітка турніру ще не готова
             </p>
           </div>
           <div
             v-else
             class="w-full py-20 flex justify-center items-center flex-col text-center
-            border border-dashed border-white/10 rounded-xl bg-white/5"
+            border border-dashed border-white/[0.07] rounded-2xl bg-white/[0.04]"
           >
-            <PhBracketsCurly :size="40" class="text-gray-600 mb-3" />
-            <p class="text-gray-400">
+            <PhBracketsCurly :size="40" class="text-gray-600 mb-4" />
+            <p class="text-sm text-gray-400 max-w-sm">
               Сітка доступна під час плей-оф
             </p>
           </div>
@@ -258,11 +264,13 @@
 <script setup lang="ts">
 import { Trophy, Calendar, User } from '@element-plus/icons-vue'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
+import TournamentBannerImage from '@/components/tournaments/TournamentBannerImage.vue'
 import TournamentQualificationTab from '@/views/tournaments/components/TournamentQualificationTab.vue'
 import { PROFILE_CAPTAIN_ROLE_UA } from '@/components/tournaments-tags/tournament.constants'
 import type { TTournament as Tournament, TTeam as Team } from '@/api/types/api.types'
 
 import { formatDate } from '@/core/helpers'
+import { formatTournamentPrizeUah } from '@/views/tournaments/utils/tournament-prize-format'
 import { teamsService } from '@/views/teams/teams.service'
 import { PhBracketsCurly, PhSteamLogo } from '@phosphor-icons/vue'
 import { getApiErrorMessage } from '@/utils/api-errors'
@@ -272,7 +280,7 @@ const activeTab = ref('teams')
 const myTeam = shallowRef<Team | null>(null)
 const joinLoading = ref(false)
 const leaveTournamentLoading = ref(false)
-const joinHiddenRegClosedByApi = ref(false)
+const joinHiddenQualificationsClosedByApi = ref(false)
 const joinHiddenCaptainByApi = ref(false)
 
 const route = useRoute()
@@ -328,13 +336,13 @@ const hasCaptainUserRole = computed(() =>
 watch(
   () => [authStore.user?.teamId, authStore.token],
   () => {
-    void hydrateMyTeam()
+    hydrateMyTeam().catch(() => {})
   },
   { immediate: true }
 )
 
 watch(() => tournament.value?.tournamentStatus, () => {
-  joinHiddenRegClosedByApi.value = false
+  joinHiddenQualificationsClosedByApi.value = false
   joinHiddenCaptainByApi.value = false
 })
 
@@ -353,7 +361,7 @@ const captainJoinContextOk = computed(() =>
   !!(authStore.token &&
     tournament.value?.tournamentStatus === 'QUALIFICATIONS' &&
     hasCaptainUserRole.value &&
-    !joinHiddenRegClosedByApi.value &&
+    !joinHiddenQualificationsClosedByApi.value &&
     !joinHiddenCaptainByApi.value)
 )
 
@@ -372,7 +380,8 @@ const showJoinPrimary = computed(() =>
 
 function joinFriendlyHintFromApi (msg: string): string {
   const hints: Partial<Record<string, string>> = {
-    'Реєстрація на турнір закрита': 'Реєстрація на цей турнір закрита.',
+    'Реєстрація на турнір закрита': 'Кваліфікацію на цей турнір закрито.',
+    'Кваліфікація на турнір закрита': 'Кваліфікацію на цей турнір закрито.',
     'Тільки капітан команди може приєднатися до турніру': 'До турніру може приєднатися лише капітан команди.',
     'Команда вже бере участь у турнірі': 'Ваша команда вже записана.',
     'Команда не верифікована': 'Спочатку підтвердьте верифікацію команди.',
@@ -397,11 +406,7 @@ async function reloadTournament () {
   try {
     const data = await tournamentsService.fetchTournament(tournamentId)
     tournament.value = data
-    const list = tournamentStore.tournamentsData
-    const idx = list.findIndex((t) => t.id === tournamentId)
-    if (idx >= 0) {
-      list[idx] = data
-    }
+    tournamentStore.patchTournamentInList(data)
   } catch (e: unknown) {
     ElMessage.error(getApiErrorMessage(e, 'Не вдалося оновити дані турніру'))
   }
@@ -413,9 +418,16 @@ function patchTournament (next: Tournament) {
 
 function handleJoinTransportError (raw: string) {
   const norm = raw.trim()
-  if (norm.includes('Реєстрація на турнір закрита')) {
-    joinHiddenRegClosedByApi.value = true
-    ElMessage.warning(joinFriendlyHintFromApi('Реєстрація на турнір закрита'))
+  if (
+    norm.includes('Реєстрація на турнір закрита') ||
+    norm.includes('Кваліфікація на турнір закрита')
+  ) {
+    joinHiddenQualificationsClosedByApi.value = true
+    ElMessage.warning(
+      norm.includes('Кваліфікація на турнір закрита')
+        ? joinFriendlyHintFromApi('Кваліфікація на турнір закрита')
+        : joinFriendlyHintFromApi('Реєстрація на турнір закрита')
+    )
     return true
   }
   if (norm.includes('Тільки капітан команди може приєднатися до турніру')) {
@@ -430,7 +442,7 @@ async function registerOnTeamTournament () {
   joinLoading.value = true
   try {
     await tournamentsService.joinTournament(tournamentId)
-    ElMessage.success('Команда успішно зареєстрована')
+    ElMessage.success('Команду успішно записано на турнір')
     await reloadTournament()
     await hydrateMyTeam()
   } catch (e: unknown) {
@@ -461,17 +473,19 @@ async function handleLeaveTournament () {
 const joinSecondaryHint = computed(() => {
   if (!captainJoinContextOk.value) return ''
 
-  if (!myTeam.value) { return 'Щоб зареєструватися, спочатку приєднайтесь або створіть команду як капітан.' }
+  if (!myTeam.value) { return 'Щоб долучитися до турніру, спочатку приєднайтеся або створіть команду як капітан.' }
 
   if (!freeSlots.value) { return 'Усі місця в турнірі вже зайняті.' }
 
   return ''
 })
 
-const mutedRegistrationHintForLoggedUser = computed(() => {
+const mutedQualificationsHintForLoggedUser = computed(() => {
   if (!authStore.token || captainJoinContextOk.value) return ''
   const st = tournament.value?.tournamentStatus
-  if (st === 'QUALIFICATIONS' && !hasCaptainUserRole.value) { return 'Реєстрацію виконує капітан команди з роллю «Капітан» у профілі.' }
+  if (st === 'QUALIFICATIONS' && !hasCaptainUserRole.value) {
+    return 'Кваліфікаційну заявку подає капітан команди'
+  }
 
   return ''
 })
@@ -479,7 +493,7 @@ const mutedRegistrationHintForLoggedUser = computed(() => {
 const inactiveTournamentBanner = computed(() => {
   if (!authStore.token) return ''
 
-  if (joinHiddenRegClosedByApi.value) { return 'Реєстрація на турнір закрита' }
+  if (joinHiddenQualificationsClosedByApi.value) { return 'Кваліфікацію на турнір закрито' }
 
   if (joinHiddenCaptainByApi.value) { return 'Приєднання для цього акаунту неможливе' }
 
@@ -487,11 +501,11 @@ const inactiveTournamentBanner = computed(() => {
 
   switch (tournament.value?.tournamentStatus) {
     case 'PLAYOFF':
-      return 'Триває плей-оф — запис на турнір недоступний'
+      return 'Триває плей-оф — подача заявок недоступна'
     case 'QUALIFICATIONS':
       return ''
     default:
-      return 'Реєстрація на турнір недоступна'
+      return 'Кваліфікація на турнір недоступна'
   }
 })
 
@@ -504,8 +518,17 @@ function getBracketUrl (url: string) {
 }
 
 onMounted(async () => {
-  const data = await tournamentStore.findTournament(tournamentId)
-  if (data) tournament.value = data
+  const cached = await tournamentStore.findTournament(tournamentId)
+  if (cached) tournament.value = cached
+  try {
+    const fresh = await tournamentsService.fetchTournament(tournamentId)
+    tournament.value = fresh
+    tournamentStore.patchTournamentInList(fresh)
+  } catch (e: unknown) {
+    if (!tournament.value) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося завантажити турнір'))
+    }
+  }
   await hydrateMyTeam()
 })
 
@@ -535,5 +558,42 @@ onMounted(async () => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.tournament-detail-tabs :deep(.el-tabs__header) {
+  margin: 0;
+}
+
+.tournament-detail-tabs :deep(.el-tabs__nav-wrap) {
+  overflow: hidden;
+}
+
+.tournament-detail-tabs :deep(.el-tabs__nav-wrap::after) {
+  display: none;
+}
+
+.tournament-detail-tabs :deep(.el-tabs__nav) {
+  gap: 0.25rem;
+}
+
+/** Не брати дефолтний primary EP (синій); під нейтральну лінію з border-батькова */
+.tournament-detail-tabs :deep(.el-tabs__active-bar) {
+  height: 2px;
+  border-radius: 0;
+  background-color: rgb(229 231 235);
+  box-shadow: none;
+}
+
+.tournament-detail-tabs :deep(.el-tabs__item) {
+  padding: 0 0.75rem 0.75rem;
+  color: rgb(156 163 175);
+}
+
+.tournament-detail-tabs :deep(.el-tabs__item:hover) {
+  color: rgb(229 231 235);
+}
+
+.tournament-detail-tabs :deep(.el-tabs__item.is-active) {
+  color: rgb(255 255 255);
 }
 </style>

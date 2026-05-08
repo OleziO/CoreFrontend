@@ -79,6 +79,7 @@ declare module 'vue' {
     TeamsPlayersDrawer: typeof import('./views/teams/components/TeamsPlayersDrawer.vue')['default']
     TeamVerificationTab: typeof import('./views/admin-panel/components/tabs/TeamVerificationTab.vue')['default']
     TournamentAdminTab: typeof import('./views/tournaments/components/TournamentAdminTab.vue')['default']
+    TournamentBannerImage: typeof import('./components/tournaments/TournamentBannerImage.vue')['default']
     TournamentCard: typeof import('./components/TournamentCard.vue')['default']
     TournamentMatchesTab: typeof import('./views/tournaments/components/TournamentMatchesTab.vue')['default']
     TournamentParcitipantsTab: typeof import('./views/tournaments/components/TournamentParcitipantsTab.vue')['default']

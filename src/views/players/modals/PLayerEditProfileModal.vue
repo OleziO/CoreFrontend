@@ -56,7 +56,7 @@
                  rounded-12 border border-white/10
                  bg-white/5 px-16 py-12"
         >
-          <div class="flex items-center gap-8">
+          <div class="flex items-center gap-8 min-w-0">
             <Icon :size="20" name="steam" />
 
             <span
@@ -74,15 +74,28 @@
             </span>
           </div>
 
-          <el-button
-            v-if="!hasSteam"
-            type="primary"
-            size="small"
-            :loading="linkingSteam"
-            @click="onConnectSteam"
-          >
-            Приєднати Steam
-          </el-button>
+          <div class="flex shrink-0 items-center gap-8">
+            <el-button
+              v-if="hasSteam && canStaffDisconnectSteam"
+              type="danger"
+              plain
+              size="small"
+              :loading="disconnectingSteam"
+              @click="onDisconnectSteam"
+            >
+              Від'єднати
+            </el-button>
+
+            <el-button
+              v-if="!hasSteam"
+              type="primary"
+              size="small"
+              :loading="linkingSteam"
+              @click="onConnectSteam"
+            >
+              Приєднати Steam
+            </el-button>
+          </div>
         </div>
       </el-form-item>
     </el-form>
@@ -108,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { positionOptions } from '@/components/player-tags/player.constants'
 import { isPlayerVerified } from '@/core/helpers'
 import { useAuthStore } from '@/store/modules/auth'
@@ -211,13 +224,28 @@ const form = ref<IEditProfileForm>({
 
 const saving = ref(false)
 const linkingSteam = ref(false)
+const disconnectingSteam = ref(false)
+
+/** Після PATCH проп з `open()` не оновлюється — мержимо відповідь API для блоку Steam. */
+const playerAfterSteamMutation = ref<TPlayer | null>(null)
 
 watch(modelValue, (open) => {
   if (!open) return
+  playerAfterSteamMutation.value = null
   applyFormFromPlayer(props.player)
 })
 
-const hasSteam = computed(() => !!props.player.steamId)
+const effectivePlayer = computed(() => playerAfterSteamMutation.value ?? props.player)
+
+const hasSteam = computed(() => {
+  const id = effectivePlayer.value.steamId
+  return id != null && String(id).trim() !== ''
+})
+
+/** Адміністрація може відв'язати Steam у гравця (PATCH профілю). */
+const canStaffDisconnectSteam = computed(
+  () => authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator
+)
 
 /** Статус «верифікований» у гравця, чий профіль редагується (як і в картках / Player.vue). */
 const targetPlayerVerified = computed(() => isPlayerVerified(props.player))
@@ -268,6 +296,38 @@ async function onConnectSteam () {
   } catch {
     ElMessage.error('Не вдалося отримати посилання для Steam. Спробуйте ще раз.')
     linkingSteam.value = false
+  }
+}
+
+async function onDisconnectSteam () {
+  try {
+    await ElMessageBox.confirm(
+      'Від\'єднати Steam у цього гравця? Пізніше він зможе знову прив\'язати акаунт.',
+      'Від\'єднати Steam',
+      {
+        type: 'warning',
+        confirmButtonText: 'Від\'єднати',
+        cancelButtonText: 'Скасувати'
+      }
+    )
+  } catch {
+    return
+  }
+
+  disconnectingSteam.value = true
+  try {
+    const updated = await playersService.updatePlayer(props.player.id, {
+      steamId: ''
+    })
+    playerAfterSteamMutation.value = updated
+    ElMessage.success('Steam від\'єднано')
+    emit('updated', updated)
+    props.onUpdated?.(updated)
+  } catch (e) {
+    const data = (e as { response?: { data?: { message?: string } } })?.response?.data
+    ElMessage.error(data?.message || 'Не вдалося від\'єднати Steam')
+  } finally {
+    disconnectingSteam.value = false
   }
 }
 

@@ -1,6 +1,11 @@
 @use "element-plus/theme-chalk/src/tooltip";
 
-.el-tooltip.el-popper.el-popover {
+/*
+  ElPopconfirm підставляє той самий клас `el-popover` на поппер, що й ElPopover.
+  Правила лише для справжнього Popover — інакше flex/max-w-fit ламають Popconfirm
+  (плаваюча позиція «їде вбік», контент стискається).
+ */
+.el-tooltip.el-popper.el-popover:not(:has(.el-popconfirm)) {
   @apply flex p-15 max-w-fit;
 }
 

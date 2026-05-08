@@ -17,7 +17,7 @@
           </div>
         </div>
 
-        <!-- TODO: endpoint not in API yet (startTournament, openRegistration, endTournament) -->
+        <!-- TODO: endpoint not in API yet (startTournament, openQualifications, endTournament) -->
         <div class="px-6 py-3 rounded-xl text-gray-500 text-sm bg-white/[0.02] font-mono">
           Управління турніром недоступне
         </div>
@@ -25,7 +25,9 @@
 
       <div class="mt-20">
         <el-popconfirm
-          title="Видалити турнір? Дія незворотна."
+          width="300"
+          placement="bottom-start"
+          title="Видалити турнір?"
           confirm-button-text="Видалити"
           cancel-button-text="Скасувати"
           confirm-button-type="danger"

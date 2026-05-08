@@ -1,47 +1,43 @@
 @use "element-plus/theme-chalk/src/popconfirm";
 
-/* Контейнер поповера */
-.custom-popconfirm.el-popper.is-light.el-tooltip {
-  @apply
-    bg-red-400          /* темно-сірий фон */
-    text-white
-    p-15
-    rounded-xl
-    border
-    border-primary
-    backdrop-blur-sm
-    !w-max;
+/* Панель як у dropdown: .el-dropdown-menu */
+.el-popper.el-tooltip:has(.el-popconfirm) {
+  @apply rounded-xl border border-white/20 bg-white/5 backdrop-blur-xl
+         shadow-[0_20px_40px_rgba(0,0,0,0.45)];
+  box-sizing: border-box;
+  padding: 12px 14px !important;
+  min-width: 200px;
+  max-width: min(100vw - 24px, 400px);
 }
 
-/* Сам popconfirm */
 .el-popconfirm {
-  @apply flex flex-col gap-3 min-w-[220px];
+  @apply flex flex-col gap-10 min-w-0;
+  max-width: 100%;
 }
 
-/* Основний текст */
 .el-popconfirm__main {
   @apply
     text-sm
-    text-gray-100
-    flex items-center gap-2;
+    text-white/90
+    flex items-start gap-10
+    leading-snug;
+  font-weight: 500;
 }
 
-/* Іконка попередження */
 .el-popconfirm__icon {
-  @apply
-    text-red-400
-    text-lg;
+  @apply shrink-0 mt-2 text-warning;
+  font-size: 18px;
 }
 
-/* Кнопки */
 .el-popconfirm__action {
-  @apply
-    flex justify-end gap-8 pt-2;
+  @apply flex justify-end gap-8 pt-10 items-center mt-2 border-t border-white/10;
 }
 
-/* Кнопка "Скасувати" */
-.el-popconfirm__action .el-button.el-button--danger,
-.el-popconfirm__action .el-button.el-button--primary  {
-  @apply rounded-lg px-10 py-4 #{!important};
+.el-popconfirm__action .el-button--small {
+  @apply rounded-lg px-12 py-6 min-h-0 #{!important};
 }
 
+.el-popconfirm__action .el-button.is-text,
+.el-popconfirm__action .el-button.el-button--text {
+  @apply text-white/70 hover:text-white hover:bg-white/10 #{!important};
+}

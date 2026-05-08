@@ -311,7 +311,7 @@
               3
             </span>
             <h3 class="text-lg font-semibold mb-3 mt-6">
-              Реєстрація на турнір
+              Кваліфікація на турнір
             </h3>
             <p class="text-sm text-zinc-400 leading-relaxed">
               Оберіть турнір, натисніть кнопку «Участь» і підтвердьте склад команди.

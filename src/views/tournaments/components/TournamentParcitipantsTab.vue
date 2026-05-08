@@ -31,6 +31,6 @@ const props = defineProps<{ tournament: Tournament | null | undefined }>()
 const emptyTeamsMessage = computed(() => {
   const end = props.tournament?.tournamentEndsAt
   if (end && Date.parse(end) < Date.now()) return 'Турнір завершено'
-  return 'Ще немає зареєстрованих команд'
+  return 'Поки немає команд серед учасників'
 })
 </script>

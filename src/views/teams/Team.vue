@@ -170,9 +170,9 @@
                 class="flex items-center gap-20 p-15 shrink-0 min-w-0
                 rounded-xl bg-gray-800/50 hover:bg-gray-800 transition-colors backdrop-blur-sm"
               >
-                <el-image
-                  :src="tournament.listBannerUrl"
-                  class="w-[60px] max-w-full rounded-lg object-cover shrink-0"
+                <TournamentBannerImage
+                  :url="tournament.listBannerUrl"
+                  variant="thumb"
                 />
 
                 <div class="flex flex-col w-full gap-15 min-w-0">
@@ -236,6 +236,7 @@
                   <el-popconfirm
                     v-if="team?.tournament"
                     width="320"
+                    placement="top-end"
                     :title="tournamentRemovePlayerWarning"
                     confirm-button-text="Видалити"
                     cancel-button-text="Скасувати"
@@ -310,6 +311,7 @@
                   <el-popconfirm
                     v-if="team?.tournament"
                     width="320"
+                    placement="top-end"
                     :title="tournamentRemovePlayerWarning"
                     confirm-button-text="Видалити"
                     cancel-button-text="Скасувати"
@@ -379,6 +381,7 @@ import { useClipboard, useWindowSize } from '@vueuse/core'
 import dayjs from 'dayjs'
 import 'dayjs/locale/uk'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
+import TournamentBannerImage from '@/components/tournaments/TournamentBannerImage.vue'
 import type { TTeam as Team } from '@/api/types/api.types'
 import type { TUpdateTeamPayload } from '@/views/teams/teams.service'
 import { teamsService } from '@/views/teams/teams.service'

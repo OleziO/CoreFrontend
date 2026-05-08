@@ -1,0 +1,75 @@
+@use "element-plus/theme-chalk/src/message-box";
+
+/*
+  Центрування: дефолтний EP використовує ::after + vertical-align,
+  що часто ламається всередині модалок / із глобальними overflow.
+*/
+.el-overlay.is-message-box .el-overlay-message-box {
+  @apply flex min-h-full w-full items-center justify-center p-16;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.el-overlay.is-message-box .el-overlay-message-box::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Панель у стилі dropdown / dialog */
+.el-message-box {
+  @apply relative overflow-visible rounded-2xl border border-white/20
+    bg-white/10 backdrop-blur-xl text-left
+    shadow-[0_20px_40px_rgba(0,0,0,0.45)]
+    max-w-[min(420px,calc(100vw-32px))]
+    p-16 sm:p-20 #{!important};
+
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.el-message-box__header {
+  @apply pb-12 #{!important};
+}
+
+.el-message-box__title {
+  @apply text-white text-lg font-semibold leading-snug pr-8 #{!important};
+}
+
+.el-message-box__content {
+  @apply text-white/90 text-sm #{!important};
+}
+
+.el-message-box__message {
+  @apply m-0 #{!important};
+
+  & p {
+    @apply text-white/90 leading-relaxed m-0 #{!important};
+  }
+}
+
+.el-message-box__container {
+  @apply items-start gap-12 #{!important};
+}
+
+.el-message-box__status {
+  @apply shrink-0 mt-1 text-warning #{!important};
+}
+
+.el-message-box__btns {
+  @apply flex flex-row flex-wrap items-center justify-end gap-10
+    border-t border-white/10 pt-16 mt-16 #{!important};
+}
+
+.el-message-box__btns .el-button {
+  @apply rounded-xl px-16 py-8 min-h-0 font-medium text-sm
+    transition-colors duration-200 #{!important};
+}
+
+.el-message-box__btns .el-button--default {
+  @apply border border-white/15 bg-white/5 text-white
+    hover:bg-white/10 hover:border-white/25 #{!important};
+}
+
+.el-message-box__btns .el-button--primary {
+  @apply border-0 #{!important};
+}

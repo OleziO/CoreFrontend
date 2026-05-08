@@ -9,9 +9,15 @@ export const tournamentFields = [
   { label: 'Кінець кваліфікації', model: 'end_registration', placeholder: '2025-01-02' }
 ] as const
 
+/**
+ * Розміри видимої картки турніру (розміри списку = картка + gap, див. `VirtualList.vue` pb-20 pr-20 і `useVirtualGridLayout`).
+ */
+export const TOURNAMENT_CARD_WIDTH = 360
+export const TOURNAMENT_CARD_HEIGHT = 400
+
 export const tournamentByStatus = {
-  'pre-registration': 'Пре-реєстрація',
-  registration: 'Реєстрація',
+  'pre-registration': 'До кваліфікації',
+  registration: 'Кваліфікація',
   'in-progress': 'У процессі',
   ended: 'Завершено'
 }

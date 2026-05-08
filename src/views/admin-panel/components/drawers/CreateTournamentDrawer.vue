@@ -122,7 +122,7 @@
           </div>
           <div class="drawer-section__body drawer-section__body--stack">
             <p class="drawer-section__hint">
-              Реєстрація → плей-оф зазвичай іде після кваліфікації; перевірте дати перед публікацією.
+              Від кваліфікації до плей-оф: перевірте дати й послідовність етапів перед публікацією.
             </p>
             <div class="drawer-date-grid">
             <el-form-item label="Початок кваліфікації" required class="drawer-field">
