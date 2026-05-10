@@ -86,7 +86,7 @@
               {{ matrixTeams.length }} {{ pluralTeams(matrixTeams.length) }}
             </span>
           </div>
-          <div class="px-10 py-12 sm:px-14 sm:py-14">
+          <div class="px-10 py-12 sm:px-14 sm:py-14 ">
             <QualificationMatrix :matches="matches" :tournament-teams="tournamentTeams" />
           </div>
           <p
@@ -100,6 +100,7 @@
         <QualificationLeaderboard
           class="qual-leaderboard-col w-full shrink-0 lg:w-[min(100%,320px)] xl:w-[340px]"
           :teams="matrixTeams"
+          :player-points="playerPoints"
         />
       </div>
     </div>
@@ -108,7 +109,7 @@
 
 <script setup lang="ts">
 import { Plus, Trophy } from '@element-plus/icons-vue'
-import type { TQualificationMatch as QualificationMatch, TTeam } from '@/api/types/api.types'
+import type { TQualificationMatch as QualificationMatch, TPlayerPointsEntry, TTeam } from '@/api/types/api.types'
 import QualificationMatrix from './QualificationMatrix.vue'
 import QualificationLeaderboard from './QualificationLeaderboard.vue'
 import { buildQualificationMatrixTeams } from './qualification-matrix.utils'
@@ -116,6 +117,7 @@ import { buildQualificationMatrixTeams } from './qualification-matrix.utils'
 const props = defineProps<{
   matches: QualificationMatch[]
   tournamentTeams?: TTeam[] | null
+  playerPoints?: TPlayerPointsEntry[] | null
   loading: boolean
   showAddResultButton: boolean
 }>()

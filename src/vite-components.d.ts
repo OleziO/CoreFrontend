@@ -51,6 +51,7 @@ declare module 'vue' {
     MmrRequestsTab: typeof import('./views/admin-panel/components/tabs/MmrRequestsTab.vue')['default']
     MobileMenu: typeof import('./components/MobileMenu.vue')['default']
     Modals: typeof import('./components/modals/Modals.vue')['default']
+    PhInfo: typeof import('~icons/ph/info')['default']
     PlayerAddToTeamModal: typeof import('./components/modals/PlayerAddToTeamModal.vue')['default']
     PlayerCard: typeof import('./components/PlayerCard.vue')['default']
     PlayerPositionsTooltip: typeof import('./components/PlayerPositionsTooltip.vue')['default']

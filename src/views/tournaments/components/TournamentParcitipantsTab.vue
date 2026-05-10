@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="tournament?.teams?.length"
-    class="flex py-20 flex-wrap gap-24"
+    class="flex py-20 flex-wrap gap-24 justify-center items-center"
   >
     <TeamCard
       v-for="team in tournament?.teams"

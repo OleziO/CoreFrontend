@@ -272,6 +272,22 @@ export interface paths {
         patch: operations["TeamsController_update"];
         trace?: never;
     };
+    "/teams/{id}/captain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TeamsController_changeCaptain"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/teams/{id}/invites": {
         parameters: {
             query?: never;
@@ -544,6 +560,46 @@ export interface paths {
         patch: operations["MatchesController_update"];
         trace?: never;
     };
+    "/admin/discord/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sync Discord roles and voice channels for all verified teams
+         * @description Idempotent: creates missing roles/channels and re-syncs all member roles. Safe to run multiple times.
+         */
+        post: operations["AdminController_syncDiscord"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/players/{playerId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Встановити повний набір ролей гравця
+         * @description Замінює записи user_roles. Оновлює verifiedAt і синхронізує ролі в Discord (DISCORD_*). Шлях відрізняється від POST/DELETE …/admin (grant/revoke admin).
+         */
+        patch: operations["AdminController_setPlayerRoles"];
+        trace?: never;
+    };
     "/admin/players/{playerId}/verify": {
         parameters: {
             query?: never;
@@ -555,14 +611,58 @@ export interface paths {
         put?: never;
         /**
          * Verify a player
-         * @description Sets the player's role to «Гравець» and stamps verifiedAt. Requires admin role.
+         * @description Sets the player's primary role to «Гравець» and stamps verifiedAt. Requires admin role.
          */
         post: operations["AdminController_verifyPlayer"];
         /**
          * Unverify a player
-         * @description Reverts the player's role to «Гість» and clears verifiedAt. Requires admin role.
+         * @description Reverts the player's primary role to «Гість» and clears verifiedAt. Requires admin role.
          */
         delete: operations["AdminController_unverifyPlayer"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/players/{playerId}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set player's primary role (Гість/Гравець/Медіа)
+         * @description Replaces the primary (non-admin) tier row. Гравець stamps verifiedAt; Гість clears verifiedAt; Медіа leaves verifiedAt unchanged. Адмін — POST/DELETE …/admin. Капітан — команди.
+         */
+        put: operations["AdminController_setPlayerRole"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/players/{playerId}/admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Grant admin role to a player
+         * @description Idempotently adds an admin role row; primary role and verifiedAt preserved.
+         */
+        post: operations["AdminController_grantAdmin"];
+        /**
+         * Revoke admin role from a player
+         * @description Removes admin role rows. Acting admin cannot revoke own admin (403).
+         */
+        delete: operations["AdminController_revokeAdmin"];
         options?: never;
         head?: never;
         patch?: never;
@@ -583,8 +683,11 @@ export interface components {
             discordUsername: string;
             /** @default 0 */
             rating: number;
-            /** @description Dota map / roles (1–5); omit or null when unset */
-            positions?: (1 | 2 | 3 | 4 | 5)[] | null;
+            /**
+             * @description Dota map / roles (1–5); omit or null when unset
+             * @enum {array|null}
+             */
+            positions?: 1 | 2 | 3 | 4 | 5 | null;
         };
         Player: {
             id: string;
@@ -615,6 +718,8 @@ export interface components {
             coach: components["schemas"]["Player"] | null;
             logoUrl: string | null;
             dotaTeamId: string | null;
+            discordRoleId: string | null;
+            discordChannelId: string | null;
             isVerified: boolean;
             isPlayingTournament: boolean;
             /** Format: date-time */
@@ -702,8 +807,11 @@ export interface components {
             discordUsername?: string;
             /** @default 0 */
             rating: number;
-            /** @description Dota map / roles (1–5); omit or null when unset */
-            positions?: (1 | 2 | 3 | 4 | 5)[] | null;
+            /**
+             * @description Dota map / roles (1–5); omit or null when unset
+             * @enum {array|null}
+             */
+            positions?: 1 | 2 | 3 | 4 | 5 | null;
         };
         DiscordExchangeDto: {
             /** @description Authorization code from Discord redirect */
@@ -775,6 +883,40 @@ export interface components {
             isVerified: boolean;
             isPlayingTournament: boolean;
         };
+        TeamTournamentEmbeddedDto: {
+            id: string;
+            name: string;
+            prizePool: number;
+            headerBannerUrl?: string | null;
+            listBannerUrl?: string | null;
+            tournamentSlots?: number | null;
+            /** Format: date-time */
+            registrationStartsAt: string;
+            /** Format: date-time */
+            registrationEndsAt: string;
+            /** Format: date-time */
+            tournamentStartsAt: string;
+            /** Format: date-time */
+            tournamentEndsAt: string;
+            /** @enum {string} */
+            tournamentStatus: "QUALIFICATIONS" | "PLAYOFF" | "COMPLETED";
+            tournamentGridUrl?: string | null;
+        };
+        TeamResponseDto: {
+            id: string;
+            name: string;
+            logoUrl?: string | null;
+            dotaTeamId?: string | null;
+            isVerified: boolean;
+            isPlayingTournament: boolean;
+            /** Format: date-time */
+            verifiedAt?: string | null;
+            captain: components["schemas"]["PlayerResponseDto"];
+            coach?: components["schemas"]["PlayerResponseDto"] | null;
+            mainPlayers: components["schemas"]["PlayerResponseDto"][];
+            reservedPlayers: components["schemas"]["PlayerResponseDto"][];
+            tournament?: components["schemas"]["TeamTournamentEmbeddedDto"] | null;
+        };
         SearchTeamsDto: {
             /** @description When true, each team includes `tournaments`: array built from its linked tournament (0 or 1 item). */
             withTournaments?: boolean;
@@ -838,6 +980,10 @@ export interface components {
             tournamentStatus?: components["schemas"]["TournamentStatus"];
             tournamentGridUrl?: string;
         };
+        PlayerPointsEntry: {
+            playerId: string;
+            points: number;
+        };
         Qualification: {
             id: string;
             tournament: components["schemas"]["Tournament"];
@@ -856,6 +1002,17 @@ export interface components {
             winner: components["schemas"]["Team"] | null;
             dotaMatchId: string | null;
             nodeGroupId: string;
+        };
+        QualificationResponseDto: {
+            playerTournamentPoints: components["schemas"]["PlayerPointsEntry"][];
+            id: string;
+            tournament: components["schemas"]["Tournament"];
+            /** Format: date-time */
+            startTime: string;
+            /** Format: date-time */
+            endTime: string;
+            nodeGroupId: string;
+            matches: components["schemas"]["QualificationMatch"][];
         };
         JoinTournamentDto: {
             /**
@@ -903,6 +1060,35 @@ export interface components {
              */
             winnerId?: string;
             dotaMatchId?: string;
+        };
+        AdminPlayerRoleItemDto: {
+            /** @enum {string} */
+            name: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін";
+            /** @description Для ролі «Адмін» очікується true; для «Гість/Гравець/Капітан» — false. */
+            isAdminRole: boolean;
+        };
+        AdminSetPlayerRolesDto: {
+            /** @description Повний набір призначень ролей гравцю (замінює існуючі записи user_roles для цього гравця). */
+            roles: components["schemas"]["AdminPlayerRoleItemDto"][];
+        };
+        AdminPlayerRoleRowDto: {
+            id: string;
+            name: string;
+            isAdminRole: boolean;
+            /** @description HEX #RRGGBB */
+            color: string;
+        };
+        AdminPlayerRolesResultDto: {
+            playerId: string;
+            verifiedAt: string | null;
+            roles: components["schemas"]["AdminPlayerRoleRowDto"][];
+        };
+        SetPlayerRoleDto: {
+            /**
+             * @description Player's new primary role (Гість, Гравець, or Медіа).
+             * @enum {string}
+             */
+            name: "Гість" | "Гравець" | "Медіа";
         };
     };
     responses: never;
@@ -1306,7 +1492,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"][];
+                };
             };
         };
     };
@@ -1323,11 +1511,21 @@ export interface operations {
             };
         };
         responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"];
+                };
+            };
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"];
+                };
             };
         };
     };
@@ -1348,7 +1546,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"][];
+                };
             };
         };
     };
@@ -1367,7 +1567,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"];
+                };
             };
         };
     };
@@ -1409,7 +1611,30 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"];
+                };
+            };
+        };
+    };
+    TeamsController_changeCaptain: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"];
+                };
             };
         };
     };
@@ -1455,7 +1680,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"];
+                };
             };
         };
     };
@@ -1475,7 +1702,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"];
+                };
             };
         };
     };
@@ -1600,9 +1829,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["Tournament"];
-                };
+                content?: never;
             };
         };
     };
@@ -1666,7 +1893,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Qualification"];
+                    "application/json": components["schemas"]["QualificationResponseDto"];
                 };
             };
         };
@@ -1927,6 +2154,50 @@ export interface operations {
             };
         };
     };
+    AdminController_syncDiscord: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    AdminController_setPlayerRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                playerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminSetPlayerRolesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminPlayerRolesResultDto"];
+                };
+            };
+        };
+    };
     AdminController_verifyPlayer: {
         parameters: {
             query?: never;
@@ -1949,6 +2220,73 @@ export interface operations {
         };
     };
     AdminController_unverifyPlayer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                playerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    AdminController_setPlayerRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                playerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPlayerRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    AdminController_grantAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                playerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    AdminController_revokeAdmin: {
         parameters: {
             query?: never;
             header?: never;

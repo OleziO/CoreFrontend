@@ -1,5 +1,5 @@
 <template>
-  <div class="qual-matrix-scroll overflow-x-auto w-full min-w-[320px] pb-12">
+  <div class="qual-matrix-scroll overflow-x-auto w-full flex justify-center items-center min-w-[320px] pb-12">
     <table
       class="qual-matrix-table border-collapse text-sm sm:text-base w-max min-w-[320px]"
       role="grid"
@@ -38,7 +38,10 @@
             </div>
           </th>
           <template v-for="col in teams" :key="row.id + '-' + col.id">
-            <template v-for="cell in [cellPresentation(row.id, col.id)]" :key="'p-' + row.id + '-' + col.id">
+            <template
+              v-for="cell in [cellPresentation(row.id, col.id)]"
+              :key="'p-' + row.id + '-' + col.id"
+            >
               <td
                 :class="cell.className"
                 class="qual-matrix-cell border border-white/12 text-center font-extrabold align-middle
@@ -110,7 +113,7 @@ function cellPresentation (rowId: string, colId: string): { label: string; class
       className = 'bg-amber-400/85 text-amber-950 qual-matrix-cell--diag'
       break
     case 'win':
-      className = 'bg-emerald-600/45 text-emerald-50 qual-matrix-cell--data'
+      className = 'bg-green-600/45 text-emerald-400/90 qual-matrix-cell--data'
       break
     case 'loss':
       className = 'bg-red-600/45 text-red-50 qual-matrix-cell--data'

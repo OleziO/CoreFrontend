@@ -27,6 +27,7 @@
     <QualificationMatchesList
       :matches="sortedDisplayMatches"
       :tournament-teams="tournament?.teams ?? null"
+      :player-points="qualificationPhase?.playerTournamentPoints ?? null"
       :loading="qualificationHydrateInFlight"
       :show-add-result-button="showAddResultButton"
       @add-result="openAddModal"

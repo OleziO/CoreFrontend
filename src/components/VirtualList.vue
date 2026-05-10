@@ -61,11 +61,11 @@ defineSlots<{
 
 const window = useWindowSize()
 
-const cardWidth = computed(() => props.itemWidth * props.gridItems)
+const gridRowWidth = computed(() => props.itemWidth * (props.gridItems ?? 1))
 
 const paddingSide = computed(() => {
   if (props.isTable) return 0
-  return (window.width.value - cardWidth.value) / 2 + 10
+  return Math.max(0, (window.width.value - gridRowWidth.value) / 2)
 })
 
 const containerStyles = computed(() => {
@@ -77,10 +77,11 @@ const containerStyles = computed(() => {
     }
   }
 
+  const pad = `${paddingSide.value}px`
   return {
     maxHeight: `${window.height.value}px`,
-    paddingLeft: `${Math.max(0, paddingSide.value - 5)}px`,
-    paddingRight: `${Math.max(0, paddingSide.value - 5)}px`
+    paddingLeft: pad,
+    paddingRight: pad
   }
 })
 

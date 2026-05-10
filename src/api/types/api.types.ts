@@ -14,8 +14,9 @@ export type TTeam = components['schemas']['Team'] & {
   division?: TTournamentDivision | null
 }
 export type TQualificationMatch = components['schemas']['QualificationMatch']
-/** Тіло GET /tournaments/:id/qualification — у OpenAPI це `Qualification`. */
-export type TQualificationPhase = components['schemas']['Qualification']
+/** Тіло GET /tournaments/:id/qualification — у OpenAPI це `QualificationResponseDto` (поверх `Qualification` додає `playerTournamentPoints`). */
+export type TQualificationPhase = components['schemas']['QualificationResponseDto']
+export type TPlayerPointsEntry = components['schemas']['PlayerPointsEntry']
 export type TTournament = components['schemas']['Tournament'] & {
   /** Підмішується з GET /tournaments/:id/qualification на клієнті; у базовій схемі турніру може не бути. */
   qualification?: TQualificationPhase | null
