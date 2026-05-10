@@ -1,20 +1,20 @@
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
-import type { TTeam as Team } from '@/api/types/api.types'
+import type { TTeamResponse } from '@/api/types/api.types'
 
 import { teamsService, type TCreateTeamPayload, type TUpdateTeamPayload } from '@/views/teams/teams.service'
 
 export const useTeamsStore = defineStore('teams', () => {
   const router = useRouter()
 
-  const teams = ref<Team[]>([])
+  const teams = ref<TTeamResponse[]>([])
   const loading = ref(false)
 
   /**
    * Оновити кеш команди після мутації ростера (POST/DELETE players, GET тощо).
    * Якщо команди ще немає в списку — додає запис (наприклад після прямого заходу на картку).
    */
-  function patchTeamInList (next: Team) {
+  function patchTeamInList (next: TTeamResponse) {
     const i = teams.value.findIndex(t => t.id === next.id)
     if (i >= 0) {
       teams.value[i] = next

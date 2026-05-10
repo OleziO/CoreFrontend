@@ -106,10 +106,10 @@ import { RouterLink } from 'vue-router'
 import { routeNames } from '@/router/route-names'
 import { PhCrown } from '@phosphor-icons/vue'
 import { getCopy, formatPlayerRatingMmr, getPlayerRankImageSrcFromPlayerRank, isPlayerVerified } from '@/core/helpers'
-import type { TPlayer } from '@/api/types/api.types'
+import type { TPlayer, TPlayerResponseDto } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
-  player: TPlayer | null
+  player: TPlayer | TPlayerResponseDto | null
   isCaptain?: boolean
   showStatusGlow?: boolean
   showRegularCap?: boolean

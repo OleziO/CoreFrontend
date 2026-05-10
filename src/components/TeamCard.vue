@@ -275,14 +275,14 @@ import {
 
 } from '@phosphor-icons/vue'
 
-import type { TTeam as Team } from '@/api/types/api.types'
+import type { TTeam as FullTeam, TTeamResponse } from '@/api/types/api.types'
 
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 import { TOURNAMENT_DIVISION_VALUES } from '@/components/tournaments-tags/tournament.constants'
 
 const props = withDefaults(defineProps<{
 
-  team: Team
+  team: TTeamResponse | FullTeam
 
   width?: number
 
@@ -328,7 +328,7 @@ function copyDotaTeamId () {
   ElMessage.success('Dota ID скопійовано')
 }
 
-function openTeamDrawer (team: Team) {
+function openTeamDrawer (team: TTeamResponse | FullTeam) {
   open('TeamsPlayersDrawer', { team })
 }
 

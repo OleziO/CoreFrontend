@@ -29,229 +29,229 @@
         <el-form :model="form" label-position="top" require-asterisk-position="right" @submit.prevent="handleSubmit">
           <!-- Основне -->
           <section class="drawer-section">
-          <div class="drawer-section__head">
-            <PhSlidersHorizontal :size="18" weight="duotone" class="text-cyan-400/90" />
-            <span class="drawer-section__title">Основне</span>
-          </div>
-          <div class="drawer-section__body drawer-section__grid">
-            <el-form-item label="Назва" required class="drawer-field span-full">
-              <el-input
-                v-model="form.name"
-                placeholder="Напр., Core League Cup #12"
-                size="large"
-                clearable
-              />
-            </el-form-item>
-
-            <el-form-item label="Дивізіон" required class="drawer-field span-full">
-              <el-select v-model="form.division" placeholder="Оберіть дивізіон" size="large" class="w-full">
-                <el-option
-                  v-for="d in TOURNAMENT_DIVISION_VALUES"
-                  :key="d"
-                  :value="d"
-                  :label="tournamentDivisionLabelMap[d]"
+            <div class="drawer-section__head">
+              <PhSlidersHorizontal :size="18" weight="duotone" class="text-cyan-400/90" />
+              <span class="drawer-section__title">Основне</span>
+            </div>
+            <div class="drawer-section__body drawer-section__grid">
+              <el-form-item label="Назва" required class="drawer-field span-full">
+                <el-input
+                  v-model="form.name"
+                  placeholder="Напр., Core League Cup #12"
+                  size="large"
+                  clearable
                 />
-              </el-select>
-            </el-form-item>
+              </el-form-item>
 
-            <el-form-item label="Статус турніру" required class="drawer-field span-full">
-              <el-select v-model="form.tournamentStatus" size="large" class="w-full">
-                <el-option
-                  v-for="s in tournamentCreateStatusOptions"
-                  :key="s.key"
-                  :value="s.key"
-                  :label="tournamentStatusLabelMap[s.key]"
-                >
-                  <div class="flex items-center gap-8 py-1">
-                    <span
-                      class="inline-flex h-8 min-w-[8px] rounded-full shadow-sm"
-                      :class="statusStripeClass[s.key]"
-                    />
-                    <span>{{ tournamentStatusLabelMap[s.key] }}</span>
-                  </div>
-                </el-option>
-              </el-select>
-            </el-form-item>
-          </div>
+              <el-form-item label="Дивізіон" required class="drawer-field span-full">
+                <el-select v-model="form.division" placeholder="Оберіть дивізіон" size="large" class="w-full">
+                  <el-option
+                    v-for="d in TOURNAMENT_DIVISION_VALUES"
+                    :key="d"
+                    :value="d"
+                    :label="tournamentDivisionLabelMap[d]"
+                  />
+                </el-select>
+              </el-form-item>
+
+              <el-form-item label="Статус турніру" required class="drawer-field span-full">
+                <el-select v-model="form.tournamentStatus" size="large" class="w-full">
+                  <el-option
+                    v-for="s in tournamentCreateStatusOptions"
+                    :key="s.key"
+                    :value="s.key"
+                    :label="tournamentStatusLabelMap[s.key]"
+                  >
+                    <div class="flex items-center gap-8 py-1">
+                      <span
+                        class="inline-flex h-8 min-w-[8px] rounded-full shadow-sm"
+                        :class="statusStripeClass[s.key]"
+                      />
+                      <span>{{ tournamentStatusLabelMap[s.key] }}</span>
+                    </div>
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </div>
           </section>
 
           <!-- Параметри -->
           <section class="drawer-section">
-          <div class="drawer-section__head">
-            <PhTrophy :size="18" weight="duotone" class="text-amber-400/90" />
-            <span class="drawer-section__title">Параметри</span>
-          </div>
-          <div class="drawer-section__body drawer-fields-pair">
-            <el-form-item label="Призовий фонд" class="drawer-field">
-              <template #label>
-                <span>Призовий фонд <span class="label-optional">(опціонально)</span></span>
-              </template>
-              <el-input
-                v-model="prizePoolText"
-                inputmode="numeric"
-                placeholder="5000"
-                size="large"
-                @input="prizePoolText = String($event).replace(/\D+/g, '')"
-              >
-                <template #prefix>
-                  <span class="input-prefix-muted">₴</span>
+            <div class="drawer-section__head">
+              <PhTrophy :size="18" weight="duotone" class="text-amber-400/90" />
+              <span class="drawer-section__title">Параметри</span>
+            </div>
+            <div class="drawer-section__body drawer-fields-pair">
+              <el-form-item label="Призовий фонд" class="drawer-field">
+                <template #label>
+                  <span>Призовий фонд <span class="label-optional">(опціонально)</span></span>
                 </template>
-              </el-input>
-            </el-form-item>
+                <el-input
+                  v-model="prizePoolText"
+                  inputmode="numeric"
+                  placeholder="5000"
+                  size="large"
+                  @input="prizePoolText = String($event).replace(/\D+/g, '')"
+                >
+                  <template #prefix>
+                    <span class="input-prefix-muted">₴</span>
+                  </template>
+                </el-input>
+              </el-form-item>
 
-            <el-form-item class="drawer-field">
-              <template #label>
-                <span>Слоти команд <span class="label-optional">(опціонально)</span></span>
-              </template>
-              <el-input
-                v-model="slotsText"
-                inputmode="numeric"
-                placeholder="16"
-                size="large"
-                @input="slotsText = String($event).replace(/\D+/g, '')"
-              />
-            </el-form-item>
-          </div>
+              <el-form-item class="drawer-field">
+                <template #label>
+                  <span>Слоти команд <span class="label-optional">(опціонально)</span></span>
+                </template>
+                <el-input
+                  v-model="slotsText"
+                  inputmode="numeric"
+                  placeholder="16"
+                  size="large"
+                  @input="slotsText = String($event).replace(/\D+/g, '')"
+                />
+              </el-form-item>
+            </div>
           </section>
 
           <!-- Графік -->
           <section class="drawer-section">
-          <div class="drawer-section__head">
-            <PhCalendar :size="18" weight="duotone" class="text-sky-400/90" />
-            <span class="drawer-section__title">Графік</span>
-          </div>
-          <div class="drawer-section__body drawer-section__body--stack">
-            <p class="drawer-section__hint">
-              Від кваліфікації до плей-оф: перевірте дати й послідовність етапів перед публікацією.
-            </p>
-            <div class="drawer-date-grid">
-            <el-form-item label="Початок кваліфікації" required class="drawer-field">
-              <el-date-picker
-                v-model="form.registrationStartsAt"
-                type="datetime"
-                size="large"
-                class="drawer-date-picker w-full"
-                popper-class="core-date-picker-popper"
-                format="DD.MM.YYYY HH:mm"
-                value-format="YYYY-MM-DD HH:mm"
-                placeholder="Оберіть дату й час"
-              />
-            </el-form-item>
-            <el-form-item label="Кінець кваліфікації" required class="drawer-field">
-              <el-date-picker
-                v-model="form.registrationEndsAt"
-                type="datetime"
-                size="large"
-                class="drawer-date-picker w-full"
-                popper-class="core-date-picker-popper"
-                format="DD.MM.YYYY HH:mm"
-                value-format="YYYY-MM-DD HH:mm"
-                placeholder="Оберіть дату й час"
-              />
-            </el-form-item>
-            <el-form-item label="Початок плей-оф" required class="drawer-field">
-              <el-date-picker
-                v-model="form.tournamentStartsAt"
-                type="datetime"
-                size="large"
-                class="drawer-date-picker w-full"
-                popper-class="core-date-picker-popper"
-                format="DD.MM.YYYY HH:mm"
-                value-format="YYYY-MM-DD HH:mm"
-                placeholder="Оберіть дату й час"
-              />
-            </el-form-item>
-            <el-form-item label="Кінець турніру" required class="drawer-field">
-              <el-date-picker
-                v-model="form.tournamentEndsAt"
-                type="datetime"
-                size="large"
-                class="drawer-date-picker w-full"
-                popper-class="core-date-picker-popper"
-                format="DD.MM.YYYY HH:mm"
-                value-format="YYYY-MM-DD HH:mm"
-                placeholder="Оберіть дату й час"
-              />
-            </el-form-item>
+            <div class="drawer-section__head">
+              <PhCalendar :size="18" weight="duotone" class="text-sky-400/90" />
+              <span class="drawer-section__title">Графік</span>
             </div>
-          </div>
+            <div class="drawer-section__body drawer-section__body--stack">
+              <p class="drawer-section__hint">
+                Від кваліфікації до плей-оф: перевірте дати й послідовність етапів перед публікацією.
+              </p>
+              <div class="drawer-date-grid">
+                <el-form-item label="Початок кваліфікації" required class="drawer-field">
+                  <el-date-picker
+                    v-model="form.registrationStartsAt"
+                    type="datetime"
+                    size="large"
+                    class="drawer-date-picker w-full"
+                    popper-class="core-date-picker-popper"
+                    format="DD.MM.YYYY HH:mm"
+                    value-format="YYYY-MM-DD HH:mm"
+                    placeholder="Оберіть дату й час"
+                  />
+                </el-form-item>
+                <el-form-item label="Кінець кваліфікації" required class="drawer-field">
+                  <el-date-picker
+                    v-model="form.registrationEndsAt"
+                    type="datetime"
+                    size="large"
+                    class="drawer-date-picker w-full"
+                    popper-class="core-date-picker-popper"
+                    format="DD.MM.YYYY HH:mm"
+                    value-format="YYYY-MM-DD HH:mm"
+                    placeholder="Оберіть дату й час"
+                  />
+                </el-form-item>
+                <el-form-item label="Початок плей-оф" required class="drawer-field">
+                  <el-date-picker
+                    v-model="form.tournamentStartsAt"
+                    type="datetime"
+                    size="large"
+                    class="drawer-date-picker w-full"
+                    popper-class="core-date-picker-popper"
+                    format="DD.MM.YYYY HH:mm"
+                    value-format="YYYY-MM-DD HH:mm"
+                    placeholder="Оберіть дату й час"
+                  />
+                </el-form-item>
+                <el-form-item label="Кінець турніру" required class="drawer-field">
+                  <el-date-picker
+                    v-model="form.tournamentEndsAt"
+                    type="datetime"
+                    size="large"
+                    class="drawer-date-picker w-full"
+                    popper-class="core-date-picker-popper"
+                    format="DD.MM.YYYY HH:mm"
+                    value-format="YYYY-MM-DD HH:mm"
+                    placeholder="Оберіть дату й час"
+                  />
+                </el-form-item>
+              </div>
+            </div>
           </section>
 
           <!-- Зображення -->
           <section class="drawer-section drawer-section--media">
-          <div class="drawer-section__head">
-            <PhImageSquare :size="18" weight="duotone" class="text-violet-400/90" />
-            <span class="drawer-section__title">Зображення</span>
-          </div>
-          <div class="drawer-section__body drawer-section__body--stack">
-            <p class="drawer-section__hint">
-              Завантажуються окремими запитами одразу після створення. JPEG або PNG, до 10&nbsp;МБ.
-            </p>
-          <div class="flex flex-col gap-16">
-            <el-form-item v-for="u in uploads" :key="u.key" class="upload-form-item drawer-field mb-0">
-              <template #label>
-                <span class="text-[13px] font-medium text-gray-300">{{ u.label }}</span>
-              </template>
-              <div class="flex w-full flex-col gap-6">
-                <!-- Як у TeamCreateModal: el-upload без нативної кнопки; превʼю — прямокутник на всю ширину -->
-                <el-upload
-                  class="tournament-banner-upload block w-full"
-                  action="#"
-                  :auto-upload="false"
-                  :show-file-list="false"
-                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                  :on-change="(file) => handleBannerPick(u.key, file)"
-                >
-                  <div class="w-full">
-                    <div
-                      v-if="!previews[u.key]"
-                      class="relative flex min-h-[88px] w-full cursor-pointer flex-col items-center justify-center
+            <div class="drawer-section__head">
+              <PhImageSquare :size="18" weight="duotone" class="text-violet-400/90" />
+              <span class="drawer-section__title">Зображення</span>
+            </div>
+            <div class="drawer-section__body drawer-section__body--stack">
+              <p class="drawer-section__hint">
+                Завантажуються окремими запитами одразу після створення. JPEG або PNG, до 10&nbsp;МБ.
+              </p>
+              <div class="flex flex-col gap-16">
+                <el-form-item v-for="u in uploads" :key="u.key" class="upload-form-item drawer-field mb-0">
+                  <template #label>
+                    <span class="text-[13px] font-medium text-gray-300">{{ u.label }}</span>
+                  </template>
+                  <div class="flex w-full flex-col gap-6">
+                    <!-- Як у TeamCreateModal: el-upload без нативної кнопки; превʼю — прямокутник на всю ширину -->
+                    <el-upload
+                      class="tournament-banner-upload block w-full"
+                      action="#"
+                      :auto-upload="false"
+                      :show-file-list="false"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      :on-change="(file) => handleBannerPick(u.key, file)"
+                    >
+                      <div class="w-full">
+                        <div
+                          v-if="!previews[u.key]"
+                          class="relative flex min-h-[88px] w-full cursor-pointer flex-col items-center justify-center
                         gap-10 rounded-xl border border-solid border-white/25 bg-white/[0.04]
                         px-16 py-20 transition hover:border-white/35 hover:bg-white/[0.06]"
-                    >
-                      <el-icon class="text-2xl text-white/70"><Plus /></el-icon>
-                      <span class="text-center text-sm text-white/50">
-                        Обрати зображення
-                      </span>
-                    </div>
-                    <div v-else class="w-full cursor-pointer py-14">
-                      <div
-                        class="relative aspect-video w-full overflow-hidden rounded-xl border border-solid
+                        >
+                          <el-icon class="text-2xl text-white/70"><Plus /></el-icon>
+                          <span class="text-center text-sm text-white/50">
+                            Обрати зображення
+                          </span>
+                        </div>
+                        <div v-else class="w-full cursor-pointer py-14">
+                          <div
+                            class="relative aspect-video w-full overflow-hidden rounded-xl border border-solid
                           border-white/20 bg-white/[0.04] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
-                      >
-                        <img
-                          :src="previews[u.key]"
-                          alt=""
-                          class="pointer-events-none absolute inset-0 h-full w-full object-cover"
-                        >
-                        <div
-                          class="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0
+                          >
+                            <img
+                              :src="previews[u.key]"
+                              alt=""
+                              class="pointer-events-none absolute inset-0 h-full w-full object-cover"
+                            >
+                            <div
+                              class="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0
                             transition-opacity hover:opacity-100"
-                        >
-                          <el-icon class="text-lg text-white"><Edit /></el-icon>
+                            >
+                              <el-icon class="text-lg text-white"><Edit /></el-icon>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </el-upload>
                   </div>
-                </el-upload>
+                </el-form-item>
               </div>
-            </el-form-item>
-          </div>
-          </div>
+            </div>
           </section>
 
           <div class="drawer-submit-wrap">
-          <el-button
-            :disabled="!isFormValid"
-            :loading="loading"
-            native-type="submit"
-            type="primary"
-            size="large"
-            class="drawer-submit-btn w-full !h-[52px] !rounded-xl !border-0 !text-[15px] !font-semibold"
-            @click="handleSubmit"
-          >
-            Створити турнір
-          </el-button>
+            <el-button
+              :disabled="!isFormValid"
+              :loading="loading"
+              native-type="submit"
+              type="primary"
+              size="large"
+              class="drawer-submit-btn w-full !h-[52px] !rounded-xl !border-0 !text-[15px] !font-semibold"
+              @click="handleSubmit"
+            >
+              Створити турнір
+            </el-button>
           </div>
         </el-form>
       </div>

@@ -1,8 +1,11 @@
-import type { TTeam as Team, TPlayer } from '@/api/types/api.types'
+import type { TTeamResponse } from '@/api/types/api.types'
 import { coercePlayerRankFromApi } from '@/core/helpers'
 
+/** Гравець у рості з відповіді команди. */
+type TRosterPlayer = TTeamResponse['mainPlayers'][number]
+
 /** Швидке клонування топ-рівня ростеру для безпечного злиття без мутацій вихідного `team`. */
-export function shallowSnapshotTeamForHydrate (t: Team): Team {
+export function shallowSnapshotTeamForHydrate (t: TTeamResponse): TTeamResponse {
   return {
     ...t,
     mainPlayers: [...(t.mainPlayers ?? [])],
@@ -10,7 +13,7 @@ export function shallowSnapshotTeamForHydrate (t: Team): Team {
   }
 }
 
-function mergePlayerRankFromPayload (p: TPlayer): TPlayer {
+function mergePlayerRankFromPayload (p: TRosterPlayer): TRosterPlayer {
   const rank = coercePlayerRankFromApi(p.rank)
   if (rank == null) return { ...p }
   return { ...p, rank }
@@ -19,10 +22,10 @@ function mergePlayerRankFromPayload (p: TPlayer): TPlayer {
 /**
  * Нормалізує `rank` у гравцях ростеру з відповіді команди (без GET /players на кожного).
  */
-export function hydrateTeamPlayersRanks (t: Team): Team {
+export function hydrateTeamPlayersRanks (t: TTeamResponse): TTeamResponse {
   return {
     ...t,
-    mainPlayers: (t.mainPlayers ?? []).map(mergePlayerRankFromPayload) as Team['mainPlayers'],
-    reservedPlayers: (t.reservedPlayers ?? []).map(mergePlayerRankFromPayload) as Team['reservedPlayers']
+    mainPlayers: (t.mainPlayers ?? []).map(mergePlayerRankFromPayload),
+    reservedPlayers: (t.reservedPlayers ?? []).map(mergePlayerRankFromPayload)
   }
 }

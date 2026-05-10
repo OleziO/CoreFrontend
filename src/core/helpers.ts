@@ -220,7 +220,7 @@ export function getPlayerMatchStats (p: (TPlayer | TPlayerMatchRecord) | null | 
 /**
  * `role.name` з API може збігатися з slug у `ERole` або з українським `roleLabelMap`.
  */
-export function hasPlayerRole (roles: UserRole[] | undefined | null, role: ERole): boolean {
+export function hasPlayerRole (roles: readonly { name: string }[] | undefined | null, role: ERole): boolean {
   if (!roles?.length || !role) return false
 
   const labelUk = roleLabelMap[role]
@@ -235,7 +235,7 @@ const ROLE_FILTER_UUID_RE =
  * Значення в query для ролей — тепер `name` як у відповіді GET `/user-roles`; для сумісності залишені slug і рідкий збіг по id каталогу.
  */
 export function playerMatchesRoleFilterToken (
-  player: { roles?: UserRole[] | null },
+  player: { roles?: readonly { name: string; id?: string }[] | null },
   rawToken: string,
   roleCatalog?: readonly { id: string; name: string }[]
 ): boolean {
@@ -261,7 +261,7 @@ export function playerMatchesRoleFilterToken (
  * Видимість «верифікований»: timestamp від беку або роль гравця («Гравець» / PLAYER).
  */
 export function isPlayerVerified (
-  player: { roles?: UserRole[] | null; verifiedAt?: string | null } | null | undefined
+  player: { roles?: readonly { name: string }[] | null; verifiedAt?: string | null } | null | undefined
 ): boolean {
   if (!player) return false
   if (player.verifiedAt) return true

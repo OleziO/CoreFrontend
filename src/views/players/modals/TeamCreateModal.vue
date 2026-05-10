@@ -126,7 +126,7 @@
 import { Edit, Plus } from '@element-plus/icons-vue'
 import type { UploadFile } from 'element-plus'
 import type {
-  TTeam,
+  TTeamResponse,
   TCreateTeamDto
 } from '@/api/types/api.types'
 import type { TCreateTeamPayload, TUpdateTeamPayload } from '@/views/teams/teams.service'
@@ -135,7 +135,7 @@ import { validateImageFileForUpload } from '@/services/image-upload.service'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 
 const props = defineProps<{
-  team?: TTeam
+  team?: TTeamResponse
   /** Якщо передано з `useAppModals` — викликається замість/разом з emit */
   onSubmit?: (payload: TCreateTeamPayload | TUpdateTeamPayload) => void | Promise<void>
 }>()

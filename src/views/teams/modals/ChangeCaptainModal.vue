@@ -44,11 +44,11 @@
 </template>
 
 <script setup lang="ts">
-import type { TTeam as Team } from '@/api/types/api.types'
+import type { TTeamResponse } from '@/api/types/api.types'
 import { ElMessage } from 'element-plus'
 
 const props = defineProps<{
-  team: Team | undefined
+  team: TTeamResponse | undefined
   teamId: string
 }>()
 

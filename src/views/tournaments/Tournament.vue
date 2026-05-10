@@ -267,7 +267,7 @@ import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusT
 import TournamentBannerImage from '@/components/tournaments/TournamentBannerImage.vue'
 import TournamentQualificationTab from '@/views/tournaments/components/TournamentQualificationTab.vue'
 import { PROFILE_CAPTAIN_ROLE_UA } from '@/components/tournaments-tags/tournament.constants'
-import type { TTournament as Tournament, TTeam as Team } from '@/api/types/api.types'
+import type { TTournament as Tournament, TTeam as Team, TTeamResponse } from '@/api/types/api.types'
 
 import { formatDate } from '@/core/helpers'
 import { formatTournamentPrizeUah } from '@/views/tournaments/utils/tournament-prize-format'
@@ -277,7 +277,7 @@ import { getApiErrorMessage } from '@/utils/api-errors'
 
 const tournament = ref<Tournament | null>(null)
 const activeTab = ref('teams')
-const myTeam = shallowRef<Team | null>(null)
+const myTeam = shallowRef<Team | TTeamResponse | null>(null)
 const joinLoading = ref(false)
 const leaveTournamentLoading = ref(false)
 const joinHiddenQualificationsClosedByApi = ref(false)

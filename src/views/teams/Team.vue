@@ -382,7 +382,7 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/uk'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 import TournamentBannerImage from '@/components/tournaments/TournamentBannerImage.vue'
-import type { TTeam as Team } from '@/api/types/api.types'
+import type { TTeamResponse } from '@/api/types/api.types'
 import type { TUpdateTeamPayload } from '@/views/teams/teams.service'
 import { teamsService } from '@/views/teams/teams.service'
 import { hydrateTeamPlayersRanks } from '@/views/teams/team-roster-hydrate'
@@ -400,7 +400,7 @@ const isMobile = computed(() => currWindow.width.value < 850)
 const teamsStore = useTeamsStore()
 const playersStore = usePlayersStore()
 
-const team = ref<Team | null>(null)
+const team = ref<TTeamResponse | null>(null)
 
 const teamLogoSrc = computed(() => resolvePublicOrApiUrl(team.value?.logoUrl))
 

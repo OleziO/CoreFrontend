@@ -100,7 +100,7 @@
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
-import type { TTournament as Tournament, TTeam as Team } from '@/api/types/api.types'
+import type { TTournament as Tournament, TTeam as Team, TTeamResponse } from '@/api/types/api.types'
 import { tournamentsService } from '@/views/tournaments/tournaments.service'
 import { teamsService } from '@/views/teams/teams.service'
 
@@ -115,7 +115,7 @@ const tournamentStore = useTournamentStore()
 const deleteLoading = ref(false)
 const joinLoading = ref(false)
 const selectedTeamId = ref<string>('')
-const allTeams = ref<Team[]>([])
+const allTeams = ref<Array<Team | TTeamResponse>>([])
 const teamsLoading = ref(false)
 
 function computeDivision (mainPlayers: { rating: number }[]): string | null {

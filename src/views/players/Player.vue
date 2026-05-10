@@ -608,7 +608,7 @@ import {
 import { positionOptions } from '@/components/player-tags/player.constants'
 import { routeNames } from '@/router/route-names'
 import { playersService } from '@/views/players/players.service'
-import type { TPlayer, TTeam } from '@/api/types/api.types'
+import type { TPlayer, TTeamResponse } from '@/api/types/api.types'
 import type { TCreateTeamPayload } from '@/views/teams/teams.service'
 import { teamsService } from '@/views/teams/teams.service'
 
@@ -664,7 +664,7 @@ const playerTeamLinkId = computed(() => {
 })
 
 /** Командний профіль із бекенду для картки в профілі гравця. */
-const profileTeam = shallowRef<TTeam | null>(null)
+const profileTeam = shallowRef<TTeamResponse | null>(null)
 const profileTeamLoading = ref(false)
 
 watch(

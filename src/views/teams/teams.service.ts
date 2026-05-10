@@ -1,7 +1,7 @@
 import apiClient from '@/api/client'
 import { ElMessage } from 'element-plus'
 import type {
-  TTeam as Team,
+  TTeamResponse as TeamApi,
   TCreateTeamDto as CreateTeamDto,
   TUpdateTeamDto as UpdateTeamDto,
   TAddTeamPlayerDto as AddTeamPlayerDto
@@ -19,22 +19,22 @@ function teamEntries (dto: Partial<UpdateTeamDto>): Partial<UpdateTeamDto> {
 }
 
 class TeamsService {
-  async fetchAllTeams (): Promise<Team[]> {
+  async fetchAllTeams (): Promise<TeamApi[]> {
     try {
       const res = await apiClient.get('/teams')
-      return res as Team[]
+      return res
     } catch (e) {
       ElMessage({ type: 'error' })
       throw e
     }
   }
 
-  async fetchTeam (id: string, options?: { silent?: boolean }): Promise<Team> {
+  async fetchTeam (id: string, options?: { silent?: boolean }): Promise<TeamApi> {
     try {
       const res = await apiClient.get('/teams/{id}', {
         dynamicKeys: { id }
       })
-      return res as Team
+      return res
     } catch (e) {
       if (!options?.silent) {
         ElMessage.error('Помилка')
@@ -44,9 +44,9 @@ class TeamsService {
   }
 
   /** POST /teams (name, dotaTeamId), потім за наявності файлу — POST /teams/:id/logo, GET для актуального стану. */
-  async createTeam (data: TCreateTeamPayload): Promise<Team> {
+  async createTeam (data: TCreateTeamPayload): Promise<TeamApi> {
     const { logoFile, ...dto } = data
-    const team = await apiClient.post('/teams', dto) as Team
+    const team = await apiClient.post('/teams', dto)
 
     if (!logoFile) return team
 
@@ -54,7 +54,7 @@ class TeamsService {
     return await this.fetchTeam(team.id)
   }
 
-  async updateTeam (id: string, data: TUpdateTeamPayload): Promise<Team> {
+  async updateTeam (id: string, data: TUpdateTeamPayload): Promise<TeamApi> {
     const { logoFile, ...rest } = data
     const patchPayload = teamEntries(rest)
 
@@ -72,23 +72,23 @@ class TeamsService {
   }
 
   /** POST /teams/:id/players — додати гравця в основу або запас (адмін). */
-  async addPlayerToTeam (teamId: string, body: AddTeamPlayerDto): Promise<Team> {
+  async addPlayerToTeam (teamId: string, body: AddTeamPlayerDto): Promise<TeamApi> {
     const res = await apiClient.post('/teams/{id}/players', body, {
       dynamicKeys: { id: teamId }
     })
     if (res && typeof res === 'object' && 'id' in res) {
-      return res as Team
+      return res
     }
     return await this.fetchTeam(teamId)
   }
 
   /** DELETE /teams/:id/players/:playerId — прибрати гравця з команди (у відповіді зазвичай повна команда). */
-  async removePlayerFromTeam (teamId: string, playerId: string): Promise<Team> {
+  async removePlayerFromTeam (teamId: string, playerId: string): Promise<TeamApi> {
     const res = await apiClient.delete('/teams/{id}/players/{playerId}', {
       dynamicKeys: { id: teamId, playerId }
     }) as unknown
     if (res && typeof res === 'object' && 'id' in res) {
-      return res as Team
+      return res as TeamApi
     }
     return await this.fetchTeam(teamId)
   }

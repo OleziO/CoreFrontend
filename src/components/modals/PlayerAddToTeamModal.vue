@@ -110,11 +110,11 @@
 import { isPlayerVerified, searchPlayer } from '@/core/helpers'
 import { getApiErrorMessage } from '@/utils/api-errors'
 import { PhCheck, PhMagnifyingGlass, PhPlus } from '@phosphor-icons/vue'
-import type { TTeam as Team } from '@/api/types/api.types'
+import type { TTeamResponse } from '@/api/types/api.types'
 import { teamsService } from '@/views/teams/teams.service'
 
 const props = defineProps<{
-  team: Team | undefined
+  team: TTeamResponse | undefined
   isMain: boolean
   onAdded?: () => void | Promise<void>
 }>()

@@ -4,6 +4,8 @@ import { shallowRef } from 'vue'
 
 import { hasPlayerRole } from '@/core/helpers'
 import { ERole } from '@/types/general.types'
+import type { components } from '@/api/types/schema'
+
 import type { TPlayer, TUpdatePlayerDto, TUserRoleCatalog } from '@/api/types/api.types'
 
 /** Каталог GET `/user-roles` — реактивний, щоб список після префетчу перерахував фільтр за query. */
@@ -68,9 +70,11 @@ class PlayersService {
   }
 
   async updatePlayer (id: string, data: Partial<TUpdatePlayerDto>): Promise<TPlayer> {
-    const res = await apiClient.patch('/players/{id}', data, {
-      dynamicKeys: { id }
-    })
+    const res = await apiClient.patch('/players/{id}',
+      data as Partial<components['schemas']['UpdatePlayerDto']>,
+      {
+        dynamicKeys: { id }
+      })
     return res as unknown as TPlayer
   }
 
