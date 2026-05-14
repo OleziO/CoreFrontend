@@ -73,9 +73,9 @@ export const tournamentDivisionTagClassMap: Record<TTournamentDivisionValue, str
 }
 
 export const tournamentDivisionMmrHintMap: Record<TTournamentDivisionValue, string> = {
-  DIVISION_I: 'Середній 0–2500 MMR, максимум гравця 3500',
-  DIVISION_II: 'Середній 2500–4500 MMR, максимум гравця 5500',
-  DIVISION_III: 'Середній 4500–7000 MMR, без обмеження максимуму гравця'
+  DIVISION_I: 'Максимальний MMR гравця ≤ 3 500',
+  DIVISION_II: 'Максимальний MMR гравця ≤ 5 500',
+  DIVISION_III: 'Максимальний MMR гравця ≤ 7 000'
 }
 
 /** Ролі профілю (GET /auth/me → CurrentPlayerDto.roles[].name). */
