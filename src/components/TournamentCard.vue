@@ -45,6 +45,16 @@
         {{ tournament.name }}
       </h2>
 
+      <div
+        v-if="tournament.division"
+        class="mt-6 flex justify-center"
+      >
+        <DivisionTag
+          :division="tournament.division"
+          variant="card"
+        />
+      </div>
+
       <div class="mx-6 mt-12 shrink-0">
         <div
           class="flex items-center justify-center gap-10 rounded-xl border border-amber-500/25 bg-amber-950/20
