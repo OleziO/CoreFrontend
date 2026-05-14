@@ -69,6 +69,19 @@
                     />
                   </button>
                 </div>
+                <div
+                  v-if="team?.dotaTeamId"
+                  class="flex items-center gap-8"
+                >
+                  <el-button
+                    class="!size-36 shrink-0 hover:bg-white/10"
+                    tag="a"
+                    target="_blank"
+                    :href="getDotabuffTeamUrl(team.dotaTeamId)"
+                  >
+                    <Icon :size="16" name="dotabuff" />
+                  </el-button>
+                </div>
               </div>
             </div>
 
@@ -380,7 +393,7 @@ import { PhCopy, PhCrown, PhDotsThree, PhCalendarDots, PhPencil, PhSealCheck, Ph
 import { useClipboard, useWindowSize } from '@vueuse/core'
 import dayjs from 'dayjs'
 import 'dayjs/locale/uk'
-import { resolvePublicOrApiUrl } from '@/core/helpers'
+import { resolvePublicOrApiUrl, getDotabuffTeamUrl } from '@/core/helpers'
 import TournamentBannerImage from '@/components/tournaments/TournamentBannerImage.vue'
 import type { TTeamResponse } from '@/api/types/api.types'
 import type { TUpdateTeamPayload } from '@/views/teams/teams.service'
