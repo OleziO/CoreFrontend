@@ -46,6 +46,16 @@
                   </el-tooltip>
                 </div>
 
+                <div
+                  v-if="team?.division"
+                  class="flex items-center"
+                >
+                  <DivisionTag
+                    :division="team.division"
+                    variant="card"
+                  />
+                </div>
+
                 <div class="flex min-w-0 flex-wrap items-center gap-3">
                   <span class="text-[10px] shrink-0 font-semibold uppercase tracking-[0.16em] text-gray-600">
                     Dota ID
