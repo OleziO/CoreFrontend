@@ -119,6 +119,21 @@
                 <span class="ml-8">Верифікувати команду</span>
               </el-button>
             </div>
+
+            <div
+              v-if="isAdmin && team?.isVerified"
+              class="mt-10 flex w-full shrink-0"
+            >
+              <el-button
+                type="warning"
+                class="h-30 w-full max-sm:text-xs max-sm:!px-8"
+                :loading="verifyTeamLoading"
+                @click="handleUnverifyTeam"
+              >
+                <PhSealWarning :size="20" class="shrink-0" />
+                <span class="ml-8">Зняти верифікацію</span>
+              </el-button>
+            </div>
           </div>
 
           <!-- ACTIONS -->
@@ -389,7 +404,7 @@
 import { getApiErrorMessage } from '@/utils/api-errors'
 import { routeNames } from '@/router/route-names'
 import { ElMessageBox } from 'element-plus'
-import { PhCopy, PhCrown, PhDotsThree, PhCalendarDots, PhPencil, PhSealCheck, PhTrash, PhUsersThree, PhX } from '@phosphor-icons/vue'
+import { PhCopy, PhCrown, PhDotsThree, PhCalendarDots, PhPencil, PhSealCheck, PhSealWarning, PhTrash, PhUsersThree, PhX } from '@phosphor-icons/vue'
 import { useClipboard, useWindowSize } from '@vueuse/core'
 import dayjs from 'dayjs'
 import 'dayjs/locale/uk'
@@ -502,6 +517,35 @@ async function handleVerifyTeam () {
     ElMessage.success('Команду верифіковано')
   } catch (e: unknown) {
     ElMessage.error(getApiErrorMessage(e, 'Не вдалося верифікувати команду'))
+  } finally {
+    verifyTeamLoading.value = false
+  }
+}
+
+async function handleUnverifyTeam () {
+  const tid = team.value?.id
+  if (!tid || !team.value?.isVerified) return
+  try {
+    await ElMessageBox.confirm(
+      'Верифікацію буде знято з команди.',
+      'Зняти верифікацію?',
+      {
+        confirmButtonText: 'Зняти',
+        cancelButtonText: 'Скасувати',
+        type: 'warning',
+        distinguishCancelAndClose: true,
+      }
+    )
+  } catch {
+    return
+  }
+  verifyTeamLoading.value = true
+  try {
+    await teamsService.unverifyTeam(tid)
+    await refreshTeamFromServer()
+    ElMessage.success('Верифікацію знято')
+  } catch (e: unknown) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося зняти верифікацію'))
   } finally {
     verifyTeamLoading.value = false
   }
