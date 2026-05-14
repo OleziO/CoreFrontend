@@ -552,7 +552,9 @@ async function handleUnverifyTeam () {
   verifyTeamLoading.value = true
   try {
     await teamsService.unverifyTeam(tid)
-    await refreshTeamFromServer()
+    const updated = await teamsService.fetchTeam(tid)
+    team.value = hydrateTeamPlayersRanks(updated)
+    teamsStore.patchTeamInList(team.value)
     ElMessage.success('Верифікацію знято')
   } catch (e: unknown) {
     ElMessage.error(getApiErrorMessage(e, 'Не вдалося зняти верифікацію'))
