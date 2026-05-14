@@ -66,6 +66,10 @@ export function getDotabuffProfileUrl (dotabuffId: string | null | undefined) {
   return `https://dotabuff.com/players/${dotabuffId}`
 }
 
+export function getDotabuffTeamUrl (dotaTeamId: string | null | undefined) {
+  return `https://www.dotabuff.com/esports/teams/${dotaTeamId}`
+}
+
 /** Single value from vue-router query (handles `?code=a&code=b` → first). */
 export function firstQueryValue (value: RouteLocationNormalized['query'][string]) {
   if (value == null) return undefined
