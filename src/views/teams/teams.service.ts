@@ -112,6 +112,17 @@ class TeamsService {
     }
   }
 
+  async unverifyTeam (teamId: string): Promise<void> {
+    try {
+      await apiClient.delete('/admin/teams/{teamId}/verify', {
+        dynamicKeys: { teamId }
+      })
+    } catch {
+      ElMessage.error('Не вдалося зняти верифікацію команди')
+      throw new Error('Unverify failed')
+    }
+  }
+
   // TODO: endpoint not in API yet
   // async leaveFromTeam () { ... }
 
