@@ -10,7 +10,8 @@
   >
     <div
       v-if="isEndedBySchedule"
-      class="absolute inset-0 z-20 flex items-center justify-center bg-black/72 backdrop-blur-[3px] transition-opacity duration-300"
+      class="absolute inset-0 z-20 flex items-center justify-center bg-black/72 backdrop-blur-[3px]
+             transition-opacity duration-300"
     >
       <span
         class="rounded-lg border border-slate-500/45 bg-slate-900/50 px-16 py-8 text-xs font-semibold uppercase
@@ -28,7 +29,10 @@
           :lazy="true"
           scale-on-hover
         />
-        <div class="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent" />
+        <div
+          class="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50
+                 to-transparent"
+        />
         <div class="absolute right-10 top-10 z-10 flex justify-end gap-6">
           <TournamentStatusTag
             v-if="tournament.tournamentStatus && !isEndedBySchedule"
@@ -46,23 +50,33 @@
       </h2>
 
       <div
-        v-if="tournament.division"
-        class="mt-6 flex justify-center"
+        class="mx-6 mt-12 flex min-w-0 shrink-0 flex-nowrap items-center gap-10"
+        :class="tournament.division ? '' : 'justify-center'"
       >
-        <DivisionTag
-          :division="tournament.division"
-          variant="card"
-        />
-      </div>
-
-      <div class="mx-6 mt-12 shrink-0">
         <div
-          class="flex items-center justify-center gap-10 rounded-xl border border-amber-500/25 bg-amber-950/20
-                 px-12 py-10 text-[13px] text-amber-100/95 backdrop-blur-sm"
+          v-if="tournament.division"
+          class="flex shrink-0 items-center"
         >
-          <PhTrophy :size="18" weight="duotone" class="shrink-0 text-amber-400/90" />
-          <span class="text-[11px] font-semibold uppercase tracking-widest text-amber-200/65">Приз</span>
-          <span class="truncate font-semibold tabular-nums text-amber-100">{{ formatTournamentPrizeUah(tournament.prizePool) }}</span>
+          <DivisionTag
+            :division="tournament.division"
+            variant="tournamentCard"
+          />
+        </div>
+
+        <div
+          class="min-w-0"
+          :class="tournament.division ? 'flex-1' : 'w-full'"
+        >
+          <div
+            class="flex min-w-0 items-center justify-center gap-10 rounded-xl border border-green-500/25
+                   bg-green-950/20 px-12 py-10 text-[13px] text-green-100/95 backdrop-blur-sm"
+          >
+            <PhTrophy :size="18" weight="duotone" class="shrink-0 text-green-400/90" />
+            <span class="text-[11px] font-semibold uppercase tracking-widest text-green-200/65">Приз</span>
+            <span class="truncate font-semibold tabular-nums text-green-100">
+              {{ formatTournamentPrizeUah(tournament.prizePool) }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -91,8 +105,10 @@
 
       <span
         v-if="participantsCount > 0"
-        class="pointer-events-none absolute right-11 top-8 z-10 inline-flex h-[22px] min-w-[22px] shrink-0 items-center justify-center rounded-full border border-black/35 bg-[var(--el-color-primary)] px-6 text-[11px]
-               font-semibold tabular-nums leading-none text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] select-none ring-2 ring-black/45"
+        class="pointer-events-none absolute right-11 top-8 z-10 inline-flex h-[22px] min-w-[22px] shrink-0
+               items-center justify-center rounded-full border border-black/35 bg-[var(--el-color-primary)] px-6
+               text-[11px] font-semibold tabular-nums leading-none text-white
+               shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] select-none ring-2 ring-black/45"
         :title="`Команд учасників: ${participantsCount}`"
       >
         {{ participantsBadgeText }}

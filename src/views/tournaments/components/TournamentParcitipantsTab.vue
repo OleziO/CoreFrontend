@@ -1,13 +1,18 @@
 <template>
   <div
     v-if="tournament?.teams?.length"
-    class="flex py-20 flex-wrap gap-24 justify-center items-center"
+    class="flex flex-wrap justify-center gap-x-12 gap-y-16 px-10 py-20"
   >
-    <TeamCard
+    <div
       v-for="team in tournament?.teams"
       :key="team.id"
-      :team="team"
-    />
+      class="w-[300px] max-w-full shrink-0"
+    >
+      <TeamCard
+        :team="team"
+        show-division-tag
+      />
+    </div>
   </div>
 
   <div

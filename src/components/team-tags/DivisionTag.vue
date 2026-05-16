@@ -10,28 +10,48 @@
       <span class="max-w-[260px] text-xs leading-relaxed">{{ mmrHint }}</span>
     </template>
     <span
-      class="inline-flex cursor-default items-center justify-center rounded-lg outline-none backdrop-blur-sm transition-all duration-300"
-      :class="[divisionShellClass, sizeClass]"
+      :class="[
+        fullWidth ? 'flex w-full min-w-0' : 'inline-flex',
+        'relative cursor-default items-center justify-center outline-none backdrop-blur-sm transition-all duration-300',
+        divisionShellClass,
+        sizeClass
+      ]"
     >
       <span
+        v-if="variant !== 'tournamentCard'"
         class="pointer-events-none absolute inset-0 rounded-[inherit]
                bg-gradient-to-b from-white/[0.08] to-black/35 opacity-95"
       />
-      <span class="relative z-10 whitespace-nowrap font-semibold tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">
+      <span
+        :class="variant === 'tournamentCard'
+          ? 'relative z-10 whitespace-nowrap text-[13px] font-semibold uppercase leading-snug tracking-wide'
+          : 'relative z-10 whitespace-nowrap font-semibold tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]'
+        "
+      >
         {{ divisionLabel }}
       </span>
     </span>
   </el-tooltip>
   <span
     v-else-if="divisionKey"
-    class="inline-flex cursor-default items-center justify-center rounded-lg outline-none backdrop-blur-sm transition-all duration-300"
-    :class="[divisionShellClass, sizeClass]"
+    :class="[
+      fullWidth ? 'flex w-full min-w-0' : 'inline-flex',
+      'relative cursor-default items-center justify-center outline-none backdrop-blur-sm transition-all duration-300',
+      divisionShellClass,
+      sizeClass
+    ]"
   >
     <span
+      v-if="variant !== 'tournamentCard'"
       class="pointer-events-none absolute inset-0 rounded-[inherit]
              bg-gradient-to-b from-white/[0.08] to-black/35 opacity-95"
     />
-    <span class="relative z-10 whitespace-nowrap font-semibold tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">
+    <span
+      :class="variant === 'tournamentCard'
+        ? 'relative z-10 whitespace-nowrap text-[13px] font-semibold uppercase leading-snug tracking-wide'
+        : 'relative z-10 whitespace-nowrap font-semibold tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]'
+      "
+    >
       {{ divisionLabel }}
     </span>
   </span>
@@ -40,7 +60,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import {
-  TOURNAMENT_DIVISION_VALUES,
+  normalizeTournamentDivision,
+  tournamentDivisionCardChipClassMap,
   tournamentDivisionLabelMap,
   tournamentDivisionMmrHintMap,
   tournamentDivisionTagClassMap,
@@ -51,23 +72,21 @@ const props = withDefaults(
   defineProps<{
     division?: string | null
     /** Великий тег поруч із TournamentStatusTag. */
-    variant?: 'hero' | 'card'
+    variant?: 'hero' | 'card' | 'tournamentCard'
     showTooltip?: boolean
+    /** На всю ширину батька (наприклад, картка команди). */
+    fullWidth?: boolean
   }>(),
   {
     variant: 'hero',
-    showTooltip: true
+    showTooltip: true,
+    fullWidth: false
   }
 )
 
-function isDivisionKey (v: string): v is TTournamentDivisionValue {
-  return (TOURNAMENT_DIVISION_VALUES as readonly string[]).includes(v)
-}
-
-const divisionKey = computed((): TTournamentDivisionValue | null => {
-  const d = props.division
-  return d && isDivisionKey(d) ? d : null
-})
+const divisionKey = computed((): TTournamentDivisionValue | null =>
+  normalizeTournamentDivision(props.division)
+)
 
 const divisionLabel = computed(() =>
   divisionKey.value ? tournamentDivisionLabelMap[divisionKey.value] : ''
@@ -77,13 +96,21 @@ const mmrHint = computed(() =>
   divisionKey.value ? tournamentDivisionMmrHintMap[divisionKey.value] : ''
 )
 
-const divisionShellClass = computed(() =>
-  divisionKey.value ? tournamentDivisionTagClassMap[divisionKey.value] : ''
-)
+const divisionShellClass = computed(() => {
+  const key = divisionKey.value
+  if (!key) return ''
+  return props.variant === 'tournamentCard'
+    ? tournamentDivisionCardChipClassMap[key]
+    : tournamentDivisionTagClassMap[key]
+})
 
-const sizeClass = computed(() =>
-  props.variant === 'card'
-    ? 'relative overflow-hidden px-10 py-5 text-[10px] uppercase tracking-[0.12em]'
-    : 'relative overflow-hidden px-14 py-8 text-[12px]'
-)
+const sizeClass = computed(() => {
+  if (props.variant === 'tournamentCard') {
+    return 'relative flex min-w-0 items-center justify-center overflow-hidden rounded-xl px-12 py-10'
+  }
+  if (props.variant === 'card') {
+    return 'relative overflow-hidden rounded-lg px-12 py-6 text-[10px] uppercase tracking-[0.14em]'
+  }
+  return 'relative overflow-hidden rounded-lg px-14 py-8 text-[12px] uppercase'
+})
 </script>

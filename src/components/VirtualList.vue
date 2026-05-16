@@ -43,6 +43,8 @@ const props = withDefaults(defineProps<{
   withTopMargin?: boolean
   emptyText?: string
   isTable?: boolean
+  /** Відступи між елементами сітки (класи на клітинці RecycleScroller). За замовчуванням як у Players/Tournaments. */
+  gridCellClass?: string
 }>(), {
   gridItems: 4,
   itemHeight: 300,
@@ -52,7 +54,8 @@ const props = withDefaults(defineProps<{
   idKey: 'id',
   buffer: 500,
   emptyText: 'Дані відсутні',
-  isTable: false
+  isTable: false,
+  gridCellClass: 'pb-20 pr-20'
 })
 
 defineSlots<{
@@ -90,6 +93,6 @@ const containerClasses = computed(() => {
 })
 
 const itemClasses = computed(() => {
-  return props.isTable ? '' : 'pb-20 pr-20'
+  return props.isTable ? '' : props.gridCellClass
 })
 </script>

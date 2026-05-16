@@ -113,7 +113,7 @@ function cellPresentation (rowId: string, colId: string): { label: string; class
       className = 'bg-amber-400/85 text-amber-950 qual-matrix-cell--diag'
       break
     case 'win':
-      className = 'bg-green-600/45 text-emerald-400/90 qual-matrix-cell--data'
+      className = 'bg-green-600/45 text-green-400/90 qual-matrix-cell--data'
       break
     case 'loss':
       className = 'bg-red-600/45 text-red-50 qual-matrix-cell--data'

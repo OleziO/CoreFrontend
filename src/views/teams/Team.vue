@@ -12,27 +12,22 @@
       <aside class="flex flex-1 flex-col gap-20 max-w-full lg:max-w-[600px] lg:self-stretch">
         <div
           class="rounded-xl w-full bg-gray-900 p-20 flex flex-col gap-20 relative
-                 border border-white/5 shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+                 border border-white/[0.08] transition-all duration-300 ease-out"
+          :class="teamProfileCardShadowClass"
         >
           <div class="flex flex-col gap-14">
             <div class="flex items-start gap-16">
-              <div
-                class="relative mt-15 size-[92px] shrink-0 overflow-hidden rounded-2xl bg-white/[0.06]
-                  shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] ring-2 ring-black/40"
+              <el-avatar
+                :size="118"
+                shape="square"
+                :src="teamLogoSrc ?? ''"
+                class="mt-15 !size-118 shrink-0 rounded-2xl bg-white/[0.06] ring-2 ring-gray-700
+                  shadow-[0_4px_14px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
               >
-                <img
-                  v-if="teamLogoSrc"
-                  :src="teamLogoSrc"
-                  alt=""
-                  class="pointer-events-none h-full w-full object-cover"
-                >
-                <div
-                  v-else
-                  class="flex h-full w-full items-center justify-center text-white/30"
-                >
-                  <PhUsersThree :size="38" weight="duotone" />
-                </div>
-              </div>
+                <template #default>
+                  <PhUser :size="32" weight="bold" class="text-white/70" />
+                </template>
+              </el-avatar>
 
               <div class="flex flex-1 min-w-0 flex-col gap-6 mt-15">
                 <div class="flex flex-wrap items-center gap-10">
@@ -47,47 +42,49 @@
                 </div>
 
                 <div
-                  v-if="team?.division"
+                  v-if="teamDivisionForDisplay"
                   class="flex items-center"
                 >
                   <DivisionTag
-                    :division="team.division"
+                    :division="teamDivisionForDisplay"
                     variant="card"
                   />
                 </div>
 
-                <div class="flex min-w-0 flex-wrap items-center gap-3">
-                  <span class="text-[10px] shrink-0 font-semibold uppercase tracking-[0.16em] text-gray-600">
-                    Dota ID
-                  </span>
-                  <button
-                    type="button"
-                    class="group/dota-id inline-flex min-w-0 max-w-full cursor-pointer items-center gap-8
-                           rounded-lg border border-transparent px-8 py-4 font-mono text-xs tabular-nums
-                           outline-none transition-all duration-200
-                           hover:border-white/10 hover:bg-white/[0.04]"
-                    :class="dotaTeamIdTrimmed
-                      ? 'text-gray-400 hover:text-primary'
-                      : 'cursor-default text-gray-600'"
-                    @click="dotaTeamIdTrimmed && copyDotaTeamIdPage()"
-                  >
-                    <span class="min-w-0 truncate">{{ dotaTeamIdTrimmed || '—' }}</span>
-                    <PhCopy
-                      v-if="dotaTeamIdTrimmed"
-                      size="14"
-                      class="shrink-0 opacity-55 transition-opacity group-hover/dota-id:opacity-100"
-                    />
-                  </button>
-                </div>
                 <div
-                  v-if="team?.dotaTeamId"
-                  class="flex items-center gap-8"
+                  class="flex min-w-0 flex-nowrap items-center justify-between gap-10"
                 >
+                  <div class="flex min-w-0 flex-1 items-center gap-3">
+                    <span class="text-[10px] shrink-0 font-semibold uppercase tracking-[0.16em] text-gray-600">
+                      Dota ID
+                    </span>
+                    <button
+                      type="button"
+                      class="group/dota-id inline-flex min-w-0 max-w-full cursor-pointer items-center gap-8
+                             rounded-lg border border-transparent px-8 py-4 font-mono text-xs tabular-nums
+                             outline-none transition-all duration-200
+                             hover:border-white/10 hover:bg-white/[0.04]"
+                      :class="dotaTeamIdTrimmed
+                        ? 'text-gray-400 hover:text-primary'
+                        : 'cursor-default text-gray-600'"
+                      @click="dotaTeamIdTrimmed && copyDotaTeamIdPage()"
+                    >
+                      <span class="min-w-0 truncate">{{ dotaTeamIdTrimmed || '—' }}</span>
+                      <PhCopy
+                        v-if="dotaTeamIdTrimmed"
+                        size="14"
+                        class="shrink-0 opacity-55 transition-opacity group-hover/dota-id:opacity-100"
+                      />
+                    </button>
+                  </div>
                   <el-button
+                    v-if="team?.dotaTeamId?.trim()"
                     class="!size-36 shrink-0 hover:bg-white/10"
                     tag="a"
                     target="_blank"
+                    rel="noopener noreferrer"
                     :href="getDotabuffTeamUrl(team.dotaTeamId)"
+                    title="Dotabuff"
                   >
                     <Icon :size="16" name="dotabuff" />
                   </el-button>
@@ -96,12 +93,13 @@
             </div>
 
             <div
-              v-if="canEditTeamProfile"
-              class="mt-12 flex w-full"
+              v-if="canEditTeamProfile || (isAdmin && team)"
+              class="mt-12 flex w-full flex-col gap-10 lg:flex-row lg:items-stretch lg:gap-12"
             >
               <el-button
+                v-if="canEditTeamProfile"
                 type="primary"
-                class="h-30 w-full shrink-0 max-sm:text-xs max-sm:!px-8"
+                class="h-30 w-full shrink-0 lg:flex-1 max-sm:text-xs max-sm:!px-8"
                 @click="open('TeamCreateModal', {
                   team,
                   onSubmit: handleTeamUpdate
@@ -113,30 +111,22 @@
                   Редагувати {{ currWindow.width.value > 650 ? ' команду' : '' }}
                 </span>
               </el-button>
-            </div>
 
-            <div
-              v-if="isAdmin && team && !team.isVerified"
-              class="mt-10 flex w-full shrink-0"
-            >
               <el-button
+                v-if="isAdmin && team && !team.isVerified"
                 type="success"
-                class="h-30 w-full max-sm:text-xs max-sm:!px-8"
+                class="h-30 w-full shrink-0 lg:flex-1 max-sm:text-xs max-sm:!px-8"
                 :loading="verifyTeamLoading"
                 @click="handleVerifyTeam"
               >
                 <PhSealCheck :size="20" class="shrink-0" />
                 <span class="ml-8">Верифікувати команду</span>
               </el-button>
-            </div>
 
-            <div
-              v-if="isAdmin && team?.isVerified"
-              class="mt-10 flex w-full shrink-0"
-            >
               <el-button
+                v-else-if="isAdmin && team?.isVerified"
                 type="warning"
-                class="h-30 w-full max-sm:text-xs max-sm:!px-8"
+                class="h-30 w-full shrink-0 lg:flex-1 max-sm:text-xs max-sm:!px-8"
                 :loading="verifyTeamLoading"
                 @click="handleUnverifyTeam"
               >
@@ -255,8 +245,22 @@
       >
         <div class="grid min-h-0 h-fit grid-cols-1 gap-20 2sm:grid-cols-2">
           <div class="flex-1 h-fit w-full min-w-0">
-            <h3 class="text-xl text-center font-semibold items-center justify-center gap-6 flex">
-              Основа
+            <h3 class="text-xl text-center font-semibold flex items-center justify-center gap-8">
+              <span>Основа</span>
+              <el-tooltip
+                placement="top"
+                effect="dark"
+                :content="mainRosterAvgRatingTooltip"
+              >
+                <span
+                  class="inline-flex cursor-default text-gray-500 outline-none transition-colors hover:text-white/75"
+                  tabindex="0"
+                  role="img"
+                  aria-label="Середній рейтинг основи"
+                >
+                  <PhInfo :size="20" weight="bold" />
+                </span>
+              </el-tooltip>
             </h3>
             <el-divider class="mt-15" />
 
@@ -414,11 +418,12 @@
 import { getApiErrorMessage } from '@/utils/api-errors'
 import { routeNames } from '@/router/route-names'
 import { ElMessageBox } from 'element-plus'
-import { PhCopy, PhCrown, PhDotsThree, PhCalendarDots, PhPencil, PhSealCheck, PhSealWarning, PhTrash, PhUsersThree, PhX } from '@phosphor-icons/vue'
+import { PhCopy, PhCrown, PhDotsThree, PhCalendarDots, PhInfo, PhPencil, PhSealCheck, PhSealWarning, PhTrash, PhUser, PhX } from '@phosphor-icons/vue'
 import { useClipboard, useWindowSize } from '@vueuse/core'
 import dayjs from 'dayjs'
 import 'dayjs/locale/uk'
 import { resolvePublicOrApiUrl, getDotabuffTeamUrl } from '@/core/helpers'
+import { resolveTeamDivisionForDisplay } from '@/components/tournaments-tags/tournament.constants'
 import TournamentBannerImage from '@/components/tournaments/TournamentBannerImage.vue'
 import type { TTeamResponse } from '@/api/types/api.types'
 import type { TUpdateTeamPayload } from '@/views/teams/teams.service'
@@ -442,7 +447,43 @@ const team = ref<TTeamResponse | null>(null)
 
 const teamLogoSrc = computed(() => resolvePublicOrApiUrl(team.value?.logoUrl))
 
+/** Ореол верифікації через box-shadow (без товстої кольорової обводки). */
+const teamProfileCardShadowClass = computed(() => {
+  const drop = 'shadow-[0_4px_16px_rgba(0,0,0,0.35)]'
+  const t = team.value
+  if (!t) return drop
+  if (t.isVerified) {
+    return (
+      'shadow-[0_4px_16px_rgba(0,0,0,0.35),0_0_32px_rgba(34,197,94,0.38),0_0_64px_rgba(34,197,94,0.14)] ' +
+      'hover:shadow-[0_4px_16px_rgba(0,0,0,0.35),0_0_46px_rgba(34,197,94,0.52),0_0_84px_rgba(34,197,94,0.2)]'
+    )
+  }
+  return (
+    'shadow-[0_4px_16px_rgba(0,0,0,0.35),0_0_32px_rgba(248,113,113,0.34),0_0_64px_rgba(248,113,113,0.11)] ' +
+    'hover:shadow-[0_4px_16px_rgba(0,0,0,0.35),0_0_46px_rgba(248,113,113,0.44),0_0_84px_rgba(248,113,113,0.16)]'
+  )
+})
+
 const dotaTeamIdTrimmed = computed(() => team.value?.dotaTeamId?.trim() ?? '')
+
+const mainRosterAvgRatingRounded = computed(() => {
+  const mains = team.value?.mainPlayers ?? []
+  if (!mains.length) return null
+  const sum = mains.reduce((acc, p) => acc + (Number(p.rating) || 0), 0)
+  return Math.round(sum / mains.length)
+})
+
+const teamDivisionForDisplay = computed(() =>
+  team.value
+    ? resolveTeamDivisionForDisplay(team.value.division, mainRosterAvgRatingRounded.value)
+    : null
+)
+
+const mainRosterAvgRatingTooltip = computed(() => {
+  const avg = mainRosterAvgRatingRounded.value
+  if (avg == null) return 'У складі основи поки немає гравців'
+  return `Середній рейтинг основи: ${avg}`
+})
 
 const { copy } = useClipboard({ legacy: true })
 const isAdmin = computed(() => {

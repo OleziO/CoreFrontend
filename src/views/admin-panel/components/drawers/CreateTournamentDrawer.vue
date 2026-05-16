@@ -307,7 +307,7 @@ const uploads: { key: UploadKey; label: string }[] = [
 ]
 
 const statusStripeClass: Record<TTournamentStatusValue, string> = {
-  QUALIFICATIONS: 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]',
+  QUALIFICATIONS: 'bg-green-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]',
   PLAYOFF: 'bg-fuchsia-400 shadow-[0_0_10px_rgba(217,70,239,0.45)]'
 }
 

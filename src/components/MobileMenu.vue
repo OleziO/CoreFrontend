@@ -6,21 +6,23 @@
       @click.self="close"
     >
       <nav class="mobile-menu-panel">
-        <button
+        <RouterLink
           v-for="item in menu"
-          :key="item.to"
-          class="mobile-menu-link"
-          @click="go(item.to)"
+          :key="item.name"
+          :to="{ name: item.name }"
+          class="mobile-menu-link no-underline"
+          @click="close"
         >
           {{ item.label }}
-        </button>
+        </RouterLink>
         <RoleGuard :roles="['admin', 'moderator']">
-          <button
-            class="mobile-menu-link"
-            @click="go(routeNames.adminPanel)"
+          <RouterLink
+            class="mobile-menu-link no-underline"
+            :to="{ name: routeNames.adminPanel }"
+            @click="close"
           >
             Адмінка
-          </button>
+          </RouterLink>
         </RoleGuard>
 
         <template v-if="!authStore.token">
@@ -49,34 +51,27 @@
 
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
-import { useRouter } from 'vue-router'
 import RoleGuard from '@/guards/RoleGuard.vue'
 import { PhDiscordLogo } from '@phosphor-icons/vue'
 
-const router = useRouter()
 const togglerStore = useTogglerStore()
 const authStore = useAuthStore()
 
 const menu = computed(() => {
-  const items: { label: string; to: string }[] = [
-    { label: 'Головна', to: routeNames.rootPage },
-    { label: 'Турніри', to: routeNames.tournaments },
-    { label: 'Команди', to: routeNames.teams },
-    { label: 'Гравці', to: routeNames.players }
+  const items: { label: string; name: string }[] = [
+    { label: 'Головна', name: routeNames.rootPage },
+    { label: 'Турніри', name: routeNames.tournaments },
+    { label: 'Команди', name: routeNames.teams },
+    { label: 'Гравці', name: routeNames.players }
   ]
   if (authStore.token) {
-    items.push({ label: 'Профіль', to: routeNames.profile })
+    items.push({ label: 'Профіль', name: routeNames.profile })
   }
   return items
 })
 
 function close () {
   togglerStore.showMobileMenu = false
-}
-
-function go (name: string) {
-  router.push({ name })
-  close()
 }
 
 function handleDiscordLogin () {
@@ -117,7 +112,8 @@ function handleLogout () {
 /* ================= LINKS ================= */
 .mobile-menu-link {
   @apply
-    border-0 cursor-pointer
+    box-border flex w-full cursor-pointer justify-center
+    border-0 bg-transparent no-underline
     text-xl font-medium text-white
     transition-all duration-200 ease-out
     hover:text-primary

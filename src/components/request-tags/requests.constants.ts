@@ -60,7 +60,7 @@ export const requestTypeClassMap: Record<string, string> = {
     shadow-[0_0_12px_rgba(168,85,247,0.2)]
   `,
   [ERequestType.WITHDRAW]: `
-    !border !border-emerald-500/40 !bg-emerald-500/10 !text-emerald-400
+    !border !border-green-500/40 !bg-green-500/10 !text-green-400
     rounded-lg px-8 py-4 text-[11px] font-semibold uppercase tracking-wide
     shadow-[0_0_12px_rgba(16,185,129,0.2)]
   `,

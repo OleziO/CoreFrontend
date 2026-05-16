@@ -46,8 +46,8 @@
           <template #default="{ row }">
             <el-button
               type="success"
-              class="!w-full !justify-start !bg-emerald-600/20 !border-emerald-500/30
-                      hover:!bg-emerald-600 hover:!border-emerald-500 text-emerald-400
+              class="!w-full !justify-start !bg-green-600/20 !border-green-500/30
+                      hover:!bg-green-600 hover:!border-green-500 text-green-400
                        hover:text-white transition-all group"
               @click="handleTake(row.id)"
             >

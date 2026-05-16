@@ -108,6 +108,7 @@
         withTopMargin
         :item-height="TEAM_CARD_HEIGHT"
         :item-width="TEAM_CARD_WIDTH"
+        grid-cell-class="pb-10 pr-12"
         empty-text="Команди не знайдені"
         id-key="id"
       >
@@ -130,7 +131,8 @@ import { useWindowSize } from '@vueuse/core'
 import { parseQueryArray } from '@/core/helpers'
 
 const TEAM_CARD_WIDTH = 300
-const TEAM_CARD_HEIGHT = 366
+/** Висота кроку сітки ≈ картка + вертикальний відступ (`grid-cell-class` на VirtualList). */
+const TEAM_CARD_HEIGHT = 472
 
 const teamsStore = useTeamsStore()
 const window = useWindowSize()

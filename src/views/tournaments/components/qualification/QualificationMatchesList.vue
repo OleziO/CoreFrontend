@@ -19,7 +19,7 @@
         </h3>
         <p class="text-xs text-gray-500 mt-8 max-w-xl leading-relaxed">
           Рядок — ваша команда, стовпець — суперник.
-          <span class="text-emerald-400/90 font-semibold">W</span> /
+          <span class="text-green-400/90 font-semibold">W</span> /
           <span class="text-red-400/90 font-semibold">L</span> з точки зору рядка;
           <span class="text-amber-300 font-semibold">X</span> — та сама команда.
           Результат подається через «Додати результат».

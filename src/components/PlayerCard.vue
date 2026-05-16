@@ -15,9 +15,13 @@
           <div class="flex items-center justify-between w-full gap-10">
             <div class="relative truncate flex items-center gap-15">
               <el-avatar
-                :src="player.avatarUrl ?? ''"
+                :src="avatarSrc"
                 class="border-2 relative min-w-50 size-50 border-gray-700 shadow-sm transition-all duration-300"
-              />
+              >
+                <template #default>
+                  <PhUser :size="22" weight="bold" class="text-white/70" />
+                </template>
+              </el-avatar>
 
               <div class="flex truncate flex-col">
                 <div>
@@ -104,8 +108,8 @@
 import { RouterLink } from 'vue-router'
 
 import { routeNames } from '@/router/route-names'
-import { PhCrown } from '@phosphor-icons/vue'
-import { getCopy, formatPlayerRatingMmr, getPlayerRankImageSrcFromPlayerRank, isPlayerVerified } from '@/core/helpers'
+import { PhCrown, PhUser } from '@phosphor-icons/vue'
+import { getCopy, formatPlayerRatingMmr, getPlayerRankImageSrcFromPlayerRank, isPlayerVerified, resolvePublicOrApiUrl } from '@/core/helpers'
 import type { TPlayer, TPlayerResponseDto } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
@@ -123,6 +127,10 @@ const props = withDefaults(defineProps<{
 })
 
 const isVerified = computed(() => isPlayerVerified(props.player))
+
+const avatarSrc = computed(() =>
+  props.player ? resolvePublicOrApiUrl(props.player.avatarUrl) : ''
+)
 
 const rankImageSrc = computed(() =>
   props.player ? getPlayerRankImageSrcFromPlayerRank(props.player.rank) : ''

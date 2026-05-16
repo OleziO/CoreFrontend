@@ -18,22 +18,26 @@
         class="flex items-center justify-between w-full"
       >
         <!-- DESKTOP NAV -->
-        <nav class="hidden lg:flex items-center gap-32 flex-1">
-          <router-link :to="{ name: routeNames.tournaments }">
-            <el-button type="primary" link class="tracking-[4]">Турніри</el-button>
-          </router-link>
-          <router-link :to="{ name: routeNames.teams }">
-            <el-button type="primary" link class="tracking-[4]">Команди</el-button>
-          </router-link>
-          <router-link :to="{ name: routeNames.players }">
-            <el-button type="primary" link class="tracking-[4]">Гравці</el-button>
-          </router-link>
+        <nav class="hidden lg:flex flex-1 items-center gap-32">
+          <RouterLink
+            v-for="item in footerNavItems"
+            :key="item.name"
+            :to="{ name: item.name }"
+            active-class=""
+            exact-active-class=""
+            class="
+              footer-site-link p-0 text-sm font-medium tracking-[4] text-white/70 no-underline
+              transition-colors hover:text-primary
+            "
+          >
+            {{ item.label }}
+          </RouterLink>
         </nav>
 
         <!-- LOGO -->
-        <router-link
+        <RouterLink
           :to="{ name: routeNames.rootPage }"
-          class="hidden lg:flex items-center justify-center h-full py-10"
+          class="footer-site-link hidden h-full items-center justify-center py-10 lg:flex"
         >
           <el-image
             class="h-full w-full max-h-30 cursor-pointer"
@@ -41,7 +45,7 @@
             :src="logo"
             alt="Core League"
           />
-        </router-link>
+        </RouterLink>
 
         <!-- SOCIAL MEDIA -->
         <div
@@ -69,6 +73,12 @@ import { routeNames } from '@/router/route-names'
 import logo from '@/assets/LongLogo.png'
 import Icon, { type TIconName } from '@/components/Icon.vue'
 
+const footerNavItems: Array<{ name: string; label: string }> = [
+  { name: routeNames.tournaments, label: 'Турніри' },
+  { name: routeNames.teams, label: 'Команди' },
+  { name: routeNames.players, label: 'Гравці' }
+]
+
 const socialLinks: Array<{
   name: string
   url: string
@@ -83,3 +93,18 @@ const socialLinks: Array<{
 ]
 
 </script>
+
+<style scoped>
+/* Чистий текстовий вигляд: без «плашки» як у кнопок EP / фокус-фону браузера */
+.footer-site-link {
+  @apply m-0 inline-flex items-center rounded-none border-0 bg-transparent shadow-none;
+  @apply outline-none ring-0 ring-offset-0;
+}
+
+.footer-site-link:hover,
+.footer-site-link:focus,
+.footer-site-link:focus-visible,
+.footer-site-link:active {
+  @apply bg-transparent shadow-none outline-none ring-0;
+}
+</style>

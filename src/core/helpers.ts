@@ -212,7 +212,7 @@ export function getPlayerMatchStats (p: (TPlayer | TPlayerMatchRecord) | null | 
     if (wins * 2 === total) {
       winrateClass = 'text-gray-400'
     } else if (wins * 2 > total) {
-      winrateClass = 'text-emerald-400'
+      winrateClass = 'text-green-400'
     } else {
       winrateClass = 'text-red-400'
     }

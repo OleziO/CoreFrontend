@@ -18,9 +18,9 @@
       "
     >
       <!-- LOGO -->
-      <div
-        class="flex h-full items-center cursor-pointer max-w-[130px]"
-        @click="$router.push({ name: routeNames.rootPage })"
+      <RouterLink
+        :to="{ name: routeNames.rootPage }"
+        class="flex h-full max-w-[130px] items-center"
       >
         <el-image
           class="h-full select-none"
@@ -28,44 +28,42 @@
           :src="logo"
           alt="Core League"
         />
-      </div>
+      </RouterLink>
 
       <!-- DESKTOP NAV -->
-      <nav class="lg:flex items-center gap-20 hidden h-full">
-        <el-button
+      <nav class="hidden h-full items-center gap-20 lg:flex">
+        <RouterLink
           v-for="link in navLinks"
           :key="link.name"
-          type="primary"
-          link
+          :to="{ name: link.name }"
+          active-class=""
+          exact-active-class=""
           class="
-            text-sm font-medium tracking-wide
-            !text-white/70 hover:!text-primary rounded-none
-            transition-colors !h-full
+            inline-flex h-full items-center text-sm font-medium tracking-wide no-underline
+            !text-white/70 transition-colors hover:!text-primary rounded-none
           "
           :class="{
             '!border-b-2 !border-b-primary': isNavActive(link.name)
           }"
-          @click="$router.push({ name: link.name })"
         >
           {{ link.label }}
-        </el-button>
+        </RouterLink>
 
         <RoleGuard :roles="['admin', 'moderator']">
-          <el-button
-            type="primary"
-            link
+          <RouterLink
+            :to="{ name: routeNames.adminPanel }"
+            active-class=""
+            exact-active-class=""
             class="
-              text-sm font-medium tracking-wide
-              !text-white/70 hover:!text-primary rounded-none
-              transition-colors !h-full
+              inline-flex h-full items-center text-sm font-medium tracking-wide no-underline
+              !text-white/70 transition-colors hover:!text-primary rounded-none
             "
             :class="{
               '!border-b-2 !border-b-primary': $route.name === routeNames.adminPanel
             }"
-            @click="$router.push({ name: routeNames.adminPanel })"
           >
             Адмінка
-          </el-button>
+          </RouterLink>
         </RoleGuard>
       </nav>
 
@@ -106,10 +104,16 @@
                 :class="{
                   'header-user-menu__item--active': $route.name === routeNames.profile
                 }"
-                @click="$router.push({ name: routeNames.profile })"
               >
-                <PhUser :size="20" />
-                <span class="ml-8">Профіль</span>
+                <RouterLink
+                  :to="{ name: routeNames.profile }"
+                  active-class=""
+                  exact-active-class=""
+                  class="flex w-full items-center no-underline text-inherit"
+                >
+                  <PhUser :size="20" />
+                  <span class="ml-8">Профіль</span>
+                </RouterLink>
               </el-dropdown-item>
 
               <el-dropdown-item

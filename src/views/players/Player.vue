@@ -287,7 +287,7 @@
                   </span>
                   <span
                     class="text-base font-medium tabular-nums leading-none
-                      text-emerald-300/90"
+                      text-green-300/90"
                   >
                     {{ matchStats.wins }}
                   </span>

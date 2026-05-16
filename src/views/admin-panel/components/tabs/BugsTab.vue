@@ -262,8 +262,8 @@ const getButtonClass = (currentStatus: string): string => {
       shadow-[0_0_12px_rgba(168,85,247,0.2)]
     `,
     [ERequestStatus.MERGED]: `
-      !border !border-emerald-500 !bg-emerald-500 !text-emerald-400
-      hover:!bg-emerald-500/20 hover:!border-emerald-500/60
+      !border !border-green-500 !bg-green-500 !text-green-400
+      hover:!bg-green-500/20 hover:!border-green-500/60
       shadow-[0_0_12px_rgba(16,185,129,0.2)]
     `
   }
