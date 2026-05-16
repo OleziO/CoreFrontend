@@ -11,14 +11,16 @@ export type TTournamentDivision = components['schemas']['TournamentDivision']
 
 /** Відповіді GET/POST/PATCH команд (`TeamResponseDto`) — без `matches*` / discord-каналів з вкладеної схеми `Team`. */
 export type TTeamResponse = components['schemas']['TeamResponseDto'] & {
-  division: TTournamentDivision | null
+  /** Підмішується бекендом поза базовою схемою; на частині ендпоінтів може бути відсутнє. */
+  division?: TTournamentDivision | null
 }
 
 /** Публічний зріз гравця в рості команди (GET /teams…) — сумісний з карткою гравця. */
 export type TPlayerResponseDto = components['schemas']['PlayerResponseDto']
 
 export type TTeam = components['schemas']['Team'] & {
-  division: TTournamentDivision | null
+  /** Підмішується бекендом поза базовою схемою `Team` (дивізіон — у `Tournament`). */
+  division?: TTournamentDivision | null
 }
 export type TQualificationMatch = components['schemas']['QualificationMatch']
 /** Тіло GET /tournaments/:id/qualification — у OpenAPI це `QualificationResponseDto` (поверх `Qualification` додає `playerTournamentPoints`). */

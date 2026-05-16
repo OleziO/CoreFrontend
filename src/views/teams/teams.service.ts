@@ -114,6 +114,8 @@ class TeamsService {
 
   async unverifyTeam (teamId: string): Promise<void> {
     try {
+      /* Шлях ще не в schema.d.ts — після `npm run api` прибрати ts-expect-error. */
+      // @ts-expect-error — DELETE /admin/teams/:id/verify не згенерований у paths
       await apiClient.delete('/admin/teams/{teamId}/verify', {
         dynamicKeys: { teamId }
       })
