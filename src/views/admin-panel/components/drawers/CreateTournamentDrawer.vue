@@ -15,7 +15,7 @@
         />
         <div>
           <h2 id="drawer-title" class="text-xl font-bold tracking-tight text-white">
-            Додати турнір
+            {{ isEditMode ? 'Редагувати турнір' : 'Додати турнір' }}
           </h2>
           <p class="mt-6 max-w-[22rem] text-[13px] leading-snug text-gray-500">
             Обовʼязкові поля маркуються зірочкою. Зображення можна додати зараз або пізніше в картці турніру.
@@ -250,7 +250,7 @@
               class="drawer-submit-btn w-full !h-[52px] !rounded-xl !border-0 !text-[15px] !font-semibold"
               @click="handleSubmit"
             >
-              Створити турнір
+              {{ isEditMode ? 'Зберегти зміни' : 'Створити турнір' }}
             </el-button>
           </div>
         </el-form>
@@ -278,11 +278,14 @@ import {
   tournamentStatusLabelMap,
   type TTournamentStatusValue
 } from '@/components/tournaments-tags/tournament.constants'
-import type { TCreateTournamentDto as CreateTournamentDto } from '@/api/types/api.types'
+import { getImageUrl } from '@/core/helpers'
+import type { TCreateTournamentDto as CreateTournamentDto, TTournament as Tournament, TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
 
-type UploadKey = 'header' | 'list'
+type TUploadKey = 'header' | 'list'
 
+const props = defineProps<{ tournament?: Tournament | null }>()
 const showCreateTournamentDrawer = defineModel<boolean>()
+const isEditMode = computed(() => !!props.tournament)
 const loading = ref(false)
 const tournamentStore = useTournamentStore()
 
@@ -291,17 +294,17 @@ const elementPlusUk = uk
 const prizePoolText = ref('')
 const slotsText = ref('')
 
-const files = reactive<Record<UploadKey, File | null>>({
+const files = reactive<Record<TUploadKey, File | null>>({
   header: null,
   list: null
 })
 
-const previews = reactive<Record<UploadKey, string>>({
+const previews = reactive<Record<TUploadKey, string>>({
   header: '',
   list: ''
 })
 
-const uploads: { key: UploadKey; label: string }[] = [
+const uploads: { key: TUploadKey; label: string }[] = [
   { key: 'header', label: 'Банер у шапці' },
   { key: 'list', label: 'Банер у списку' }
 ]
@@ -341,7 +344,7 @@ function translateUploadErr (msg: string) {
   return msg
 }
 
-function ingestImageFile (key: UploadKey, raw: File) {
+function ingestImageFile (key: TUploadKey, raw: File) {
   const v = validateImageFileForUpload(raw)
   if (v !== null) {
     ElMessage.error(translateUploadErr(v))
@@ -352,10 +355,27 @@ function ingestImageFile (key: UploadKey, raw: File) {
   previews[key] = URL.createObjectURL(raw)
 }
 
-function handleBannerPick (key: UploadKey, uploadFile: UploadFile) {
+function handleBannerPick (key: TUploadKey, uploadFile: UploadFile) {
   const raw = uploadFile.raw
   if (!raw) return
   ingestImageFile(key, raw)
+}
+
+function populateFromTournament (t: Tournament) {
+  form.name = t.name ?? ''
+  form.division = (t.division as CreateTournamentDto['division']) ?? ''
+  const editableStatuses: TTournamentStatusValue[] = ['QUALIFICATIONS', 'PLAYOFF']
+  form.tournamentStatus = editableStatuses.includes(t.tournamentStatus as TTournamentStatusValue)
+    ? (t.tournamentStatus as TTournamentStatusValue)
+    : 'QUALIFICATIONS'
+  form.registrationStartsAt = t.registrationStartsAt ? dayjs(t.registrationStartsAt).format('YYYY-MM-DD HH:mm') : ''
+  form.registrationEndsAt = t.registrationEndsAt ? dayjs(t.registrationEndsAt).format('YYYY-MM-DD HH:mm') : ''
+  form.tournamentStartsAt = t.tournamentStartsAt ? dayjs(t.tournamentStartsAt).format('YYYY-MM-DD HH:mm') : ''
+  form.tournamentEndsAt = t.tournamentEndsAt ? dayjs(t.tournamentEndsAt).format('YYYY-MM-DD HH:mm') : ''
+  prizePoolText.value = t.prizePool != null ? String(t.prizePool) : ''
+  slotsText.value = t.tournamentSlots != null ? String(t.tournamentSlots) : ''
+  previews.header = t.headerBannerUrl ? getImageUrl(t.headerBannerUrl) : ''
+  previews.list = t.listBannerUrl ? getImageUrl(t.listBannerUrl) : ''
 }
 
 function clearData () {
@@ -368,16 +388,20 @@ function clearData () {
   form.tournamentEndsAt = ''
   prizePoolText.value = ''
   slotsText.value = ''
-  for (const k of Object.keys(files) as UploadKey[]) {
-    if (previews[k]) URL.revokeObjectURL(previews[k])
+  for (const k of Object.keys(files) as TUploadKey[]) {
+    if (previews[k] && previews[k].startsWith('blob:')) URL.revokeObjectURL(previews[k])
     files[k] = null
     previews[k] = ''
   }
 }
 
 watch(showCreateTournamentDrawer, (isOpen) => {
-  if (isOpen) syncDayjsUk()
-  else clearData()
+  if (isOpen) {
+    syncDayjsUk()
+    if (props.tournament) populateFromTournament(props.tournament)
+  } else {
+    clearData()
+  }
 })
 
 function toIsoUtc (pickerValue: string): string {
@@ -387,43 +411,46 @@ function toIsoUtc (pickerValue: string): string {
 const handleSubmit = async () => {
   if (!isFormValid.value || !form.division) return
 
-  const payload: CreateTournamentDto = {
+  const basePayload = {
     name: form.name.trim(),
     division: form.division as CreateTournamentDto['division'],
     tournamentStatus: form.tournamentStatus,
     registrationStartsAt: toIsoUtc(form.registrationStartsAt),
     registrationEndsAt: toIsoUtc(form.registrationEndsAt),
     tournamentStartsAt: toIsoUtc(form.tournamentStartsAt),
-    tournamentEndsAt: toIsoUtc(form.tournamentEndsAt)
+    tournamentEndsAt: toIsoUtc(form.tournamentEndsAt),
+    ...(prizePoolText.value !== '' && { prizePool: Number(prizePoolText.value) }),
+    ...(slotsText.value !== '' && { tournamentSlots: Number(slotsText.value) })
   }
-
-  if (prizePoolText.value !== '') payload.prizePool = Number(prizePoolText.value)
-  if (slotsText.value !== '') payload.tournamentSlots = Number(slotsText.value)
 
   loading.value = true
   try {
-    const created = await tournamentsService.createTournament(payload)
-    const id = created.id
+    const saved = isEditMode.value && props.tournament
+      ? await tournamentsService.updateTournament(props.tournament.id, basePayload as UpdateTournamentDto)
+      : await tournamentsService.createTournament(basePayload as CreateTournamentDto)
+    const id = saved.id
 
     try {
       if (files.header) await tournamentsService.uploadHeaderBanner(id, files.header)
       if (files.list) await tournamentsService.uploadListBanner(id, files.list)
     } catch (up: unknown) {
       const um = up instanceof Error ? up.message : String(up)
-      ElMessage.warning(`Турнір створено, але зображення не завантажились: ${translateUploadErr(um)}`)
-      tournamentStore.patchTournamentInList(created)
+      const action = isEditMode.value ? 'оновлено' : 'створено'
+      ElMessage.warning(`Турнір ${action}, але зображення не завантажились: ${translateUploadErr(um)}`)
+      tournamentStore.patchTournamentInList(saved)
       showCreateTournamentDrawer.value = false
       queryCache.invalidateQueries({ key: ['tournaments'] })
       clearData()
       return
     }
 
-    tournamentStore.patchTournamentInList(created)
-    ElMessage.success('Турнір успішно створено')
+    tournamentStore.patchTournamentInList(saved)
+    ElMessage.success(isEditMode.value ? 'Турнір успішно оновлено' : 'Турнір успішно створено')
     showCreateTournamentDrawer.value = false
     queryCache.invalidateQueries({ key: ['tournaments'] })
   } catch (e: unknown) {
-    ElMessage.error(getApiErrorMessage(e, 'Помилка при створенні турніру'))
+    const action = isEditMode.value ? 'оновленні' : 'створенні'
+    ElMessage.error(getApiErrorMessage(e, `Помилка при ${action} турніру`))
   } finally {
     loading.value = false
   }
