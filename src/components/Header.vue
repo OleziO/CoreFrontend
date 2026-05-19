@@ -59,7 +59,7 @@
               !text-white/70 transition-colors hover:!text-primary rounded-none
             "
             :class="{
-              '!border-b-2 !border-b-primary': $route.name === routeNames.adminPanel
+              '!border-b-2 !border-b-primary': route.name === routeNames.adminPanel
             }"
           >
             Адмінка
@@ -102,7 +102,7 @@
             <el-dropdown-menu>
               <el-dropdown-item
                 :class="{
-                  'header-user-menu__item--active': $route.name === routeNames.profile
+                  'header-user-menu__item--active': route.name === routeNames.profile
                 }"
               >
                 <RouterLink
