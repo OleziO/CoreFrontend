@@ -14,6 +14,7 @@ export function friendlyQualificationSubmitError (msg: string): string {
       'Не вдалося отримати матч із OpenDota. Спробуйте ще раз.'
   }
   const direct = hints[msg.trim()]
+  
   if (direct) return direct
   if (msg.includes('Гравець зі Steam ID') && msg.includes('не знайдений')) {
     return 'Розходження між матчем і заявленим складом.'
