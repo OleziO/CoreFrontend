@@ -216,38 +216,61 @@
 
         <div
           v-if="activeTab === 'bracket'"
-          class="mt-20 rounded-xl
-            flex items-center justify-center relative overflow-hidden"
+          class="mt-20"
         >
-          <iframe
-            v-if="showBracketIframe"
-            :src="getBracketUrl(tournament?.tournamentGridUrl || '')"
-            width="100%"
-            height="500"
-            class="sm:h-[600px] rounded-lg border-0"
-            frameborder="0"
-            scrolling="auto"
-            allowtransparency="true"
-          />
-          <div
-            v-else-if="!tournament?.tournamentGridUrl"
-            class="w-full py-20 flex justify-center items-center flex-col text-center
-            border border-dashed border-white/[0.07] rounded-2xl bg-white/[0.04]"
-          >
-            <PhBracketsCurly :size="40" class="text-gray-600 mb-4" />
-            <p class="text-sm text-gray-400 max-w-sm">
-              Сітка турніру ще не готова
-            </p>
+          <div v-if="canSubmitPlayoffMatch" class="flex justify-end mb-12">
+            <el-button
+              type="primary"
+              class="!bg-cyan-600 !border-cyan-600"
+              @click="openPlayoffSubmit"
+            >
+              Подати результат матчу
+            </el-button>
           </div>
+
           <div
-            v-else
-            class="w-full py-20 flex justify-center items-center flex-col text-center
-            border border-dashed border-white/[0.07] rounded-2xl bg-white/[0.04]"
+            class="rounded-xl flex items-center justify-center relative overflow-hidden"
           >
-            <PhBracketsCurly :size="40" class="text-gray-600 mb-4" />
-            <p class="text-sm text-gray-400 max-w-sm">
-              Сітка доступна під час плей-оф
-            </p>
+            <div
+              v-if="playoffLoading"
+              class="w-full py-20 flex justify-center items-center flex-col text-center
+            border border-dashed border-white/[0.07] rounded-2xl bg-white/[0.04]"
+            >
+              <PhBracketsCurly :size="40" class="text-gray-600 mb-4 animate-pulse" />
+              <p class="text-sm text-gray-400 max-w-sm">
+                Завантаження сітки…
+              </p>
+            </div>
+            <iframe
+              v-else-if="playoffEmbedUrl"
+              :src="getBracketUrl(playoffEmbedUrl)"
+              width="100%"
+              height="500"
+              class="sm:h-[600px] rounded-lg border-0"
+              frameborder="0"
+              scrolling="auto"
+              allowtransparency="true"
+            />
+            <div
+              v-else-if="!isPlayoffPhase"
+              class="w-full py-20 flex justify-center items-center flex-col text-center
+            border border-dashed border-white/[0.07] rounded-2xl bg-white/[0.04]"
+            >
+              <PhBracketsCurly :size="40" class="text-gray-600 mb-4" />
+              <p class="text-sm text-gray-400 max-w-sm">
+                Сітка доступна під час плей-оф
+              </p>
+            </div>
+            <div
+              v-else
+              class="w-full py-20 flex justify-center items-center flex-col text-center
+            border border-dashed border-white/[0.07] rounded-2xl bg-white/[0.04]"
+            >
+              <PhBracketsCurly :size="40" class="text-gray-600 mb-4" />
+              <p class="text-sm text-gray-400 max-w-sm">
+                Сітку плей-оф ще не сформовано
+              </p>
+            </div>
           </div>
         </div>
 
@@ -267,7 +290,7 @@ import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusT
 import TournamentBannerImage from '@/components/tournaments/TournamentBannerImage.vue'
 import TournamentQualificationTab from '@/views/tournaments/components/TournamentQualificationTab.vue'
 import { PROFILE_CAPTAIN_ROLE_UA } from '@/components/tournaments-tags/tournament.constants'
-import type { TTournament as Tournament, TTeam as Team, TTeamResponse } from '@/api/types/api.types'
+import type { TTournament as Tournament, TTeam as Team, TTeamResponse, TPlayoffResponse } from '@/api/types/api.types'
 
 import { formatDate } from '@/core/helpers'
 import { formatTournamentPrizeUah } from '@/views/tournaments/utils/tournament-prize-format'
@@ -289,14 +312,74 @@ const tournamentStore = useTournamentStore()
 const tournamentId = String(route.params.id)
 const apiBaseUrl = import.meta.env.VITE_API_PUBLIC_URL
 
+const { open: openAppModal } = useAppModals()
+
+const DUELO_PROMO_LS_KEY = 'dueloPromoLastShownAt'
+const DUELO_PROMO_INTERVAL_MS = 30 * 60 * 1000
+let dueloPromoTimer: ReturnType<typeof setInterval> | null = null
+
+/** Показуємо промо-модалку Duelo не частіше, ніж раз на 30 хв (зберігається між візитами). */
+function maybeShowDueloPromo () {
+  const last = Number(localStorage.getItem(DUELO_PROMO_LS_KEY) ?? 0)
+  if (Number.isFinite(last) && last > 0 && Date.now() - last < DUELO_PROMO_INTERVAL_MS) return
+  localStorage.setItem(DUELO_PROMO_LS_KEY, String(Date.now()))
+  openAppModal('DueloPromoModal')
+}
+
 function isTournamentEndedByDate (tt: Tournament | null | undefined): boolean {
   if (!tt?.tournamentEndsAt) return false
   return Date.parse(tt.tournamentEndsAt) < Date.now()
 }
 
-const showBracketIframe = computed(() =>
-  !!(tournament.value?.tournamentGridUrl &&
-    (tournament.value.tournamentStatus === 'PLAYOFF' || isTournamentEndedByDate(tournament.value))))
+const playoff = ref<TPlayoffResponse | null>(null)
+const playoffLoading = ref(false)
+const playoffFetched = ref(false)
+
+/** Плей-оф активний (триває або турнір завершено за датою) — тоді показуємо сітку. */
+const isPlayoffPhase = computed(() =>
+  tournament.value?.tournamentStatus === 'PLAYOFF' || isTournamentEndedByDate(tournament.value))
+
+const playoffEmbedUrl = computed(() => playoff.value?.embedUrl ?? '')
+
+async function loadPlayoff (opts?: { force?: boolean }) {
+  if (!tournamentId) return
+  if (playoffLoading.value) return
+  if (playoffFetched.value && !opts?.force) return
+  playoffLoading.value = true
+  try {
+    playoff.value = await tournamentsService.fetchPlayoff(tournamentId)
+    playoffFetched.value = true
+  } catch (e: unknown) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося завантажити сітку плей-оф'))
+  } finally {
+    playoffLoading.value = false
+  }
+}
+
+/** Підвантажуємо сітку, коли відкрито вкладку «Сітка» під час плей-оф. */
+watch(
+  () => [activeTab.value, tournament.value?.tournamentStatus] as const,
+  ([tab]) => {
+    if (tab === 'bracket' && isPlayoffPhase.value) loadPlayoff()
+  },
+  { immediate: true }
+)
+
+/** Подати результат матчу плей-оф може будь-який залогінений користувач під час плей-оф. */
+const canSubmitPlayoffMatch = computed(() =>
+  !!authStore.token && tournament.value?.tournamentStatus === 'PLAYOFF')
+
+async function handlePlayoffSubmitted () {
+  await loadPlayoff({ force: true })
+  await reloadTournament()
+}
+
+function openPlayoffSubmit () {
+  openAppModal('PlayoffSubmitResultModal', {
+    tournamentId,
+    onSubmitted: handlePlayoffSubmitted
+  })
+}
 
 const canManagePlayers = computed(() => {
   return authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator
@@ -530,6 +613,16 @@ onMounted(async () => {
     }
   }
   await hydrateMyTeam()
+
+  maybeShowDueloPromo()
+  dueloPromoTimer = setInterval(maybeShowDueloPromo, DUELO_PROMO_INTERVAL_MS)
+})
+
+onUnmounted(() => {
+  if (dueloPromoTimer != null) {
+    clearInterval(dueloPromoTimer)
+    dueloPromoTimer = null
+  }
 })
 
 </script>

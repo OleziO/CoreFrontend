@@ -407,6 +407,33 @@
                 </div>
               </template>
             </div>
+
+            <!-- COACH -->
+            <div
+              v-if="team?.coach || canEditTeamRoster"
+              class="mt-20"
+            >
+              <h3 class="text-xl text-center font-semibold">Тренер</h3>
+              <el-divider class="mt-15" />
+
+              <div class="rounded-xl bg-gray-800/30 p-16 flex flex-col gap-20 min-h-0">
+                <div
+                  v-if="team?.coach"
+                  class="relative overflow-visible rounded-2xl"
+                >
+                  <PlayerCard :player="team.coach" />
+                </div>
+
+                <button
+                  v-else-if="canEditTeamRoster"
+                  class="h-48 rounded-lg border border-dashed
+                   border-gray-600 text-gray-400 hover:border-primary hover:text-primary"
+                  @click="handleOpenAddPlayer('coach')"
+                >
+                  + Додати тренера
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -584,7 +611,7 @@ async function handleUnverifyTeam () {
         confirmButtonText: 'Зняти',
         cancelButtonText: 'Скасувати',
         type: 'warning',
-        distinguishCancelAndClose: true,
+        distinguishCancelAndClose: true
       }
     )
   } catch {
@@ -618,11 +645,12 @@ async function refreshTeamFromServer () {
   teamsStore.patchTeamInList(team.value)
 }
 
-function handleOpenAddPlayer (slot: 'main' | 'reserved') {
+function handleOpenAddPlayer (slot: 'main' | 'reserved' | 'coach') {
   if (isAdmin.value) {
     open('PlayerAddToTeamModal', {
       team: team.value,
       isMain: slot === 'main',
+      isCoach: slot === 'coach',
       onAdded: refreshTeamFromServer
     })
   } else {

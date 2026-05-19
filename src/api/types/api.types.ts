@@ -31,6 +31,16 @@ export type TTournament = components['schemas']['Tournament'] & {
   /** Підмішується з GET /tournaments/:id/qualification на клієнті; у базовій схемі турніру може не бути. */
   qualification?: TQualificationPhase | null
 }
+/** Тіло GET /tournaments/:id/playoff та відповідь POST /playoff/start|disqualify — Challonge embed + актуальний склад. */
+export type TPlayoffResponse = components['schemas']['PlayoffResponseDto']
+/** Запис матчу плей-оф (відповідь POST /tournaments/:id/playoff/submit). */
+export type TPlayoffMatch = components['schemas']['PlayoffMatch']
+/** Тіло POST/DELETE /tournaments/:id/playoff/teams та POST /playoff/start. */
+export type TPlayoffTeamsDto = components['schemas']['PlayoffTeamsDto']
+/** Тіло POST /tournaments/:id/playoff/submit. */
+export type TSubmitPlayoffMatchDto = components['schemas']['SubmitPlayoffMatchDto']
+/** Тіло POST /tournaments/:id/playoff/disqualify. */
+export type TDisqualifyTeamDto = components['schemas']['DisqualifyTeamDto']
 export type TCreateTournamentDto = components['schemas']['CreateTournamentDto']
 export type TMatch = components['schemas']['Match']
 export type TUserRole = components['schemas']['UserRoles']
@@ -52,3 +62,9 @@ export type TUpdateMatchDto = components['schemas']['UpdateMatchDto']
 export type TCreateUserRoleDto = components['schemas']['CreateUserRoleDto']
 export type TUpdateUserRoleDto = components['schemas']['UpdateUserRoleDto']
 export type TUserRoleCatalog = components['schemas']['UserRoleResponseDto']
+
+/** PATCH /admin/players/:id/roles — повний набір ролей (замінює user_roles, синхронізує Discord, оновлює verifiedAt). */
+export type TAdminSetPlayerRolesDto = components['schemas']['AdminSetPlayerRolesDto']
+export type TAdminPlayerRoleItem = components['schemas']['AdminPlayerRoleItemDto']
+/** Відповідь PATCH /admin/players/:id/roles — джерело істини після мутації ролей. */
+export type TAdminPlayerRolesResult = components['schemas']['AdminPlayerRolesResultDto']

@@ -3,6 +3,9 @@ import type {
   TTournament as Tournament,
   TQualificationPhase,
   TQualificationMatch,
+  TTeamResponse,
+  TPlayoffResponse,
+  TPlayoffMatch,
   TCreateTournamentDto as CreateTournamentDto,
   TUpdateTournamentDto as UpdateTournamentDto
 } from '@/api/types/api.types'
@@ -69,6 +72,94 @@ class TournamentsService {
       { dynamicKeys: { id: tournamentId } }
     )
     return res as TQualificationMatch
+  }
+
+  /**
+   * GET /tournaments/:id/qualification/teams — команди, допущені до плей-оф
+   * (мають хоча б один верифікований кваліфікаційний матч).
+   */
+  async fetchQualificationTeams (tournamentId: string): Promise<TTeamResponse[]> {
+    const res = await apiClient.get('/tournaments/{id}/qualification/teams', {
+      dynamicKeys: { id: tournamentId }
+    })
+    return res as TTeamResponse[]
+  }
+
+  /** GET /tournaments/:id/playoff/teams — поточний (ще не стартований) склад плей-оф. */
+  async getPlayoffTeams (tournamentId: string): Promise<TTeamResponse[]> {
+    const res = await apiClient.get('/tournaments/{id}/playoff/teams', {
+      dynamicKeys: { id: tournamentId }
+    })
+    return res as TTeamResponse[]
+  }
+
+  /** POST /tournaments/:id/playoff/teams — додати команди до складу плей-оф (ідемпотентно). */
+  async addPlayoffTeams (tournamentId: string, teamIds: string[]): Promise<TTeamResponse[]> {
+    const res = await apiClient.post(
+      '/tournaments/{id}/playoff/teams',
+      { teamIds },
+      { dynamicKeys: { id: tournamentId } }
+    )
+    return res as TTeamResponse[]
+  }
+
+  /** DELETE /tournaments/:id/playoff/teams — прибрати команди зі складу плей-оф (ідемпотентно). */
+  async removePlayoffTeams (tournamentId: string, teamIds: string[]): Promise<TTeamResponse[]> {
+    const res = await apiClient.delete('/tournaments/{id}/playoff/teams', {
+      dynamicKeys: { id: tournamentId },
+      data: { teamIds }
+    })
+    return res as TTeamResponse[]
+  }
+
+  /** POST /tournaments/:id/playoff/start — одноразовий запуск плей-оф (409, якщо вже стартовано). */
+  async startPlayoff (tournamentId: string, teamIds: string[]): Promise<TPlayoffResponse> {
+    const res = await apiClient.post(
+      '/tournaments/{id}/playoff/start',
+      { teamIds },
+      { dynamicKeys: { id: tournamentId } }
+    )
+    return res as TPlayoffResponse
+  }
+
+  /** POST /tournaments/:id/playoff/disqualify — дискваліфікувати команду й перебудувати сітку. */
+  async disqualifyPlayoffTeam (tournamentId: string, teamId: string): Promise<TPlayoffResponse> {
+    const res = await apiClient.post(
+      '/tournaments/{id}/playoff/disqualify',
+      { teamId },
+      { dynamicKeys: { id: tournamentId } }
+    )
+    return res as TPlayoffResponse
+  }
+
+  /** POST /tournaments/:id/playoff/submit — подати ID матчу Dota 2 (будь-який залогінений користувач). */
+  async submitPlayoffMatch (tournamentId: string, dotaMatchId: string): Promise<TPlayoffMatch> {
+    const res = await apiClient.post(
+      '/tournaments/{id}/playoff/submit',
+      { dotaMatchId },
+      { dynamicKeys: { id: tournamentId } }
+    )
+    return res as TPlayoffMatch
+  }
+
+  /**
+   * GET /tournaments/:id/playoff — публічний перегляд сітки.
+   * 404, якщо плей-оф ще не стартовано → повертаємо null.
+   */
+  async fetchPlayoff (tournamentId: string): Promise<TPlayoffResponse | null> {
+    try {
+      const res = await apiClient.get('/tournaments/{id}/playoff', {
+        dynamicKeys: { id: tournamentId }
+      })
+      return res as TPlayoffResponse
+    } catch (e: unknown) {
+      const status =
+        typeof e === 'object' && e !== null && 'response' in e
+          ? (e as { response?: { status?: number } }).response?.status
+          : undefined
+      if (status === 404) return null
+      throw e
+    }
   }
 
   private async postMultipartTournamentBanner (

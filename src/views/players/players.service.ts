@@ -6,7 +6,13 @@ import { hasPlayerRole } from '@/core/helpers'
 import { ERole } from '@/types/general.types'
 import type { components } from '@/api/types/schema'
 
-import type { TPlayer, TUpdatePlayerDto, TUserRoleCatalog } from '@/api/types/api.types'
+import type {
+  TAdminPlayerRoleItem,
+  TAdminPlayerRolesResult,
+  TPlayer,
+  TUpdatePlayerDto,
+  TUserRoleCatalog
+} from '@/api/types/api.types'
 
 /** Каталог GET `/user-roles` — реактивний, щоб список після префетчу перерахував фільтр за query. */
 export const userRolesCatalogRef = shallowRef<TUserRoleCatalog[] | null>(null)
@@ -179,11 +185,29 @@ class PlayersService {
   // TODO: endpoint not in API yet
   // async getChats () { ... }
 
-  // TODO: endpoint not in API yet
-  // async getPlayerRoles () { ... }
-
-  // TODO: endpoint not in API yet
-  // async updatePlayerRoles (playerId: number, roleIds: number[]) { ... }
+  /**
+   * Повний набір ролей гравця (PATCH `/admin/players/:id/roles`).
+   * Замінює user_roles, синхронізує Discord і переставляє `verifiedAt` — джерело істини у відповіді.
+   * Не показує тост: викликається в комбінованому сабміті профілю, помилку обробляє форма.
+   *
+   * Тіло — за OpenAPI-контрактом `AdminSetPlayerRolesDto` ({ roles: [...] }).
+   * УВАГА (стейдж, 2026-05): сервер відхиляє і `{ roles: [...] }` ("property roles
+   * should not exist"), і голий масив ("property 0 should not exist"). Обидва —
+   * NestJS `forbidNonWhitelisted`, тобто на бекенді цей DTO без class-validator
+   * декораторів (або прив'язаний не той тип). Жодне тіло не пройде — це баг бекенду,
+   * не форма тіла. Лишаємо контрактну форму; виправлення — на боці API.
+   */
+  async setPlayerRolesByAdmin (
+    playerId: string,
+    roles: TAdminPlayerRoleItem[]
+  ): Promise<TAdminPlayerRolesResult> {
+    const res = await apiClient.patch('/admin/players/{playerId}/roles',
+      { roles } as components['schemas']['AdminSetPlayerRolesDto'],
+      {
+        dynamicKeys: { playerId }
+      })
+    return res as unknown as TAdminPlayerRolesResult
+  }
 
   // TODO: endpoint not in API yet
   // toSteam3ID (steamID64: string): string { ... }

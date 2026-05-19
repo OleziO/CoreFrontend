@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="modelValue"
-    title="Додати гравців до команди"
+    :title="isCoach ? 'Додати тренера' : 'Додати гравців до команди'"
     width="440"
     destroy-on-close
     @close="close"
@@ -9,7 +9,7 @@
     <div v-loading.fullscreen="playerStore.loading || submitLoading" class="flex flex-col gap-4 my-20 w-full">
       <div class="flex flex-col gap-6 text-sm text-gray-400 px-2">
         <span>
-          {{ isMain ? 'Основа' : 'Запас' }}: можна обрати до
+          {{ slotTitle }}: можна обрати до
           <span class="text-gray-200 font-medium">{{ maxSelectable }}</span>
           {{ slotLabel }}.
           Лише <span class="text-gray-200">верифіковані</span> гравці.
@@ -116,6 +116,7 @@ import { teamsService } from '@/views/teams/teams.service'
 const props = defineProps<{
   team: TTeamResponse | undefined
   isMain: boolean
+  isCoach?: boolean
   onAdded?: () => void | Promise<void>
 }>()
 
@@ -129,12 +130,21 @@ const apiPublicUrl = import.meta.env.VITE_API_PUBLIC_URL
 const playerStore = usePlayersStore()
 const teamsStore = useTeamsStore()
 
-const slotLabel = computed(() => (props.isMain ? 'гравців у основі' : 'гравців у запасі'))
+const slotTitle = computed(() => {
+  if (props.isCoach) return 'Тренер'
+  return props.isMain ? 'Основа' : 'Запас'
+})
 
-/** Скільки ще можна додати в цей слот (ліміт бекенду / UI). */
+const slotLabel = computed(() => {
+  if (props.isCoach) return 'тренера'
+  return props.isMain ? 'гравців у основі' : 'гравців у запасі'
+})
+
+/** Скільки ще можна додати в цей слот (ліміт бекенду / UI). Тренер — один. */
 const maxSelectable = computed(() => {
   const t = props.team
   if (!t) return 0
+  if (props.isCoach) return t.coach ? 0 : 1
   if (props.isMain) {
     return Math.max(0, 5 - (t.mainPlayers?.length ?? 0))
   }
@@ -178,6 +188,12 @@ function isRowSelected (id: string) {
 function togglePlayer (id: string) {
   if (maxSelectable.value === 0) return
 
+  // Тренер — один: повторний клік знімає, інший гравець замінює вибір.
+  if (props.isCoach) {
+    selectedIds.value = isRowSelected(id) ? [] : [id]
+    return
+  }
+
   const i = selectedIds.value.indexOf(id)
   if (i >= 0) {
     selectedIds.value = selectedIds.value.filter((x) => x !== id)
@@ -217,9 +233,25 @@ async function submitAdd () {
   }
 
   submitLoading.value = true
-  const slot = props.isMain ? 'main' : 'reserved'
-  let added = 0
   try {
+    if (props.isCoach) {
+      const coachId = ids[0]
+      try {
+        const updatedTeam = await teamsStore.updateTeam(tid, { coachId })
+        teamsStore.patchTeamInList(updatedTeam)
+        playerStore.setPlayerTeamIdClientside(coachId, tid)
+      } catch (e: unknown) {
+        ElMessage.error(getApiErrorMessage(e, 'Не вдалося призначити тренера'))
+        return
+      }
+      await props.onAdded?.()
+      ElMessage.success('Тренера призначено')
+      close()
+      return
+    }
+
+    const slot = props.isMain ? 'main' : 'reserved'
+    let added = 0
     for (const pid of ids) {
       try {
         const updatedTeam = await teamsService.addPlayerToTeam(tid, { playerId: pid, slot })

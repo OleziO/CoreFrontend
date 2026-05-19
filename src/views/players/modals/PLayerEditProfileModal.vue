@@ -49,6 +49,28 @@
         </el-select>
       </el-form-item>
 
+      <!-- Roles (admin only) -->
+      <el-form-item v-if="canManageRoles" label="Ролі">
+        <el-select
+          v-model="selectedRoleNames"
+          :loading="rolesLoading"
+          multiple
+          collapse-tags
+          :show-arrow="false"
+          collapse-tags-tooltip
+          :max-collapse-tags="3"
+          placeholder="Оберіть ролі"
+          class="w-full"
+        >
+          <el-option
+            v-for="role in playersStore.userRolesCatalog"
+            :key="role.id"
+            :label="role.name"
+            :value="role.name"
+          />
+        </el-select>
+      </el-form-item>
+
       <!-- Steam -->
       <el-form-item label="Steam">
         <div
@@ -126,7 +148,12 @@ import { positionOptions } from '@/components/player-tags/player.constants'
 import { isPlayerVerified } from '@/core/helpers'
 import { useAuthStore } from '@/store/modules/auth'
 import { playersService } from '@/views/players/players.service'
-import type { TPlayer, TUpdatePlayerDto } from '@/api/types/api.types'
+import type {
+  TAdminPlayerRoleItem,
+  TAdminPlayerRolesResult,
+  TPlayer,
+  TUpdatePlayerDto
+} from '@/api/types/api.types'
 
 interface IEditProfileForm {
   mmr: number | null
@@ -214,7 +241,26 @@ const props = defineProps<{
 }>()
 
 const authStore = useAuthStore()
-// const playersStore = usePlayersStore()
+const playersStore = usePlayersStore()
+
+/** Тільки адмін керує ролями (бекенд `/admin/players/:id/roles` вимагає admin-роль). */
+const canManageRoles = computed(() => authStore.isAdmin.isAdmin)
+
+const rolesLoading = ref(false)
+/** v-model мультиселекту — імена ролей (як у фільтрі гравців). */
+const selectedRoleNames = ref<string[]>([])
+/** Імена ролей на момент відкриття — щоб не смикати ендпоінт без змін (і не переставляти verifiedAt). */
+const originalRoleNames = ref<string[]>([])
+
+function playerRoleNames (p: TPlayer): string[] {
+  return (p.roles ?? []).map((r) => r.name)
+}
+
+const rolesChanged = computed(() => {
+  const a = [...selectedRoleNames.value].sort()
+  const b = [...originalRoleNames.value].sort()
+  return a.length !== b.length || a.some((name, i) => name !== b[i])
+})
 
 const form = ref<IEditProfileForm>({
   mmr: props.player.rating ?? null,
@@ -229,11 +275,31 @@ const disconnectingSteam = ref(false)
 /** Після PATCH проп з `open()` не оновлюється — мержимо відповідь API для блоку Steam. */
 const playerAfterSteamMutation = ref<TPlayer | null>(null)
 
+function applyRolesFromPlayer (p: TPlayer) {
+  const names = playerRoleNames(p)
+  selectedRoleNames.value = [...names]
+  originalRoleNames.value = [...names]
+}
+
+async function loadRolesCatalog () {
+  if (!canManageRoles.value) return
+  rolesLoading.value = true
+  try {
+    await playersStore.fetchUserRoles()
+  } catch {
+    /* помилка вже в playersService */
+  } finally {
+    rolesLoading.value = false
+  }
+}
+
 watch(modelValue, (open) => {
   if (!open) return
   playerAfterSteamMutation.value = null
   applyFormFromPlayer(props.player)
-})
+  applyRolesFromPlayer(props.player)
+  loadRolesCatalog()
+}, { immediate: true })
 
 const effectivePlayer = computed(() => playerAfterSteamMutation.value ?? props.player)
 
@@ -331,6 +397,29 @@ async function onDisconnectSteam () {
   }
 }
 
+/** Імена → елементи DTO; `isAdminRole` беремо з каталогу, із фолбеком на поточні ролі гравця. */
+function buildRolesPayload (): TAdminPlayerRoleItem[] {
+  const adminFlagByName = new Map<string, boolean>()
+  for (const r of playersStore.userRolesCatalog) adminFlagByName.set(r.name, r.isAdminRole)
+  for (const r of props.player.roles ?? []) {
+    if (!adminFlagByName.has(r.name)) adminFlagByName.set(r.name, r.isAdminRole)
+  }
+
+  return selectedRoleNames.value.map((name) => ({
+    name: name as TAdminPlayerRoleItem['name'],
+    isAdminRole: adminFlagByName.get(name) ?? false
+  }))
+}
+
+/** Відповідь ендпоінта ролей — джерело істини: переписуємо roles + verifiedAt. */
+function mergeRolesIntoPlayer (player: TPlayer, result: TAdminPlayerRolesResult): TPlayer {
+  return {
+    ...player,
+    verifiedAt: result.verifiedAt,
+    roles: result.roles as unknown as TPlayer['roles']
+  }
+}
+
 async function onSubmit () {
   if (!isValid.value) return
 
@@ -343,7 +432,13 @@ async function onSubmit () {
 
   saving.value = true
   try {
-    const updated = await playersService.updatePlayer(props.player.id, payload)
+    let updated = await playersService.updatePlayer(props.player.id, payload)
+
+    if (canManageRoles.value && rolesChanged.value) {
+      const result = await playersService.setPlayerRolesByAdmin(props.player.id, buildRolesPayload())
+      updated = mergeRolesIntoPlayer(updated, result)
+    }
+
     ElMessage.success('Профіль оновлено')
     emit('submit', form.value)
     emit('updated', updated)

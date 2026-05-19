@@ -343,6 +343,11 @@
     "VIRTUAL_GRID_CARD_GAP_PX": true,
     "ElMessageBox": true,
     "POST_LOGIN_REDIRECT_KEY": true,
-    "invitesService": true
+    "invitesService": true,
+    "heroIconUrl": true,
+    "heroShortName": true,
+    "openDotaService": true,
+    "steamId64ToAccountId": true,
+    "heroImageUrl": true
   }
 }

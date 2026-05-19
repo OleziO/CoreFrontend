@@ -480,6 +480,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tournaments/{id}/qualification/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TournamentsController_getQualificationTeams"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/playoff/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TournamentsController_getPlayoffTeams"];
+        put?: never;
+        post: operations["TournamentsController_addPlayoffTeams"];
+        delete: operations["TournamentsController_removePlayoffTeams"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/playoff/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TournamentsController_startPlayoff"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/playoff/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TournamentsController_submitPlayoffMatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/playoff/disqualify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TournamentsController_disqualifyTeam"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/playoff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TournamentsController_getPlayoff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tournaments/{id}/header-banner": {
         parameters: {
             query?: never;
@@ -560,6 +656,26 @@ export interface paths {
         patch: operations["MatchesController_update"];
         trace?: never;
     };
+    "/admin/matches/{matchId}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Manually set match result (bypasses OpenDota verification)
+         * @description Sets the winner directly and awards points. winnerPoints defaults to 100, loserPoints to 40. Throws 409 if the match already has a result.
+         */
+        post: operations["AdminController_overrideMatchResult"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/discord/sync": {
         parameters: {
             query?: never;
@@ -575,6 +691,26 @@ export interface paths {
          */
         post: operations["AdminController_syncDiscord"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/teams/{teamId}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove team verification
+         * @description Sets isVerified=false and clears verifiedAt. Does not remove Discord role/channel.
+         */
+        delete: operations["AdminController_unverifyTeam"];
         options?: never;
         head?: never;
         patch?: never;
@@ -668,6 +804,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/sync-partner-matches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sync all historical matches to Duelo.gg partner webhook
+         * @description Re-fetches every verified qualification match from OpenDota and sends it to the Duelo.gg webhook. Returns counts of sent and errored matches.
+         */
+        post: operations["AdminController_syncPartnerMatches"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -723,7 +879,7 @@ export interface components {
             isVerified: boolean;
             isPlayingTournament: boolean;
             /** Format: date-time */
-            verifiedAt: string;
+            verifiedAt: string | null;
             mainPlayers: components["schemas"]["Player"][];
             reservedPlayers: components["schemas"]["Player"][];
             tournament: components["schemas"]["Tournament"] | null;
@@ -916,6 +1072,8 @@ export interface components {
             mainPlayers: components["schemas"]["PlayerResponseDto"][];
             reservedPlayers: components["schemas"]["PlayerResponseDto"][];
             tournament?: components["schemas"]["TeamTournamentEmbeddedDto"] | null;
+            /** @enum {string|null} */
+            division?: "DIVISION_I" | "DIVISION_II" | "DIVISION_III" | null;
         };
         SearchTeamsDto: {
             /** @description When true, each team includes `tournaments`: array built from its linked tournament (0 or 1 item). */
@@ -1025,6 +1183,49 @@ export interface components {
             /** @description Dota2 numeric match ID from the played game */
             dotaMatchId: string;
         };
+        PlayoffTeamsDto: {
+            /**
+             * @example [
+             *       "uuid-1",
+             *       "uuid-2"
+             *     ]
+             */
+            teamIds: string[];
+        };
+        PlayoffResponseDto: {
+            embedUrl: string;
+            teams: components["schemas"]["TeamResponseDto"][];
+        };
+        SubmitPlayoffMatchDto: {
+            dotaMatchId: string;
+        };
+        Playoff: {
+            id: string;
+            tournamentId: string;
+            tournament: components["schemas"]["Tournament"];
+            challongeTournamentId: string;
+            challongeUrl: string;
+            challongeEmbedUrl: string;
+        };
+        PlayoffMatch: {
+            id: string;
+            playoffId: string;
+            playoff: components["schemas"]["Playoff"];
+            teamAId: string;
+            teamA: components["schemas"]["Team"];
+            teamBId: string;
+            teamB: components["schemas"]["Team"];
+            winnerId: string | null;
+            winner: components["schemas"]["Team"] | null;
+            dotaMatchId: string | null;
+            challongeMatchId: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        DisqualifyTeamDto: {
+            /** Format: uuid */
+            teamId: string;
+        };
         CreateMatchDto: {
             /**
              * Format: uuid
@@ -1060,6 +1261,17 @@ export interface components {
              */
             winnerId?: string;
             dotaMatchId?: string;
+        };
+        OverrideMatchResultDto: {
+            /**
+             * Format: uuid
+             * @description UUID of the winning team (must be teamA or teamB)
+             */
+            winnerTeamId: string;
+            /** @default 100 */
+            winnerPoints: number;
+            /** @default 40 */
+            loserPoints: number;
         };
         AdminPlayerRoleItemDto: {
             /** @enum {string} */
@@ -1969,6 +2181,218 @@ export interface operations {
             };
         };
     };
+    TournamentsController_getQualificationTeams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"][];
+                };
+            };
+        };
+    };
+    TournamentsController_getPlayoffTeams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"][];
+                };
+            };
+        };
+    };
+    TournamentsController_addPlayoffTeams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlayoffTeamsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"][];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"][];
+                };
+            };
+        };
+    };
+    TournamentsController_removePlayoffTeams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlayoffTeamsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"][];
+                };
+            };
+        };
+    };
+    TournamentsController_startPlayoff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlayoffTeamsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayoffResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayoffResponseDto"];
+                };
+            };
+        };
+    };
+    TournamentsController_submitPlayoffMatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitPlayoffMatchDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayoffMatch"];
+                };
+            };
+        };
+    };
+    TournamentsController_disqualifyTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DisqualifyTeamDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayoffResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayoffResponseDto"];
+                };
+            };
+        };
+    };
+    TournamentsController_getPlayoff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayoffResponseDto"];
+                };
+            };
+        };
+    };
     TournamentsController_uploadHeaderBanner: {
         parameters: {
             query?: never;
@@ -2154,6 +2578,29 @@ export interface operations {
             };
         };
     };
+    AdminController_overrideMatchResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OverrideMatchResultDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminController_syncDiscord: {
         parameters: {
             query?: never;
@@ -2170,6 +2617,25 @@ export interface operations {
                 content: {
                     "application/json": Record<string, never>;
                 };
+            };
+        };
+    };
+    AdminController_unverifyTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teamId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2304,6 +2770,23 @@ export interface operations {
                 content: {
                     "application/json": Record<string, never>;
                 };
+            };
+        };
+    };
+    AdminController_syncPartnerMatches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
