@@ -15,7 +15,6 @@ export function useGetFile () {
 
   function reset () {
     if (preview.value) URL.revokeObjectURL(preview.value)
-    
     preview.value = null
     file.value = null
   }
