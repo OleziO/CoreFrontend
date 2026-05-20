@@ -22,8 +22,6 @@
           Управління турніром недоступне
         </div>
       </div>
-<<<<<<< Updated upstream
-=======
 
       <div class="mt-20 flex items-center gap-10">
         <el-button type="primary" plain @click="showEditDrawer = true">
@@ -46,10 +44,9 @@
           </template>
         </el-popconfirm>
       </div>
->>>>>>> Stashed changes
     </div>
 
-    <CreateTournamentDrawer v-model="showEditDrawer" :tournament="tournament" @updated="emit('refresh')" />
+    <CreateTournamentDrawer v-model="showEditDrawer" :tournament="tournament" />
 
     <div v-if="activeTab === 'participants'" class="mt-20">
       <div class="participants-tab flex flex-col gap-20 w-full max-w-7xl mx-auto">
@@ -260,8 +257,6 @@ const props = defineProps<{
   tournament?: Tournament | null
 }>()
 
-<<<<<<< Updated upstream
-=======
 const emit = defineEmits<{ (e: 'refresh'): void }>()
 
 const showEditDrawer = ref(false)
@@ -294,8 +289,6 @@ const eligibleTeams = computed(() => {
     return computeDivision(main) === tournamentDivision
   })
 })
-
->>>>>>> Stashed changes
 const tabs = [
   { value: 'status', label: 'Етапи турніру' },
   { value: 'participants', label: 'Управління командами' },
