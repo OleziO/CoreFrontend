@@ -142,6 +142,7 @@ declare global {
   const unrefElement: typeof import('@vueuse/core')['unrefElement']
   const until: typeof import('@vueuse/core')['until']
   const useActiveElement: typeof import('@vueuse/core')['useActiveElement']
+  const useAnalyticsUserTracking: typeof import('../src/composables/use-analytics-user-tracking')['useAnalyticsUserTracking']
   const useAnimate: typeof import('@vueuse/core')['useAnimate']
   const useAppModals: typeof import('../src/composables/use-app-modals')['useAppModals']
   const useArrayDifference: typeof import('@vueuse/core')['useArrayDifference']

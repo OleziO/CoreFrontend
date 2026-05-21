@@ -348,6 +348,7 @@
     "heroShortName": true,
     "openDotaService": true,
     "steamId64ToAccountId": true,
-    "heroImageUrl": true
+    "heroImageUrl": true,
+    "useAnalyticsUserTracking": true
   }
 }
