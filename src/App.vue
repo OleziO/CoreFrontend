@@ -10,4 +10,6 @@
 
 <script setup lang="ts">
 import { appModals } from '@/composables/use-app-modals'
+
+useAnalyticsUserTracking()
 </script>
