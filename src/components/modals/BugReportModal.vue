@@ -22,6 +22,7 @@
       <label class="text-sm font-medium text-gray-400">
         Зображення
       </label>
+      
       <div class="upload-container">
         <input
           name="image"
