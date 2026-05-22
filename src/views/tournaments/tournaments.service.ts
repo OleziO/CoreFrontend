@@ -138,7 +138,7 @@ class TournamentsService {
   ): Promise<{ matchId: string; winnerId: string }> {
     const res = await apiClient.post(
       '/admin/matches/{matchId}/result',
-      { winnerTeamId },
+      { winnerTeamId, winnerPoints: 100, loserPoints: 40 },
       { dynamicKeys: { matchId } }
     )
     return res as { matchId: string; winnerId: string }

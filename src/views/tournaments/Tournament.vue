@@ -296,7 +296,7 @@
           <TournamentAdminTab
             :tournament="tournament"
             @refresh="reloadTournament"
-            @playoff-updated="(r) => { playoff.value = r; playoffFetched.value = true }"
+            @playoff-updated="(r) => { playoff = r; playoffFetched = true }"
           />
         </div>
       </div>
