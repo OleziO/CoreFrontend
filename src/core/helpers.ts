@@ -47,6 +47,7 @@ export function resolvePublicOrApiUrl (path: string | null | undefined): string 
   if (raw.startsWith('//')) return `https:${raw}`
   const base = String(import.meta.env.VITE_API_PUBLIC_URL ?? '').replace(/\/+$/, '')
   const p = raw.startsWith('/') ? raw : `/${raw}`
+  
   return base ? `${base}${p}` : p
 }
 
