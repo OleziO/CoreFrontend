@@ -12,6 +12,7 @@ export const createHashedObject = <
   array: T[] = [],
   prop: Prop = 'id' as Prop,
   isValueArray?: ValueArray,
+  
   shouldRemoveKeyField?: boolean
 ): Record<T[Prop], ValueArray extends true ? T[] : T> => {
   return array.reduce((acc, current) => {
