@@ -257,7 +257,10 @@ const props = defineProps<{
   tournament?: Tournament | null
 }>()
 
-const emit = defineEmits<{ (e: 'refresh'): void }>()
+const emit = defineEmits<{
+  (e: 'refresh'): void
+  (e: 'playoff-updated', response: TPlayoffResponse): void
+}>()
 
 const showEditDrawer = ref(false)
 
@@ -407,8 +410,10 @@ async function disqualify (teamId: string) {
   if (!id) return
   actionLoading.value = true
   try {
-    playoff.value = await tournamentsService.disqualifyPlayoffTeam(id, teamId)
+    const response = await tournamentsService.disqualifyPlayoffTeam(id, teamId)
+    playoff.value = response
     ElMessage.success('Команду дискваліфіковано, сітку перебудовано')
+    emit('playoff-updated', response)
     emit('refresh')
   } catch (e: unknown) {
     ElMessage.error(friendlyPlayoffError(e, 'Не вдалося дискваліфікувати команду'))

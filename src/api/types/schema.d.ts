@@ -560,6 +560,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tournaments/{id}/playoff/open-matches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TournamentsController_getOpenPlayoffMatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/playoff/tech-loss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TournamentsController_techLossMatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tournaments/{id}/playoff": {
         parameters: {
             query?: never;
@@ -824,6 +856,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/dev/mock-match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DevController_mockMatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -882,7 +930,7 @@ export interface components {
             verifiedAt: string | null;
             mainPlayers: components["schemas"]["Player"][];
             reservedPlayers: components["schemas"]["Player"][];
-            tournament: components["schemas"]["Tournament"] | null;
+            tournaments: components["schemas"]["Tournament"][];
             matchesAsTeamA: components["schemas"]["Match"][];
             matchesAsTeamB: components["schemas"]["Match"][];
             matchesAsWinner: components["schemas"]["Match"][];
@@ -1071,7 +1119,7 @@ export interface components {
             coach?: components["schemas"]["PlayerResponseDto"] | null;
             mainPlayers: components["schemas"]["PlayerResponseDto"][];
             reservedPlayers: components["schemas"]["PlayerResponseDto"][];
-            tournament?: components["schemas"]["TeamTournamentEmbeddedDto"] | null;
+            tournaments: components["schemas"]["TeamTournamentEmbeddedDto"][];
             /** @enum {string|null} */
             division?: "DIVISION_I" | "DIVISION_II" | "DIVISION_III" | null;
         };
@@ -1226,6 +1274,30 @@ export interface components {
             /** Format: uuid */
             teamId: string;
         };
+        OpenPlayoffMatchTeamDto: {
+            id: string;
+            name: string;
+            logoUrl: string | null;
+        };
+        OpenPlayoffMatchDto: {
+            challongeMatchId: number;
+            round: number;
+            state: string;
+            teamA: components["schemas"]["OpenPlayoffMatchTeamDto"];
+            teamB: components["schemas"]["OpenPlayoffMatchTeamDto"];
+        };
+        TechLossPlayoffDto: {
+            /**
+             * Format: uuid
+             * @description UUID of the team that receives the technical win
+             */
+            winnerTeamId: string;
+            /**
+             * Format: uuid
+             * @description UUID of the team that receives the technical loss
+             */
+            loserTeamId: string;
+        };
         CreateMatchDto: {
             /**
              * Format: uuid
@@ -1301,6 +1373,16 @@ export interface components {
              * @enum {string}
              */
             name: "Гість" | "Гравець" | "Медіа";
+        };
+        DevMockMatchDto: {
+            /** Format: uuid */
+            tournamentId: string;
+            /** Format: uuid */
+            teamAId: string;
+            /** Format: uuid */
+            teamBId: string;
+            /** @enum {string} */
+            phase: "qualification" | "playoff";
         };
     };
     responses: never;
@@ -2372,6 +2454,60 @@ export interface operations {
             };
         };
     };
+    TournamentsController_getOpenPlayoffMatches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpenPlayoffMatchDto"][];
+                };
+            };
+        };
+    };
+    TournamentsController_techLossMatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TechLossPlayoffDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayoffResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayoffResponseDto"];
+                };
+            };
+        };
+    };
     TournamentsController_getPlayoff: {
         parameters: {
             query?: never;
@@ -2781,6 +2917,27 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DevController_mockMatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DevMockMatchDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {

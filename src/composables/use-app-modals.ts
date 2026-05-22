@@ -19,7 +19,13 @@ export const appModals = useModals({
   AdminUpdateMmrModal: defineAsyncComponent(() => import('@/views/players/modals/AdminUpdateMmrModal.vue')) as Component,
   DueloPromoModal: defineAsyncComponent(() => import('@/views/tournaments/modals/DueloPromoModal.vue')) as Component,
   PlayoffSubmitResultModal:
-    defineAsyncComponent(() => import('@/views/tournaments/modals/PlayoffSubmitResultModal.vue')) as Component
+    defineAsyncComponent(() => import('@/views/tournaments/modals/PlayoffSubmitResultModal.vue')) as Component,
+  TestMatchCreationModal:
+    defineAsyncComponent(() => import('@/views/tournaments/modals/TestMatchCreationModal.vue')) as Component,
+  TechLossQualificationModal:
+    defineAsyncComponent(() => import('@/views/tournaments/modals/TechLossQualificationModal.vue')) as Component,
+  TechLossPlayoffModal:
+    defineAsyncComponent(() => import('@/views/tournaments/modals/TechLossPlayoffModal.vue')) as Component
 })
 
 export function useAppModals () {

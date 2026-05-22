@@ -6,6 +6,7 @@ import type {
   TTeamResponse,
   TPlayoffResponse,
   TPlayoffMatch,
+  TOpenPlayoffMatch,
   TCreateTournamentDto as CreateTournamentDto,
   TUpdateTournamentDto as UpdateTournamentDto
 } from '@/api/types/api.types'
@@ -117,6 +118,41 @@ class TournamentsService {
     const res = await apiClient.post(
       '/tournaments/{id}/playoff/start',
       { teamIds },
+      { dynamicKeys: { id: tournamentId } }
+    )
+    return res as TPlayoffResponse
+  }
+
+  /** GET /tournaments/:id/playoff/open-matches — відкриті матчі сітки (для адмін-дії «Технічна поразка»). */
+  async fetchPlayoffOpenMatches (tournamentId: string): Promise<TOpenPlayoffMatch[]> {
+    const res = await apiClient.get('/tournaments/{id}/playoff/open-matches', {
+      dynamicKeys: { id: tournamentId }
+    })
+    return res as TOpenPlayoffMatch[]
+  }
+
+  /** POST /admin/matches/:matchId/result — технічна поразка у кваліфікації (може перезаписати наявний результат). */
+  async adminTechLossQualificationMatch (
+    matchId: string,
+    winnerTeamId: string
+  ): Promise<{ matchId: string; winnerId: string }> {
+    const res = await apiClient.post(
+      '/admin/matches/{matchId}/result',
+      { winnerTeamId },
+      { dynamicKeys: { matchId } }
+    )
+    return res as { matchId: string; winnerId: string }
+  }
+
+  /** POST /tournaments/:id/playoff/tech-loss — техпораз у плей-оф, скасовує наступні матчі та перебудовує сітку за потреби. */
+  async adminTechLossPlayoffMatch (
+    tournamentId: string,
+    winnerTeamId: string,
+    loserTeamId: string
+  ): Promise<TPlayoffResponse> {
+    const res = await apiClient.post(
+      '/tournaments/{id}/playoff/tech-loss',
+      { winnerTeamId, loserTeamId },
       { dynamicKeys: { id: tournamentId } }
     )
     return res as TPlayoffResponse

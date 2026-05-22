@@ -30,7 +30,11 @@
       :player-points="qualificationPhase?.playerTournamentPoints ?? null"
       :loading="qualificationHydrateInFlight"
       :show-add-result-button="showAddResultButton"
+      :show-test-match-button="isLocalhost"
+      :show-tech-loss-button="isAdmin"
       @add-result="openAddModal"
+      @test-match="openTestMatchModal"
+      @tech-loss="openTechLossModal"
     />
 
     <QualificationAddResultModal
@@ -65,6 +69,7 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
+const { open: openAppModal } = useAppModals()
 
 const qualificationPhase = shallowRef<QualificationPhase | null>(null)
 
@@ -189,10 +194,40 @@ const showAddResultButton = computed(
   () => !!authStore.token && !pastSubmissionWindow.value
 )
 
+const isAdmin = computed(() => authStore.isAdmin?.isAdmin || authStore.isAdmin?.isModerator)
+
 const modalOpen = ref(false)
 
 function openAddModal () {
   modalOpen.value = true
+}
+
+function openTechLossModal () {
+  openAppModal('TechLossQualificationModal', {
+    matches: matches.value,
+    onSubmitted: (matchId: string, winnerId: string) => {
+      const q = qualificationPhase.value
+      if (!q) return
+      const list = [...(q.matches ?? [])]
+      const i = list.findIndex((m) => m.id === matchId)
+      if (i >= 0) {
+        const m = list[i]
+        const fullWinner = m.teamA.id === winnerId ? m.teamA : m.teamB
+        list[i] = { ...m, winner: fullWinner, dotaMatchId: `tech_loss_${matchId}` }
+      }
+      qualificationPhase.value = { ...q, matches: list }
+    }
+  })
+}
+
+const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+
+function openTestMatchModal () {
+  openAppModal('TestMatchCreationModal', {
+    tournamentId: props.tournamentId,
+    phase: 'qualification',
+    teams: props.tournament?.teams ?? []
+  })
 }
 
 function onSubmitted (updated: QualificationMatch) {

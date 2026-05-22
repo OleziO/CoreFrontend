@@ -276,7 +276,7 @@
                 />
                 <template v-if="showRemovePlayerButton(player)">
                   <el-popconfirm
-                    v-if="team?.tournament"
+                    v-if="team?.tournaments?.length"
                     width="320"
                     placement="top-end"
                     :title="tournamentRemovePlayerWarning"
@@ -351,7 +351,7 @@
                 />
                 <template v-if="showRemovePlayerButton(player)">
                   <el-popconfirm
-                    v-if="team?.tournament"
+                    v-if="team?.tournaments?.length"
                     width="320"
                     placement="top-end"
                     :title="tournamentRemovePlayerWarning"
@@ -550,7 +550,7 @@ function copyDotaTeamIdPage () {
 // TODO: endpoint not in API yet
 // const isTeamPlayer = computed(() => false)
 // const isCap = computed(() => false)
-const teamTournaments = computed(() => team.value?.tournament ? [team.value.tournament] : [])
+const teamTournaments = computed(() => team.value?.tournaments ?? [])
 
 const mainSlotCounts = computed(() => {
   const count = team.value?.mainPlayers?.length ?? 0

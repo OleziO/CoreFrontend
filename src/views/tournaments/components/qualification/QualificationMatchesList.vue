@@ -25,8 +25,25 @@
           Результат подається через «Додати результат».
         </p>
       </div>
-      <div v-if="showAddResultButton" class="relative shrink-0 w-full sm:w-auto sm:self-start lg:self-center">
+      <div v-if="showAddResultButton || showTestMatchButton || showTechLossButton" class="relative shrink-0 w-full sm:w-auto sm:self-start lg:self-center flex flex-wrap gap-10">
         <el-button
+          v-if="showTestMatchButton"
+          type="warning"
+          @click="$emit('test-match')"
+        >
+          Test match creation
+        </el-button>
+        <el-button
+          v-if="showTechLossButton"
+          type="danger"
+          plain
+          class="!rounded-xl !h-12 !min-h-[48px] !px-22 !text-sm !font-semibold"
+          @click="$emit('tech-loss')"
+        >
+          Технічна поразка
+        </el-button>
+        <el-button
+          v-if="showAddResultButton"
           type="primary"
           :class="addResultButtonClass"
           @click="$emit('add-result')"
@@ -120,10 +137,14 @@ const props = defineProps<{
   playerPoints?: TPlayerPointsEntry[] | null
   loading: boolean
   showAddResultButton: boolean
+  showTestMatchButton?: boolean
+  showTechLossButton?: boolean
 }>()
 
 defineEmits<{
   'add-result': []
+  'test-match': []
+  'tech-loss': []
 }>()
 
 /** Єдині розміри для всіх кнопок «Додати результат» (шапка + порожній стан). */

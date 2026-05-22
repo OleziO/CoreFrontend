@@ -68,3 +68,5 @@ export type TAdminSetPlayerRolesDto = components['schemas']['AdminSetPlayerRoles
 export type TAdminPlayerRoleItem = components['schemas']['AdminPlayerRoleItemDto']
 /** Відповідь PATCH /admin/players/:id/roles — джерело істини після мутації ролей. */
 export type TAdminPlayerRolesResult = components['schemas']['AdminPlayerRolesResultDto']
+/** Відкритий матч плей-оф (GET /tournaments/:id/playoff/open-matches). */
+export type TOpenPlayoffMatch = components['schemas']['OpenPlayoffMatchDto']

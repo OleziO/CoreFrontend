@@ -218,8 +218,24 @@
           v-if="activeTab === 'bracket'"
           class="mt-20"
         >
-          <div v-if="canSubmitPlayoffMatch" class="flex justify-end mb-12">
+          <div v-if="canSubmitPlayoffMatch || isLocalhost || (canManagePlayers && isPlayoffPhase)" class="flex justify-end gap-10 mb-12">
             <el-button
+              v-if="isLocalhost"
+              type="warning"
+              @click="openTestMatchModal('playoff')"
+            >
+              Test match creation
+            </el-button>
+            <el-button
+              v-if="canManagePlayers && isPlayoffPhase"
+              type="danger"
+              plain
+              @click="openTechLossPlayoff"
+            >
+              Технічна поразка
+            </el-button>
+            <el-button
+              v-if="canSubmitPlayoffMatch"
               type="primary"
               class="!bg-cyan-600 !border-cyan-600"
               @click="openPlayoffSubmit"
@@ -277,7 +293,11 @@
         <div
           v-if="activeTab === 'admin'"
         >
-          <TournamentAdminTab :tournament="tournament" @refresh="reloadTournament" />
+          <TournamentAdminTab
+            :tournament="tournament"
+            @refresh="reloadTournament"
+            @playoff-updated="(r) => { playoff.value = r; playoffFetched.value = true }"
+          />
         </div>
       </div>
     </div>
@@ -381,6 +401,29 @@ function openPlayoffSubmit () {
   })
 }
 
+function openTechLossPlayoff () {
+  openAppModal('TechLossPlayoffModal', {
+    tournamentId,
+    teams: playoff.value?.teams ?? [],
+    onSubmitted: (response: TPlayoffResponse) => {
+      playoff.value = response
+    }
+  })
+}
+
+const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+
+function openTestMatchModal (phase: 'qualification' | 'playoff') {
+  openAppModal('TestMatchCreationModal', {
+    tournamentId,
+    phase,
+    teams: tournament.value?.teams ?? [],
+    onSubmitted: () => {
+      if (phase === 'playoff') handlePlayoffSubmitted()
+    }
+  })
+}
+
 const canManagePlayers = computed(() => {
   return authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator
 })
@@ -449,16 +492,14 @@ const captainJoinContextOk = computed(() =>
 )
 
 const occupiedByAnotherTournament = computed(() =>
-  !!(myTeam.value?.tournament && myTeam.value.tournament.id !== tournament.value?.id)
+  !!(myTeam.value?.tournaments?.some((t) => t.id !== tournament.value?.id))
 )
 
 const showJoinPrimary = computed(() =>
   captainJoinContextOk.value &&
     !!myTeam.value &&
-    !myTeam.value.tournament &&
     !isMyTeamInThisTournament.value &&
-    freeSlots.value &&
-    !occupiedByAnotherTournament.value
+    freeSlots.value
 )
 
 function joinFriendlyHintFromApi (msg: string): string {
