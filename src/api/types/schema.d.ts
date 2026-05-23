@@ -910,15 +910,15 @@ export interface components {
         };
         Match: {
             id: string;
-            teamA: components["schemas"]["Team"];
-            teamB: components["schemas"]["Team"];
-            winner: components["schemas"]["Team"];
+            teamA: components["schemas"]["Team"] | null;
+            teamB: components["schemas"]["Team"] | null;
+            winner: components["schemas"]["Team"] | null;
             dotaMatchId: string;
         };
         Team: {
             id: string;
             name: string;
-            captain: components["schemas"]["Player"];
+            captain: components["schemas"]["Player"] | null;
             coach: components["schemas"]["Player"] | null;
             logoUrl: string | null;
             dotaTeamId: string | null;
@@ -928,6 +928,8 @@ export interface components {
             isPlayingTournament: boolean;
             /** Format: date-time */
             verifiedAt: string | null;
+            /** Format: date-time */
+            disbandedAt: string | null;
             mainPlayers: components["schemas"]["Player"][];
             reservedPlayers: components["schemas"]["Player"][];
             tournaments: components["schemas"]["Tournament"][];
@@ -1079,9 +1081,9 @@ export interface components {
             name: string;
             /**
              * Format: uuid
-             * @description UUID of the coach player
+             * @description UUID of the coach player, or null to remove coach
              */
-            coachId?: string;
+            coachId?: string | null;
             /** @description Dota 2 team ID from the game API */
             dotaTeamId?: string;
             isVerified: boolean;
@@ -1131,13 +1133,20 @@ export interface components {
             name?: string;
             /**
              * Format: uuid
-             * @description UUID of the coach player
+             * @description UUID of the coach player, or null to remove coach
              */
-            coachId?: string;
+            coachId?: string | null;
             /** @description Dota 2 team ID from the game API */
             dotaTeamId?: string;
             isVerified?: boolean;
             isPlayingTournament?: boolean;
+        };
+        ChangeCaptainDto: {
+            /**
+             * Format: uuid
+             * @description UUID of the player to become new captain
+             */
+            newCaptainPlayerId: string;
         };
         CreateInviteDto: {
             /** @enum {string} */
@@ -1203,8 +1212,8 @@ export interface components {
         QualificationMatch: {
             id: string;
             qualification: components["schemas"]["Qualification"];
-            teamA: components["schemas"]["Team"];
-            teamB: components["schemas"]["Team"];
+            teamA: components["schemas"]["Team"] | null;
+            teamB: components["schemas"]["Team"] | null;
             winner: components["schemas"]["Team"] | null;
             dotaMatchId: string | null;
             nodeGroupId: string;
@@ -1223,7 +1232,7 @@ export interface components {
         JoinTournamentDto: {
             /**
              * Format: uuid
-             * @description Admin-only: join a specific team by ID instead of the requester's team
+             * @description UUID команди для реєстрації вручну (адмін-панель). Дозволено лише JWT користувачу з адміністративною роллю; для dev також BYPASS_TEAM_VERIFICATION.
              */
             teamId?: string;
         };
@@ -1233,12 +1242,13 @@ export interface components {
         };
         PlayoffTeamsDto: {
             /**
+             * @description When omitted or empty with `POST …/playoff/start`, seeded teams come from playoff staging only.
              * @example [
              *       "uuid-1",
              *       "uuid-2"
              *     ]
              */
-            teamIds: string[];
+            teamIds?: string[];
         };
         PlayoffResponseDto: {
             embedUrl: string;
@@ -1254,15 +1264,16 @@ export interface components {
             challongeTournamentId: string;
             challongeUrl: string;
             challongeEmbedUrl: string;
+            dotaPlayoffContainingNodeGroupId: string | null;
         };
         PlayoffMatch: {
             id: string;
             playoffId: string;
             playoff: components["schemas"]["Playoff"];
-            teamAId: string;
-            teamA: components["schemas"]["Team"];
-            teamBId: string;
-            teamB: components["schemas"]["Team"];
+            teamAId: string | null;
+            teamA: components["schemas"]["Team"] | null;
+            teamBId: string | null;
+            teamB: components["schemas"]["Team"] | null;
             winnerId: string | null;
             winner: components["schemas"]["Team"] | null;
             dotaMatchId: string | null;
@@ -1920,8 +1931,20 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeCaptainDto"];
+            };
+        };
         responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"];
+                };
+            };
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -2207,6 +2230,13 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Після успішного join повертає актуальний турнір з оновленим списком teams (зручно для UI без другого запиту). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -2230,6 +2260,13 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Після успішного leave повертає актуальний турнір з оновленим списком teams. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             201: {
                 headers: {
                     [name: string]: unknown;

@@ -422,6 +422,16 @@
                   class="relative overflow-visible rounded-2xl"
                 >
                   <PlayerCard :player="team.coach" />
+                  <button
+                    v-if="canEditTeamRoster"
+                    type="button"
+                    class="player-remove-from-team-btn"
+                    :disabled="removeCoachLoading"
+                    aria-label="Прибрати тренера"
+                    @click.stop="handleRemoveCoach"
+                  >
+                    <PhX :size="14" weight="bold" class="pointer-events-none" />
+                  </button>
                 </div>
 
                 <button
@@ -569,7 +579,14 @@ const reserveSlotCounts = computed(() => {
 
 function changeCapTeam () {
   if (!team.value?.id) return
-  open('ChangeCaptainModal', { team: team.value, teamId: team.value.id })
+  open('ChangeCaptainModal', {
+    team: team.value,
+    teamId: team.value.id,
+    onUpdated: (updated: TTeamResponse) => {
+      team.value = hydrateTeamPlayersRanks(updated)
+      teamsStore.patchTeamInList(team.value)
+    }
+  })
 }
 
 function handleDisbandTeam () {
@@ -583,6 +600,7 @@ const tournamentRemovePlayerWarning =
 
 const verifyTeamLoading = ref(false)
 const removePlayerLoadingId = ref<string | null>(null)
+const removeCoachLoading = ref(false)
 
 async function handleVerifyTeam () {
   const tid = team.value?.id
@@ -695,6 +713,36 @@ async function handleRemovePlayerFromTeam (playerId: string) {
     return
   }
   await runRemovePlayerFromTeam(playerId)
+}
+
+async function handleRemoveCoach () {
+  const tid = team.value?.id
+  if (!tid) return
+  try {
+    await ElMessageBox.confirm(
+      'Тренера буде прибрано з команди.',
+      'Прибрати тренера?',
+      {
+        confirmButtonText: 'Прибрати',
+        cancelButtonText: 'Скасувати',
+        type: 'warning',
+        distinguishCancelAndClose: true
+      }
+    )
+  } catch {
+    return
+  }
+  removeCoachLoading.value = true
+  try {
+    const updated = await teamsService.removeCoach(tid)
+    team.value = hydrateTeamPlayersRanks(updated)
+    teamsStore.patchTeamInList(team.value)
+    ElMessage.success('Тренера прибрано з команди')
+  } catch (e: unknown) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося прибрати тренера'))
+  } finally {
+    removeCoachLoading.value = false
+  }
 }
 
 async function handleTeamUpdate (payload: TUpdateTeamPayload) {

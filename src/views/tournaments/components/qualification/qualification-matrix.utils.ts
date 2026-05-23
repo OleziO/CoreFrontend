@@ -21,6 +21,7 @@ export function buildQualificationMatrixTeams (
     byId.set(t.id, t)
   }
   for (const m of matches) {
+    if (!m.teamA || !m.teamB) continue
     if (!byId.has(m.teamA.id)) byId.set(m.teamA.id, m.teamA)
     if (!byId.has(m.teamB.id)) byId.set(m.teamB.id, m.teamB)
   }
@@ -34,6 +35,7 @@ export function buildQualificationMatrixTeams (
     pushUnique(t.id)
   }
   for (const m of matches) {
+    if (!m.teamA || !m.teamB) continue
     pushUnique(m.teamA.id)
     pushUnique(m.teamB.id)
   }
@@ -48,6 +50,7 @@ export function buildQualificationPairMap (
 ): Map<string, TQualificationMatch> {
   const map = new Map<string, TQualificationMatch>()
   for (const m of matches) {
+    if (!m.teamA || !m.teamB) continue
     map.set(qualificationPairKey(m.teamA.id, m.teamB.id), m)
   }
   return map

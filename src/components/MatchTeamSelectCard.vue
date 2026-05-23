@@ -20,6 +20,15 @@
       Переможець
     </div>
 
+    <!-- Disbanded badge -->
+    <div
+      v-if="team.disbandedAt"
+      class="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-4 rounded-full
+             bg-gray-600 px-10 py-3 text-[10px] font-semibold uppercase tracking-widest text-white/70 shadow-md"
+    >
+      Розпущено
+    </div>
+
     <!-- Logo -->
     <div class="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black/30">
       <img
@@ -50,7 +59,7 @@ import { PhTrophy, PhUsersThree } from '@phosphor-icons/vue'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 
 const props = defineProps<{
-  team: { id: string; name: string; logoUrl?: string | null }
+  team: { id: string; name: string; logoUrl?: string | null; disbandedAt?: string | null }
   state: 'neutral' | 'winner' | 'loser'
 }>()
 

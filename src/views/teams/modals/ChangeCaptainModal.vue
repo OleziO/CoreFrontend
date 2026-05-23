@@ -32,7 +32,8 @@
           Скасувати
         </el-button>
         <el-button
-          :disabled="!selectedPlayerId"
+          :disabled="!selectedPlayerId || loading"
+          :loading="loading"
           type="primary"
           @click="transferCaptaincy()"
         >
@@ -46,21 +47,29 @@
 <script setup lang="ts">
 import type { TTeamResponse } from '@/api/types/api.types'
 import { ElMessage } from 'element-plus'
+import { teamsService } from '@/views/teams/teams.service'
 
 const props = defineProps<{
   team: TTeamResponse | undefined
   teamId: string
+  onUpdated?: (team: TTeamResponse) => void
 }>()
 
 const modelValue = defineModel<boolean>({ default: false })
 
 const selectedPlayerId = ref<string | null>(null)
+const loading = ref(false)
+
+watch(modelValue, (open) => {
+  if (open) selectedPlayerId.value = null
+})
 
 const teamPlayers = computed(() => {
+  const captainId = props.team?.captain?.id
   const players = [
     ...(props.team?.mainPlayers ?? []),
     ...(props.team?.reservedPlayers ?? [])
-  ]
+  ].filter((p) => p.id !== captainId)
   return players.map((player) => ({
     value: player.id,
     label: player.discordName || player.discordUsername || `Гравець #${player.id}`
@@ -70,8 +79,16 @@ const teamPlayers = computed(() => {
 async function transferCaptaincy () {
   if (!selectedPlayerId.value || !props.teamId) return
 
-  // TODO: endpoint not in API yet (updateTeamCapitan)
-  ElMessage.info('Функціонал передачі капітанства ще не реалізований в API')
-  modelValue.value = false
+  loading.value = true
+  try {
+    const updated = await teamsService.transferCaptaincy(props.teamId, selectedPlayerId.value)
+    ElMessage.success('Капітанство успішно передано')
+    props.onUpdated?.(updated)
+    modelValue.value = false
+  } catch {
+    ElMessage.error('Помилка при передачі капітанства')
+  } finally {
+    loading.value = false
+  }
 }
 </script>

@@ -212,7 +212,7 @@ function openTechLossModal () {
       const i = list.findIndex((m) => m.id === matchId)
       if (i >= 0) {
         const m = list[i]
-        const fullWinner = m.teamA.id === winnerId ? m.teamA : m.teamB
+        const fullWinner = m.teamA?.id === winnerId ? m.teamA : m.teamB
         list[i] = { ...m, winner: fullWinner, dotaMatchId: `tech_loss_${matchId}` }
       }
       qualificationPhase.value = { ...q, matches: list }

@@ -82,6 +82,14 @@ class TeamsService {
     return await this.fetchTeam(teamId)
   }
 
+  /** PATCH /teams/:id { coachId: null } — прибрати тренера з команди. */
+  async removeCoach (teamId: string): Promise<TeamApi> {
+    await apiClient.patch('/teams/{id}', { coachId: null }, {
+      dynamicKeys: { id: teamId }
+    })
+    return await this.fetchTeam(teamId)
+  }
+
   /** DELETE /teams/:id/players/:playerId — прибрати гравця з команди (у відповіді зазвичай повна команда). */
   async removePlayerFromTeam (teamId: string, playerId: string): Promise<TeamApi> {
     const res = await apiClient.delete('/teams/{id}/players/{playerId}', {
@@ -135,8 +143,15 @@ class TeamsService {
   // TODO: endpoint not in API yet
   // async deleteTeamChats (teamId: number) { ... }
 
-  // TODO: endpoint not in API yet
-  // async transferCaptaincy (teamId: number, newCaptainId: number) { ... }
+  async transferCaptaincy (teamId: string, newCaptainPlayerId: string): Promise<TeamApi> {
+    const res = await apiClient.post('/teams/{id}/captain', { newCaptainPlayerId }, {
+      dynamicKeys: { id: teamId }
+    } as any)
+    if (res && typeof res === 'object' && 'id' in res) {
+      return res as TeamApi
+    }
+    return await this.fetchTeam(teamId)
+  }
 
   /** POST /teams/:id/invites — створити запрошення до команди (тільки капітан). */
   async createInvite (teamId: string, slot: 'main' | 'reserved' | 'coach'): Promise<{ token: string; expiresAt: string }> {

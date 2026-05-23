@@ -95,8 +95,13 @@ const selectedMatch = computed(() =>
   props.matches.find((m) => m.id === selectedMatchId.value) ?? null
 )
 
+function teamLabel (team: TQualificationMatch['teamA']): string {
+  if (!team) return '?'
+  return team.disbandedAt ? `${team.name} (розпущено)` : team.name
+}
+
 function matchLabel (m: TQualificationMatch): string {
-  return `${m.teamA?.name ?? '?'} vs ${m.teamB?.name ?? '?'}`
+  return `${teamLabel(m.teamA)} vs ${teamLabel(m.teamB)}`
 }
 
 function cardState (teamId: string): 'neutral' | 'winner' | 'loser' {

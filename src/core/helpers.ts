@@ -12,7 +12,7 @@ export const createHashedObject = <
   array: T[] = [],
   prop: Prop = 'id' as Prop,
   isValueArray?: ValueArray,
-  
+
   shouldRemoveKeyField?: boolean
 ): Record<T[Prop], ValueArray extends true ? T[] : T> => {
   return array.reduce((acc, current) => {
@@ -48,7 +48,7 @@ export function resolvePublicOrApiUrl (path: string | null | undefined): string 
   if (raw.startsWith('//')) return `https:${raw}`
   const base = String(import.meta.env.VITE_API_PUBLIC_URL ?? '').replace(/\/+$/, '')
   const p = raw.startsWith('/') ? raw : `/${raw}`
-  
+
   return base ? `${base}${p}` : p
 }
 
