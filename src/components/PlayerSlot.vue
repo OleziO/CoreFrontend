@@ -36,8 +36,6 @@ import { routeNames } from '@/router/route-names'
 import { ShieldCheck, ShieldX } from 'lucide-vue-next'
 import { isPlayerVerified } from '@/core/helpers'
 
-import type { TPlayer } from '@/api/types/api.types'
-
 const props = defineProps<{ player: TPlayer }>()
 const isVerified = computed(() => isPlayerVerified(props.player))
 </script>

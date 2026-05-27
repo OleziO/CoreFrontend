@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TPlayer, TUserRole, TCurrentPlayerRole } from '@/api/types/api.types'
+import type { TUserRole, TCurrentPlayerRole } from '@/api/types/api.types'
 import { getRoleTagCssVars } from '@/utils/role-tag-styles'
 import { resolveRoleDisplayLabel } from '@/components/player-tags/player.constants'
 

@@ -64,8 +64,6 @@
 </template>
 
 <script setup lang="ts">
-import type { TTeam } from '@/api/types/api.types'
-
 const props = defineProps<{
   tournamentId: string
   phase: 'qualification' | 'playoff'

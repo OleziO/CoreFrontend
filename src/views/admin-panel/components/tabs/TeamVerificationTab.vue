@@ -43,13 +43,12 @@
           </template>
         </el-table-column>
         <el-table-column label="Дії" width="180" align="center">
-          <template #default="{ row }">
+          <template #default>
             <el-button
               type="success"
               class="!w-full !justify-start !bg-green-600/20 !border-green-500/30
                       hover:!bg-green-600 hover:!border-green-500 text-green-400
                        hover:text-white transition-all group"
-              @click="handleTake(row.id)"
             >
               <el-icon class="mr-2 group-hover:scale-110 transition-transform"><Check /></el-icon>
               Прийняти запит
@@ -62,31 +61,14 @@
 </template>
 
 <script setup lang="ts">
-// TODO: endpoint not in API yet
-// import { useGetRequests } from '@/composables/query/use-requests'
-// import { getImageUrl } from '@/core/helpers'
 import { Check, TopRight } from '@element-plus/icons-vue'
-// import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
 import { routeNames } from '@/router/route-names'
-import { adminPanelService } from '@/views/admin-panel/admin-panel.service'
 import RequestStatusTag from '@/components/request-tags/RequestStatusTag.vue'
 import RequestTypeTag from '@/components/request-tags/RequestTypeTag.vue'
 
 const router = useRouter()
-// TODO: endpoint not in API yet
 const requests = ref<any[]>([])
 const isLoading = ref(false)
-const refetch = async () => {}
-
-const handleTake = async (requestId: number) => {
-  try {
-    await adminPanelService.handleTake(requestId)
-    await refetch()
-  } catch (e) {
-    console.error(e)
-  }
-}
 
 const openTeamProfile = (userId: number) => {
   router.push({ name: routeNames.team, params: { id: userId } })

@@ -2,37 +2,17 @@ import type { components } from './schema'
 
 export type TPlayerRankDto = components['schemas']['PlayerRankDto']
 
-/** У ростері /teams `rank` нормалізується на клієнті (`coercePlayerRankFromApi`). */
-export type TPlayer = components['schemas']['Player'] & {
-  rank?: TPlayerRankDto | null
-}
 export type TCurrentPlayer = components['schemas']['CurrentPlayerDto']
 export type TTournamentDivision = components['schemas']['TournamentDivision']
-
-/** Відповіді GET/POST/PATCH команд (`TeamResponseDto`) — без `matches*` / discord-каналів з вкладеної схеми `Team`. */
-export type TTeamResponse = components['schemas']['TeamResponseDto'] & {
-  /** Підмішується бекендом поза базовою схемою; на частині ендпоінтів може бути відсутнє. */
-  division?: TTournamentDivision | null
-}
 
 /** Публічний зріз гравця в рості команди (GET /teams…) — сумісний з карткою гравця. */
 export type TPlayerResponseDto = components['schemas']['PlayerResponseDto']
 
-export type TTeam = components['schemas']['Team'] & {
-  /** Підмішується бекендом поза базовою схемою `Team` (дивізіон — у `Tournament`). */
-  division?: TTournamentDivision | null
-}
 export type TQualificationMatch = components['schemas']['QualificationMatch']
 /** Тіло GET /tournaments/:id/qualification — у OpenAPI це `QualificationResponseDto` (поверх `Qualification` додає `playerTournamentPoints`). */
 export type TQualificationPhase = components['schemas']['QualificationResponseDto']
 export type TPlayerPointsEntry = components['schemas']['PlayerPointsEntry']
-export type TTournament = components['schemas']['Tournament'] & {
-  division?: TTournamentDivision | null
-  /** Підмішується з GET /tournaments/:id/qualification на клієнті; у базовій схемі турніру може не бути. */
-  qualification?: TQualificationPhase | null
-}
 /** Тіло GET /tournaments/:id/playoff та відповідь POST /playoff/start|disqualify — Challonge embed + актуальний склад. */
-export type TPlayoffResponse = components['schemas']['PlayoffResponseDto']
 /** Запис матчу плей-оф (відповідь POST /tournaments/:id/playoff/submit). */
 export type TPlayoffMatch = components['schemas']['PlayoffMatch']
 /** Тіло POST/DELETE /tournaments/:id/playoff/teams та POST /playoff/start. */

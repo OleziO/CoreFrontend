@@ -45,7 +45,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import { PhCoins } from '@phosphor-icons/vue'
 
 const props = defineProps<{

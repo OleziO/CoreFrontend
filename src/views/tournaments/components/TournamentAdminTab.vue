@@ -241,25 +241,18 @@
 
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
-import type {
-  TTournament as Tournament,
-  TTeam as Team,
-  TTeamResponse,
-  TPlayoffResponse
-} from '@/api/types/api.types'
 import { tournamentsService } from '@/views/tournaments/tournaments.service'
 import { teamsService } from '@/views/teams/teams.service'
 import { friendlyPlayoffError } from '@/views/tournaments/utils/playoff-errors'
 
 const props = defineProps<{
-  tournament?: Tournament | null
+  tournament?: TTournament | null
 }>()
 
 const emit = defineEmits<{
   (e: 'refresh'): void
-  (e: 'playoff-updated', response: TPlayoffResponse): void
+  (e: 'playoff-updated', response: TPlayoff): void
 }>()
 
 const showEditDrawer = ref(false)
@@ -269,7 +262,7 @@ const tournamentStore = useTournamentStore()
 const deleteLoading = ref(false)
 const joinLoading = ref(false)
 const selectedTeamId = ref<string>('')
-const allTeams = ref<Array<Team | TTeamResponse>>([])
+const allTeams = ref<Array<TTeam | TTeam>>([])
 const teamsLoading = ref(false)
 
 function computeDivision (mainPlayers: { rating: number }[]): string | null {
@@ -319,12 +312,12 @@ watch(activeTab, (tab) => {
 }, { immediate: false })
 
 // --- Плей-оф (адмін) ---
-const playoff = ref<TPlayoffResponse | null>(null)
+const playoff = ref<TPlayoff | null>(null)
 const playoffLoading = ref(false)
 const actionLoading = ref(false)
 const eligibleLoading = ref(false)
-const playoffEligibleTeams = ref<TTeamResponse[]>([])
-const stagedTeams = ref<TTeamResponse[]>([])
+const playoffEligibleTeams = ref<TTeam[]>([])
+const stagedTeams = ref<TTeam[]>([])
 const selectedEligibleIds = ref<string[]>([])
 
 /** Допущені команди, яких ще немає в складі плей-оф. */

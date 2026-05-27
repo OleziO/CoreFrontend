@@ -684,8 +684,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, shallowRef } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import {
   PhCopy,
   PhSealCheck,
@@ -712,7 +710,6 @@ import {
 import { positionOptions } from '@/components/player-tags/player.constants'
 import { routeNames } from '@/router/route-names'
 import { playersService } from '@/views/players/players.service'
-import type { TPlayer, TTeamResponse } from '@/api/types/api.types'
 import type { TCreateTeamPayload } from '@/views/teams/teams.service'
 import { teamsService } from '@/views/teams/teams.service'
 import { usePlayerFavoriteHeroes } from '@/composables/query/use-player-heroes'
@@ -784,8 +781,7 @@ const playerTeamLinkId = computed(() => {
   return String(id)
 })
 
-/** Командний профіль із бекенду для картки в профілі гравця. */
-const profileTeam = shallowRef<TTeamResponse | null>(null)
+const profileTeam = shallowRef<TTeam | null>(null)
 const profileTeamLoading = ref(false)
 
 watch(

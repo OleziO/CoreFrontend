@@ -387,7 +387,7 @@
 
 <script setup lang="ts">
 import { scrollToSection } from '@/core/helpers'
-import playersMacbook from '@/assets/images/players_macbook.png'
+import playersMacbook from '@/assets/images/players-page-macbook-screen.png'
 import { PhShieldCheck, PhTarget, PhBrowser, PhQuestionMark, PhCaretDown, PhDiscordLogo } from '@phosphor-icons/vue'
 
 const authStore = useAuthStore()

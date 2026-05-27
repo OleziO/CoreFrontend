@@ -70,7 +70,7 @@
 
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
-import logo from '@/assets/LongLogo.png'
+import logo from '@/assets/images/core-league-logo-full.png'
 import Icon, { type TIconName } from '@/components/Icon.vue'
 
 const footerNavItems: Array<{ name: string; label: string }> = [

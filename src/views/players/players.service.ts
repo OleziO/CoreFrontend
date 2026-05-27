@@ -1,6 +1,5 @@
 import apiClient from '@/api/client'
 import { ElMessage } from 'element-plus'
-import { shallowRef } from 'vue'
 
 import { hasPlayerRole } from '@/core/helpers'
 import { ERole } from '@/types/general.types'
@@ -8,16 +7,12 @@ import type { components } from '@/api/types/schema'
 
 import type {
   TAdminPlayerRoleItem,
-  TAdminPlayerRolesResult,
-  TPlayer,
   TUpdatePlayerDto,
   TUserRoleCatalog
 } from '@/api/types/api.types'
 
-/** Каталог GET `/user-roles` — реактивний, щоб список після префетчу перерахував фільтр за query. */
 export const userRolesCatalogRef = shallowRef<TUserRoleCatalog[] | null>(null)
 
-/** Відповідь GET `/user-roles` — зазвичай масив `UserRoleResponseDto[]`. */
 function parseUserRolesList (raw: unknown): TUserRoleCatalog[] {
   if (Array.isArray(raw)) return raw as TUserRoleCatalog[]
   if (raw && typeof raw === 'object' && raw !== null && 'data' in raw) {
@@ -28,15 +23,11 @@ function parseUserRolesList (raw: unknown): TUserRoleCatalog[] {
 }
 
 class PlayersService {
-  /** Останній успішний кеш каталогу ролей (для підписів тегів без повторного GET). */
   getCachedUserRoles (): TUserRoleCatalog[] {
     return userRolesCatalogRef.value ?? []
   }
 
-  /**
-   * Каталог ролей з бекенду (GET `/user-roles`). Кешується для селектів фільтрів.
-   */
-  async fetchUserRoles (opts?: { force?: boolean }): Promise<TUserRoleCatalog[]> {
+  async fetchUserRoles (opts?: { force?: boolean }) {
     const force = opts?.force ?? false
     if (!force && userRolesCatalogRef.value !== null) {
       return [...userRolesCatalogRef.value]
@@ -53,47 +44,40 @@ class PlayersService {
     }
   }
 
-  async fetchPlayers (): Promise<TPlayer[]> {
+  async fetchPlayers () {
     try {
-      const res = await apiClient.get('/players')
-      return res as unknown as TPlayer[]
+      return await apiClient.get('/players')
     } catch (e) {
       ElMessage({ type: 'error', message: 'Не вдалося завантажити гравців' })
       throw e
     }
   }
 
-  async fetchPlayerItemById (id: string): Promise<TPlayer | null> {
+  async fetchPlayerItemById (id: string) {
     try {
-      const res = await apiClient.get('/players/{id}', {
+      return await apiClient.get('/players/{id}', {
         dynamicKeys: { id }
       })
-      return res as unknown as TPlayer
     } catch (e) {
       ElMessage.error('Гравця не знайдено')
       return null
     }
   }
 
-  async updatePlayer (id: string, data: Partial<TUpdatePlayerDto>): Promise<TPlayer> {
-    const res = await apiClient.patch('/players/{id}',
+  async updatePlayer (id: string, data: Partial<TUpdatePlayerDto>) {
+    return await apiClient.patch('/players/{id}',
       data as Partial<components['schemas']['UpdatePlayerDto']>,
       {
         dynamicKeys: { id }
       })
-    return res as unknown as TPlayer
   }
 
-  async deletePlayer (id: string): Promise<void> {
+  async deletePlayer (id: string) {
     await apiClient.delete('/players/{id}', {
       dynamicKeys: { id }
     })
   }
 
-  /**
-   * Відповідь POST/DELETE `/admin/players/:id/verify` звичайно містить `verified`
-   * (джерело істини після мутації). Зливаємо її із GET `/players/:id`, щоб кеш/UI не показували старий стан.
-   */
   private mergePlayerAfterVerifyMutation (player: TPlayer, apiBody: unknown): TPlayer {
     if (apiBody == null || typeof apiBody !== 'object') {
       return player
@@ -132,7 +116,7 @@ class PlayersService {
       }
 
       if (Array.isArray(b.roles)) {
-        next.roles = b.roles as unknown as TPlayer['roles']
+        next.roles = b.roles
       }
 
       return next
@@ -145,7 +129,7 @@ class PlayersService {
     return player
   }
 
-  async setPlayerVerificationByAdmin (playerId: string, verified: boolean): Promise<TPlayer | null> {
+  async setPlayerVerificationByAdmin (playerId: string, verified: boolean) {
     let verifyResponse: unknown
     try {
       if (verified) {
@@ -165,7 +149,7 @@ class PlayersService {
     try {
       const res = await apiClient.get('/players/{id}', {
         dynamicKeys: { id: playerId }
-      }) as unknown as TPlayer
+      })
       const merged = this.mergePlayerAfterVerifyMutation(res, verifyResponse)
 
       ElMessage.success(verified ? 'Гравця верифіковано' : 'Верифікацію знято')
@@ -176,56 +160,16 @@ class PlayersService {
     }
   }
 
-  // TODO: endpoint not in API yet
-  // async createTeam (team: ICreateTeamForm): Promise<TTeam> { ... }
-
-  // TODO: endpoint not in API yet
-  // async callPlayers (chatId: string, playersIds: number[], message = '', signature = true) { ... }
-
-  // TODO: endpoint not in API yet
-  // async getChats () { ... }
-
-  /**
-   * Повний набір ролей гравця (PATCH `/admin/players/:id/roles`).
-   * Замінює user_roles, синхронізує Discord і переставляє `verifiedAt` — джерело істини у відповіді.
-   * Не показує тост: викликається в комбінованому сабміті профілю, помилку обробляє форма.
-   *
-   * Тіло — за OpenAPI-контрактом `AdminSetPlayerRolesDto` ({ roles: [...] }).
-   * УВАГА (стейдж, 2026-05): сервер відхиляє і `{ roles: [...] }` ("property roles
-   * should not exist"), і голий масив ("property 0 should not exist"). Обидва —
-   * NestJS `forbidNonWhitelisted`, тобто на бекенді цей DTO без class-validator
-   * декораторів (або прив'язаний не той тип). Жодне тіло не пройде — це баг бекенду,
-   * не форма тіла. Лишаємо контрактну форму; виправлення — на боці API.
-   */
   async setPlayerRolesByAdmin (
     playerId: string,
     roles: TAdminPlayerRoleItem[]
-  ): Promise<TAdminPlayerRolesResult> {
-    const res = await apiClient.patch('/admin/players/{playerId}/roles',
-      { roles } as components['schemas']['AdminSetPlayerRolesDto'],
+  ) {
+    return await apiClient.patch('/admin/players/{playerId}/roles',
+      { roles },
       {
         dynamicKeys: { playerId }
       })
-    return res as unknown as TAdminPlayerRolesResult
   }
-
-  // TODO: endpoint not in API yet
-  // toSteam3ID (steamID64: string): string { ... }
-
-  // TODO: endpoint not in API yet (external API — opendota)
-  // async getPlayerFavoriteHeroes (steamID64: string) { ... }
-
-  // TODO: endpoint not in API yet
-  // async changePlayerRespect (playerId: number, action: 'like' | 'dislike', amount = 1) { ... }
-
-  // TODO: endpoint not in API yet
-  // async updatePlayerPoints (playerId: number, _points: number) { ... }
-
-  // TODO: endpoint not in API yet
-  // async updatePlayerMmrByAdmin (playerId: number, mmr: number) { ... }
-
-  // TODO: endpoint not in API yet
-  // async toggleDiscordNotification (isTrue: boolean) { ... }
 }
 
 export const playersService = new PlayersService()

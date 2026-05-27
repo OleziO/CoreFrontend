@@ -219,7 +219,6 @@ declare global {
   const useGetCopy: typeof import('../src/composables/use-get-copy')['useGetCopy']
   const useGetFile: typeof import('../src/composables/use-get-file')['useGetFile']
   const useHead: typeof import('@vueuse/head')['useHead']
-  const useI18n: typeof import('vue-i18n')['useI18n']
   const useIdle: typeof import('@vueuse/core')['useIdle']
   const useImage: typeof import('@vueuse/core')['useImage']
   const useInfiniteScroll: typeof import('@vueuse/core')['useInfiniteScroll']

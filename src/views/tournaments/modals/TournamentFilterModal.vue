@@ -83,7 +83,6 @@ const router = useRouter()
 const route = useRoute()
 const filters = ref({ ...DEFAULT_TOURNAMENT_FILTERS })
 
-// TODO: endpoint not in API yet (divisions)
 const divisionArr = computed(() => [] as { key: string; label: string }[])
 
 function onReset (withClose = true) {

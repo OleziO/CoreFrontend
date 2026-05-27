@@ -1,6 +1,4 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import type { TCurrentPlayer, TUserRole as UserRole } from '@/api/types/api.types'
 import { authService } from '@/services/auth.service'
 

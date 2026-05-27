@@ -22,8 +22,6 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router'
-import { onMounted } from 'vue'
 import { firstQueryValue } from '@/core/helpers'
 import { useAuthStore } from '@/store/modules/auth'
 import { routeNames } from '@/router/route-names'

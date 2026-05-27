@@ -1,5 +1,3 @@
-import { defineAsyncComponent, type Component } from 'vue'
-
 import { useModals } from '@/composables/use-modals'
 
 /** Один виклик useModals у модулі — інакше різні closures / _components і ламані async-модалки. */

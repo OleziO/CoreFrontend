@@ -462,7 +462,6 @@ import 'dayjs/locale/uk'
 import { resolvePublicOrApiUrl, getDotabuffTeamUrl } from '@/core/helpers'
 import { resolveTeamDivisionForDisplay } from '@/components/tournaments-tags/tournament.constants'
 import TournamentBannerImage from '@/components/tournaments/TournamentBannerImage.vue'
-import type { TTeamResponse } from '@/api/types/api.types'
 import type { TUpdateTeamPayload } from '@/views/teams/teams.service'
 import { teamsService } from '@/views/teams/teams.service'
 import { hydrateTeamPlayersRanks } from '@/views/teams/team-roster-hydrate'
@@ -480,7 +479,7 @@ const isMobile = computed(() => currWindow.width.value < 850)
 const teamsStore = useTeamsStore()
 const playersStore = usePlayersStore()
 
-const team = ref<TTeamResponse | null>(null)
+const team = ref<TTeam | null>(null)
 
 const teamLogoSrc = computed(() => resolvePublicOrApiUrl(team.value?.logoUrl))
 
@@ -582,7 +581,7 @@ function changeCapTeam () {
   open('ChangeCaptainModal', {
     team: team.value,
     teamId: team.value.id,
-    onUpdated: (updated: TTeamResponse) => {
+    onUpdated: (updated: TTeam) => {
       team.value = hydrateTeamPlayersRanks(updated)
       teamsStore.patchTeamInList(team.value)
     }
@@ -592,7 +591,7 @@ function changeCapTeam () {
 function handleDisbandTeam () {
   const tid = team.value?.id
   if (!tid) return
-  void teamsStore.deleteTeam(tid)
+  teamsStore.deleteTeam(tid)
 }
 
 const tournamentRemovePlayerWarning =

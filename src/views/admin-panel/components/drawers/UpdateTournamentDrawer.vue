@@ -132,16 +132,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
 import { tournamentFields } from '@/constants/tournaments'
 import { queryCache } from '@/core/query-cache-client'
 import { tournamentStatuses } from '@/utils/formatters'
 import { Plus, Edit } from '@element-plus/icons-vue'
 import type { UploadFile } from 'element-plus'
-// TODO: endpoint not in API yet (divisions)
-// import { useGetDivisions } from '@/composables/query/use-divisions'
 import { ElMessage } from 'element-plus'
-import type { TTournament as Tournament, TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
+import type { TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
 import { getImageUrl } from '@/core/helpers'
 
 interface ITournamentUpdateFormData extends Partial<UpdateTournamentDto> {
@@ -150,7 +147,7 @@ interface ITournamentUpdateFormData extends Partial<UpdateTournamentDto> {
   limit?: number | null
 }
 
-const props = defineProps<{newTournamentData: Tournament | undefined | null}>()
+const props = defineProps<{newTournamentData: TTournament | undefined | null}>()
 const { file, preview, reset } = useGetFile()
 
 // TODO: endpoint not in API yet (divisions)

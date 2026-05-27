@@ -81,8 +81,6 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { PhWarningCircle, PhShield, PhDiscordLogo } from '@phosphor-icons/vue'
 import { useAuthStore } from '@/store/modules/auth'

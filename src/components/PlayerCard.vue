@@ -105,12 +105,11 @@
 </template>
 
 <script lang="ts" setup>
-import { RouterLink } from 'vue-router'
 
 import { routeNames } from '@/router/route-names'
 import { PhCrown, PhUser } from '@phosphor-icons/vue'
 import { getCopy, formatPlayerRatingMmr, getPlayerRankImageSrcFromPlayerRank, isPlayerVerified, resolvePublicOrApiUrl } from '@/core/helpers'
-import type { TPlayer, TPlayerResponseDto } from '@/api/types/api.types'
+import type { TPlayerResponseDto } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
   player: TPlayer | TPlayerResponseDto | null

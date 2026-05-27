@@ -2,7 +2,6 @@
 export const tournamentTypeLabelMap: Record<string, string> = {}
 export const tournamentTypeClassMap: Record<string, string> = {}
 
-/** Усі значення `tournamentStatus` з API (POST/PATCH — лише ці два). */
 export const TOURNAMENT_STATUS_VALUES = ['QUALIFICATIONS', 'PLAYOFF'] as const
 export type TTournamentStatusValue = (typeof TOURNAMENT_STATUS_VALUES)[number]
 
@@ -25,7 +24,6 @@ export const tournamentCreateStatusOptions: ReadonlyArray<{
   { key: 'PLAYOFF', label: 'Плей-оф' }
 ]
 
-/** Статуси для фільтрів / оновлення в адмінці. */
 export const tournamentAdminStatusOptions: ReadonlyArray<{
   key: TTournamentStatusValue
   label: string
@@ -34,7 +32,6 @@ export const tournamentAdminStatusOptions: ReadonlyArray<{
   { key: 'PLAYOFF', label: 'Плей-оф' }
 ]
 
-/** Значення `division` з API турніру. */
 export const TOURNAMENT_DIVISION_VALUES = [
   'DIVISION_I',
   'DIVISION_II',
@@ -45,9 +42,6 @@ export type TTournamentDivisionValue = typeof TOURNAMENT_DIVISION_VALUES[number]
 
 const TOURNAMENT_DIVISION_VALUE_SET = new Set<string>(TOURNAMENT_DIVISION_VALUES)
 
-/**
- * Нормалізує `division` з API до ключа OpenAPI (наприклад, кирилична «І» у `DIVISION_III` ламає порівняння рядків).
- */
 export function normalizeTournamentDivision (
   raw: string | null | undefined
 ): TTournamentDivisionValue | null {

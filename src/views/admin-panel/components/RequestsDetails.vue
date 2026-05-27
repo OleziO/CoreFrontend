@@ -40,7 +40,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import MmrRequestsTab from './tabs/MmrRequestsTab.vue'
 import TeamVerificationTab from './tabs/TeamVerificationTab.vue'
 import PlayerVerificationTab from './tabs/PlayerVerificationTab.vue'

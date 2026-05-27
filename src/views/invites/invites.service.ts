@@ -16,24 +16,22 @@ export type TCreateInviteResult = {
 }
 
 class InvitesService {
-  async getInviteInfo (token: string): Promise<TInviteInfo> {
-    const res = await apiClient.get('/invites/{token}', {
+  async getInviteInfo (token: string) {
+    return await apiClient.get('/invites/{token}', {
       dynamicKeys: { token }
-    })
-    return res as TInviteInfo
+    }) as TInviteInfo
   }
 
-  async acceptInvite (token: string): Promise<void> {
+  async acceptInvite (token: string) {
     await apiClient.post('/invites/{token}/accept', {}, {
       dynamicKeys: { token }
     } as any)
   }
 
-  async createTeamInvite (teamId: string, slot: 'main' | 'reserved' | 'coach'): Promise<TCreateInviteResult> {
-    const res = await apiClient.post('/teams/{id}/invites', { slot }, {
+  async createTeamInvite (teamId: string, slot: 'main' | 'reserved' | 'coach') {
+    return await apiClient.post('/teams/{id}/invites', { slot }, {
       dynamicKeys: { id: teamId }
-    } as any)
-    return res as TCreateInviteResult
+    } as any) as TCreateInviteResult
   }
 }
 

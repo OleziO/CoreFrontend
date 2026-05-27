@@ -146,23 +146,17 @@
 </template>
 
 <script setup lang="ts">
-// TODO: endpoint not in API yet
-// import { useGetBugs } from '@/composables/query/use-bugs'
 import { getImageUrl } from '@/core/helpers'
 import { ZoomIn } from '@element-plus/icons-vue'
-import { useRouter } from 'vue-router'
 import { routeNames } from '@/router/route-names'
-// import { bugService } from '@/services/bug.service'
 import { ElMessage } from 'element-plus'
 import BugStatusTag from '@/components/bug-tags/BugStatusTag.vue'
 import { ERequestStatus, requestStatusLabelMap } from '@/components/bug-tags/status.constants'
 
 const router = useRouter()
 const authStore = useAuthStore()
-// TODO: endpoint not in API yet
 const bugs = ref<any[]>([])
 const isLoading = ref(false)
-// const refetch = async () => {}
 
 const loadingStatusUpdate = ref<Record<number, boolean>>({})
 const activeStatusTab = ref<string>('all')
@@ -272,24 +266,7 @@ const getButtonClass = (currentStatus: string): string => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleUpdateStatus = async (_bugId: number, _newStatus: string) => {
-  // TODO: endpoint not in API yet
   ElMessage.info('Функціонал оновлення статусу багу ще не реалізований в API')
-  // const bugId = _bugId
-  // const newStatus = _newStatus
-  // loadingStatusUpdate.value[bugId] = true
-  // try {
-  //   // await bugService.updateBugStatus(bugId, newStatus)
-  //   ElMessage.success('Статус успішно оновлено')
-  //   await refetch()
-  // } catch (error: any) {
-  //   console.error('Помилка при оновленні статусу:', error)
-  //   const errorMessage = error?.response?.data?.detail ||
-  //                       error?.response?.data?.message ||
-  //                       'Помилка при оновленні статусу. Спробуйте ще раз.'
-  //   ElMessage.error(errorMessage)
-  // } finally {
-  //   loadingStatusUpdate.value[bugId] = false
-  // }
 }
 
 const openUserProfile = (userId: number) => {

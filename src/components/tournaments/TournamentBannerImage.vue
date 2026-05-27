@@ -40,7 +40,6 @@
 
 <script setup lang="ts">
 import { PhTrophy } from '@phosphor-icons/vue'
-import { computed } from 'vue'
 import { getImageUrl } from '@/core/helpers'
 
 const props = withDefaults(

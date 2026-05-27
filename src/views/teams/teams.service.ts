@@ -1,7 +1,6 @@
 import apiClient from '@/api/client'
 import { ElMessage } from 'element-plus'
 import type {
-  TTeamResponse as TeamApi,
   TCreateTeamDto as CreateTeamDto,
   TUpdateTeamDto as UpdateTeamDto,
   TAddTeamPlayerDto as AddTeamPlayerDto
@@ -19,22 +18,20 @@ function teamEntries (dto: Partial<UpdateTeamDto>): Partial<UpdateTeamDto> {
 }
 
 class TeamsService {
-  async fetchAllTeams (): Promise<TeamApi[]> {
+  async fetchAllTeams () {
     try {
-      const res = await apiClient.get('/teams')
-      return res
+      return await apiClient.get('/teams')
     } catch (e) {
       ElMessage({ type: 'error' })
       throw e
     }
   }
 
-  async fetchTeam (id: string, options?: { silent?: boolean }): Promise<TeamApi> {
+  async fetchTeam (id: string, options?: { silent?: boolean }) {
     try {
-      const res = await apiClient.get('/teams/{id}', {
+      return await apiClient.get('/teams/{id}', {
         dynamicKeys: { id }
       })
-      return res
     } catch (e) {
       if (!options?.silent) {
         ElMessage.error('Помилка')
@@ -44,7 +41,7 @@ class TeamsService {
   }
 
   /** POST /teams (name, dotaTeamId), потім за наявності файлу — POST /teams/:id/logo, GET для актуального стану. */
-  async createTeam (data: TCreateTeamPayload): Promise<TeamApi> {
+  async createTeam (data: TCreateTeamPayload) {
     const { logoFile, ...dto } = data
     const team = await apiClient.post('/teams', dto)
 
@@ -54,7 +51,7 @@ class TeamsService {
     return await this.fetchTeam(team.id)
   }
 
-  async updateTeam (id: string, data: TUpdateTeamPayload): Promise<TeamApi> {
+  async updateTeam (id: string, data: TUpdateTeamPayload) {
     const { logoFile, ...rest } = data
     const patchPayload = teamEntries(rest)
 
@@ -72,7 +69,7 @@ class TeamsService {
   }
 
   /** POST /teams/:id/players — додати гравця в основу або запас (адмін). */
-  async addPlayerToTeam (teamId: string, body: AddTeamPlayerDto): Promise<TeamApi> {
+  async addPlayerToTeam (teamId: string, body: AddTeamPlayerDto) {
     const res = await apiClient.post('/teams/{id}/players', body, {
       dynamicKeys: { id: teamId }
     })
@@ -83,7 +80,7 @@ class TeamsService {
   }
 
   /** PATCH /teams/:id { coachId: null } — прибрати тренера з команди. */
-  async removeCoach (teamId: string): Promise<TeamApi> {
+  async removeCoach (teamId: string) {
     await apiClient.patch('/teams/{id}', { coachId: null }, {
       dynamicKeys: { id: teamId }
     })
@@ -91,17 +88,17 @@ class TeamsService {
   }
 
   /** DELETE /teams/:id/players/:playerId — прибрати гравця з команди (у відповіді зазвичай повна команда). */
-  async removePlayerFromTeam (teamId: string, playerId: string): Promise<TeamApi> {
+  async removePlayerFromTeam (teamId: string, playerId: string) {
     const res = await apiClient.delete('/teams/{id}/players/{playerId}', {
       dynamicKeys: { id: teamId, playerId }
     }) as unknown
     if (res && typeof res === 'object' && 'id' in res) {
-      return res as TeamApi
+      return res
     }
     return await this.fetchTeam(teamId)
   }
 
-  async dissolveTeam (id: string): Promise<void> {
+  async dissolveTeam (id: string) {
     try {
       await apiClient.delete('/teams/{id}', {
         dynamicKeys: { id }
@@ -120,7 +117,7 @@ class TeamsService {
     }
   }
 
-  async unverifyTeam (teamId: string): Promise<void> {
+  async unverifyTeam (teamId: string) {
     try {
       await apiClient.delete('/admin/teams/{teamId}/verify', {
         dynamicKeys: { teamId }
@@ -143,22 +140,21 @@ class TeamsService {
   // TODO: endpoint not in API yet
   // async deleteTeamChats (teamId: number) { ... }
 
-  async transferCaptaincy (teamId: string, newCaptainPlayerId: string): Promise<TeamApi> {
+  async transferCaptaincy (teamId: string, newCaptainPlayerId: string) {
     const res = await apiClient.post('/teams/{id}/captain', { newCaptainPlayerId }, {
       dynamicKeys: { id: teamId }
     } as any)
     if (res && typeof res === 'object' && 'id' in res) {
-      return res as TeamApi
+      return res
     }
     return await this.fetchTeam(teamId)
   }
 
   /** POST /teams/:id/invites — створити запрошення до команди (тільки капітан). */
-  async createInvite (teamId: string, slot: 'main' | 'reserved' | 'coach'): Promise<{ token: string; expiresAt: string }> {
-    const res = await apiClient.post('/teams/{id}/invites', { slot }, {
+  async createInvite (teamId: string, slot: 'main' | 'reserved' | 'coach') {
+    return await apiClient.post('/teams/{id}/invites', { slot }, {
       dynamicKeys: { id: teamId }
-    } as any)
-    return res as { token: string; expiresAt: string }
+    } as any) as { token: string; expiresAt: string }
   }
 
   // TODO: endpoint not in API yet

@@ -180,7 +180,6 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
 import { useClipboard, useWindowSize } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 
@@ -195,7 +194,6 @@ import {
   PhCompassRose
 } from '@phosphor-icons/vue'
 
-import type { TPlayer } from '@/api/types/api.types'
 import { playersService } from '@/views/players/players.service'
 
 const props = withDefaults(defineProps<{

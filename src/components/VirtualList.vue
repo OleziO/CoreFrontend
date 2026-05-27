@@ -29,7 +29,6 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import { computed } from 'vue'
 import { useWindowSize } from '@vueuse/core'
 
 const props = withDefaults(defineProps<{

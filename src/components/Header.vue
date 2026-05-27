@@ -165,7 +165,7 @@
 
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
-import logo from '@/assets/LongLogo.png'
+import logo from '@/assets/images/core-league-logo-full.png'
 import { PhDiscordLogo, PhSignOut, PhUser, PhTrophy } from '@phosphor-icons/vue'
 import RoleGuard from '@/guards/RoleGuard.vue'
 import CreateTournamentDrawer from '@/views/admin-panel/components/drawers/CreateTournamentDrawer.vue'

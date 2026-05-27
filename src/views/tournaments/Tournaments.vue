@@ -110,7 +110,6 @@ import { Search } from '@element-plus/icons-vue'
 import { PhSlidersHorizontal } from '@phosphor-icons/vue'
 import { TOURNAMENT_CARD_HEIGHT, TOURNAMENT_CARD_WIDTH } from '@/constants/tournaments'
 import { VIRTUAL_GRID_CARD_GAP_PX } from '@/composables/use-virtual-grid'
-import type { TTournament as Tournament } from '@/api/types/api.types'
 import { useTournamentStore } from './tournaments.store'
 import type { LocationQuery } from 'vue-router'
 
@@ -138,7 +137,7 @@ const filteredTournaments = computed(() => {
   })
 })
 
-function checkQueryFilter (tournament: Tournament, query: LocationQuery) {
+function checkQueryFilter (tournament: TTournament, query: LocationQuery) {
   if (query.status) {
     const status = query.status.toString().split(',')
     if (!status.includes(tournament.tournamentStatus as string)) return false
@@ -147,7 +146,7 @@ function checkQueryFilter (tournament: Tournament, query: LocationQuery) {
   return true
 }
 
-function searchTournament (tournament: Tournament) {
+function searchTournament (tournament: TTournament) {
   if (!search.value) return true
   return tournament.name?.toLowerCase().includes(search.value.toLowerCase())
 }

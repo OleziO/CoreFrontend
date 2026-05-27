@@ -5,6 +5,11 @@ const responseInterceptor = (response: AxiosResponse): Promise<AxiosResponse> =>
 }
 
 const errorInterceptor = (error: AxiosError): Promise<AxiosError> => {
+  if (error.response && error.response.status === 401) {
+    localStorage.removeItem('userToken')
+    window.location.href = '/'
+  }
+
   return Promise.reject(error)
 }
 

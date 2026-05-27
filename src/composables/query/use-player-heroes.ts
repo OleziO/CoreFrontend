@@ -1,4 +1,3 @@
-import { computed } from 'vue'
 import { useQueryWrapper } from '@/core/use-query.utils'
 import {
   openDotaService,

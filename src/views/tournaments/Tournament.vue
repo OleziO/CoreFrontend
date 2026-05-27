@@ -218,7 +218,10 @@
           v-if="activeTab === 'bracket'"
           class="mt-20"
         >
-          <div v-if="canSubmitPlayoffMatch || isLocalhost || (canManagePlayers && isPlayoffPhase)" class="flex justify-end gap-10 mb-12">
+          <div
+            v-if="canSubmitPlayoffMatch || isLocalhost ||
+              (canManagePlayers && isPlayoffPhase)" class="flex justify-end gap-10 mb-12"
+          >
             <el-button
               v-if="isLocalhost"
               type="warning"
@@ -310,7 +313,6 @@ import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusT
 import TournamentBannerImage from '@/components/tournaments/TournamentBannerImage.vue'
 import TournamentQualificationTab from '@/views/tournaments/components/TournamentQualificationTab.vue'
 import { PROFILE_CAPTAIN_ROLE_UA } from '@/components/tournaments-tags/tournament.constants'
-import type { TTournament as Tournament, TTeam as Team, TTeamResponse, TPlayoffResponse } from '@/api/types/api.types'
 
 import { formatDate } from '@/core/helpers'
 import { formatTournamentPrizeUah } from '@/views/tournaments/utils/tournament-prize-format'
@@ -318,9 +320,9 @@ import { teamsService } from '@/views/teams/teams.service'
 import { PhBracketsCurly, PhSteamLogo } from '@phosphor-icons/vue'
 import { getApiErrorMessage } from '@/utils/api-errors'
 
-const tournament = ref<Tournament | null>(null)
+const tournament = ref<TTournament | null>(null)
 const activeTab = ref('teams')
-const myTeam = shallowRef<Team | TTeamResponse | null>(null)
+const myTeam = shallowRef<TTeam | null>(null)
 const joinLoading = ref(false)
 const leaveTournamentLoading = ref(false)
 const joinHiddenQualificationsClosedByApi = ref(false)
@@ -346,12 +348,12 @@ function maybeShowDueloPromo () {
   openAppModal('DueloPromoModal')
 }
 
-function isTournamentEndedByDate (tt: Tournament | null | undefined): boolean {
+function isTournamentEndedByDate (tt: TTournament | null | undefined): boolean {
   if (!tt?.tournamentEndsAt) return false
   return Date.parse(tt.tournamentEndsAt) < Date.now()
 }
 
-const playoff = ref<TPlayoffResponse | null>(null)
+const playoff = ref<TPlayoff | null>(null)
 const playoffLoading = ref(false)
 const playoffFetched = ref(false)
 
@@ -405,7 +407,7 @@ function openTechLossPlayoff () {
   openAppModal('TechLossPlayoffModal', {
     tournamentId,
     teams: playoff.value?.teams ?? [],
-    onSubmitted: (response: TPlayoffResponse) => {
+    onSubmitted: (response: TPlayoff) => {
       playoff.value = response
     }
   })
@@ -491,10 +493,6 @@ const captainJoinContextOk = computed(() =>
     !joinHiddenCaptainByApi.value)
 )
 
-const occupiedByAnotherTournament = computed(() =>
-  !!(myTeam.value?.tournaments?.some((t) => t.id !== tournament.value?.id))
-)
-
 const showJoinPrimary = computed(() =>
   captainJoinContextOk.value &&
     !!myTeam.value &&
@@ -536,7 +534,7 @@ async function reloadTournament () {
   }
 }
 
-function patchTournament (next: Tournament) {
+function patchTournament (next: TTournament) {
   tournament.value = next
 }
 

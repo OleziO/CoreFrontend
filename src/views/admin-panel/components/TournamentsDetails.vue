@@ -66,19 +66,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { useGetTournaments } from '@/composables/query/use-tournaments'
 import TournamentRow from './TournamentRow.vue'
-import type { TTournament as Tournament } from '@/api/types/api.types'
 
 const showCreateTournamentDrawer = ref(false)
 const showUpdateTournamentDrawer = ref(false)
-const newTournamentData = ref<Tournament | null>(null)
+const newTournamentData = ref<TTournament | null>(null)
 
 const { data: tournaments, isLoading } = useGetTournaments()
 
-const openUpdateModal = (tournament: Tournament) => {
+const openUpdateModal = (tournament: TTournament) => {
   newTournamentData.value = tournament
   showUpdateTournamentDrawer.value = true
 }

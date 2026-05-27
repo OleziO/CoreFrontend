@@ -179,12 +179,10 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue'
 import { routeNames } from '@/router/route-names'
 import { useClipboard } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import { PhChartBar, PhCopy, PhSealCheck, PhSealWarning, PhUsersThree } from '@phosphor-icons/vue'
-import type { TTeam as FullTeam, TTeamResponse } from '@/api/types/api.types'
 import { getDotabuffTeamUrl, resolvePublicOrApiUrl } from '@/core/helpers'
 import {
   resolveTeamDivisionForDisplay,
@@ -192,7 +190,7 @@ import {
 } from '@/components/tournaments-tags/tournament.constants'
 
 const props = withDefaults(defineProps<{
-  team: TTeamResponse | FullTeam
+  team: TTeam
   width?: number
   /** Тег дивізіону команди — лише на сторінці списку команд, не на вкладці «Команди» турніру. */
   showDivisionTag?: boolean
@@ -241,7 +239,7 @@ function copyDotaTeamId () {
   ElMessage.success('Dota ID скопійовано')
 }
 
-function openTeamDrawer (team: TTeamResponse | FullTeam) {
+function openTeamDrawer (team: TTeam) {
   open('TeamsPlayersDrawer', { team })
 }
 

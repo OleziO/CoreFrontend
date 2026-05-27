@@ -22,7 +22,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { createHashedObject } from '@/core/helpers'
 import TournamentsDetails from './components/TournamentsDetails.vue'
 import RequestsDetails from './components/RequestsDetails.vue'

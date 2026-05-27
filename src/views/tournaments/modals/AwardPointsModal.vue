@@ -72,14 +72,10 @@
 </template>
 
 <script setup lang="ts">
-// import { getImageUrl } from '@/core/helpers'
-
-import type { TTeam as Team } from '@/api/types/api.types'
-
 defineProps<{
   modelValue: boolean
   tournamentId: string
-  teams: Team[] | undefined
+  teams: TTeam[] | undefined
 }>()
 
 const emit = defineEmits<{

@@ -1,11 +1,10 @@
-import type { TTeamResponse } from '@/api/types/api.types'
 import { coercePlayerRankFromApi } from '@/core/helpers'
 
 /** Гравець у рості з відповіді команди. */
-type TRosterPlayer = TTeamResponse['mainPlayers'][number]
+type TRosterPlayer = TTeam['mainPlayers'][number]
 
 /** Швидке клонування топ-рівня ростеру для безпечного злиття без мутацій вихідного `team`. */
-export function shallowSnapshotTeamForHydrate (t: TTeamResponse): TTeamResponse {
+export function shallowSnapshotTeamForHydrate (t: TTeam): TTeam {
   return {
     ...t,
     mainPlayers: [...(t.mainPlayers ?? [])],
@@ -22,7 +21,7 @@ function mergePlayerRankFromPayload (p: TRosterPlayer): TRosterPlayer {
 /**
  * Нормалізує `rank` у гравцях ростеру з відповіді команди (без GET /players на кожного).
  */
-export function hydrateTeamPlayersRanks (t: TTeamResponse): TTeamResponse {
+export function hydrateTeamPlayersRanks (t: TTeam): TTeam {
   return {
     ...t,
     mainPlayers: (t.mainPlayers ?? []).map(mergePlayerRankFromPayload),

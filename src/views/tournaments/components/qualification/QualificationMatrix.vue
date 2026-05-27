@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import QualificationMatrixTeamThumb from './QualificationMatrixTeamThumb.vue'
-import type { TQualificationMatch, TTeam } from '@/api/types/api.types'
+import type { TQualificationMatch } from '@/api/types/api.types'
 import {
   buildQualificationMatrixTeams,
   buildQualificationPairMap,

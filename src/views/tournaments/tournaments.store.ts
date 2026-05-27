@@ -1,11 +1,10 @@
 import { AxiosError } from 'axios'
-import type { TTournament as Tournament } from '@/api/types/api.types'
 
 export const useTournamentStore = defineStore('tournaments', () => {
-  const tournamentsData = ref<Tournament[]>([])
+  const tournamentsData = ref<TTournament[]>([])
   const loading = ref(false)
 
-  function patchTournamentInList (next: Tournament) {
+  function patchTournamentInList (next: TTournament) {
     const i = tournamentsData.value.findIndex(t => t.id === next.id)
     if (i >= 0) {
       tournamentsData.value[i] = next
@@ -44,30 +43,6 @@ export const useTournamentStore = defineStore('tournaments', () => {
 
     return tournamentsData.value.find(t => t.id === tournamentId) || null
   }
-
-  // TODO: endpoint not in API yet
-  // async function getDivisions () { ... }
-
-  // TODO: endpoint not in API yet
-  // async function registerInTeamTournament (tournamentId: string) { ... }
-
-  // TODO: endpoint not in API yet
-  // async function unRegisterInTeamTournament (tournamentId: string) { ... }
-
-  // TODO: endpoint not in API yet
-  // const startTournament = async (tournamentId: string) => { ... }
-
-  // TODO: endpoint not in API yet
-  // const openQualificationsTournament = async (tournamentId: string) => { ... }
-
-  // TODO: endpoint not in API yet
-  // const endTournament = async (tournamentId: string, winnerId: string, _points: number) => { ... }
-
-  // TODO: endpoint not in API yet
-  // async function getOpenMatches (tournamentId: string) { ... }
-
-  // TODO: endpoint not in API yet
-  // const adminUnregisterTeamFromTournament = async (tournamentId: string, teamId: string) => { ... }
 
   return {
     tournamentsData,

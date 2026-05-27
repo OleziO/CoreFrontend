@@ -123,13 +123,11 @@ import TournamentBannerImage from '@/components/tournaments/TournamentBannerImag
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
 import { TOURNAMENT_CARD_HEIGHT, TOURNAMENT_CARD_WIDTH } from '@/constants/tournaments'
 import { routeNames } from '@/router/route-names'
-import type { TTournament as Tournament } from '@/api/types/api.types'
 import { PhTrophy } from '@phosphor-icons/vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/uk'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
-import { useRouter } from 'vue-router'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -139,7 +137,7 @@ const TZ = 'Europe/Kyiv'
 
 const props = withDefaults(
   defineProps<{
-    tournament: Tournament
+    tournament: TTournament
     width?: number
   }>(),
   { width: TOURNAMENT_CARD_WIDTH }

@@ -116,7 +116,6 @@
 <script setup lang="ts">
 import { PhSlidersHorizontal, PhMagnifyingGlass } from '@phosphor-icons/vue'
 import type { LocationQuery } from 'vue-router'
-import type { TPlayer } from '@/api/types/api.types'
 import { ERole } from '@/types/general.types'
 
 import {
@@ -224,7 +223,7 @@ function openPlayersFilterModal () {
 }
 
 onMounted(() => {
-  void playersStore.getPlayers()
-  void playersStore.fetchUserRoles().catch(() => {})
+  playersStore.getPlayers()
+  playersStore.fetchUserRoles().catch(() => {})
 })
 </script>

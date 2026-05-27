@@ -88,8 +88,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { roleLabelMap, EUserIsTeam, hasTeamLabelMap, verificationOptions, positionOptions } from '@/components/player-tags/player.constants'
 import { playersService } from '@/views/players/players.service'

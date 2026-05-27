@@ -20,7 +20,6 @@
 
 <script setup lang="ts">
 import { PhUsersThree } from '@phosphor-icons/vue'
-import type { TTeam } from '@/api/types/api.types'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 
 const props = withDefaults(
