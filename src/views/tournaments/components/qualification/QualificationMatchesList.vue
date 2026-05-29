@@ -8,7 +8,8 @@
         md:py-18 border-b border-white/[0.06] bg-[#0a0f18]/40"
     >
       <div
-        class="pointer-events-none absolute inset-0 opacity-[0.35] bg-[radial-gradient(ellipse_80%_60%_at_20%_-20%,rgba(6,182,212,0.12),transparent_55%)]"
+        class="pointer-events-none absolute inset-0 opacity-[0.35]
+          bg-[radial-gradient(ellipse_80%_60%_at_20%_-20%,rgba(6,182,212,0.12),transparent_55%)]"
       />
       <div class="relative min-w-0 flex-1">
         <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-500/80 mb-6">
@@ -25,7 +26,10 @@
           Результат подається через «Додати результат».
         </p>
       </div>
-      <div v-if="showAddResultButton || showTestMatchButton || showTechLossButton" class="relative shrink-0 w-full sm:w-auto sm:self-start lg:self-center flex flex-wrap gap-10">
+      <div
+        v-if="showAddResultButton || showTestMatchButton || showTechLossButton"
+        class="relative shrink-0 w-full sm:w-auto sm:self-start lg:self-center flex flex-wrap gap-10"
+      >
         <el-button
           v-if="showTestMatchButton"
           type="warning"
@@ -126,7 +130,7 @@
 
 <script setup lang="ts">
 import { Plus, Trophy } from '@element-plus/icons-vue'
-import type { TQualificationMatch as QualificationMatch, TPlayerPointsEntry, TTeam } from '@/api/types/api.types'
+import type { TQualificationMatch as QualificationMatch, TPlayerPointsEntry } from '@/api/types/api.types'
 import QualificationMatrix from './QualificationMatrix.vue'
 import QualificationLeaderboard from './QualificationLeaderboard.vue'
 import { buildQualificationMatrixTeams } from './qualification-matrix.utils'

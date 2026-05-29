@@ -39,8 +39,8 @@
           </th>
           <template v-for="col in teams" :key="row.id + '-' + col.id">
             <template
-              v-for="cell in [cellPresentation(row.id, col.id)]"
-              :key="'p-' + row.id + '-' + col.id"
+              v-for="(cell, cellIdx) in [cellPresentation(row.id, col.id)]"
+              :key="cellIdx + '-' + row.id + '-' + col.id"
             >
               <td
                 :class="cell.className"

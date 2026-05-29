@@ -1,13 +1,32 @@
 import type { TUserRoleCatalog } from '@/api/types/api.types'
 
 import { useAuthStore } from '@/store/modules/auth'
-import { playersService, userRolesCatalogRef } from '@/views/players/players.service'
+import { playersService } from '@/views/players/players.service'
 
 export const usePlayersStore = defineStore('players', () => {
   const players = ref<TPlayer[]>([])
   const loading = ref(false)
 
+  const userRolesCatalogRef = shallowRef<TUserRoleCatalog[] | null>(null)
   const userRolesCatalog = computed((): TUserRoleCatalog[] => userRolesCatalogRef.value ?? [])
+
+  function setUserRolesCatalog (list: TUserRoleCatalog[]) {
+    userRolesCatalogRef.value = list
+  }
+
+  /**
+   * Оновити кеш гравця після мутації (верифікація, ролі тощо).
+   * Якщо гравця ще немає в списку — додає запис (наприклад після прямого заходу на картку).
+   */
+  function patchPlayerInList (updated: TPlayer) {
+    const list = players.value
+    const ix = list.findIndex(p => p.id === updated.id)
+    if (ix !== -1) {
+      list.splice(ix, 1, updated)
+    } else {
+      list.push(updated)
+    }
+  }
 
   async function fetchUserRoles (opts?: { force?: boolean }) {
     return playersService.fetchUserRoles(opts)
@@ -63,6 +82,8 @@ export const usePlayersStore = defineStore('players', () => {
     players,
     loading,
     userRolesCatalog,
+    setUserRolesCatalog,
+    patchPlayerInList,
     fetchUserRoles,
     findPlayer,
     clearTeamMembershipClientside,

@@ -5,8 +5,8 @@ class AuthService {
     return apiClient.get('/auth/discord/url')
   }
 
-  async exchangeDiscordCode (code: string, state: string) {
-    return apiClient.post('/auth/discord/token', { code, state })
+  async exchangeDiscordCode (code: string, state: string): Promise<{ access_token: string }> {
+    return apiClient.post('/auth/discord/token', { code, state }) as unknown as Promise<{ access_token: string }>
   }
 
   async getMe () {

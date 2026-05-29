@@ -22,8 +22,8 @@ export function buildQualificationMatrixTeams (
   }
   for (const m of matches) {
     if (!m.teamA || !m.teamB) continue
-    if (!byId.has(m.teamA.id)) byId.set(m.teamA.id, m.teamA)
-    if (!byId.has(m.teamB.id)) byId.set(m.teamB.id, m.teamB)
+    if (!byId.has(m.teamA.id)) byId.set(m.teamA.id, m.teamA as unknown as TTeam)
+    if (!byId.has(m.teamB.id)) byId.set(m.teamB.id, m.teamB as unknown as TTeam)
   }
 
   const orderedIds: string[] = []

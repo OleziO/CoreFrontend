@@ -7,6 +7,7 @@ export const useTeamsStore = defineStore('teams', () => {
 
   const teams = ref<TTeam[]>([])
   const loading = ref(false)
+  const error = ref<string | null>(null)
 
   /**
    * Оновити кеш команди після мутації ростера (POST/DELETE players, GET тощо).
@@ -125,6 +126,7 @@ export const useTeamsStore = defineStore('teams', () => {
   return {
     teams,
     loading,
+    error,
     getTeams,
     findTeam,
     patchTeamInList,

@@ -1,0 +1,17 @@
+// Glass-morphism mixins — shared across element-reset overrides.
+// Three strength variants mirror the design system's layering:
+//   glass-panel  → modals, message-boxes (strong blur + medium opacity)
+//   glass-popper → select/dropdown poppers (strong blur + low opacity)
+//   glass-input  → form inputs, group prepend/append (medium blur + medium opacity)
+
+@mixin glass-panel {
+  @apply bg-white/10 backdrop-blur-xl border border-white/20;
+}
+
+@mixin glass-popper {
+  @apply bg-white/5 backdrop-blur-xl border border-white/10;
+}
+
+@mixin glass-input {
+  @apply bg-white/10 backdrop-blur-md border border-white/20;
+}

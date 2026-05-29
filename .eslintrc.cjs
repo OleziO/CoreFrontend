@@ -33,6 +33,7 @@ module.exports = {
     "*.cjs",
     "src/api/types/axios.d.ts",
     "src/types/api.ts",
+    "vite.config.ts.timestamp-*.mjs",
   ],
 
   rules: {
@@ -44,6 +45,7 @@ module.exports = {
         ignoreTrailingComments: true,
         ignoreUrls: true,
         ignoreStrings: true,
+        ignoreTemplateLiterals: true,
         ignoreRegExpLiterals: true,
         ignorePattern: "url\\(",
       },

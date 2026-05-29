@@ -17,7 +17,10 @@
 
     <!-- Invite card -->
     <template v-else-if="invite">
-      <div class="bg-bg-secondary rounded-xl border border-white/10 p-40 flex flex-col items-center gap-20 w-full max-w-sm text-center shadow-xl">
+      <div
+        class="bg-bg-secondary rounded-xl border border-white/10 p-40
+          flex flex-col items-center gap-20 w-full max-w-sm text-center shadow-xl"
+      >
         <!-- Team logo -->
         <el-avatar
           :size="80"

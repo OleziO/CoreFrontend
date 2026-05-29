@@ -207,7 +207,6 @@ const { copy } = useClipboard({ legacy: true })
 const window = useWindowSize()
 const me = useAuthStore()
 const router = useRouter()
-const playersStore = usePlayersStore()
 
 const isMobile = computed(() => window.width.value < 850)
 const verificationLoading = ref(false)
@@ -236,13 +235,7 @@ async function toggleVerificationFromMenu () {
   verificationLoading.value = true
   try {
     const wantVerified = !isVerified.value
-    const updated = await playersService.setPlayerVerificationByAdmin(u.id, wantVerified)
-    if (!updated) return
-    const list = playersStore.players
-    const ix = list.findIndex(p => p.id === updated.id)
-    if (ix !== -1) {
-      list.splice(ix, 1, updated)
-    }
+    await playersService.setPlayerVerificationByAdmin(u.id, wantVerified)
   } finally {
     verificationLoading.value = false
   }

@@ -1,11 +1,12 @@
 @use "element-plus/theme-chalk/src/dropdown";
+@use "../mixins" as *;
 
 /* =========================
    Dropdown wrapper (popper)
    ========================= */
 .el-dropdown-menu {
-  @apply rounded-xl border border-white/20 bg-white/5 backdrop-blur-xl
-         shadow-[0_20px_40px_rgba(0,0,0,0.45)] overflow-hidden p-0;
+  @include glass-popper;
+  @apply rounded-xl border-white/20 shadow-[0_20px_40px_rgba(0,0,0,0.45)] overflow-hidden p-0;
   min-width: 200px;
 }
 

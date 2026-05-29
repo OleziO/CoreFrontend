@@ -200,7 +200,7 @@
                       :auto-upload="false"
                       :show-file-list="false"
                       accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                      :on-change="(file) => handleBannerPick(u.key, file)"
+                      :on-change="(file: UploadFile) => handleBannerPick(u.key, file)"
                     >
                       <div class="w-full">
                         <div
@@ -278,11 +278,11 @@ import {
   type TTournamentStatusValue
 } from '@/components/tournaments-tags/tournament.constants'
 import { getImageUrl } from '@/core/helpers'
-import type { TCreateTournamentDto as CreateTournamentDto, TTournament as Tournament, TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
+import type { TCreateTournamentDto as CreateTournamentDto, TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
 
 type TUploadKey = 'header' | 'list'
 
-const props = defineProps<{ tournament?: Tournament | null }>()
+const props = defineProps<{ tournament?: TTournament | null }>()
 const showCreateTournamentDrawer = defineModel<boolean>()
 const isEditMode = computed(() => !!props.tournament)
 const loading = ref(false)
@@ -360,7 +360,7 @@ function handleBannerPick (key: TUploadKey, uploadFile: UploadFile) {
   ingestImageFile(key, raw)
 }
 
-function populateFromTournament (t: Tournament) {
+function populateFromTournament (t: TTournament) {
   form.name = t.name ?? ''
   form.division = (t.division as CreateTournamentDto['division']) ?? ''
   const editableStatuses: TTournamentStatusValue[] = ['QUALIFICATIONS', 'PLAYOFF']

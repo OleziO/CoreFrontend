@@ -124,7 +124,6 @@ import {
   parseQueryArray,
   playerMatchesRoleFilterToken
 } from '@/core/helpers'
-import { userRolesCatalogRef } from '@/views/players/players.service'
 
 function parseTeamStatusQuery (query: LocationQuery): boolean[] {
   const raw = query.teamStatus
@@ -164,7 +163,7 @@ function checkQueryFilter (player: TPlayer, query: LocationQuery) {
 
   if (query.roles) {
     const tokens = String(query.roles).split(',').map(s => s.trim()).filter(Boolean)
-    const catalog = userRolesCatalogRef.value ?? []
+    const catalog = playersStore.userRolesCatalog
     if (tokens.length && !tokens.some(t => playerMatchesRoleFilterToken(player, t, catalog))) return false
   }
 

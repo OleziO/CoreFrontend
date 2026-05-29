@@ -6,6 +6,9 @@ import type {
   TUpdateTournamentDto as UpdateTournamentDto
 } from '@/api/types/api.types'
 import { validateImageFileForUpload } from '@/services/image-upload.service'
+import { ElMessage } from 'element-plus'
+import { getApiErrorMessage } from '@/utils/api-errors'
+import { useTournamentStore } from '@/views/tournaments/tournaments.store'
 
 class TournamentsService {
   async fetchTournaments () {
@@ -213,6 +216,53 @@ class TournamentsService {
     await apiClient.delete('/tournaments/{id}', {
       dynamicKeys: { id }
     })
+  }
+
+  /**
+   * Перезавантажує дані турніру та оновлює список у сховищі.
+   * Показує ElMessage.error при помилці.
+   * Повертає TTournament або null при помилці.
+   */
+  async reloadTournament (tournamentId: string): Promise<TTournament | null> {
+    try {
+      const data = await this.fetchTournament(tournamentId)
+      useTournamentStore().patchTournamentInList(data)
+      return data
+    } catch (e: unknown) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося оновити дані турніру'))
+      return null
+    }
+  }
+
+  /**
+   * Записує команду на турнір і показує тост при успіху.
+   * При помилці повертає повідомлення без відображення ElMessage
+   * (відображення залишається на стороні виду для кастомної логіки).
+   */
+  async joinTournamentWithToast (tournamentId: string): Promise<{ success: boolean; errorMsg: string | null }> {
+    try {
+      await this.joinTournament(tournamentId)
+      ElMessage.success('Команду успішно записано на турнір')
+      return { success: true, errorMsg: null }
+    } catch (e: unknown) {
+      const errorMsg = getApiErrorMessage(e, 'Не вдалося приєднатися до турніру')
+      return { success: false, errorMsg }
+    }
+  }
+
+  /**
+   * Знімає команду з турніру і показує тост при успіху чи помилці.
+   * Повертає true при успіху, false при помилці.
+   */
+  async leaveTournamentWithToast (tournamentId: string): Promise<boolean> {
+    try {
+      await this.leaveTournament(tournamentId)
+      ElMessage.success('Команда покинула турнір')
+      return true
+    } catch (e: unknown) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося покинути турнір'))
+      return false
+    }
   }
 }
 

@@ -1,4 +1,5 @@
 @use "element-plus/theme-chalk/src/message-box";
+@use "../mixins" as *;
 
 /*
   Центрування: дефолтний EP використовує ::after + vertical-align,
@@ -17,8 +18,8 @@
 
 /* Панель у стилі dropdown / dialog */
 .el-message-box {
-  @apply relative overflow-visible rounded-2xl border border-white/20
-    bg-white/10 backdrop-blur-xl text-left
+  @include glass-panel;
+  @apply relative overflow-visible rounded-2xl text-left
     shadow-[0_20px_40px_rgba(0,0,0,0.45)]
     max-w-[min(420px,calc(100vw-32px))]
     p-16 sm:p-20 #{!important};

@@ -11,7 +11,7 @@ import type {
   TUserRoleCatalog
 } from '@/api/types/api.types'
 
-export const userRolesCatalogRef = shallowRef<TUserRoleCatalog[] | null>(null)
+import { usePlayersStore } from '@/views/players/players.store'
 
 function parseUserRolesList (raw: unknown): TUserRoleCatalog[] {
   if (Array.isArray(raw)) return raw as TUserRoleCatalog[]
@@ -23,20 +23,17 @@ function parseUserRolesList (raw: unknown): TUserRoleCatalog[] {
 }
 
 class PlayersService {
-  getCachedUserRoles (): TUserRoleCatalog[] {
-    return userRolesCatalogRef.value ?? []
-  }
-
   async fetchUserRoles (opts?: { force?: boolean }) {
     const force = opts?.force ?? false
-    if (!force && userRolesCatalogRef.value !== null) {
-      return [...userRolesCatalogRef.value]
+    const store = usePlayersStore()
+    if (!force && store.userRolesCatalog.length) {
+      return [...store.userRolesCatalog]
     }
     try {
       const raw = await apiClient.get('/user-roles') as unknown
       const list = parseUserRolesList(raw)
       const copy = [...list]
-      userRolesCatalogRef.value = copy
+      store.setUserRolesCatalog(copy)
       return copy
     } catch (e) {
       ElMessage({ type: 'error', message: 'Не вдалося завантажити ролі' })
@@ -152,6 +149,7 @@ class PlayersService {
       })
       const merged = this.mergePlayerAfterVerifyMutation(res, verifyResponse)
 
+      usePlayersStore().patchPlayerInList(merged)
       ElMessage.success(verified ? 'Гравця верифіковано' : 'Верифікацію знято')
       return merged
     } catch {

@@ -5,8 +5,7 @@
         v-loading="isLoading"
         :data="requests"
         height="100%"
-        style="width: 100%"
-        class="custom-table"
+        class="w-full custom-table"
         empty-text="Запитів немає"
       >
         <el-table-column prop="id" label="ID" width="80" align="center">
