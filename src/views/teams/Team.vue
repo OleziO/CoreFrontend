@@ -90,7 +90,10 @@ async function handleVerifyTeam () {
   if (!tid || team.value?.isVerified) return
   verifyTeamLoading.value = true
   const updated = await teamsService.verifyTeam(tid)
-  if (updated) team.value = updated
+  if (updated) {
+    teamsStore.patchTeamInList(updated)
+    team.value = updated
+  }
   verifyTeamLoading.value = false
 }
 
@@ -110,7 +113,10 @@ async function handleUnverifyTeam () {
   if (!confirmed) return
   verifyTeamLoading.value = true
   const updated = await teamsService.unverifyTeam(tid)
-  if (updated) team.value = updated
+  if (updated) {
+    teamsStore.patchTeamInList(updated)
+    team.value = updated
+  }
   verifyTeamLoading.value = false
 }
 
@@ -119,7 +125,11 @@ async function handleRemovePlayer (playerId: string) {
   if (!tid) return
   removePlayerLoadingId.value = playerId
   const updated = await teamsService.removePlayerFromTeam(tid, playerId)
-  if (updated) team.value = updated
+  if (updated) {
+    playersStore.setPlayerTeamIdClientside(playerId, null)
+    teamsStore.patchTeamInList(updated)
+    team.value = updated
+  }
   removePlayerLoadingId.value = null
 }
 
@@ -128,7 +138,10 @@ async function handleRemoveCoach () {
   if (!tid) return
   removeCoachLoading.value = true
   const updated = await teamsService.removeCoach(tid)
-  if (updated) team.value = updated
+  if (updated) {
+    teamsStore.patchTeamInList(updated)
+    team.value = updated
+  }
   removeCoachLoading.value = false
 }
 
@@ -137,6 +150,7 @@ async function handleTeamUpdate (payload: TUpdateTeamPayload) {
   if (!tid) return
   const updated = await teamsService.updateTeamProfile(tid, payload)
   if (updated) {
+    teamsStore.patchTeamInList(updated)
     team.value = updated
     close('TeamCreateModal')
   }
@@ -167,7 +181,10 @@ function handleOpenAddPlayer (slot: 'main' | 'reserved' | 'coach') {
       isCoach: slot === 'coach',
       onAdded: async () => {
         const updated = await teamsService.loadTeam(team.value?.id ?? id)
-        if (updated) team.value = updated
+        if (updated) {
+          teamsStore.patchTeamInList(updated)
+          team.value = updated
+        }
       }
     })
   } else {
@@ -180,6 +197,12 @@ function handleOpenAddPlayer (slot: 'main' | 'reserved' | 'coach') {
 
 onMounted(async () => {
   const cached = await teamsStore.findTeam(id)
-  team.value = cached ?? await teamsService.loadTeam(id)
+  if (cached) {
+    team.value = cached
+  } else {
+    const loaded = await teamsService.loadTeam(id)
+    if (loaded) teamsStore.patchTeamInList(loaded)
+    team.value = loaded
+  }
 })
 </script>

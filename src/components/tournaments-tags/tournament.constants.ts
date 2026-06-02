@@ -117,7 +117,6 @@ export const tournamentDivisionTagClassMap: Record<TTournamentDivisionValue, str
   `
 }
 
-/** Компактний чіп як блок «Приз» на TournamentCard (rounded-xl, px-12 py-10). */
 export const tournamentDivisionCardChipClassMap: Record<TTournamentDivisionValue, string> = {
   DIVISION_I: 'border border-cyan-500/25 bg-cyan-950/25 text-cyan-100/95',
   DIVISION_II: 'border border-fuchsia-500/25 bg-fuchsia-950/25 text-fuchsia-100/95',
@@ -130,7 +129,6 @@ export const tournamentDivisionMmrHintMap: Record<TTournamentDivisionValue, stri
   DIVISION_III: 'Максимальний MMR гравця ≤ 7 000'
 }
 
-/** Ролі профілю (GET /auth/me → CurrentPlayerDto.roles[].name). */
 export const PROFILE_CAPTAIN_ROLE_UA = 'Капітан'
 
 export const tournamentStatusClassMap: Record<string, string> = {

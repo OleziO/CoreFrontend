@@ -107,7 +107,7 @@
 <script setup lang="ts">
 import { Plus } from 'lucide-vue-next'
 import { teamsService } from '@/views/teams/teams.service'
-import { hydrateTeamPlayersRanks, shallowSnapshotTeamForHydrate } from '@/views/teams/team-roster-hydrate'
+import { hydrateTeamPlayersRanks, shallowSnapshotTeamForHydrate } from '@/views/teams/team-roster-hydrate.utils'
 
 const props = defineProps<{
   team: TTeam

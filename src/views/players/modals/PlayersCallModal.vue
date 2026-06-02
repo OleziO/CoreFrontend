@@ -89,8 +89,8 @@
 
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
-import { roleLabelMap, EUserIsTeam, hasTeamLabelMap, verificationOptions, positionOptions } from '@/components/player-tags/player.constants'
-import type { ERole } from '@/types/general.types'
+import { roleLabelMap, EUserIsTeam, hasTeamLabelMap, verificationOptions, positionOptions } from '@/components/player-tags/player.enums'
+import type { ERole } from '@/types/general.enums'
 
 interface IMessageForm {
   searchType: string | null

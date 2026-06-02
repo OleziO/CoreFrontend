@@ -235,7 +235,8 @@ async function toggleVerificationFromMenu () {
   verificationLoading.value = true
   try {
     const wantVerified = !isVerified.value
-    await playersService.setPlayerVerificationByAdmin(u.id, wantVerified)
+    const updated = await playersService.setPlayerVerificationByAdmin(u.id, wantVerified)
+    if (updated) usePlayersStore().patchPlayerInList(updated)
   } finally {
     verificationLoading.value = false
   }

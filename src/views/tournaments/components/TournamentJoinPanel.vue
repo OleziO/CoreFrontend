@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-full bg-[#111827]/70 backdrop-blur-xl border border-white/[0.08]
+    class="w-full bg-gray-900/70 backdrop-blur-xl border border-white/[0.08]
     rounded-2xl p-7 sm:p-8 shadow-xl shadow-black/30 ring-1 ring-white/[0.04]
     flex flex-col gap-6 sm:gap-7 transition-[box-shadow,border-color] duration-300"
   >
@@ -133,7 +133,7 @@
 import { Trophy, Calendar, User } from '@element-plus/icons-vue'
 import { PhSteamLogo } from '@phosphor-icons/vue'
 import { formatDate } from '@/core/helpers'
-import { formatTournamentPrizeUah } from '@/views/tournaments/utils/tournament-prize-format'
+import { formatTournamentPrizeUah } from '@/core/utils/formatters'
 
 interface IProps {
   tournament: TTournament | null

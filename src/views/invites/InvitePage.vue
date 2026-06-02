@@ -88,7 +88,7 @@ import { ElMessage } from 'element-plus'
 import { PhWarningCircle, PhShield, PhDiscordLogo } from '@phosphor-icons/vue'
 import { useAuthStore } from '@/store/modules/auth'
 import { routeNames } from '@/router/route-names'
-import { invitesService, POST_LOGIN_REDIRECT_KEY, type TInviteInfo } from './invites.service'
+import { invitesService, type TInviteInfo } from './invites.service'
 
 const route = useRoute()
 const router = useRouter()
@@ -138,7 +138,7 @@ onMounted(async () => {
 })
 
 function loginAndReturn () {
-  sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, route.fullPath)
+  authService.savePostLoginRedirect(route.fullPath)
   authStore.startDiscordLogin()
 }
 

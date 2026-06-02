@@ -1,8 +1,8 @@
-import { ERole } from '@/types/general.types'
+import { ERole } from '@/types/general.enums'
 import get from 'lodash/get'
 import type { LocationQueryValue, RouteLocationNormalized } from 'vue-router'
-import type { TPlayerRankDto, TUserRole as UserRole } from '@/api/types/api.types'
-import { getDotaPositionLabel, roleLabelMap } from '@/components/player-tags/player.constants'
+import type { TPlayerRankDto } from '@/api/types/api.types'
+import { getDotaPositionLabel, roleLabelMap } from '@/components/player-tags/player.enums'
 
 export const createHashedObject = <
   T extends TIndexedObject,
@@ -15,7 +15,7 @@ export const createHashedObject = <
   shouldRemoveKeyField?: boolean
 ): Record<T[Prop], ValueArray extends true ? T[] : T> => {
   return array.reduce((acc, current) => {
-    const key = get(current, prop as string) as unknown as T[Prop]
+    const key = get(current, prop as string) as T[Prop]
 
     if (shouldRemoveKeyField) {
       delete current[prop]
@@ -240,10 +240,6 @@ export function isPlayerVerified (
   return hasPlayerRole(player.roles, ERole.PLAYER)
 }
 
-function checkRoles (roles: UserRole[], roleName: ERole): boolean {
-  return hasPlayerRole(roles, roleName)
-}
-
 export function getCopy (data: number | string | undefined | null, message: string) {
   const { copy } = useClipboard()
 
@@ -259,5 +255,3 @@ export async function scrollToSection (section: HTMLElement | null) {
     section?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
-
-export default checkRoles

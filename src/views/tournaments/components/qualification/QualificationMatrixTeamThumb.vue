@@ -25,7 +25,6 @@ import { resolvePublicOrApiUrl } from '@/core/helpers'
 const props = withDefaults(
   defineProps<{
     team: TTeam
-    /** Додаткові Tailwind-класи розміру поверх базового `.qual-matrix-thumb` */
     boxClass?: string
     iconSize?: number
   }>(),

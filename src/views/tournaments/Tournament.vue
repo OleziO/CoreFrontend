@@ -1,5 +1,5 @@
 <template>
-  <div v-loading.fullscreen="tournamentStore.loading" class="h-full w-full overflow-y-auto bg-[#0b1121] custom-scroll">
+  <div v-loading.fullscreen="tournamentStore.loading" class="h-full w-full overflow-y-auto bg-dark-navy custom-scroll">
     <div class="relative w-full min-h-[550px] lg:h-[600px] flex items-end shrink-0">
       <AppBackButton class="top-24 left-20 lg:left-40" />
 
@@ -10,11 +10,11 @@
           :lazy="false"
         />
         <div
-          class="absolute inset-0 bg-gradient-to-t from-[#0b1121]
-           via-[#0b1121]/80 to-transparent pointer-events-none"
+          class="absolute inset-0 bg-gradient-to-t from-dark-navy
+           via-dark-navy/80 to-transparent pointer-events-none"
         />
         <div
-          class="absolute inset-0 bg-gradient-to-r from-[#0b1121]/80
+          class="absolute inset-0 bg-gradient-to-r from-dark-navy/80
            via-transparent to-transparent pointer-events-none"
         />
       </div>
@@ -119,7 +119,7 @@ import TournamentBannerImage from '@/components/tournaments/TournamentBannerImag
 import TournamentQualificationTab from '@/views/tournaments/components/TournamentQualificationTab.vue'
 import { PROFILE_CAPTAIN_ROLE_UA } from '@/components/tournaments-tags/tournament.constants'
 import { teamsService } from '@/views/teams/teams.service'
-import { getApiErrorMessage } from '@/utils/api-errors'
+import { getApiErrorMessage } from '@/core/utils/api-errors'
 
 const tournament = ref<TTournament | null>(null)
 const activeTab = ref('teams')
@@ -327,7 +327,10 @@ function joinFriendlyHintFromApi (msg: string): string {
 
 async function reloadTournament () {
   const data = await tournamentsService.reloadTournament(tournamentId)
-  if (data) tournament.value = data
+  if (data) {
+    tournament.value = data
+    useTournamentStore().patchTournamentInList(data)
+  }
 }
 
 function patchTournament (next: TTournament) {

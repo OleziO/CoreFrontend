@@ -14,7 +14,9 @@ export const colors = {
   dark: {
     900: '#0A0711',
     800: '#1c1c1c',
-    700: '#2c2c2c'
+    700: '#2c2c2c',
+    navy: '#0b1121',
+    card: '#1e2330'
   },
 
   // todo: with the following code you can use element colors
@@ -22,5 +24,8 @@ export const colors = {
   success: 'var(--el-color-success)',
   warning: 'var(--el-color-warning)',
   danger: 'var(--el-color-danger)',
-  'bg-primary': '#0A0711'
+  'bg-primary': '#0A0711',
+  accent: {
+    gold: '#e8b931'
+  }
 }

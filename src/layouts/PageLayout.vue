@@ -15,9 +15,4 @@
   </div>
 </template>
 
-<style scoped>
-.bg {
-  background-color: #01000f;
-  background-image: url("https://www.transparenttextures.com/patterns/cartographer.png");
-}
-</style>
+<script setup lang="ts"></script>

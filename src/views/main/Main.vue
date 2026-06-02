@@ -70,8 +70,8 @@
               class="bg-gradient-to-r from-primary to-indigo-800 flex gap-10 items-center w-full
                       h-full 2xl:p-30 lg:p-20 p-10 rounded-lg"
             >
-              <div class="bg-[#1c1c25] rounded-full size-50 p-10 md:flex hidden justify-center items-center">
-                <PhTarget color="#fff" :size="30" />
+              <div class="bg-dark-800 rounded-full size-50 p-10 md:flex hidden justify-center items-center">
+                <PhTarget color="white" :size="30" />
               </div>
               <div class="text-left font-light">
                 <p class="font-bold xl:text-2xl text-lg uppercase">Ціль організації</p>
@@ -82,8 +82,8 @@
               class="bg-gradient-to-r from-primary to-indigo-800 flex gap-10 items-center w-full
                     h-full 2xl:p-30 lg:p-20 p-10 rounded-lg"
             >
-              <div class="bg-[#1c1c25] rounded-full size-50 p-10 md:flex hidden justify-center items-center">
-                <PhShieldCheck color="#fff" :size="30" />
+              <div class="bg-dark-800 rounded-full size-50 p-10 md:flex hidden justify-center items-center">
+                <PhShieldCheck color="white" :size="30" />
               </div>
               <div class="text-left font-light">
                 <p class="font-bold xl:text-2xl text-lg uppercase">Наші цінності</p>
@@ -94,8 +94,8 @@
               class="bg-gradient-to-r from-primary to-indigo-800
                flex gap-10 items-center w-full rounded-lg h-full 2xl:p-30 lg:p-20 p-10"
             >
-              <div class="bg-[#1c1c25] rounded-full size-50 p-10 md:flex hidden justify-center items-center">
-                <PhQuestionMark color="#fff" :size="30" />
+              <div class="bg-dark-800 rounded-full size-50 p-10 md:flex hidden justify-center items-center">
+                <PhQuestionMark color="white" :size="30" />
               </div>
               <div class="text-left font-light">
                 <p class="font-bold xl:text-2xl text-lg uppercase">Для кого ми</p>
@@ -109,8 +109,8 @@
               class="bg-gradient-to-r from-primary to-indigo-800
                flex gap-10 items-center w-full h-full 2xl:p-30 lg:p-20 p-10 rounded-lg"
             >
-              <div class="bg-[#1c1c25] rounded-full size-50 p-10 md:flex hidden justify-center items-center">
-                <PhBrowser color="#fff" :size="30" />
+              <div class="bg-dark-800 rounded-full size-50 p-10 md:flex hidden justify-center items-center">
+                <PhBrowser color="white" :size="30" />
               </div>
               <div class="text-left font-light">
                 <p class="font-bold xl:text-2xl text-lg uppercase">Наша платформа</p>

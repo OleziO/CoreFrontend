@@ -7,8 +7,7 @@ import type {
 } from '@/api/types/api.types'
 import { validateImageFileForUpload } from '@/services/image-upload.service'
 import { ElMessage } from 'element-plus'
-import { getApiErrorMessage } from '@/utils/api-errors'
-import { useTournamentStore } from '@/views/tournaments/tournaments.store'
+import { getApiErrorMessage } from '@/core/utils/api-errors'
 
 class TournamentsService {
   async fetchTournaments () {
@@ -225,9 +224,7 @@ class TournamentsService {
    */
   async reloadTournament (tournamentId: string): Promise<TTournament | null> {
     try {
-      const data = await this.fetchTournament(tournamentId)
-      useTournamentStore().patchTournamentInList(data)
-      return data
+      return await this.fetchTournament(tournamentId)
     } catch (e: unknown) {
       ElMessage.error(getApiErrorMessage(e, 'Не вдалося оновити дані турніру'))
       return null

@@ -41,11 +41,10 @@
 
 <script setup lang="ts">
 import { EditPen } from '@element-plus/icons-vue'
-// import TournamentTypeTag from '@/components/tournaments-tags/TournamentTypeTag.vue'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
 
 defineProps<{
-  tournament: any
+  tournament: TTournament
 }>()
 
 defineEmits(['edit'])

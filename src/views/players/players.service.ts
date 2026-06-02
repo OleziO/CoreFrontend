@@ -2,39 +2,18 @@ import apiClient from '@/api/client'
 import { ElMessage } from 'element-plus'
 
 import { hasPlayerRole } from '@/core/helpers'
-import { ERole } from '@/types/general.types'
+import { ERole } from '@/types/general.enums'
 import type { components } from '@/api/types/schema'
 
 import type {
   TAdminPlayerRoleItem,
-  TUpdatePlayerDto,
-  TUserRoleCatalog
+  TUpdatePlayerDto
 } from '@/api/types/api.types'
 
-import { usePlayersStore } from '@/views/players/players.store'
-
-function parseUserRolesList (raw: unknown): TUserRoleCatalog[] {
-  if (Array.isArray(raw)) return raw as TUserRoleCatalog[]
-  if (raw && typeof raw === 'object' && raw !== null && 'data' in raw) {
-    const inner = (raw as { data: unknown }).data
-    if (Array.isArray(inner)) return inner as TUserRoleCatalog[]
-  }
-  return []
-}
-
 class PlayersService {
-  async fetchUserRoles (opts?: { force?: boolean }) {
-    const force = opts?.force ?? false
-    const store = usePlayersStore()
-    if (!force && store.userRolesCatalog.length) {
-      return [...store.userRolesCatalog]
-    }
+  async fetchUserRoles () {
     try {
-      const raw = await apiClient.get('/user-roles') as unknown
-      const list = parseUserRolesList(raw)
-      const copy = [...list]
-      store.setUserRolesCatalog(copy)
-      return copy
+      return await apiClient.get('/user-roles')
     } catch (e) {
       ElMessage({ type: 'error', message: 'Не вдалося завантажити ролі' })
       throw e
@@ -148,8 +127,6 @@ class PlayersService {
         dynamicKeys: { id: playerId }
       })
       const merged = this.mergePlayerAfterVerifyMutation(res, verifyResponse)
-
-      usePlayersStore().patchPlayerInList(merged)
       ElMessage.success(verified ? 'Гравця верифіковано' : 'Верифікацію знято')
       return merged
     } catch {

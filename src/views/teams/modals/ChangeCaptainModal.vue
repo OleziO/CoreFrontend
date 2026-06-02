@@ -81,6 +81,7 @@ async function transferCaptaincy () {
   loading.value = true
   try {
     const updated = await teamsService.transferCaptaincy(props.teamId, selectedPlayerId.value)
+    useTeamsStore().patchTeamInList(updated)
     ElMessage.success('Капітанство успішно передано')
     props.onUpdated?.(updated)
     modelValue.value = false

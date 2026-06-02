@@ -7,8 +7,8 @@ import type {
 } from '@/api/types/api.types'
 
 import { postTeamLogoUpload } from '@/services/image-upload.service'
-import { hydrateTeamPlayersRanks } from '@/views/teams/team-roster-hydrate'
-import { getApiErrorMessage } from '@/utils/api-errors'
+import { hydrateTeamPlayersRanks } from '@/views/teams/team-roster-hydrate.utils'
+import { getApiErrorMessage } from '@/core/utils/api-errors'
 
 export type TCreateTeamPayload = CreateTeamDto & { logoFile?: File | null }
 export type TUpdateTeamPayload = UpdateTeamDto & { logoFile?: File | null }
@@ -44,12 +44,10 @@ class TeamsService {
     }
   }
 
-  /** Fetch, hydrate and cache a single team. Returns null on error (silent). */
+  /** Fetch and hydrate a single team silently. Returns null on error. */
   async loadTeam (teamId: string): Promise<TTeam | null> {
     try {
-      const hydrated = await this.fetchTeam(teamId, { silent: true })
-      useTeamsStore().patchTeamInList(hydrated)
-      return hydrated
+      return await this.fetchTeam(teamId, { silent: true })
     } catch {
       return null
     }
@@ -83,11 +81,10 @@ class TeamsService {
     return await this.fetchTeam(id)
   }
 
-  /** Full-cycle: update team profile + cache + success toast. Returns null on error. */
+  /** Full-cycle: update team profile + success toast. Returns null on error. */
   async updateTeamProfile (id: string, data: TUpdateTeamPayload): Promise<TTeam | null> {
     try {
       const updated = await this.updateTeam(id, data)
-      useTeamsStore().patchTeamInList(updated)
       ElMessage.success('Команду оновлено')
       return updated
     } catch (e) {
@@ -96,11 +93,10 @@ class TeamsService {
     }
   }
 
-  /** Full-cycle: verify team + cache + success toast. Returns null on error. */
+  /** Full-cycle: verify team + success toast. Returns null on error. */
   async verifyTeam (teamId: string): Promise<TTeam | null> {
     try {
       const updated = await this.updateTeam(teamId, { isVerified: true })
-      useTeamsStore().patchTeamInList(updated)
       ElMessage.success('Команду верифіковано')
       return updated
     } catch (e) {
@@ -120,14 +116,13 @@ class TeamsService {
     return await this.fetchTeam(teamId)
   }
 
-  /** Full-cycle: remove coach + cache + success toast. Returns null on error. */
+  /** Full-cycle: remove coach + success toast. Returns null on error. */
   async removeCoach (teamId: string): Promise<TTeam | null> {
     try {
       await apiClient.patch('/teams/{id}', { coachId: null }, {
         dynamicKeys: { id: teamId }
       })
       const updated = await this.fetchTeam(teamId)
-      useTeamsStore().patchTeamInList(updated)
       ElMessage.success('Тренера прибрано з команди')
       return updated
     } catch (e) {
@@ -136,19 +131,17 @@ class TeamsService {
     }
   }
 
-  /** Full-cycle: remove player + cache + playersStore update + success toast. Returns null on error. */
+  /** Full-cycle: remove player + success toast. Returns null on error. */
   async removePlayerFromTeam (teamId: string, playerId: string): Promise<TTeam | null> {
     try {
       const res = await apiClient.delete('/teams/{id}/players/{playerId}', {
         dynamicKeys: { id: teamId, playerId }
-      }) as unknown
+      })
 
-      const updated = (res && typeof res === 'object' && 'id' in res)
-        ? hydrateTeamPlayersRanks(res as TTeam)
+      const updated = res?.id
+        ? hydrateTeamPlayersRanks(res)
         : await this.fetchTeam(teamId)
 
-      usePlayersStore().setPlayerTeamIdClientside(playerId, null)
-      useTeamsStore().patchTeamInList(updated)
       ElMessage.success('Гравця прибрано з команди')
       return updated
     } catch (e) {
@@ -176,14 +169,13 @@ class TeamsService {
     }
   }
 
-  /** Full-cycle: unverify team + cache + success toast. Returns null on error. */
+  /** Full-cycle: unverify team + success toast. Returns null on error. */
   async unverifyTeam (teamId: string): Promise<TTeam | null> {
     try {
       await apiClient.delete('/admin/teams/{teamId}/verify', {
         dynamicKeys: { teamId }
       })
       const updated = await this.fetchTeam(teamId)
-      useTeamsStore().patchTeamInList(updated)
       ElMessage.success('Верифікацію знято')
       return updated
     } catch (e) {
@@ -204,23 +196,21 @@ class TeamsService {
   // TODO: endpoint not in API yet
   // async deleteTeamChats (teamId: number) { ... }
 
-  /** Hydrates and caches result; success toast is handled by ChangeCaptainModal. */
+  /** Returns hydrated team; success toast is handled by ChangeCaptainModal. */
   async transferCaptaincy (teamId: string, newCaptainPlayerId: string): Promise<TTeam> {
     const res = await apiClient.post('/teams/{id}/captain', { newCaptainPlayerId }, {
       dynamicKeys: { id: teamId }
-    } as any)
-    const updated = (res && typeof res === 'object' && 'id' in res)
-      ? hydrateTeamPlayersRanks(res)
+    })
+    return (res && typeof res === 'object' && 'id' in res)
+      ? hydrateTeamPlayersRanks(res as TTeam)
       : await this.fetchTeam(teamId)
-    useTeamsStore().patchTeamInList(updated)
-    return updated
   }
 
   /** POST /teams/:id/invites — створити запрошення до команди (тільки капітан). */
   async createInvite (teamId: string, slot: 'main' | 'reserved' | 'coach') {
     return await apiClient.post('/teams/{id}/invites', { slot }, {
       dynamicKeys: { id: teamId }
-    } as any) as { token: string; expiresAt: string }
+    }) as unknown as { token: string; expiresAt: string }
   }
 
   // TODO: endpoint not in API yet

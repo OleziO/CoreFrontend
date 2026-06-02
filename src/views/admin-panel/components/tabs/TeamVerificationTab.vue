@@ -1,6 +1,6 @@
 <template>
   <div class="h-full flex flex-col">
-    <div class="flex-1 min-h-0 rounded-xl border border-white/10 bg-[#111827] shadow-xl overflow-hidden">
+    <div class="flex-1 min-h-0 rounded-xl border border-white/10 bg-gray-900 shadow-xl overflow-hidden">
       <el-table
         v-loading="isLoading"
         :data="requests"
@@ -73,65 +73,3 @@ const openTeamProfile = (userId: number) => {
   router.push({ name: routeNames.team, params: { id: userId } })
 }
 </script>
-
-<style scoped>
-/* Стилізація таблиці */
-:deep(.custom-table) {
-  --el-table-border-color: rgba(255, 255, 255, 0.05);
-  --el-table-bg-color: transparent;
-  --el-table-tr-bg-color: transparent;
-  --el-table-header-bg-color: rgba(255, 255, 255, 0.03);
-  --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.05);
-  --el-table-text-color: #9ca3af;
-  --el-table-header-text-color: #e5e7eb;
-  background-color: transparent !important;
-}
-
-:deep(.el-table__inner-wrapper::before),
-:deep(.el-table__border-left-patch) {
-  display: none;
-}
-
-:deep(.el-table--border) {
-  border-color: rgba(255, 255, 255, 0.05);
-}
-
-:deep(.el-table th.el-table__cell) {
-  background-color: rgba(17, 24, 39, 0.8) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-}
-
-:deep(.el-table td.el-table__cell) {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-}
-
-/* Стилізація розгорнутого рядка */
-:deep(.el-table__expanded-cell) {
-  background-color: transparent !important;
-  padding: 0 !important;
-}
-
-:deep(.el-table__expand-icon) {
-  color: #9ca3af;
-}
-
-/* Скролбар */
-:deep(.el-table__body-wrapper::-webkit-scrollbar) {
-  width: 6px;
-  height: 6px;
-}
-:deep(.el-table__body-wrapper::-webkit-scrollbar-track) {
-  background: rgba(0, 0, 0, 0.2);
-}
-:deep(.el-table__body-wrapper::-webkit-scrollbar-thumb) {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 3px;
-}
-:deep(.el-table__body-wrapper::-webkit-scrollbar-thumb:hover) {
-  background-color: rgba(255, 255, 255, 0.25);
-}
-</style>

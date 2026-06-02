@@ -62,8 +62,8 @@
 
 <script setup lang="ts">
 import type { TUserRole, TCurrentPlayerRole } from '@/api/types/api.types'
-import { getRoleTagCssVars } from '@/utils/role-tag-styles'
-import { resolveRoleDisplayLabel } from '@/components/player-tags/player.constants'
+import { getRoleTagCssVars } from '@/core/utils/role-tag-styles'
+import { resolveRoleDisplayLabel } from '@/components/player-tags/player.enums'
 
 export type TAnyRoleForTag = TUserRole | TCurrentPlayerRole
 
@@ -72,9 +72,7 @@ const props = withDefaults(
     user?: TPlayer
     roles?: TAnyRoleForTag[]
     max?: number
-    /** Один рядок; якщо багато видимих тегів — горизонтальний скрол (ProfileRoles тощо). */
     noWrap?: boolean
-    /** Колонка 50% у grid: займає всю ширину клітинки, теги по центру. */
     stretchInGrid?: boolean
   }>(),
   { max: 1, noWrap: false, stretchInGrid: false }
@@ -90,7 +88,6 @@ const rowClass = computed(() => {
   return `${flow} w-full items-stretch justify-start`
 })
 
-/** У grid-колонці основний тег тягнеться, +N лише під контент */
 function visibleRoleCellClass (index: number): string {
   if (!props.stretchInGrid) return 'contents'
   if (!overflowRoles.value.length) {

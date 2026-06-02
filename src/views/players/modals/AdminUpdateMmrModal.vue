@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { MAX_RATING } from '@/components/player-tags/player.constants'
+import { MAX_RATING } from '@/components/player-tags/player.enums'
 
 const props = defineProps<{playerId: string}>()
 

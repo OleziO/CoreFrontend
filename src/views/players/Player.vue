@@ -292,12 +292,12 @@ import {
   isPlayerVerified,
   resolvePublicOrApiUrl
 } from '@/core/helpers'
-import { positionOptions } from '@/components/player-tags/player.constants'
+import { positionOptions } from '@/components/player-tags/player.enums'
 import { routeNames } from '@/router/route-names'
 import { playersService } from '@/views/players/players.service'
 import type { TCreateTeamPayload } from '@/views/teams/teams.service'
 import { teamsService } from '@/views/teams/teams.service'
-import { usePlayerFavoriteHeroes } from '@/composables/query/use-player-heroes'
+import { usePlayerFavoriteHeroes } from '@/views/players/composables/use-player-heroes'
 
 const route = useRoute()
 const router = useRouter()
@@ -419,7 +419,7 @@ async function onOpen () {
   const isMePage = route.name === routeNames.profile
   loading.value = true
   try {
-    player.value = isMePage ? (me.user as unknown as TPlayer) : await playerStore.findPlayer(id)
+    player.value = isMePage ? (me.user as TPlayer) : await playerStore.findPlayer(id)
     if (!player.value) router.push('/')
   } finally {
     loading.value = false
@@ -436,7 +436,10 @@ async function togglePlayerVerification () {
   verifyLoading.value = true
   try {
     const updated = await playersService.setPlayerVerificationByAdmin(player.value.id, !isVerified.value)
-    if (updated) player.value = updated
+    if (updated) {
+      player.value = updated
+      playerStore.patchPlayerInList(updated)
+    }
   } finally {
     verifyLoading.value = false
   }
@@ -449,7 +452,7 @@ async function handleCreateTeam (dto: TCreateTeamPayload) {
   }
   close('TeamCreateModal')
   await me.fetchUser()
-  player.value = me.user as unknown as TPlayer
+  player.value = me.user as TPlayer
   await router.push({ name: routeNames.team, params: { id: created.id } })
 }
 
@@ -462,13 +465,13 @@ function openCreateTeamModal () {
 function openEditProfileModal () {
   if (!player.value) return
 
-  open('PLayerEditProfileModal', {
+  open('PlayerEditProfileModal', {
     player: player.value,
     onUpdated: async (updated: TPlayer) => {
       player.value = updated
       if (route.name === routeNames.profile) {
         await me.fetchUser()
-        player.value = me.user as unknown as TPlayer
+        player.value = me.user as TPlayer
       }
     }
   })
@@ -479,7 +482,7 @@ onMounted(async () => {
   const result = me.handleSteamCallback(route.query)
   if (result === 'linked') {
     await me.fetchUser()
-    player.value = me.user as unknown as TPlayer
+    player.value = me.user as TPlayer
     router.replace({ name: routeNames.profile })
   } else if (result === 'error') {
     router.replace({ name: routeNames.profile })

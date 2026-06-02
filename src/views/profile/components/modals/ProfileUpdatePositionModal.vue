@@ -30,8 +30,7 @@
 </template>
 
 <script setup lang="ts">
-const showPositionModal = defineModel<boolean>('showPositionModal') // Не забывать что чтобы связывать с v-model в дочернем компоненте, использеутся defineModel а не defineProps, пропсы не имеют реактивности и их нельзя менять
-// const authStore = useAuthStore()
+const showPositionModal = defineModel<boolean>('showPositionModal')
 
 const selectedPositions = defineModel<number[] | undefined>('selectedPositions')
 

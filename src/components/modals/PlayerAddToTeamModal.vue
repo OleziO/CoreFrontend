@@ -108,7 +108,7 @@
 
 <script setup lang="ts">
 import { isPlayerVerified, searchPlayer } from '@/core/helpers'
-import { getApiErrorMessage } from '@/utils/api-errors'
+import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { PhCheck, PhMagnifyingGlass, PhPlus } from '@phosphor-icons/vue'
 import { teamsService } from '@/views/teams/teams.service'
 

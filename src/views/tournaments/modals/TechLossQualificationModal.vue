@@ -148,12 +148,12 @@ async function submit () {
 
 <style scoped>
 :deep(.tech-loss-qual-dialog.custom-dialog) {
-  background-color: #1e2330;
+  background-color: theme('colors.dark.card');
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
 }
 :deep(.tech-loss-qual-dialog .el-dialog__title) {
-  color: #fff;
+  color: white;
 }
 
 .fade-slide-enter-active,

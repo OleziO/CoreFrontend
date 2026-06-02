@@ -142,7 +142,7 @@
 
 <script setup lang="ts">
 import { getDiscordProfileUrl, getDotabuffProfileUrl, getSteamProfileUrl, getPlayerDotaPositions } from '@/core/helpers'
-import { positionOptions } from '@/components/player-tags/player.constants'
+import { positionOptions } from '@/components/player-tags/player.enums'
 import { Ellipsis } from 'lucide-vue-next'
 
 import steamImg from '@/assets/icons/steam.svg'

@@ -1,7 +1,6 @@
 <template>
   <el-dialog
     :model-value="modelValue"
-
     destroy-on-close
     width="600"
     title="Фільтри турнірів"
@@ -71,7 +70,7 @@
 <script setup lang="ts">
 import { parseQueryArray } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
-import { tournamentStatuses } from '@/utils/formatters'
+import { tournamentStatuses } from '@/core/utils/formatters'
 import { PhMagnifyingGlass } from '@phosphor-icons/vue'
 
 const DEFAULT_TOURNAMENT_FILTERS = {

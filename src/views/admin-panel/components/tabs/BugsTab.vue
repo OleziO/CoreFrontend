@@ -26,10 +26,10 @@
           v-for="(bug, index) in filteredAndSortedBugs"
           :key="bug.id"
           class="flex flex-col rounded-xl border border-white/10
-           bg-[#0b1121]/50 hover:bg-[#0b1121]/70 transition-all duration-300 overflow-hidden group"
+           bg-dark-navy/50 hover:bg-dark-navy/70 transition-all duration-300 overflow-hidden group"
         >
           <!-- Изображение -->
-          <div class="w-full aspect-video bg-[#111827] border-b border-white/10 relative overflow-hidden group/image">
+          <div class="w-full aspect-video bg-gray-900 border-b border-white/10 relative overflow-hidden group/image">
             <el-image
               v-if="bug.img_url"
               :src="getImageUrl(bug.img_url)"
@@ -151,7 +151,7 @@ import { ZoomIn } from '@element-plus/icons-vue'
 import { routeNames } from '@/router/route-names'
 import { ElMessage } from 'element-plus'
 import BugStatusTag from '@/components/bug-tags/BugStatusTag.vue'
-import { ERequestStatus, requestStatusLabelMap } from '@/components/bug-tags/status.constants'
+import { ERequestStatus, requestStatusLabelMap } from '@/components/bug-tags/status.enums'
 
 const router = useRouter()
 const authStore = useAuthStore()

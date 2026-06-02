@@ -36,7 +36,7 @@
                       content="Капітан команди"
                     >
                       <span
-                        class="inline-flex shrink-0 cursor-default text-[#e8b931]
+                        class="inline-flex shrink-0 cursor-default text-accent-gold
                                drop-shadow-[0_0_8px_rgba(232,185,49,0.55)]
                                [&_svg]:block"
                         role="img"

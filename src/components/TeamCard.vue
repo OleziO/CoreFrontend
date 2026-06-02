@@ -190,7 +190,7 @@ import {
 } from '@/components/tournaments-tags/tournament.constants'
 
 const props = withDefaults(defineProps<{
-  team: TTeam
+  team: TTeam | TTournamentTeam
   width?: number
   /** Тег дивізіону команди — лише на сторінці списку команд, не на вкладці «Команди» турніру. */
   showDivisionTag?: boolean
@@ -206,7 +206,10 @@ const mainAvgRating = computed(() => {
 })
 
 const resolvedDivisionKey = computed((): TTournamentDivisionValue | null =>
-  resolveTeamDivisionForDisplay(props.team.division, mainAvgRating.value)
+  resolveTeamDivisionForDisplay(
+    'division' in props.team ? props.team.division : undefined,
+    mainAvgRating.value
+  )
 )
 
 const showDivisionBadge = computed(() => {
@@ -239,8 +242,8 @@ function copyDotaTeamId () {
   ElMessage.success('Dota ID скопійовано')
 }
 
-function openTeamDrawer (team: TTeam) {
-  open('TeamsPlayersDrawer', { team })
+function openTeamDrawer (team: TTeam | TTournamentTeam) {
+  open('TeamsPlayersDrawer', { team: team as TTeam })
 }
 
 function goToTeamPage (id: string) {

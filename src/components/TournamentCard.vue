@@ -118,10 +118,10 @@
 </template>
 
 <script setup lang="ts">
-import { formatTournamentPrizeUah } from '@/views/tournaments/utils/tournament-prize-format'
+import { formatTournamentPrizeUah } from '@/core/utils/formatters'
 import TournamentBannerImage from '@/components/tournaments/TournamentBannerImage.vue'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
-import { TOURNAMENT_CARD_HEIGHT, TOURNAMENT_CARD_WIDTH } from '@/constants/tournaments'
+import { TOURNAMENT_CARD_HEIGHT, TOURNAMENT_CARD_WIDTH } from '@/views/tournaments/tournaments.enums'
 import { routeNames } from '@/router/route-names'
 import { PhTrophy } from '@phosphor-icons/vue'
 import dayjs from 'dayjs'

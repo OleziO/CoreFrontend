@@ -108,7 +108,7 @@
 <script setup lang="ts">
 import { Search } from '@element-plus/icons-vue'
 import { PhSlidersHorizontal } from '@phosphor-icons/vue'
-import { TOURNAMENT_CARD_HEIGHT, TOURNAMENT_CARD_WIDTH } from '@/constants/tournaments'
+import { TOURNAMENT_CARD_HEIGHT, TOURNAMENT_CARD_WIDTH } from '@/views/tournaments/tournaments.enums'
 import { VIRTUAL_GRID_CARD_GAP_PX } from '@/composables/use-virtual-grid'
 import { useTournamentStore } from './tournaments.store'
 import type { LocationQuery } from 'vue-router'
@@ -129,6 +129,8 @@ const tournamentStore = useTournamentStore()
 
 const filteredTournaments = computed(() => {
   const query = route.query
+
+  console.log(tournamentStore.tournamentsData)
 
   return tournamentStore.tournamentsData.filter(tournament => {
     if (!checkQueryFilter(tournament, query)) return false

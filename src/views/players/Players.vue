@@ -116,7 +116,7 @@
 <script setup lang="ts">
 import { PhSlidersHorizontal, PhMagnifyingGlass } from '@phosphor-icons/vue'
 import type { LocationQuery } from 'vue-router'
-import { ERole } from '@/types/general.types'
+import { ERole } from '@/types/general.enums'
 
 import {
   getPlayerDotaPositions,

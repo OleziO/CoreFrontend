@@ -29,7 +29,14 @@ export const usePlayersStore = defineStore('players', () => {
   }
 
   async function fetchUserRoles (opts?: { force?: boolean }) {
-    return playersService.fetchUserRoles(opts)
+    const force = opts?.force ?? false
+    if (!force && userRolesCatalogRef.value?.length) {
+      return [...userRolesCatalogRef.value]
+    }
+    const list = await playersService.fetchUserRoles()
+    const copy = [...list]
+    setUserRolesCatalog(copy)
+    return copy
   }
 
   async function findPlayer (playerId?: string | null) {

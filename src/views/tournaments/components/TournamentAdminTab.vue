@@ -6,7 +6,7 @@
 
     <div v-if="activeTab === 'status'" class="mt-20">
       <div
-        class="bg-[#111827] rounded-md p-10
+        class="bg-gray-900 rounded-md p-10
           md:p-20 flex flex-col md:flex-row items-center justify-between gap-8
           relative overflow-hidden"
       >
@@ -50,7 +50,7 @@
 
     <div v-if="activeTab === 'participants'" class="mt-20">
       <div class="participants-tab flex flex-col gap-20 w-full max-w-7xl mx-auto">
-        <div class="bg-[#111827] rounded-md p-10 md:p-20 flex flex-col gap-12">
+        <div class="bg-gray-900 rounded-md p-10 md:p-20 flex flex-col gap-12">
           <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Додати команду до турніру</span>
           <div class="flex gap-10 items-center">
             <el-select
@@ -106,7 +106,7 @@
       </div>
 
       <template v-else-if="playoff">
-        <div class="bg-[#111827] rounded-md p-10 md:p-20 flex flex-col gap-12">
+        <div class="bg-gray-900 rounded-md p-10 md:p-20 flex flex-col gap-12">
           <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Плей-оф запущено</span>
           <a
             :href="playoff.embedUrl"
@@ -118,7 +118,7 @@
           </a>
         </div>
 
-        <div class="bg-[#111827] rounded-md p-10 md:p-20 flex flex-col gap-12">
+        <div class="bg-gray-900 rounded-md p-10 md:p-20 flex flex-col gap-12">
           <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Учасники плей-оф</span>
           <el-table
             :data="playoff.teams"
@@ -155,7 +155,7 @@
       </template>
 
       <template v-else>
-        <div class="bg-[#111827] rounded-md p-10 md:p-20 flex flex-col gap-12">
+        <div class="bg-gray-900 rounded-md p-10 md:p-20 flex flex-col gap-12">
           <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Додати команди до плей-оф</span>
           <div class="flex gap-10 items-center">
             <el-select
@@ -184,7 +184,7 @@
           </div>
         </div>
 
-        <div class="bg-[#111827] rounded-md p-10 md:p-20 flex flex-col gap-12">
+        <div class="bg-gray-900 rounded-md p-10 md:p-20 flex flex-col gap-12">
           <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">
             Склад плей-оф (ще не запущено)
           </span>
@@ -244,7 +244,7 @@ import { ElMessage } from 'element-plus'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
 import { tournamentsService } from '@/views/tournaments/tournaments.service'
 import { teamsService } from '@/views/teams/teams.service'
-import { friendlyPlayoffError } from '@/views/tournaments/utils/playoff-errors'
+import { friendlyPlayoffError } from '@/views/tournaments/utils/playoff-errors.utils'
 
 const props = defineProps<{
   tournament?: TTournament | null
