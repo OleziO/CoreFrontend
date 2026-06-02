@@ -144,7 +144,7 @@
 
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { positionOptions } from '@/components/player-tags/player.enums'
+import { positionOptions } from '@/components/player-tags/player.constants'
 import { isPlayerVerified } from '@/core/helpers'
 import { useAuthStore } from '@/store/modules/auth'
 import { playersService } from '@/views/players/players.service'
@@ -415,7 +415,7 @@ function mergeRolesIntoPlayer (player: TPlayer, result: TAdminPlayerRolesResult)
   return {
     ...player,
     verifiedAt: result.verifiedAt,
-    roles: result.roles as TPlayer['roles']
+    roles: result.roles as unknown as TPlayer['roles']
   }
 }
 
