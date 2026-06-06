@@ -17,6 +17,7 @@ declare module 'vue-virtual-scroller' {
 
 interface ImportMetaEnv {
   readonly VITE_API_PUBLIC_URL: string
+  readonly VITE_API_PUBLIC_URL_V2: string
 }
 
 interface ImportMeta {

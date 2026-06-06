@@ -350,6 +350,8 @@
     "steamId64ToAccountId": true,
     "heroImageUrl": true,
     "useAnalyticsUserTracking": true,
-    "devService": true
+    "devService": true,
+    "financeClient": true,
+    "financeService": true
   }
 }

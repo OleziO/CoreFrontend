@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { firstQueryValue } from '@/core/helpers'
 import { routes, routeNames } from './route-names'
+import { hasAdminRole } from '@/views/finance-monitor/constants'
 
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -40,5 +41,10 @@ router.beforeEach(async (to, from, next) => { // Перед роутингом �
   if (authStore.token && !authStore.user) {
     await authStore.fetchUser()
   }
+
+  if (to.name === routeNames.financeMonitor && !hasAdminRole(authStore.user?.roles)) {
+    return next('/')
+  }
+
   next()
 })

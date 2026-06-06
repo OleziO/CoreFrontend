@@ -23,7 +23,15 @@ export const appModals = useModals({
   TechLossQualificationModal:
     defineAsyncComponent(() => import('@/views/tournaments/modals/TechLossQualificationModal.vue')) as Component,
   TechLossPlayoffModal:
-    defineAsyncComponent(() => import('@/views/tournaments/modals/TechLossPlayoffModal.vue')) as Component
+    defineAsyncComponent(() => import('@/views/tournaments/modals/TechLossPlayoffModal.vue')) as Component,
+  RenameOperationModal:
+    defineAsyncComponent(() => import('@/views/finance-monitor/modals/RenameOperationModal.vue')) as Component,
+  SelectIconModal:
+    defineAsyncComponent(() => import('@/views/finance-monitor/modals/SelectIconModal.vue')) as Component,
+  GroupOperationsModal:
+    defineAsyncComponent(() => import('@/views/finance-monitor/modals/GroupOperationsModal.vue')) as Component,
+  CreateCustomCategoryModal:
+    defineAsyncComponent(() => import('@/views/finance-monitor/modals/CreateCustomCategoryModal.vue')) as Component
 })
 
 export function useAppModals () {

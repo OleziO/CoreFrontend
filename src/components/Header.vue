@@ -126,6 +126,14 @@
               </el-dropdown-item>
 
               <el-dropdown-item
+                v-if="hasAdminUaRole"
+                @click="$router.push({ name: routeNames.financeMonitor })"
+              >
+                <PhCurrencyCircleDollar :size="20" />
+                <span class="ml-8">Фінанси</span>
+              </el-dropdown-item>
+
+              <el-dropdown-item
                 class="header-user-menu__item--danger"
                 divided
                 @click="authStore.logout"
@@ -166,7 +174,7 @@
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
 import logo from '@/assets/images/core-league-logo-full.png'
-import { PhDiscordLogo, PhSignOut, PhUser, PhTrophy } from '@phosphor-icons/vue'
+import { PhDiscordLogo, PhSignOut, PhUser, PhTrophy, PhCurrencyCircleDollar } from '@phosphor-icons/vue'
 import RoleGuard from '@/guards/RoleGuard.vue'
 import CreateTournamentDrawer from '@/views/admin-panel/components/drawers/CreateTournamentDrawer.vue'
 
