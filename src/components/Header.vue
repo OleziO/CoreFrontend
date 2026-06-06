@@ -177,16 +177,13 @@ import logo from '@/assets/images/core-league-logo-full.png'
 import { PhDiscordLogo, PhSignOut, PhUser, PhTrophy, PhCurrencyCircleDollar } from '@phosphor-icons/vue'
 import RoleGuard from '@/guards/RoleGuard.vue'
 import CreateTournamentDrawer from '@/views/admin-panel/components/drawers/CreateTournamentDrawer.vue'
+import { hasAdminRole } from '@/core/helpers'
 
 const authStore = useAuthStore()
 const showCreateTournamentDrawer = ref(false)
 
-/** Тільки роль «Адмін» за назвою з API (згідно з UserRoleResponseDto). */
-const ADMIN_ROLE_API_NAME = 'Адмін'
-
-const hasAdminUaRole = computed(() =>
-  !!(authStore.user?.roles ?? []).some((r) => r.name === ADMIN_ROLE_API_NAME)
-)
+/** Єдиний предикат адмінського доступу — спільний із гардом роуту /finance. */
+const hasAdminUaRole = computed(() => hasAdminRole(authStore.user?.roles))
 
 const route = useRoute()
 

@@ -6,7 +6,18 @@
       </h2>
     </div>
 
-    <div class="flex-1 min-h-0 overflow-y-auto p-20 flex flex-col gap-20">
+    <div v-if="isPending" class="flex-1 p-20">
+      <el-skeleton :rows="10" animated />
+    </div>
+
+    <p
+      v-else-if="isError"
+      class="flex-1 flex items-center justify-center text-red-400 text-sm p-20"
+    >
+      Не вдалося завантажити прогноз
+    </p>
+
+    <div v-else class="flex-1 min-h-0 overflow-y-auto p-20 flex flex-col gap-20">
       <el-form label-position="top" class="finance-form">
         <p class="text-sm font-medium text-gray-300 mb-12">
           Кількість команд
@@ -143,6 +154,8 @@ import { formatCompactK, kopecksToUah, uahToKopecks } from '../utils/format-mone
 const props = defineProps<{
   config?: ForecastConfig | null
   result?: ForecastResult | null
+  isPending?: boolean
+  isError?: boolean
   isSaving?: boolean
 }>()
 
@@ -150,17 +163,19 @@ const emit = defineEmits<{
   save: [config: ForecastConfig]
 }>()
 
-type FormState = {
-  divisions: [{ teamCount: number; projectContribution: number }, { teamCount: number; projectContribution: number }, { teamCount: number; projectContribution: number }]
+type TDivisionForm = { teamCount: number; projectContribution: number }
+
+type TFormState = {
+  divisions: [TDivisionForm, TDivisionForm, TDivisionForm]
   fees: { top1_4: number; top5_8: number; top8plus: number }
   prizePoolPercent: number
 }
 
-const configToForm = (config: ForecastConfig): FormState => ({
+const configToForm = (config: ForecastConfig): TFormState => ({
   divisions: config.divisions.map(d => ({
     teamCount: d.teamCount,
     projectContribution: kopecksToUah(d.projectContribution)
-  })) as FormState['divisions'],
+  })) as TFormState['divisions'],
   fees: {
     top1_4: kopecksToUah(config.fees.top1_4),
     top5_8: kopecksToUah(config.fees.top5_8),
@@ -169,7 +184,7 @@ const configToForm = (config: ForecastConfig): FormState => ({
   prizePoolPercent: config.prizePoolPercent
 })
 
-const form = ref<FormState>(configToForm(DEFAULT_FORECAST_CONFIG))
+const form = ref<TFormState>(configToForm(DEFAULT_FORECAST_CONFIG))
 
 watch(
   () => props.config,

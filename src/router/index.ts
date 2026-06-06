@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { firstQueryValue } from '@/core/helpers'
+import { firstQueryValue, hasAdminRole } from '@/core/helpers'
 import { routes, routeNames } from './route-names'
-import { hasAdminRole } from '@/views/finance-monitor/constants'
 
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

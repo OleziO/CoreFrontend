@@ -206,6 +206,11 @@ export function hasPlayerRole (roles: readonly { name: string }[] | undefined | 
   return roles.some(r => r.name === role || r.name === labelUk)
 }
 
+/** Єдиний предикат адмінського доступу — за прапором `isAdminRole`, а не за назвою ролі. */
+export function hasAdminRole (roles: readonly { isAdminRole?: boolean }[] | undefined | null): boolean {
+  return !!roles?.some(r => r.isAdminRole)
+}
+
 const ROLE_FILTER_UUID_RE =
   /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i
 

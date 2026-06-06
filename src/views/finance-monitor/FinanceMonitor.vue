@@ -3,9 +3,20 @@
     <div class="w-[90%] max-w-[1400px] mx-auto flex flex-col h-full py-20 gap-20">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-16 shrink-0">
         <div>
-          <h1 class="text-2xl font-bold tracking-tight">
-            Finance Monitor
-          </h1>
+          <div class="flex items-center gap-12">
+            <h1 class="text-4xl font-semibold tracking-tight">
+              Finance Monitor
+            </h1>
+
+            <!-- Ненав'язливий індикатор фонової синхронізації -->
+            <span
+              v-if="isAutoSyncing"
+              class="inline-flex items-center gap-6 text-xs text-gray-400"
+            >
+              <PhSpinnerGap size="14" class="animate-spin" />
+              Синхронізація…
+            </span>
+          </div>
           <p class="text-sm text-gray-400 mt-4">
             Фінансовий аудит та прогнозування
           </p>
@@ -21,12 +32,16 @@
       <BalanceCard
         :balance="balanceQuery.data.value"
         :is-pending="balanceQuery.isPending.value"
+        :is-error="balanceHasError"
       />
+
+      <!-- Phase 4 reserved slot: category-breakdown card goes here -->
 
       <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-20">
         <TransactionFeed
           :items="operationsQuery.data.value?.items || []"
           :is-pending="operationsQuery.isPending.value"
+          :is-error="operationsHasError"
           @rename="handleRename"
           @icon="handleIcon"
           @group="handleGroup"
@@ -37,6 +52,8 @@
         <ForecastCalculator
           :config="forecastQuery.data.value?.config"
           :result="forecastQuery.data.value?.result"
+          :is-pending="forecastQuery.isPending.value"
+          :is-error="forecastHasError"
           :is-saving="forecastQuery.isSaving.value"
           @save="handleSaveForecast"
         />
@@ -46,7 +63,9 @@
 </template>
 
 <script setup lang="ts">
+import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
+import { PhSpinnerGap } from '@phosphor-icons/vue'
 import { useAppModals } from '@/composables/use-app-modals'
 import { useFinanceAssets } from '@/composables/query/use-finance-assets'
 import { useFinanceBalance } from '@/composables/query/use-finance-balance'
@@ -67,6 +86,10 @@ const operationsQuery = useFinanceOperations(computed(() => ({
 })))
 const forecastQuery = useFinanceForecast()
 const assetsQuery = useFinanceAssets()
+
+const balanceHasError = computed(() => !!balanceQuery.error.value)
+const operationsHasError = computed(() => !!operationsQuery.error.value)
+const forecastHasError = computed(() => !!forecastQuery.error.value)
 
 const { open, close } = useAppModals()
 
@@ -149,8 +172,33 @@ async function handleSaveForecast (config: ForecastConfig) {
   await forecastQuery.saveForecast(config)
 }
 
+/**
+ * Фонова синхронізація за останні 2 місяці під час відкриття сторінки.
+ * Не блокує перший рендер; по завершенні інвалідовує кеш ['finance'],
+ * щоб стрічка та баланс перезавантажились. Помилки гасимо тихо —
+ * ручна синхронізація з власним діапазоном лишається доступною.
+ */
+const isAutoSyncing = ref(false)
+
+async function runBackgroundSync () {
+  isAutoSyncing.value = true
+  try {
+    await financeService.syncBank({
+      from: dayjs().subtract(2, 'month').toISOString(),
+      to: dayjs().toISOString()
+    })
+    queryCache.invalidateQueries({ key: ['finance'] })
+  } catch {
+    // Тиха фонова синхронізація — без сповіщень про помилку.
+  } finally {
+    isAutoSyncing.value = false
+  }
+}
+
 onMounted(() => {
   document.body.style.overflow = 'hidden'
+  // Свідомо без await — сторінка інтерактивна одразу.
+  runBackgroundSync()
 })
 
 onBeforeUnmount(() => {

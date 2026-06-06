@@ -21,6 +21,18 @@
     </div>
 
     <div
+      v-else-if="isError"
+      class="flex-1 flex flex-col items-center justify-center gap-12 p-20 text-center"
+    >
+      <p class="text-red-400 text-sm">
+        Не вдалося завантажити транзакції
+      </p>
+      <el-button size="small" @click="$emit('refetch')">
+        Спробувати ще раз
+      </el-button>
+    </div>
+
+    <div
       v-else-if="items.length"
       class="flex-1 min-h-0 overflow-y-auto p-12 flex flex-col gap-8"
     >
@@ -51,6 +63,7 @@ import BankSyncButton from './BankSyncButton.vue'
 defineProps<{
   items: FeedItem[]
   isPending?: boolean
+  isError?: boolean
 }>()
 
 defineEmits<{

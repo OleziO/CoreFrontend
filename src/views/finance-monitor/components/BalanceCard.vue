@@ -8,6 +8,10 @@
       <el-skeleton :rows="1" animated />
     </div>
 
+    <p v-else-if="isError" class="text-red-400 text-sm">
+      Не вдалося завантажити баланс
+    </p>
+
     <div v-else-if="balance" class="flex flex-col gap-4">
       <p class="text-4xl font-bold text-white tracking-tight">
         {{ formatUah(displayAmount, undefined, { showSign: false }) }}
@@ -36,6 +40,7 @@ import { formatUah } from '../utils/format-money'
 const props = defineProps<{
   balance?: Balance
   isPending?: boolean
+  isError?: boolean
 }>()
 
 const displayAmount = computed(() => {

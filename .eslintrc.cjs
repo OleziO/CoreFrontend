@@ -30,6 +30,7 @@ module.exports = {
   ignorePatterns: [
     "dts/*.d.ts",
     "src/api/types/schema.d.ts",
+    "src/api/types/schema-v2.d.ts",
     "*.cjs",
     "src/api/types/axios.d.ts",
     "src/types/api.ts",
