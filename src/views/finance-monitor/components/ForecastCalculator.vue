@@ -147,20 +147,20 @@
 
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
-import type { ForecastConfig, ForecastResult } from '../finance.types'
+import type { TForecastConfig, TForecastResult } from '../finance.types'
 import { DEFAULT_FORECAST_CONFIG } from '../finance.types'
 import { formatCompactK, kopecksToUah, uahToKopecks } from '../utils/format-money'
 
 const props = defineProps<{
-  config?: ForecastConfig | null
-  result?: ForecastResult | null
+  config?: TForecastConfig | null
+  result?: TForecastResult | null
   isPending?: boolean
   isError?: boolean
   isSaving?: boolean
 }>()
 
 const emit = defineEmits<{
-  save: [config: ForecastConfig]
+  save: [config: TForecastConfig]
 }>()
 
 type TDivisionForm = { teamCount: number; projectContribution: number }
@@ -171,7 +171,7 @@ type TFormState = {
   prizePoolPercent: number
 }
 
-const configToForm = (config: ForecastConfig): TFormState => ({
+const configToForm = (config: TForecastConfig): TFormState => ({
   divisions: config.divisions.map(d => ({
     teamCount: d.teamCount,
     projectContribution: kopecksToUah(d.projectContribution)
@@ -196,12 +196,12 @@ watch(
   { immediate: true }
 )
 
-function formToConfig (): ForecastConfig {
+function formToConfig (): TForecastConfig {
   return {
     divisions: form.value.divisions.map(d => ({
       teamCount: d.teamCount,
       projectContribution: uahToKopecks(d.projectContribution)
-    })) as ForecastConfig['divisions'],
+    })) as TForecastConfig['divisions'],
     fees: {
       top1_4: uahToKopecks(form.value.fees.top1_4),
       top5_8: uahToKopecks(form.value.fees.top5_8),

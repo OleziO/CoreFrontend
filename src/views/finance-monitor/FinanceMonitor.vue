@@ -62,7 +62,7 @@ import { queryCache } from '@/core/query-cache-client'
 import BalanceCard from './components/BalanceCard.vue'
 import TransactionFeed from './components/TransactionFeed.vue'
 import ForecastCalculator from './components/ForecastCalculator.vue'
-import type { FeedItem, ForecastConfig } from './finance.types'
+import type { TFeedItem, TForecastConfig } from './finance.types'
 import { financeService } from './finance.service'
 
 const includeForecast = ref(false)
@@ -91,7 +91,7 @@ function invalidateOperations () {
   queryCache.invalidateQueries({ key: ['finance', 'balance'] })
 }
 
-function handleRename (item: FeedItem) {
+function handleRename (item: TFeedItem) {
   const operationId = item.kind === 'OPERATION' ? item.id : item.operationIds[0]
   if (!operationId) return
 
@@ -107,7 +107,7 @@ function handleRename (item: FeedItem) {
   })
 }
 
-function handleIcon (item: FeedItem) {
+function handleIcon (item: TFeedItem) {
   const operationId = item.kind === 'OPERATION' ? item.id : item.operationIds[0]
   if (!operationId) return
 
@@ -123,7 +123,7 @@ function handleIcon (item: FeedItem) {
   })
 }
 
-function handleGroup (item: FeedItem) {
+function handleGroup (item: TFeedItem) {
   selectedOperationIds.value = item.operationIds.length
     ? item.operationIds
     : [item.id]
@@ -155,7 +155,7 @@ function handleCreateCategory () {
   })
 }
 
-async function handleSaveForecast (config: ForecastConfig) {
+async function handleSaveForecast (config: TForecastConfig) {
   await forecastQuery.saveForecast(config)
 }
 

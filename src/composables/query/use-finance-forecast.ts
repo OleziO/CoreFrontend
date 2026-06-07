@@ -1,19 +1,19 @@
 import { useQueryWrapper } from '@/core/use-query.utils'
 import { queryCache } from '@/core/query-cache-client'
 import { financeService } from '@/views/finance-monitor/finance.service'
-import type { ForecastConfig, ForecastResponse } from '@/views/finance-monitor/finance.types'
+import type { TForecastConfig, TForecastResponse } from '@/views/finance-monitor/finance.types'
 import { ref } from 'vue'
 
 export const useFinanceForecast = () => {
   const isSaving = ref(false)
 
-  const query = useQueryWrapper<ForecastResponse>({
+  const query = useQueryWrapper<TForecastResponse>({
     key: ['finance', 'forecast'],
     query: () => financeService.fetchForecast(),
     refetchOnWindowFocus: false
   })
 
-  const saveForecast = async (config: ForecastConfig) => {
+  const saveForecast = async (config: TForecastConfig) => {
     isSaving.value = true
     try {
       const result = await financeService.updateForecast(config)

@@ -1,4 +1,4 @@
-import type { FeedItemSign } from '../finance.types'
+import type { TFeedItemSign } from '../finance.types'
 
 export const kopecksToUah = (kopecks: number): number => kopecks / 100
 
@@ -9,7 +9,7 @@ const formatNumber = (value: number): string =>
 
 export const formatUah = (
   kopecks: number,
-  sign?: FeedItemSign,
+  sign?: TFeedItemSign,
   options?: { showSign?: boolean }
 ): string => {
   const showSign = options?.showSign ?? true
@@ -39,5 +39,5 @@ export const formatCompactK = (kopecks: number): string => {
   return formatted.replace(/\.0k$/, 'k')
 }
 
-export const signColorClass = (sign: FeedItemSign): string =>
+export const signColorClass = (sign: TFeedItemSign): string =>
   sign === 'POSITIVE' ? 'text-green-400' : 'text-red-400'

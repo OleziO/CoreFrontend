@@ -11,7 +11,8 @@
     "type-check": "vue-tsc --build --force",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "api": "npx openapi-typescript https://api.core-league-dota2.org/api-json -o src/api/types/schema.d.ts",
-    "api:local": "npx openapi-typescript http://localhost:3000/api-json -o src/api/types/schema.d.ts"
+    "api:local": "npx openapi-typescript http://localhost:3000/api-json -o src/api/types/schema.d.ts",
+    "api:prod-v2": "npx openapi-typescript https://v2.core-league-dota2.org/api-json -o src/api/types/schema-v2.d.ts"
   },
   "dependencies": {
     "@phosphor-icons/vue": "^2.2.1",

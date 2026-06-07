@@ -51,10 +51,10 @@
 </template>
 
 <script setup lang="ts">
-import type { AssetView } from '../finance.types'
+import type { TAssetView } from '../finance.types'
 
 const props = defineProps<{
-  assets: AssetView[]
+  assets: TAssetView[]
   isPending?: boolean
   onSubmit: (iconAssetId: string) => Promise<void> | void
 }>()

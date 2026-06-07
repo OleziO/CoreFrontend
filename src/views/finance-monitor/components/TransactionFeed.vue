@@ -56,20 +56,20 @@
 </template>
 
 <script setup lang="ts">
-import type { FeedItem } from '../finance.types'
+import type { TFeedItem } from '../finance.types'
 import TransactionFeedItem from './TransactionFeedItem.vue'
 import BankSyncButton from './BankSyncButton.vue'
 
 defineProps<{
-  items: FeedItem[]
+  items: TFeedItem[]
   isPending?: boolean
   isError?: boolean
 }>()
 
 defineEmits<{
-  rename: [item: FeedItem]
-  icon: [item: FeedItem]
-  group: [item: FeedItem]
+  rename: [item: TFeedItem]
+  icon: [item: TFeedItem]
+  group: [item: TFeedItem]
   'create-category': []
   refetch: []
 }>()

@@ -34,11 +34,11 @@
 </template>
 
 <script setup lang="ts">
-import type { Balance } from '../finance.types'
+import type { TBalance } from '../finance.types'
 import { formatUah } from '../utils/format-money'
 
 const props = defineProps<{
-  balance?: Balance
+  balance?: TBalance
   isPending?: boolean
   isError?: boolean
 }>()
