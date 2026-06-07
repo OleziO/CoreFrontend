@@ -35,8 +35,8 @@
 </template>
 
 <script setup lang="ts">
-import { getApiErrorMessage } from '@/utils/api-errors'
-import { friendlyQualificationSubmitError } from '../utils/qualification-errors'
+import { getApiErrorMessage } from '@/core/utils/api-errors'
+import { friendlyQualificationSubmitError } from '../utils/qualification-errors.utils'
 import type { TQualificationMatch as QualificationMatch } from '@/api/types/api.types'
 
 const props = defineProps<{
@@ -111,17 +111,17 @@ async function submit () {
 
 <style scoped>
 :deep(.qual-submit-dialog.custom-dialog) {
-  background-color: #1e2330;
+  background-color: theme('colors.dark.card');
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
 }
 :deep(.qual-submit-dialog .el-dialog__title) {
-  color: #fff;
+  color: white;
 }
 :deep(.match-id-input .el-input__wrapper) {
   background-color: rgba(255, 255, 255, 0.05);
 }
 :deep(.match-id-input .el-input__inner) {
-  color: #fff;
+  color: white;
 }
 </style>

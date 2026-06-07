@@ -145,15 +145,15 @@ async function submit () {
 
 <style scoped>
 :deep(.custom-dialog) {
-  background-color: #1e2330;
+  background-color: theme('colors.dark.card');
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
 }
 :deep(.custom-dialog .el-dialog__title) {
-  color: #fff;
+  color: white;
 }
 :deep(.el-form-item__label) {
-  color: #9ca3af;
+  color: theme('colors.gray.400');
 }
 :deep(.el-input) {
   width: 100%;
@@ -164,6 +164,6 @@ async function submit () {
   box-shadow: none;
 }
 :deep(.el-input .el-input__inner) {
-  color: #fff;
+  color: white;
 }
 </style>

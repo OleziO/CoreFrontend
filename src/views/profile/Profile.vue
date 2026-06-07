@@ -142,12 +142,12 @@
 
 <script setup lang="ts">
 import { getDiscordProfileUrl, getDotabuffProfileUrl, getSteamProfileUrl, getPlayerDotaPositions } from '@/core/helpers'
-import { positionOptions } from '@/components/player-tags/player.constants'
+import { positionOptions } from '@/components/player-tags/player.enums'
 import { Ellipsis } from 'lucide-vue-next'
 
-import steamImg from '@/assets/icons/steam-logo.svg'
-import discordImg from '@/assets/icons/discord-logo.svg'
-import dotabuffImg from '@/assets/icons/dotabuff-logo.svg'
+import steamImg from '@/assets/icons/steam.svg'
+import discordImg from '@/assets/icons/discord.svg'
+import dotabuffImg from '@/assets/icons/dotabuff.svg'
 
 const authStore = useAuthStore()
 

@@ -1,31 +1,34 @@
 import apiClient from '@/api/client'
-import type { TCurrentPlayer } from '@/api/types/api.types'
 
-interface IDiscordUrlResponse {
-  url: string
-}
-
-interface IDiscordTokenResponse {
-  access_token: string
-  token_type: 'Bearer'
-  expires_in: number
-}
+const POST_LOGIN_REDIRECT_KEY = 'postLoginRedirect'
 
 class AuthService {
-  async getDiscordAuthUrl (): Promise<IDiscordUrlResponse> {
+  async getDiscordAuthUrl () {
     return apiClient.get('/auth/discord/url')
   }
 
-  async exchangeDiscordCode (code: string, state: string): Promise<IDiscordTokenResponse> {
-    return apiClient.post('/auth/discord/token', { code, state })
+  async exchangeDiscordCode (code: string, state: string): Promise<{ access_token: string }> {
+    // OpenAPI schema omits the response body for this endpoint (content?: never),
+    // but the real API returns { access_token }. Cast is unavoidable until the schema is fixed.
+    return apiClient.post('/auth/discord/token', { code, state }) as Promise<{ access_token: string }>
   }
 
-  async getMe (): Promise<TCurrentPlayer> {
+  async getMe () {
     return apiClient.get('/auth/me')
   }
 
-  async getSteamLinkUrl (): Promise<{ url: string }> {
+  async getSteamLinkUrl () {
     return apiClient.get('/auth/steam/link')
+  }
+
+  savePostLoginRedirect (path: string) {
+    sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, path)
+  }
+
+  consumePostLoginRedirect (): string | null {
+    const redirect = sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY)
+    sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY)
+    return redirect
   }
 }
 

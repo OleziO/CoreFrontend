@@ -1,4 +1,8 @@
 /// <reference types="vite/client" />
+/// <reference path="../src/api/types/schema-helpers.d.ts" />
+/// <reference path="../src/views/players/players.d.ts" />
+/// <reference path="../src/views/teams/teams.types.d.ts" />
+/// <reference path="../src/views/tournaments/tournaments.d.ts" />
 
 declare module 'vue-virtual-scroller' {
   import { DefineComponent } from 'vue'
@@ -13,6 +17,7 @@ declare module 'vue-virtual-scroller' {
 
 interface ImportMetaEnv {
   readonly VITE_API_PUBLIC_URL: string
+  readonly VITE_API_PUBLIC_URL_V2: string
 }
 
 interface ImportMeta {

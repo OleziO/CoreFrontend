@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-[#1e2330] flex flex-col gap-10 md:p-20 p-10 rounded-md border border-white/5">
+  <div class="bg-dark-card flex flex-col gap-10 md:p-20 p-10 rounded-md border border-white/5">
     <div class="flex justify-between items-center mb-6">
       <h3 class="text-lg font-bold text-white">Відкриті матчі</h3>
       <el-tooltip placement="top" content="Оновити матчі">

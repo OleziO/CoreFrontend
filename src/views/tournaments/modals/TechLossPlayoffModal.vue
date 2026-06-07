@@ -84,12 +84,12 @@
 
 <script setup lang="ts">
 import { Loading } from '@element-plus/icons-vue'
-import type { TPlayoffResponse, TOpenPlayoffMatch } from '@/api/types/api.types'
+import type { TOpenPlayoffMatch } from '@/api/types/api.types'
 import MatchTeamSelectCard from '@/components/MatchTeamSelectCard.vue'
 
 const props = defineProps<{
   tournamentId: string
-  onSubmitted?: (response: TPlayoffResponse) => void
+  onSubmitted?: (response: TPlayoff) => void
 }>()
 
 const modelValue = defineModel<boolean>({ default: false })
@@ -175,12 +175,12 @@ async function submit () {
 
 <style scoped>
 :deep(.tech-loss-playoff-dialog.custom-dialog) {
-  background-color: #1e2330;
+  background-color: theme('colors.dark.card');
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
 }
 :deep(.tech-loss-playoff-dialog .el-dialog__title) {
-  color: #fff;
+  color: white;
 }
 
 .fade-slide-enter-active,

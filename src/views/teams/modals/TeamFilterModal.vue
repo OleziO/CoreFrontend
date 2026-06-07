@@ -45,7 +45,7 @@
 import { PhMagnifyingGlass } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import { parseQueryArray } from '@/core/helpers'
-import { teamStatus } from '@/constants/teams'
+import { teamStatus } from '@/views/teams/teams.enums'
 
 const modelValue = defineModel<boolean>({ default: false })
 const router = useRouter()
@@ -71,7 +71,7 @@ function onApply () {
   query.status = status?.length ? status.join(',') : undefined
 
   const cleanQuery = Object.fromEntries(
-    Object.entries(query).filter(([_, v]) => v != null && v !== '')
+    Object.entries(query).filter(([, v]) => v != null && v !== '')
   ) as Record<string, string>
 
   router.push({ name: routeNames.teams, query: cleanQuery })

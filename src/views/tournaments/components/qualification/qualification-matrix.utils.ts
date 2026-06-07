@@ -1,6 +1,6 @@
-import type { TQualificationMatch, TTeam } from '@/api/types/api.types'
+import type { TQualificationMatch } from '@/api/types/api.types'
 
-export type QualificationMatrixCellKind = 'diagonal' | 'win' | 'loss' | 'empty'
+export type TQualificationMatrixCellKind = 'diagonal' | 'win' | 'loss' | 'empty'
 
 /** Стабільний ключ неупорядкованої пари команд для пошуку матчу. */
 export function qualificationPairKey (teamAId: string, teamBId: string): string {
@@ -22,8 +22,8 @@ export function buildQualificationMatrixTeams (
   }
   for (const m of matches) {
     if (!m.teamA || !m.teamB) continue
-    if (!byId.has(m.teamA.id)) byId.set(m.teamA.id, m.teamA)
-    if (!byId.has(m.teamB.id)) byId.set(m.teamB.id, m.teamB)
+    if (!byId.has(m.teamA.id)) byId.set(m.teamA.id, m.teamA as unknown as TTeam)
+    if (!byId.has(m.teamB.id)) byId.set(m.teamB.id, m.teamB as unknown as TTeam)
   }
 
   const orderedIds: string[] = []
@@ -64,14 +64,14 @@ export function resolveQualificationMatrixCell (
   rowTeamId: string,
   colTeamId: string,
   pairMap: ReadonlyMap<string, TQualificationMatch>
-): QualificationMatrixCellKind {
+): TQualificationMatrixCellKind {
   if (rowTeamId === colTeamId) return 'diagonal'
   const match = pairMap.get(qualificationPairKey(rowTeamId, colTeamId))
   if (!match?.winner) return 'empty'
   return match.winner.id === rowTeamId ? 'win' : 'loss'
 }
 
-export function qualificationMatrixCellLabel (kind: QualificationMatrixCellKind): string {
+export function qualificationMatrixCellLabel (kind: TQualificationMatrixCellKind): string {
   switch (kind) {
     case 'diagonal':
       return 'X'

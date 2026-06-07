@@ -6,8 +6,6 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router'
-import { onMounted } from 'vue'
 import { useAuthStore } from '@/store/modules/auth'
 import { routeNames } from '@/router/route-names'
 

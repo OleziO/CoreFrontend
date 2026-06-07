@@ -26,7 +26,7 @@
 
     <QualificationMatchesList
       :matches="sortedDisplayMatches"
-      :tournament-teams="tournament?.teams ?? null"
+      :tournament-teams="tournamentTeams"
       :player-points="qualificationPhase?.playerTournamentPoints ?? null"
       :loading="qualificationHydrateInFlight"
       :show-add-result-button="showAddResultButton"
@@ -53,7 +53,6 @@ import { useIntervalFn } from '@vueuse/core'
 import QualificationMatchesList from './qualification/QualificationMatchesList.vue'
 import QualificationAddResultModal from '../modals/QualificationAddResultModal.vue'
 import type {
-  TTournament as Tournament,
   TQualificationMatch as QualificationMatch,
   TQualificationPhase as QualificationPhase
 } from '@/api/types/api.types'
@@ -61,17 +60,21 @@ dayjs.locale('uk')
 
 const props = defineProps<{
   tournamentId: string
-  tournament: Tournament | null
+  tournament: TTournament | null
 }>()
 
 const emit = defineEmits<{
-  (e: 'patch-tournament', value: Tournament): void
+  (e: 'patch-tournament', value: TTournament): void
 }>()
 
 const authStore = useAuthStore()
 const { open: openAppModal } = useAppModals()
 
 const qualificationPhase = shallowRef<QualificationPhase | null>(null)
+
+// tournament.teams comes from the embedded Tournament schema (Team[]), not the /teams list (TTeam[]).
+// Cast bridging the schema mismatch — structurally compatible at runtime.
+const tournamentTeams = computed(() => (props.tournament?.teams ?? null) as TTeam[] | null)
 
 /** Захист від паралельних GET та від циклу watch → patch → watch. */
 const qualificationHydrateInFlight = ref(false)
@@ -107,7 +110,7 @@ async function hydrateQualification () {
 }
 
 onMounted(() => {
-  void hydrateQualification()
+  hydrateQualification()
 })
 
 /**
@@ -117,7 +120,7 @@ onMounted(() => {
 watch(
   () => [props.tournamentId, props.tournament?.qualification?.matches?.length ?? -1] as const,
   () => {
-    void hydrateQualification()
+    hydrateQualification()
   }
 )
 

@@ -1,4 +1,5 @@
 @use "element-plus/theme-chalk/src/dialog";
+@use "../mixins" as *;
 
 .el-overlay-dialog {
   @apply flex justify-center items-center;
@@ -33,7 +34,8 @@
 }
 /* Сам діалог */
 .el-dialog {
-  @apply relative rounded-2xl m-auto border border-white/20 bg-white/10 backdrop-blur-xl max-h-[70vh] overflow-hidden flex flex-col px-0;
+  @include glass-panel;
+  @apply relative rounded-2xl m-auto max-h-[70vh] overflow-hidden flex flex-col px-0;
 
   &::focus,
   &:focus-visible {
@@ -73,7 +75,8 @@
   .el-input__wrapper,
   .el-select__wrapper,
   .el-input-number {
-    @apply bg-white/10 border border-white/20 backdrop-blur-md shadow-none rounded-xl;
+    @include glass-input;
+    @apply shadow-none rounded-xl;
   }
 
   .el-select__wrapper {

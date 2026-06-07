@@ -56,22 +56,11 @@
 </template>
 
 <script setup lang="ts">
-import { MAX_RATING } from '@/components/player-tags/player.constants'
-import type { TPlayer } from '@/api/types/api.types'
+import { MAX_RATING } from '@/components/player-tags/player.enums'
 
 const props = defineProps<{playerId: string}>()
 
 const modelValue = defineModel<boolean>({ default: false })
-
-// const roleLabels: Record<string, string> = {
-//   admin: 'Адміністратор',
-//   moderator: 'Модератор',
-//   media: 'Медіа',
-//   cap: 'Капітан',
-//   player: 'Гравець',
-//   unverified: 'Не верифікований',
-//   blocked: 'Заблокований'
-// }
 
 const playersStore = usePlayersStore()
 
@@ -83,10 +72,6 @@ const player = ref<TPlayer | null>(null)
 const isValid = computed(() => {
   return mmr.value === null
 })
-
-// function getRoleLabel (roleName: string): string {
-//   return roleLabels[roleName] || roleName
-// }
 
 function onNumericInput (newValue: number | string) {
   const value = String(newValue ?? '')

@@ -116,8 +116,7 @@
 <script setup lang="ts">
 import { PhSlidersHorizontal, PhMagnifyingGlass } from '@phosphor-icons/vue'
 import type { LocationQuery } from 'vue-router'
-import type { TPlayer } from '@/api/types/api.types'
-import { ERole } from '@/types/general.types'
+import { ERole } from '@/types/general.enums'
 
 import {
   getPlayerDotaPositions,
@@ -125,7 +124,6 @@ import {
   parseQueryArray,
   playerMatchesRoleFilterToken
 } from '@/core/helpers'
-import { userRolesCatalogRef } from '@/views/players/players.service'
 
 function parseTeamStatusQuery (query: LocationQuery): boolean[] {
   const raw = query.teamStatus
@@ -165,7 +163,7 @@ function checkQueryFilter (player: TPlayer, query: LocationQuery) {
 
   if (query.roles) {
     const tokens = String(query.roles).split(',').map(s => s.trim()).filter(Boolean)
-    const catalog = userRolesCatalogRef.value ?? []
+    const catalog = playersStore.userRolesCatalog
     if (tokens.length && !tokens.some(t => playerMatchesRoleFilterToken(player, t, catalog))) return false
   }
 
@@ -224,7 +222,7 @@ function openPlayersFilterModal () {
 }
 
 onMounted(() => {
-  void playersStore.getPlayers()
-  void playersStore.fetchUserRoles().catch(() => {})
+  playersStore.getPlayers()
+  playersStore.fetchUserRoles().catch(() => {})
 })
 </script>

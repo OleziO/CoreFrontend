@@ -1,17 +1,42 @@
-import type { TPlayer, TUserRoleCatalog } from '@/api/types/api.types'
+import type { TUserRoleCatalog } from '@/api/types/api.types'
 
 import { useAuthStore } from '@/store/modules/auth'
-import { playersService, userRolesCatalogRef } from '@/views/players/players.service'
+import { playersService } from '@/views/players/players.service'
 
 export const usePlayersStore = defineStore('players', () => {
   const players = ref<TPlayer[]>([])
   const loading = ref(false)
 
-  /** Останній GET `/user-roles` (живе з `players.service` → `userRolesCatalogRef`). */
+  const userRolesCatalogRef = shallowRef<TUserRoleCatalog[] | null>(null)
   const userRolesCatalog = computed((): TUserRoleCatalog[] => userRolesCatalogRef.value ?? [])
 
+  function setUserRolesCatalog (list: TUserRoleCatalog[]) {
+    userRolesCatalogRef.value = list
+  }
+
+  /**
+   * Оновити кеш гравця після мутації (верифікація, ролі тощо).
+   * Якщо гравця ще немає в списку — додає запис (наприклад після прямого заходу на картку).
+   */
+  function patchPlayerInList (updated: TPlayer) {
+    const list = players.value
+    const ix = list.findIndex(p => p.id === updated.id)
+    if (ix !== -1) {
+      list.splice(ix, 1, updated)
+    } else {
+      list.push(updated)
+    }
+  }
+
   async function fetchUserRoles (opts?: { force?: boolean }) {
-    return playersService.fetchUserRoles(opts)
+    const force = opts?.force ?? false
+    if (!force && userRolesCatalogRef.value?.length) {
+      return [...userRolesCatalogRef.value]
+    }
+    const list = await playersService.fetchUserRoles()
+    const copy = [...list]
+    setUserRolesCatalog(copy)
+    return copy
   }
 
   async function findPlayer (playerId?: string | null) {
@@ -38,9 +63,6 @@ export const usePlayersStore = defineStore('players', () => {
     }
   }
 
-  /**
-   * Вихід / виключення / зміна складу одного гравця: локальний teamId (+ поточний користувач).
-   */
   function setPlayerTeamIdClientside (playerId: string, nextTeamId: string | null) {
     const p = players.value.find(pl => pl.id === playerId)
     if (p) p.teamId = nextTeamId
@@ -48,18 +70,6 @@ export const usePlayersStore = defineStore('players', () => {
     const auth = useAuthStore()
     if (auth.user?.id === playerId) auth.user.teamId = nextTeamId
   }
-
-  // function searchPlayer (player: TPlayer, search = '') {
-  //   if (!search) return true
-  //
-  //   const q = search.toLowerCase()
-  //
-  //   return (
-  //     player.discordName?.toLowerCase().includes(q) ||
-  //     player.discordUsername?.toLowerCase().includes(q) ||
-  //     player.steamId?.toLowerCase().includes(q)
-  //   )
-  // }
 
   async function getPlayers (opts?: { force?: boolean }) {
     if (!opts?.force && players.value.length) return players.value
@@ -75,37 +85,12 @@ export const usePlayersStore = defineStore('players', () => {
     return players.value
   }
 
-  // TODO: endpoint not in API yet
-  // async function updatePlayerMMP (id: string, newMMP: number) { ... }
-
-  // TODO: endpoint not in API yet
-  // async function updateMyProfileData (newMMP: number, positions: number[]) { ... }
-
-  // TODO: endpoint not in API yet
-  // async function updatePlayerPoints (playerId: string, _points: number) { ... }
-
-  // TODO: endpoint not in API yet
-  // async function getAllPlayerRoles () { ... }
-
-  // TODO: endpoint not in API yet
-  // async function updatePlayerRoles (playerId: string, rolesIdArr: number[]) { ... }
-
-  // TODO: endpoint not in API yet
-  // async function changePlayerRespect (id: string, action: 'like' | 'dislike') { ... }
-
-  // TODO: endpoint not in API yet
-  // function isVerified (player: TPlayer) { ... }
-
-  // TODO: endpoint not in API yet
-  // async function verifyPlayer (playerId: string) { ... }
-
-  // TODO: endpoint not in API yet
-  // async function toggleDiscordNotification (isTrue: boolean) { ... }
-
   return {
     players,
     loading,
     userRolesCatalog,
+    setUserRolesCatalog,
+    patchPlayerInList,
     fetchUserRoles,
     findPlayer,
     clearTeamMembershipClientside,

@@ -16,10 +16,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
 import { useElementSize } from '@vueuse/core'
 import UserCard from './UserCard.vue'
-import type { TPlayer } from '@/api/types/api.types'
 
 const props = defineProps<{
   players: TPlayer[]

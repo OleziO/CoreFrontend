@@ -1,4 +1,3 @@
-import { computed } from 'vue'
 import { useWindowSize } from '@vueuse/core'
 
 type TVirtualGridLayoutOptions = {

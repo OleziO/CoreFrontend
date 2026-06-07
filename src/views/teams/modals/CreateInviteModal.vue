@@ -55,7 +55,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { PhCopy } from '@phosphor-icons/vue'
 import { useClipboard } from '@vueuse/core'

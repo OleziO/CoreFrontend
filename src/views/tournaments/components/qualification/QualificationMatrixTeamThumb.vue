@@ -20,13 +20,11 @@
 
 <script setup lang="ts">
 import { PhUsersThree } from '@phosphor-icons/vue'
-import type { TTeam } from '@/api/types/api.types'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 
 const props = withDefaults(
   defineProps<{
     team: TTeam
-    /** Додаткові Tailwind-класи розміру поверх базового `.qual-matrix-thumb` */
     boxClass?: string
     iconSize?: number
   }>(),

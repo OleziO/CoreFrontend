@@ -1,6 +1,6 @@
 import type { Plugin } from 'vue'
 import { routeNames } from '@/router/route-names'
-import { dialogDefaultConfig } from '@/utils/dialog.utils'
+import { dialogDefaultConfig } from '@/core/utils/dialog.utils'
 
 export const globalProperties = {
   $routeNames: routeNames,

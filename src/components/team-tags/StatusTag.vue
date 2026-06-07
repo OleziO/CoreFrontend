@@ -11,7 +11,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 // Убедитесь, что импортируете именно НОВЫЕ мапы
 import { teamStatusClassMap, teamStatusLabelMap } from './team.constants'
 

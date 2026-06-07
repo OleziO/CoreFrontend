@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { friendlyPlayoffError } from '../utils/playoff-errors'
+import { friendlyPlayoffError } from '../utils/playoff-errors.utils'
 import type { TPlayoffMatch } from '@/api/types/api.types'
 
 const props = defineProps<{
@@ -94,17 +94,17 @@ async function submit () {
 
 <style scoped>
 :deep(.playoff-submit-dialog.custom-dialog) {
-  background-color: #1e2330;
+  background-color: theme('colors.dark.card');
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
 }
 :deep(.playoff-submit-dialog .el-dialog__title) {
-  color: #fff;
+  color: white;
 }
 :deep(.match-id-input .el-input__wrapper) {
   background-color: rgba(255, 255, 255, 0.05);
 }
 :deep(.match-id-input .el-input__inner) {
-  color: #fff;
+  color: white;
 }
 </style>

@@ -27,11 +27,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { PhTrophy } from '@phosphor-icons/vue'
-import type { TTournament as Tournament } from '@/api/types/api.types'
 
-const props = defineProps<{ tournament: Tournament | null | undefined }>()
+const props = defineProps<{ tournament: TTournament | null | undefined }>()
 
 const emptyTeamsMessage = computed(() => {
   const end = props.tournament?.tournamentEndsAt

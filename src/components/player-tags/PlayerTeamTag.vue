@@ -25,8 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TPlayer } from '@/api/types/api.types'
-import { EUserIsTeam, hasTeamBadgeLabelMap, hasTeamLabelMap } from '@/components/player-tags/player.constants'
+import { EUserIsTeam, hasTeamBadgeLabelMap, hasTeamLabelMap } from '@/components/player-tags/player.enums'
 
 const props = withDefaults(
   defineProps<{

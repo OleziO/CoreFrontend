@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import type { TCurrentPlayer, TUserRole as UserRole } from '@/api/types/api.types'
 import { authService } from '@/services/auth.service'
 
@@ -68,6 +67,19 @@ export const useAuthStore = defineStore('auth', () => {
     window.location.href = url
   }
 
+  function handleSteamCallback (query: Record<string, unknown>) {
+    const steamLinked = query.steam_linked
+    const steamError = query.steam_error
+    if (steamLinked === 'true') {
+      ElMessage.success("Steam акаунт успішно прив'язано!")
+      return 'linked'
+    } else if (steamError) {
+      ElMessage.error(`Помилка прив'язки Steam: ${steamError}`)
+      return 'error'
+    }
+    return null
+  }
+
   async function fetchUser () {
     if (!token.value) {
       user.value = null
@@ -95,6 +107,7 @@ export const useAuthStore = defineStore('auth', () => {
     startDiscordLogin,
     handleDiscordCallback,
     linkSteam,
-    fetchUser
+    fetchUser,
+    handleSteamCallback
   }
 })

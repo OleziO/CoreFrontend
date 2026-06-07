@@ -28,7 +28,7 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  background-color: #01000f;
+  background-color: theme('colors.dark.900');
   background-image: url("https://www.transparenttextures.com/patterns/cartographer.png");
 }
 
@@ -62,7 +62,7 @@ label {
   }
 
   &::-webkit-scrollbar-track {
-    background: #0A0711;
+    background: theme('colors.dark.900');
     border-radius: 4px;
   }
 
@@ -80,5 +80,5 @@ label {
 // Firefox
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) #0A0711;
+  scrollbar-color: rgba(255, 255, 255, 0.2) theme('colors.dark.900');
 }

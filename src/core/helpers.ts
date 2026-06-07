@@ -1,8 +1,8 @@
-import { ERole } from '@/types/general.types'
+import { ERole } from '@/types/general.enums'
 import get from 'lodash/get'
 import type { LocationQueryValue, RouteLocationNormalized } from 'vue-router'
-import type { TPlayer, TPlayerRankDto, TUserRole as UserRole } from '@/api/types/api.types'
-import { getDotaPositionLabel, roleLabelMap } from '@/components/player-tags/player.constants'
+import type { TPlayerRankDto } from '@/api/types/api.types'
+import { getDotaPositionLabel, roleLabelMap } from '@/components/player-tags/player.enums'
 
 export const createHashedObject = <
   T extends TIndexedObject,
@@ -12,11 +12,10 @@ export const createHashedObject = <
   array: T[] = [],
   prop: Prop = 'id' as Prop,
   isValueArray?: ValueArray,
-
   shouldRemoveKeyField?: boolean
 ): Record<T[Prop], ValueArray extends true ? T[] : T> => {
   return array.reduce((acc, current) => {
-    const key = get(current, prop as string) as unknown as T[Prop]
+    const key = get(current, prop as string) as T[Prop]
 
     if (shouldRemoveKeyField) {
       delete current[prop]
@@ -33,14 +32,6 @@ export const createHashedObject = <
   }, {} as Record<T[Prop], ValueArray extends true ? T[] : T>)
 }
 
-// export function goBack (router: Router) {
-//   router.back()
-// }
-
-/**
- * Абсолютний URL ресурсу з бекенду: абсолютні `http(s)://` без змін;
- * відносний шлях (напр. `/uploads/...`) — префікс `VITE_API_PUBLIC_URL`.
- */
 export function resolvePublicOrApiUrl (path: string | null | undefined): string {
   const raw = typeof path === 'string' ? path.trim() : ''
   if (!raw) return ''
@@ -72,7 +63,6 @@ export function getDotabuffTeamUrl (dotaTeamId: string | null | undefined) {
   return `https://www.dotabuff.com/esports/teams/${dotaTeamId}`
 }
 
-/** Single value from vue-router query (handles `?code=a&code=b` → first). */
 export function firstQueryValue (value: RouteLocationNormalized['query'][string]) {
   if (value == null) return undefined
 
@@ -117,14 +107,12 @@ function coerceFiniteRankInt (value: unknown): number | null {
   return null
 }
 
-/** Код медалі для іконки: OpenAPI використовує `numericName`; API часто надсилає `numeric_name`. */
 export function resolvePlayerRankNumericName (rank: unknown): number | null {
   if (rank == null || typeof rank !== 'object') return null
   const r = rank as Record<string, unknown>
   return coerceFiniteRankInt(r.numericName ?? r.numeric_name)
 }
 
-/** Після зливу даних із бекенду тримаємо ранг у передбаченій схемою формі. */
 export function coercePlayerRankFromApi (rank: unknown): TPlayerRankDto | null {
   const numericName = resolvePlayerRankNumericName(rank)
   if (numericName == null) return null
@@ -140,12 +128,10 @@ export function coercePlayerRankFromApi (rank: unknown): TPlayerRankDto | null {
   }
 }
 
-/** PNG рангу з об'єкта `rank` незалежно від кейсу ключів із бекенду. */
 export function getPlayerRankImageSrcFromPlayerRank (rank: unknown): string {
   return getPlayerRankImageSrc(resolvePlayerRankNumericName(rank))
 }
 
-/** Шлях до PNG рангу в `public/images/ranks/{numericName}.png`. Порожній рядок, якщо `numericName` не задано. */
 export function getPlayerRankImageSrc (numericName: number | null | undefined): string {
   if (numericName == null) return ''
   return `${basePublicUrl()}images/ranks/${numericName}.png`
@@ -156,10 +142,6 @@ export function formatPlayerRatingMmr (rating: number | null | undefined): strin
   return `${rating} MMR`
 }
 
-/**
- * Позиції 1–5 Dota з поля `positions` у відповіді API.
- * У схемі TPlayer `positions` може бути `Record<never>[]`, на рантаймі — масив чисел.
- */
 export function getPlayerDotaPositions (p: { positions?: unknown } | null | undefined): number[] {
   if (!p?.positions) return []
   const raw = p.positions
@@ -176,7 +158,6 @@ export type TPlayerPositionsSummary = {
   rows: { id: number; label: string }[]
 }
 
-/** Текст для tooltip: «1. Carry · 2. Mid» або повідомлення, якщо позицій немає. */
 export function formatPlayerPositionsSummary (p: { positions?: unknown } | null | undefined): TPlayerPositionsSummary {
   const ids = getPlayerDotaPositions(p)
   if (!ids.length) {
@@ -190,16 +171,11 @@ export function formatPlayerPositionsSummary (p: { positions?: unknown } | null 
   }
 }
 
-/** totalWinMatches / totalLostMatches з беку (роль гравця). */
 export type TPlayerMatchRecord = {
   totalWinMatches?: number | null
   totalLostMatches?: number | null
 }
 
-/**
- * total матчів = перемоги + поразки; у дужках відсоток перемог: >50% зелений, <50% червоний, рівно 50% сірий.
- * Без матчів — 0%.
- */
 export function getPlayerMatchStats (p: (TPlayer | TPlayerMatchRecord) | null | undefined) {
   const wins = Math.max(0, Number((p as TPlayerMatchRecord)?.totalWinMatches ?? 0) || 0)
   const losses = Math.max(0, Number((p as TPlayerMatchRecord)?.totalLostMatches ?? 0) || 0)
@@ -223,9 +199,6 @@ export function getPlayerMatchStats (p: (TPlayer | TPlayerMatchRecord) | null | 
   return { wins, losses, total, winrateText, winrateClass }
 }
 
-/**
- * `role.name` з API може збігатися з slug у `ERole` або з українським `roleLabelMap`.
- */
 export function hasPlayerRole (roles: readonly { name: string }[] | undefined | null, role: ERole): boolean {
   if (!roles?.length || !role) return false
 
@@ -233,13 +206,14 @@ export function hasPlayerRole (roles: readonly { name: string }[] | undefined | 
   return roles.some(r => r.name === role || r.name === labelUk)
 }
 
-/** UUID зі старих посилань; за `name` з фільтра достатньо звичайного збігу. */
+/** Єдиний предикат адмінського доступу — за прапором `isAdminRole`, а не за назвою ролі. */
+export function hasAdminRole (roles: readonly { isAdminRole?: boolean }[] | undefined | null): boolean {
+  return !!roles?.some(r => r.isAdminRole)
+}
+
 const ROLE_FILTER_UUID_RE =
   /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i
 
-/**
- * Значення в query для ролей — тепер `name` як у відповіді GET `/user-roles`; для сумісності залишені slug і рідкий збіг по id каталогу.
- */
 export function playerMatchesRoleFilterToken (
   player: { roles?: readonly { name: string; id?: string }[] | null },
   rawToken: string,
@@ -263,19 +237,12 @@ export function playerMatchesRoleFilterToken (
   return pr.some(r => r.name === token)
 }
 
-/**
- * Видимість «верифікований»: timestamp від беку або роль гравця («Гравець» / PLAYER).
- */
 export function isPlayerVerified (
   player: { roles?: readonly { name: string }[] | null; verifiedAt?: string | null } | null | undefined
 ): boolean {
   if (!player) return false
   if (player.verifiedAt) return true
   return hasPlayerRole(player.roles, ERole.PLAYER)
-}
-
-function checkRoles (roles: UserRole[], roleName: ERole): boolean {
-  return hasPlayerRole(roles, roleName)
 }
 
 export function getCopy (data: number | string | undefined | null, message: string) {
@@ -293,5 +260,3 @@ export async function scrollToSection (section: HTMLElement | null) {
     section?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
-
-export default checkRoles

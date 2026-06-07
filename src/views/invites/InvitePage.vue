@@ -17,7 +17,10 @@
 
     <!-- Invite card -->
     <template v-else-if="invite">
-      <div class="bg-bg-secondary rounded-xl border border-white/10 p-40 flex flex-col items-center gap-20 w-full max-w-sm text-center shadow-xl">
+      <div
+        class="bg-bg-secondary rounded-xl border border-white/10 p-40
+          flex flex-col items-center gap-20 w-full max-w-sm text-center shadow-xl"
+      >
         <!-- Team logo -->
         <el-avatar
           :size="80"
@@ -81,13 +84,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { PhWarningCircle, PhShield, PhDiscordLogo } from '@phosphor-icons/vue'
 import { useAuthStore } from '@/store/modules/auth'
 import { routeNames } from '@/router/route-names'
-import { invitesService, POST_LOGIN_REDIRECT_KEY, type TInviteInfo } from './invites.service'
+import { invitesService, type TInviteInfo } from './invites.service'
 
 const route = useRoute()
 const router = useRouter()
@@ -137,7 +138,7 @@ onMounted(async () => {
 })
 
 function loginAndReturn () {
-  sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, route.fullPath)
+  authService.savePostLoginRedirect(route.fullPath)
   authStore.startDiscordLogin()
 }
 

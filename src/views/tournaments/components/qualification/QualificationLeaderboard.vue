@@ -133,14 +133,14 @@
 
 <script setup lang="ts">
 import { PhInfo } from '@phosphor-icons/vue'
-import type { TPlayer, TPlayerPointsEntry, TTeam } from '@/api/types/api.types'
+import type { TPlayerPointsEntry } from '@/api/types/api.types'
 
 const props = defineProps<{
   teams: TTeam[]
   playerPoints?: TPlayerPointsEntry[] | null
 }>()
 
-interface TeamRosterRow {
+interface ITeamRosterRow {
   playerId: string
   nickname: string
   points: number
@@ -173,11 +173,11 @@ function playerNickname (p: TPlayer): string {
 }
 
 /** teamId → відсортований за очками рядок для тултіпа (тільки гравці з нарахованими очками). */
-const teamRoster = computed((): Record<string, TeamRosterRow[]> => {
-  const out: Record<string, TeamRosterRow[]> = {}
+const teamRoster = computed((): Record<string, ITeamRosterRow[]> => {
+  const out: Record<string, ITeamRosterRow[]> = {}
   const points = pointsByPlayerId.value
   for (const team of props.teams) {
-    const rows: TeamRosterRow[] = []
+    const rows: ITeamRosterRow[] = []
     for (const p of rosterFor(team)) {
       const pts = points[p.id]
       if (pts == null) continue
@@ -199,10 +199,10 @@ const teamPointsByTeamId = computed((): Record<string, number> => {
   return out
 })
 
-type BlockKey = 'p1_4' | 'p5_8' | 'p9p'
+type TBlockKey = 'p1_4' | 'p5_8' | 'p9p'
 
-interface LeaderboardBlock {
-  key: BlockKey
+interface ILeaderboardBlock {
+  key: TBlockKey
   label: string
   teams: TTeam[]
   startRank: number
@@ -212,7 +212,7 @@ interface LeaderboardBlock {
   rankBadgeClass: string
 }
 
-type LeaderboardMeta = Omit<LeaderboardBlock, 'teams' | 'startRank'>
+type TLeaderboardMeta = Omit<ILeaderboardBlock, 'teams' | 'startRank'>
 
 /** Команди в порядку лідерборду: за сумою очок ↓, далі — за початковим порядком (стабільно). */
 const rankedTeams = computed((): TTeam[] => {
@@ -226,9 +226,9 @@ const rankedTeams = computed((): TTeam[] => {
     .map(({ team }) => team)
 })
 
-const sectionBlocks = computed((): LeaderboardBlock[] => {
+const sectionBlocks = computed((): ILeaderboardBlock[] => {
   const list = rankedTeams.value
-  const raw: LeaderboardMeta[] = [
+  const raw: TLeaderboardMeta[] = [
     {
       key: 'p1_4',
       label: '1–4 місце',

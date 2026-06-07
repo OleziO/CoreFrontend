@@ -21,9 +21,9 @@
       </el-button>
     </div>
 
-    <div class="flex-1 min-h-0 rounded-xl border border-white/10 bg-[#111827] shadow-xl overflow-hidden flex flex-col">
+    <div class="flex-1 min-h-0 rounded-xl border border-white/10 bg-gray-900 shadow-xl overflow-hidden flex flex-col">
       <div
-        class="grid-header border-b border-white/10 bg-[#111827]/80 backdrop-blur
+        class="grid-header border-b border-white/10 bg-gray-900/80 backdrop-blur
        text-xs font-semibold text-gray-300 uppercase tracking-wider shrink-0 z-20"
       >
         <div class="flex items-center justify-center">ID</div>
@@ -66,19 +66,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
-import { useGetTournaments } from '@/composables/query/use-tournaments'
+import { useGetTournaments } from '@/views/tournaments/tournaments.queries'
 import TournamentRow from './TournamentRow.vue'
-import type { TTournament as Tournament } from '@/api/types/api.types'
 
 const showCreateTournamentDrawer = ref(false)
 const showUpdateTournamentDrawer = ref(false)
-const newTournamentData = ref<Tournament | null>(null)
+const newTournamentData = ref<TTournament | null>(null)
 
 const { data: tournaments, isLoading } = useGetTournaments()
 
-const openUpdateModal = (tournament: Tournament) => {
+const openUpdateModal = (tournament: TTournament) => {
   newTournamentData.value = tournament
   showUpdateTournamentDrawer.value = true
 }

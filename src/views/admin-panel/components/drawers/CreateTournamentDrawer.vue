@@ -200,7 +200,7 @@
                       :auto-upload="false"
                       :show-file-list="false"
                       accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                      :on-change="(file) => handleBannerPick(u.key, file)"
+                      :on-change="(file: UploadFile) => handleBannerPick(u.key, file)"
                     >
                       <div class="w-full">
                         <div
@@ -260,7 +260,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/uk'
 import uk from 'element-plus/es/locale/lang/uk'
@@ -269,7 +268,7 @@ import type { UploadFile } from 'element-plus'
 import { Edit, Plus } from '@element-plus/icons-vue'
 import { PhCalendar, PhImageSquare, PhSlidersHorizontal, PhTrophy } from '@phosphor-icons/vue'
 import { queryCache } from '@/core/query-cache-client'
-import { getApiErrorMessage } from '@/utils/api-errors'
+import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { UPLOAD_ERROR, validateImageFileForUpload } from '@/services/image-upload.service'
 import {
   TOURNAMENT_DIVISION_VALUES,
@@ -279,11 +278,11 @@ import {
   type TTournamentStatusValue
 } from '@/components/tournaments-tags/tournament.constants'
 import { getImageUrl } from '@/core/helpers'
-import type { TCreateTournamentDto as CreateTournamentDto, TTournament as Tournament, TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
+import type { TCreateTournamentDto as CreateTournamentDto, TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
 
 type TUploadKey = 'header' | 'list'
 
-const props = defineProps<{ tournament?: Tournament | null }>()
+const props = defineProps<{ tournament?: TTournament | null }>()
 const showCreateTournamentDrawer = defineModel<boolean>()
 const isEditMode = computed(() => !!props.tournament)
 const loading = ref(false)
@@ -361,7 +360,7 @@ function handleBannerPick (key: TUploadKey, uploadFile: UploadFile) {
   ingestImageFile(key, raw)
 }
 
-function populateFromTournament (t: Tournament) {
+function populateFromTournament (t: TTournament) {
   form.name = t.name ?? ''
   form.division = (t.division as CreateTournamentDto['division']) ?? ''
   const editableStatuses: TTournamentStatusValue[] = ['QUALIFICATIONS', 'PLAYOFF']
@@ -612,8 +611,8 @@ const handleSubmit = async () => {
 }
 
 :deep(.create-tournament-drawer.el-drawer) {
-  --el-drawer-bg-color: #0c111d;
-  background: linear-gradient(180deg, #0f172a 0%, #0b1121 40%, #080c16 100%) !important;
+  --el-drawer-bg-color: theme('colors.dark.navy');
+  background: linear-gradient(180deg, #0f172a 0%, theme('colors.dark.navy') 40%, #080c16 100%) !important;
   border-left: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: -16px 0 48px rgba(0, 0, 0, 0.45);
 }
@@ -633,16 +632,16 @@ const handleSubmit = async () => {
 }
 
 :deep(.create-tournament-drawer .el-drawer__close-btn) {
-  color: rgb(156 163 175);
+  color: theme('colors.gray.400');
   font-size: 18px;
 }
 
 :deep(.create-tournament-drawer .el-drawer__close-btn:hover) {
-  color: #fff;
+  color: white;
 }
 
 :deep(.drawer-field .el-form-item__label) {
-  color: rgb(203 213 225);
+  color: theme('colors.gray.300');
   font-weight: 500;
   font-size: 13px;
 }
@@ -675,11 +674,11 @@ const handleSubmit = async () => {
 }
 
 :deep(.el-input__inner) {
-  color: #f8fafc;
+  color: white;
 }
 
 :deep(.el-input__inner::placeholder) {
-  color: rgb(100 116 139);
+  color: theme('colors.gray.500');
 }
 
 :deep(.el-select__wrapper) {
@@ -700,11 +699,11 @@ const handleSubmit = async () => {
 }
 
 :deep(.el-select__placeholder) {
-  color: rgb(100 116 139);
+  color: theme('colors.gray.500');
 }
 
 :deep(.el-select__selected-item) {
-  color: #f1f5f9;
+  color: white;
 }
 
 /* Дата й час у полі: відступ для іконки, вища зона натиску */

@@ -8,9 +8,8 @@
 
 <script setup lang="ts">
 import { PhInfo } from '@phosphor-icons/vue'
-import type { TTeam as FullTeam, TTeamResponse } from '@/api/types/api.types'
 
-const props = defineProps<{ team: TTeamResponse | FullTeam | undefined | null }>()
+const props = defineProps<{ team: TTeam | undefined | null }>()
 
 const teamAvg = computed(() => {
   if (!props.team) return null

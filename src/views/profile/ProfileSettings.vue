@@ -185,10 +185,6 @@ const user = computed(() => {
   return authStore.user
 })
 
-watch(() => user.value?.rating, () => {
-  // rating changed
-}, { deep: true })
-
 onMounted(() => {
   // TODO: positions and mmr not in API yet
   selectedPositions.value = []

@@ -108,13 +108,12 @@
 
 <script setup lang="ts">
 import { isPlayerVerified, searchPlayer } from '@/core/helpers'
-import { getApiErrorMessage } from '@/utils/api-errors'
+import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { PhCheck, PhMagnifyingGlass, PhPlus } from '@phosphor-icons/vue'
-import type { TTeamResponse } from '@/api/types/api.types'
 import { teamsService } from '@/views/teams/teams.service'
 
 const props = defineProps<{
-  team: TTeamResponse | undefined
+  team: TTeam | undefined
   isMain: boolean
   isCoach?: boolean
   onAdded?: () => void | Promise<void>
@@ -281,6 +280,6 @@ async function submitAdd () {
 }
 
 onMounted(() => {
-  void playerStore.getPlayers()
+  playerStore.getPlayers()
 })
 </script>

@@ -180,7 +180,6 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
 import { useClipboard, useWindowSize } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 
@@ -195,7 +194,6 @@ import {
   PhCompassRose
 } from '@phosphor-icons/vue'
 
-import type { TPlayer } from '@/api/types/api.types'
 import { playersService } from '@/views/players/players.service'
 
 const props = withDefaults(defineProps<{
@@ -209,7 +207,6 @@ const { copy } = useClipboard({ legacy: true })
 const window = useWindowSize()
 const me = useAuthStore()
 const router = useRouter()
-const playersStore = usePlayersStore()
 
 const isMobile = computed(() => window.width.value < 850)
 const verificationLoading = ref(false)
@@ -239,12 +236,7 @@ async function toggleVerificationFromMenu () {
   try {
     const wantVerified = !isVerified.value
     const updated = await playersService.setPlayerVerificationByAdmin(u.id, wantVerified)
-    if (!updated) return
-    const list = playersStore.players
-    const ix = list.findIndex(p => p.id === updated.id)
-    if (ix !== -1) {
-      list.splice(ix, 1, updated)
-    }
+    if (updated) usePlayersStore().patchPlayerInList(updated)
   } finally {
     verificationLoading.value = false
   }

@@ -88,12 +88,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { roleLabelMap, EUserIsTeam, hasTeamLabelMap, verificationOptions, positionOptions } from '@/components/player-tags/player.constants'
-import { playersService } from '@/views/players/players.service'
-import type { ERole } from '@/types/general.types'
+import { roleLabelMap, EUserIsTeam, hasTeamLabelMap, verificationOptions, positionOptions } from '@/components/player-tags/player.enums'
+import type { ERole } from '@/types/general.enums'
 
 interface IMessageForm {
   searchType: string | null
@@ -134,7 +131,7 @@ const filterTags = computed<string[]>(() => {
   }
 
   if (query.roles) {
-    const catalog = playersService.getCachedUserRoles()
+    const catalog = usePlayersStore().userRolesCatalog
     const uuidRe = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i
     String(query.roles).split(',').forEach(raw => {
       const r = raw.trim()

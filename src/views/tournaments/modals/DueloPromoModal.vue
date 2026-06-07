@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import dueloBanner from '@/assets/images/duelo_core.png'
+import dueloBanner from '@/assets/images/core-duelo-ad.png'
 
 const LOCK_SECONDS = 5
 

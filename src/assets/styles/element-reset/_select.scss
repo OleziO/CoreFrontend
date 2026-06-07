@@ -1,15 +1,13 @@
 @use "element-plus/theme-chalk/src/select";
 @use "../variables/colors" as colors;
+@use "../mixins" as *;
 
 /* ---------------- Popper / Tooltip ---------------- */
 .el-popper.is-pure.is-light,
 .el-select__popper {
+  @include glass-popper;
   @apply
     rounded-xl
-    border
-    border-white/10
-    bg-white/5
-    backdrop-blur-xl
     shadow-[0_20px_60px_rgba(0,0,0,0.55)];
 
   /* ⬇️ Глушимо дефолтні змінні EP */
@@ -23,12 +21,9 @@
 
 /* Для випадку popper + tooltip */
 .el-popper.is-light.el-tooltip {
+  @include glass-popper;
   @apply
     rounded-xl
-    border
-    border-white/10
-    bg-white/5
-    backdrop-blur-xl
     shadow-[0_20px_60px_rgba(0,0,0,0.55)];
 
   --el-bg-color: transparent;
@@ -134,12 +129,9 @@
 /* ---------------- User menu in header: як у списку el-select (опції) ---------------- */
 .el-dropdown__popper.header-dropdown,
 .header-dropdown.el-popper {
+  @include glass-popper;
   @apply
     rounded-xl
-    border
-    border-white/10
-    bg-white/5
-    backdrop-blur-xl
     overflow-hidden
     p-0
     shadow-[0_20px_60px_rgba(0,0,0,0.55)];

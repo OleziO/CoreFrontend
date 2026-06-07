@@ -20,7 +20,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { tournamentTypeClassMap, tournamentTypeLabelMap } from './tournament.constants' // Вкажіть правильний шлях
 
 const props = defineProps<{

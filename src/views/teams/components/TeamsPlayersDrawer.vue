@@ -106,17 +106,16 @@
 
 <script setup lang="ts">
 import { Plus } from 'lucide-vue-next'
-import type { TTeamResponse } from '@/api/types/api.types'
 import { teamsService } from '@/views/teams/teams.service'
-import { hydrateTeamPlayersRanks, shallowSnapshotTeamForHydrate } from '@/views/teams/team-roster-hydrate'
+import { hydrateTeamPlayersRanks, shallowSnapshotTeamForHydrate } from '@/views/teams/team-roster-hydrate.utils'
 
 const props = defineProps<{
-  team: TTeamResponse
+  team: TTeam
 }>()
 
 const modelValue = defineModel<boolean>({ default: false })
 
-const displayTeam = ref<TTeamResponse>(props.team)
+const displayTeam = ref<TTeam>(props.team)
 
 const rosterHydrating = ref(false)
 

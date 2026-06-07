@@ -36,7 +36,7 @@
                       content="Капітан команди"
                     >
                       <span
-                        class="inline-flex shrink-0 cursor-default text-[#e8b931]
+                        class="inline-flex shrink-0 cursor-default text-accent-gold
                                drop-shadow-[0_0_8px_rgba(232,185,49,0.55)]
                                [&_svg]:block"
                         role="img"
@@ -105,12 +105,11 @@
 </template>
 
 <script lang="ts" setup>
-import { RouterLink } from 'vue-router'
 
 import { routeNames } from '@/router/route-names'
 import { PhCrown, PhUser } from '@phosphor-icons/vue'
 import { getCopy, formatPlayerRatingMmr, getPlayerRankImageSrcFromPlayerRank, isPlayerVerified, resolvePublicOrApiUrl } from '@/core/helpers'
-import type { TPlayer, TPlayerResponseDto } from '@/api/types/api.types'
+import type { TPlayerResponseDto } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
   player: TPlayer | TPlayerResponseDto | null

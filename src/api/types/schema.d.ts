@@ -528,6 +528,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tournaments/{id}/playoff/submit-manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TournamentsController_submitPlayoffBracketGameManual"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tournaments/{id}/playoff/submit": {
         parameters: {
             query?: never;
@@ -538,6 +554,23 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["TournamentsController_submitPlayoffMatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/playoff/matches/{matchId}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify a playoff game result */
+        post: operations["TournamentsController_verifyPlayoffMatch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -656,6 +689,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/duelo/sync/{tournamentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sync all tournament matches to Duelo.gg
+         * @description Sends all qualification and playoff matches (with a real dotaMatchId) from the given tournament to the Duelo.gg partner webhook. Returns counts of sent, errored, and skipped matches.
+         */
+        post: operations["DueloController_syncTournamentMatches"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/matches": {
         parameters: {
             query?: never;
@@ -702,6 +755,26 @@ export interface paths {
          * @description Sets the winner directly and awards points. winnerPoints defaults to 100, loserPoints to 40. Throws 409 if the match already has a result.
          */
         post: operations["AdminController_overrideMatchResult"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/playoff-matches/{matchId}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Override a playoff game result
+         * @description Changes the winner of an individual playoff game and resets isVerified to false.
+         */
+        post: operations["AdminController_overridePlayoffMatchResult"];
         delete?: never;
         options?: never;
         head?: never;
@@ -918,7 +991,7 @@ export interface components {
         Team: {
             id: string;
             name: string;
-            captain: components["schemas"]["Player"] | null;
+            captain: components["schemas"]["Player"];
             coach: components["schemas"]["Player"] | null;
             logoUrl: string | null;
             dotaTeamId: string | null;
@@ -1117,7 +1190,9 @@ export interface components {
             isPlayingTournament: boolean;
             /** Format: date-time */
             verifiedAt?: string | null;
-            captain: components["schemas"]["PlayerResponseDto"];
+            /** Format: date-time */
+            disbandedAt?: string | null;
+            captain?: components["schemas"]["PlayerResponseDto"] | null;
             coach?: components["schemas"]["PlayerResponseDto"] | null;
             mainPlayers: components["schemas"]["PlayerResponseDto"][];
             reservedPlayers: components["schemas"]["PlayerResponseDto"][];
@@ -1254,8 +1329,18 @@ export interface components {
             embedUrl: string;
             teams: components["schemas"]["TeamResponseDto"][];
         };
-        SubmitPlayoffMatchDto: {
-            dotaMatchId: string;
+        ManualPlayoffSeriesGameDto: {
+            /** @description Challonge bracket node id this game belongs to. */
+            challongeMatchId: string;
+            /**
+             * Format: uuid
+             * @description Winning Core team UUID (must appear in this bracket slot)
+             */
+            winnerTeamId: string;
+            /** @description Optional OpenDota match id — when omitted an internal synthetic id is used. */
+            dotaMatchId?: string;
+            /** @description Для BO3: номер підігри (gameNumber у Core, 1..3). Якщо не вказано — береться найменший підігровий слот без переможця. */
+            seriesGameSlot?: number;
         };
         Playoff: {
             id: string;
@@ -1266,10 +1351,32 @@ export interface components {
             challongeEmbedUrl: string;
             dotaPlayoffContainingNodeGroupId: string | null;
         };
+        PlayoffSeries: {
+            id: string;
+            playoffId: string;
+            playoff: components["schemas"]["Playoff"];
+            challongeMatchId: string;
+            bestOf: number;
+            isFinalSeries: boolean;
+            finalType: Record<string, never> | null;
+            teamAId: string | null;
+            teamA: components["schemas"]["Team"] | null;
+            teamBId: string | null;
+            teamB: components["schemas"]["Team"] | null;
+            seriesWinnerId: string | null;
+            seriesWinner: components["schemas"]["Team"] | null;
+            /** Format: date-time */
+            resolvedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
         PlayoffMatch: {
             id: string;
             playoffId: string;
             playoff: components["schemas"]["Playoff"];
+            seriesId: string | null;
+            series: components["schemas"]["PlayoffSeries"] | null;
+            gameNumber: number | null;
             teamAId: string | null;
             teamA: components["schemas"]["Team"] | null;
             teamBId: string | null;
@@ -1278,8 +1385,12 @@ export interface components {
             winner: components["schemas"]["Team"] | null;
             dotaMatchId: string | null;
             challongeMatchId: string;
+            isVerified: boolean;
             /** Format: date-time */
             createdAt: string;
+        };
+        SubmitPlayoffMatchDto: {
+            dotaMatchId: string;
         };
         DisqualifyTeamDto: {
             /** Format: uuid */
@@ -1290,12 +1401,38 @@ export interface components {
             name: string;
             logoUrl: string | null;
         };
+        PlayoffBracketGameSummaryDto: {
+            id: string;
+            gameNumber: number;
+            winnerTeamId?: string | null;
+            dotaMatchId?: string | null;
+        };
         OpenPlayoffMatchDto: {
             challongeMatchId: number;
             round: number;
             state: string;
             teamA: components["schemas"]["OpenPlayoffMatchTeamDto"];
             teamB: components["schemas"]["OpenPlayoffMatchTeamDto"];
+            /** @description Core identifier for persisted series envelope */
+            seriesId: string;
+            /** @enum {string} */
+            format: "bo1" | "bo3";
+            /**
+             * @description `finals_bo3` — один із BO3-finals (верхній / нижній / grand final сітки).
+             * @enum {string}
+             */
+            seriesKind: "standard" | "finals_bo3";
+            /**
+             * @description Конкретний тип finals-серії (лише коли BO3-finals). Інакше null.
+             * @enum {string|null}
+             */
+            finalSeriesType?: "upper_bracket_final" | "lower_bracket_final" | "grand_final" | null;
+            winsTeamA: number;
+            winsTeamB: number;
+            /** @description Set once the series is mathematically locked. */
+            seriesWinnerTeamId?: string | null;
+            seriesResolved: boolean;
+            games: components["schemas"]["PlayoffBracketGameSummaryDto"][];
         };
         TechLossPlayoffDto: {
             /**
@@ -2433,6 +2570,31 @@ export interface operations {
             };
         };
     };
+    TournamentsController_submitPlayoffBracketGameManual: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualPlayoffSeriesGameDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayoffMatch"];
+                };
+            };
+        };
+    };
     TournamentsController_submitPlayoffMatch: {
         parameters: {
             query?: never;
@@ -2447,6 +2609,28 @@ export interface operations {
                 "application/json": components["schemas"]["SubmitPlayoffMatchDto"];
             };
         };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayoffMatch"];
+                };
+            };
+        };
+    };
+    TournamentsController_verifyPlayoffMatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                matchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             201: {
                 headers: {
@@ -2644,6 +2828,25 @@ export interface operations {
             };
         };
     };
+    DueloController_syncTournamentMatches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tournamentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MatchesController_findAll: {
         parameters: {
             query?: never;
@@ -2752,6 +2955,29 @@ export interface operations {
         };
     };
     AdminController_overrideMatchResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OverrideMatchResultDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_overridePlayoffMatchResult: {
         parameters: {
             query?: never;
             header?: never;

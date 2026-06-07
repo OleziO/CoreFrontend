@@ -40,7 +40,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import MmrRequestsTab from './tabs/MmrRequestsTab.vue'
 import TeamVerificationTab from './tabs/TeamVerificationTab.vue'
 import PlayerVerificationTab from './tabs/PlayerVerificationTab.vue'
@@ -53,7 +52,7 @@ const activeTab = ref<TRequestTabType>('mmr')
 const tabs: { label: string; value: TRequestTabType }[] = [
   { label: 'MMR', value: 'mmr' },
   { label: 'Team Verification', value: 'team-verification' },
-  { label: 'TPlayer Verification', value: 'player-verification' },
+  { label: 'Player Verification', value: 'player-verification' },
   { label: 'Баги', value: 'bugs' }
 ]
 </script>

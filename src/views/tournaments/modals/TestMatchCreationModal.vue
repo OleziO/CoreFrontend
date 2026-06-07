@@ -64,8 +64,6 @@
 </template>
 
 <script setup lang="ts">
-import type { TTeam } from '@/api/types/api.types'
-
 const props = defineProps<{
   tournamentId: string
   phase: 'qualification' | 'playoff'
@@ -123,11 +121,11 @@ async function submit () {
 
 <style scoped>
 :deep(.test-match-dialog.custom-dialog) {
-  background-color: #1e2330;
+  background-color: theme('colors.dark.card');
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
 }
 :deep(.test-match-dialog .el-dialog__title) {
-  color: #fff;
+  color: white;
 }
 </style>

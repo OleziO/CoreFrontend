@@ -22,11 +22,10 @@
 
 <script setup lang="ts">
 import { ETournamentStatus } from '@/components/tournaments-tags/tournament.constants'
-import type { TTournament as Tournament } from '@/api/types/api.types'
 
-defineProps<{ tournament: Tournament | undefined }>()
+defineProps<{ tournament: TTournament | undefined }>()
 
-function isEndedBySchedule (t: Tournament): boolean {
+function isEndedBySchedule (t: TTournament): boolean {
   if (!t.tournamentEndsAt) return false
   return Date.parse(t.tournamentEndsAt) < Date.now()
 }

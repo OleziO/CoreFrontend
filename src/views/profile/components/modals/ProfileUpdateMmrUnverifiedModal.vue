@@ -55,8 +55,9 @@
 </template>
 
 <script setup lang="ts">
+import { getApiErrorMessage } from '@/core/utils/api-errors'
+
 const showMmrUnverifiedModal = defineModel<boolean>('showMmrUnverifiedModal')
-// const authStore = useAuthStore()
 
 const newMmr = ref<number | null>(null)
 const loading = ref(false)
@@ -74,15 +75,8 @@ const updateMmr = async () => {
     ElMessage.warning('Функціонал оновлення MMR ще не реалізований в API')
     showMmrUnverifiedModal.value = false
     newMmr.value = null
-  } catch (error: any) {
-    console.error('Помилка при оновленні MMP:', error)
-
-    // Извлекаем текст ошибки из ответа сервера
-    const errorMessage = error?.response?.data?.detail ||
-                        error?.response?.data?.message ||
-                        'Помилка при оновленні MMP. Спробуйте ще раз.'
-
-    ElMessage.error(errorMessage)
+  } catch (error: unknown) {
+    ElMessage.error(getApiErrorMessage(error, 'Помилка при оновленні MMP. Спробуйте ще раз.'))
   } finally {
     loading.value = false
   }

@@ -1,13 +1,14 @@
 import apiClient from '@/api/client'
 import { ElMessage } from 'element-plus'
 import type {
-  TTeamResponse as TeamApi,
   TCreateTeamDto as CreateTeamDto,
   TUpdateTeamDto as UpdateTeamDto,
   TAddTeamPlayerDto as AddTeamPlayerDto
 } from '@/api/types/api.types'
 
 import { postTeamLogoUpload } from '@/services/image-upload.service'
+import { hydrateTeamPlayersRanks } from '@/views/teams/team-roster-hydrate.utils'
+import { getApiErrorMessage } from '@/core/utils/api-errors'
 
 export type TCreateTeamPayload = CreateTeamDto & { logoFile?: File | null }
 export type TUpdateTeamPayload = UpdateTeamDto & { logoFile?: File | null }
@@ -19,22 +20,22 @@ function teamEntries (dto: Partial<UpdateTeamDto>): Partial<UpdateTeamDto> {
 }
 
 class TeamsService {
-  async fetchAllTeams (): Promise<TeamApi[]> {
+  async fetchAllTeams () {
     try {
-      const res = await apiClient.get('/teams')
-      return res
+      const teams = await apiClient.get('/teams')
+      return teams.map(hydrateTeamPlayersRanks)
     } catch (e) {
       ElMessage({ type: 'error' })
       throw e
     }
   }
 
-  async fetchTeam (id: string, options?: { silent?: boolean }): Promise<TeamApi> {
+  async fetchTeam (id: string, options?: { silent?: boolean }) {
     try {
-      const res = await apiClient.get('/teams/{id}', {
+      const raw = await apiClient.get('/teams/{id}', {
         dynamicKeys: { id }
       })
-      return res
+      return hydrateTeamPlayersRanks(raw)
     } catch (e) {
       if (!options?.silent) {
         ElMessage.error('Помилка')
@@ -43,18 +44,27 @@ class TeamsService {
     }
   }
 
+  /** Fetch and hydrate a single team silently. Returns null on error. */
+  async loadTeam (teamId: string): Promise<TTeam | null> {
+    try {
+      return await this.fetchTeam(teamId, { silent: true })
+    } catch {
+      return null
+    }
+  }
+
   /** POST /teams (name, dotaTeamId), потім за наявності файлу — POST /teams/:id/logo, GET для актуального стану. */
-  async createTeam (data: TCreateTeamPayload): Promise<TeamApi> {
+  async createTeam (data: TCreateTeamPayload) {
     const { logoFile, ...dto } = data
     const team = await apiClient.post('/teams', dto)
 
-    if (!logoFile) return team
+    if (!logoFile) return hydrateTeamPlayersRanks(team)
 
     await postTeamLogoUpload(team.id, logoFile)
     return await this.fetchTeam(team.id)
   }
 
-  async updateTeam (id: string, data: TUpdateTeamPayload): Promise<TeamApi> {
+  async updateTeam (id: string, data: TUpdateTeamPayload) {
     const { logoFile, ...rest } = data
     const patchPayload = teamEntries(rest)
 
@@ -71,37 +81,76 @@ class TeamsService {
     return await this.fetchTeam(id)
   }
 
+  /** Full-cycle: update team profile + success toast. Returns null on error. */
+  async updateTeamProfile (id: string, data: TUpdateTeamPayload): Promise<TTeam | null> {
+    try {
+      const updated = await this.updateTeam(id, data)
+      ElMessage.success('Команду оновлено')
+      return updated
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося оновити команду'))
+      return null
+    }
+  }
+
+  /** Full-cycle: verify team + success toast. Returns null on error. */
+  async verifyTeam (teamId: string): Promise<TTeam | null> {
+    try {
+      const updated = await this.updateTeam(teamId, { isVerified: true })
+      ElMessage.success('Команду верифіковано')
+      return updated
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося верифікувати команду'))
+      return null
+    }
+  }
+
   /** POST /teams/:id/players — додати гравця в основу або запас (адмін). */
-  async addPlayerToTeam (teamId: string, body: AddTeamPlayerDto): Promise<TeamApi> {
+  async addPlayerToTeam (teamId: string, body: AddTeamPlayerDto) {
     const res = await apiClient.post('/teams/{id}/players', body, {
       dynamicKeys: { id: teamId }
     })
     if (res && typeof res === 'object' && 'id' in res) {
-      return res
+      return hydrateTeamPlayersRanks(res)
     }
     return await this.fetchTeam(teamId)
   }
 
-  /** PATCH /teams/:id { coachId: null } — прибрати тренера з команди. */
-  async removeCoach (teamId: string): Promise<TeamApi> {
-    await apiClient.patch('/teams/{id}', { coachId: null }, {
-      dynamicKeys: { id: teamId }
-    })
-    return await this.fetchTeam(teamId)
-  }
-
-  /** DELETE /teams/:id/players/:playerId — прибрати гравця з команди (у відповіді зазвичай повна команда). */
-  async removePlayerFromTeam (teamId: string, playerId: string): Promise<TeamApi> {
-    const res = await apiClient.delete('/teams/{id}/players/{playerId}', {
-      dynamicKeys: { id: teamId, playerId }
-    }) as unknown
-    if (res && typeof res === 'object' && 'id' in res) {
-      return res as TeamApi
+  /** Full-cycle: remove coach + success toast. Returns null on error. */
+  async removeCoach (teamId: string): Promise<TTeam | null> {
+    try {
+      await apiClient.patch('/teams/{id}', { coachId: null }, {
+        dynamicKeys: { id: teamId }
+      })
+      const updated = await this.fetchTeam(teamId)
+      ElMessage.success('Тренера прибрано з команди')
+      return updated
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося прибрати тренера'))
+      return null
     }
-    return await this.fetchTeam(teamId)
   }
 
-  async dissolveTeam (id: string): Promise<void> {
+  /** Full-cycle: remove player + success toast. Returns null on error. */
+  async removePlayerFromTeam (teamId: string, playerId: string): Promise<TTeam | null> {
+    try {
+      const res = await apiClient.delete('/teams/{id}/players/{playerId}', {
+        dynamicKeys: { id: teamId, playerId }
+      })
+
+      const updated = res?.id
+        ? hydrateTeamPlayersRanks(res)
+        : await this.fetchTeam(teamId)
+
+      ElMessage.success('Гравця прибрано з команди')
+      return updated
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося прибрати гравця'))
+      return null
+    }
+  }
+
+  async dissolveTeam (id: string) {
     try {
       await apiClient.delete('/teams/{id}', {
         dynamicKeys: { id }
@@ -120,14 +169,18 @@ class TeamsService {
     }
   }
 
-  async unverifyTeam (teamId: string): Promise<void> {
+  /** Full-cycle: unverify team + success toast. Returns null on error. */
+  async unverifyTeam (teamId: string): Promise<TTeam | null> {
     try {
       await apiClient.delete('/admin/teams/{teamId}/verify', {
         dynamicKeys: { teamId }
       })
-    } catch {
-      ElMessage.error('Не вдалося зняти верифікацію команди')
-      throw new Error('Unverify failed')
+      const updated = await this.fetchTeam(teamId)
+      ElMessage.success('Верифікацію знято')
+      return updated
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося зняти верифікацію команди'))
+      return null
     }
   }
 
@@ -143,22 +196,21 @@ class TeamsService {
   // TODO: endpoint not in API yet
   // async deleteTeamChats (teamId: number) { ... }
 
-  async transferCaptaincy (teamId: string, newCaptainPlayerId: string): Promise<TeamApi> {
+  /** Returns hydrated team; success toast is handled by ChangeCaptainModal. */
+  async transferCaptaincy (teamId: string, newCaptainPlayerId: string): Promise<TTeam> {
     const res = await apiClient.post('/teams/{id}/captain', { newCaptainPlayerId }, {
       dynamicKeys: { id: teamId }
-    } as any)
-    if (res && typeof res === 'object' && 'id' in res) {
-      return res as TeamApi
-    }
-    return await this.fetchTeam(teamId)
+    })
+    return (res && typeof res === 'object' && 'id' in res)
+      ? hydrateTeamPlayersRanks(res as TTeam)
+      : await this.fetchTeam(teamId)
   }
 
   /** POST /teams/:id/invites — створити запрошення до команди (тільки капітан). */
-  async createInvite (teamId: string, slot: 'main' | 'reserved' | 'coach'): Promise<{ token: string; expiresAt: string }> {
-    const res = await apiClient.post('/teams/{id}/invites', { slot }, {
+  async createInvite (teamId: string, slot: 'main' | 'reserved' | 'coach') {
+    return await apiClient.post('/teams/{id}/invites', { slot }, {
       dynamicKeys: { id: teamId }
-    } as any)
-    return res as { token: string; expiresAt: string }
+    }) as unknown as { token: string; expiresAt: string }
   }
 
   // TODO: endpoint not in API yet

@@ -132,17 +132,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { tournamentFields } from '@/constants/tournaments'
+import { tournamentFields } from '@/views/tournaments/tournaments.enums'
 import { queryCache } from '@/core/query-cache-client'
-import { tournamentStatuses } from '@/utils/formatters'
+import { tournamentStatuses } from '@/core/utils/formatters'
 import { Plus, Edit } from '@element-plus/icons-vue'
 import type { UploadFile } from 'element-plus'
-// TODO: endpoint not in API yet (divisions)
-// import { useGetDivisions } from '@/composables/query/use-divisions'
 import { ElMessage } from 'element-plus'
-import type { TTournament as Tournament, TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
+import type { TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
 import { getImageUrl } from '@/core/helpers'
+import { getApiErrorMessage } from '@/core/utils/api-errors'
 
 interface ITournamentUpdateFormData extends Partial<UpdateTournamentDto> {
   status?: string
@@ -150,7 +148,7 @@ interface ITournamentUpdateFormData extends Partial<UpdateTournamentDto> {
   limit?: number | null
 }
 
-const props = defineProps<{newTournamentData: Tournament | undefined | null}>()
+const props = defineProps<{newTournamentData: TTournament | undefined | null}>()
 const { file, preview, reset } = useGetFile()
 
 // TODO: endpoint not in API yet (divisions)
@@ -202,16 +200,14 @@ const handleSubmit = async () => {
   try {
     const updated = await tournamentsService.updateTournament(
       props.newTournamentData?.id ?? '',
-      tournamentData.value as unknown as UpdateTournamentDto
+      tournamentData.value as UpdateTournamentDto
     )
     tournamentStore.patchTournamentInList(updated)
     ElMessage({ message: 'Турнір успішно оновлено', type: 'success' })
     showUpdateTournamentDrawer.value = false
     queryCache.invalidateQueries({ key: ['tournaments'] })
-  } catch (e: any) {
-    console.log(e)
-    const errorMessage = e?.response?.data?.detail || e?.response?.data?.message || 'Помилка при оновленні турніру'
-    ElMessage({ message: errorMessage, type: 'error' })
+  } catch (e: unknown) {
+    ElMessage.error(getApiErrorMessage(e, 'Помилка при оновленні турніру'))
   } finally {
     loading.value = false
   }
@@ -229,25 +225,25 @@ function isDateField (model: string): boolean {
 <style scoped>
 /* Стилізація Drawer */
 :deep(.custom-drawer) {
-  background-color: #111827 !important; /* Темний фон */
+  background-color: theme('colors.gray.900') !important;
   border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 :deep(.el-drawer__header) {
   margin-bottom: 20px;
   padding: 20px 24px 0;
-  color: #fff;
+  color: white;
 }
 
 :deep(.el-drawer__title) {
-  color: #fff;
+  color: white;
   font-weight: 600;
   font-size: 1.25rem;
 }
 
 :deep(.el-drawer__body) {
   padding: 0 24px 20px;
-  overflow: hidden; /* Важливо для внутрішнього скролу */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -268,7 +264,7 @@ function isDateField (model: string): boolean {
 }
 
 :deep(.el-form-item__label) {
-  color: #9ca3af;
+  color: theme('colors.gray.400');
 }
 
 :deep(.el-input__wrapper) {
@@ -278,7 +274,7 @@ function isDateField (model: string): boolean {
 }
 
 :deep(.el-input__inner) {
-  color: #fff;
+  color: white;
 }
 
 :deep(.el-select__wrapper) {
@@ -288,10 +284,10 @@ function isDateField (model: string): boolean {
 }
 
 :deep(.el-select__placeholder) {
-  color: #6b7280;
+  color: theme('colors.gray.500');
 }
 
 :deep(.el-select__selected-item) {
-  color: #fff;
+  color: white;
 }
 </style>

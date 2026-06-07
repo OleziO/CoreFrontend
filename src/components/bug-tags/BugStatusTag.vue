@@ -19,12 +19,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import {
   ERequestStatus,
   requestStatusClassMap,
   requestStatusLabelMap
-} from './status.constants' // <-- Укажи свой путь к файлу констант
+} from './status.enums'
 
 const props = defineProps<{
   status?: string | null

@@ -30,9 +30,11 @@ module.exports = {
   ignorePatterns: [
     "dts/*.d.ts",
     "src/api/types/schema.d.ts",
+    "src/api/types/schema-v2.d.ts",
     "*.cjs",
     "src/api/types/axios.d.ts",
     "src/types/api.ts",
+    "vite.config.ts.timestamp-*.mjs",
   ],
 
   rules: {
@@ -44,6 +46,7 @@ module.exports = {
         ignoreTrailingComments: true,
         ignoreUrls: true,
         ignoreStrings: true,
+        ignoreTemplateLiterals: true,
         ignoreRegExpLiterals: true,
         ignorePattern: "url\\(",
       },

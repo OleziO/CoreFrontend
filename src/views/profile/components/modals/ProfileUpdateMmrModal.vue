@@ -25,8 +25,6 @@
 </template>
 
 <script setup lang="ts">
-// const authStore = useAuthStore()
-
 const selectedMmr = defineModel<number | null | undefined>('selectedMmr')
 const showMmrModal = defineModel<boolean>('showMmrModal')
 

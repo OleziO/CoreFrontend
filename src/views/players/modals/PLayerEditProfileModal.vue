@@ -151,7 +151,6 @@ import { playersService } from '@/views/players/players.service'
 import type {
   TAdminPlayerRoleItem,
   TAdminPlayerRolesResult,
-  TPlayer,
   TUpdatePlayerDto
 } from '@/api/types/api.types'
 
