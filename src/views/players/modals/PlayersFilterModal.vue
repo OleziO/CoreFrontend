@@ -162,10 +162,10 @@
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
 import { PhSealCheck, PhSealWarning, PhMagnifyingGlass } from '@phosphor-icons/vue'
-import { DEFAULT_PLAYER_FILTERS, MAX_RATING, positionOptions, teamStatusOptions, verificationOptions } from '@/components/player-tags/player.constants'
+import { DEFAULT_PLAYER_FILTERS, MAX_RATING, positionOptions, teamStatusOptions, verificationOptions } from '@/components/player-tags/player.enums'
 
 import { parseQueryArray } from '@/core/helpers'
-import { ERole } from '@/types/general.types'
+import { ERole } from '@/types/general.enums'
 
 const modelValue = defineModel<boolean>({ default: false })
 
