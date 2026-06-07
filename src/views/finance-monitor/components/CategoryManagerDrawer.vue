@@ -75,7 +75,7 @@
               :class="form.iconAssetId === asset.id ? 'border-primary' : 'border-white/10'"
               @click="form.iconAssetId = asset.id"
             >
-              <el-image :src="asset.url" fit="cover" class="w-full h-full" />
+              <el-image :src="resolveFinanceAssetUrl(asset.url)" fit="cover" class="w-full h-full" />
             </button>
           </div>
         </div>
@@ -108,7 +108,7 @@
           class="flex items-center gap-12 p-12 rounded-xl border border-white/8 bg-white/[0.02]"
         >
           <div class="shrink-0 w-32 h-32 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
-            <el-image v-if="cat.icon" :src="cat.icon.url" fit="cover" class="w-full h-full" />
+            <el-image v-if="cat.icon" :src="resolveFinanceAssetUrl(cat.icon.url)" fit="cover" class="w-full h-full" />
             <PhTag v-else size="16" class="text-gray-400" />
           </div>
 
@@ -151,6 +151,7 @@ import type {
   TCreateCustomCategoryPayload,
   TUpdateCustomCategoryPayload
 } from '../finance.types'
+import { resolveFinanceAssetUrl } from '../utils/resolve-finance-asset-url'
 
 const props = defineProps<{
   categories: TCustomCategoryView[]

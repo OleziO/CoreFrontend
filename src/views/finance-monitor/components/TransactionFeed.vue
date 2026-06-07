@@ -6,9 +6,20 @@
       </h2>
 
       <div class="flex items-center gap-8">
+        <el-input
+          v-model="search"
+          size="small"
+          clearable
+          placeholder="Пошук"
+          class="finance-search w-160"
+        >
+          <template #prefix>
+            <PhMagnifyingGlass size="14" />
+          </template>
+        </el-input>
         <el-button
           size="small"
-          @click="$emit('create-category')"
+          @click="$emit('manage-categories')"
         >
           Категорія
         </el-button>
@@ -33,22 +44,23 @@
     </div>
 
     <div
-      v-else-if="items.length"
+      v-else-if="filteredItems.length"
       class="flex-1 min-h-0 overflow-y-auto p-12 flex flex-col gap-8"
     >
       <TransactionFeedItem
-        v-for="item in items"
+        v-for="item in filteredItems"
         :key="item.id"
         :item="item"
         @rename="$emit('rename', $event)"
         @icon="$emit('icon', $event)"
         @group="$emit('group', $event)"
+        @assign-category="$emit('assign-category', $event)"
       />
     </div>
 
     <el-empty
       v-else
-      description="Транзакцій немає"
+      :description="search.trim() ? 'Нічого не знайдено' : 'Транзакцій немає'"
       class="flex-1"
       :image-size="120"
     />
@@ -56,21 +68,40 @@
 </template>
 
 <script setup lang="ts">
+import { PhMagnifyingGlass } from '@phosphor-icons/vue'
 import type { TFeedItem } from '../finance.types'
 import TransactionFeedItem from './TransactionFeedItem.vue'
 import BankSyncButton from './BankSyncButton.vue'
 
-defineProps<{
+const props = defineProps<{
   items: TFeedItem[]
   isPending?: boolean
   isError?: boolean
 }>()
 
+const search = ref('')
+
+// Client-side free-text search over title and category; a group matches if it
+// or any of its child operations match (by title or category label).
+function itemMatches (item: TFeedItem, q: string): boolean {
+  return item.title.toLowerCase().includes(q) ||
+    !!item.category?.label.toLowerCase().includes(q)
+}
+
+const filteredItems = computed(() => {
+  const q = search.value.trim().toLowerCase()
+  if (!q) return props.items
+  return props.items.filter(item =>
+    itemMatches(item, q) || item.children.some(child => itemMatches(child, q))
+  )
+})
+
 defineEmits<{
   rename: [item: TFeedItem]
   icon: [item: TFeedItem]
   group: [item: TFeedItem]
-  'create-category': []
+  'assign-category': [item: TFeedItem]
+  'manage-categories': []
   refetch: []
 }>()
 </script>

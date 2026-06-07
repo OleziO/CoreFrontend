@@ -123,6 +123,9 @@
                 <el-dropdown-item command="group">
                   Групувати
                 </el-dropdown-item>
+                <el-dropdown-item command="category" divided>
+                  Категорія
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -143,6 +146,7 @@
         @rename="emit('rename', $event)"
         @icon="emit('icon', $event)"
         @group="emit('group', $event)"
+        @assign-category="emit('assign-category', $event)"
       />
     </div>
   </div>
@@ -165,6 +169,7 @@ const emit = defineEmits<{
   rename: [item: TFeedItem]
   icon: [item: TFeedItem]
   group: [item: TFeedItem]
+  'assign-category': [item: TFeedItem]
 }>()
 
 const expanded = ref(false)
@@ -215,5 +220,6 @@ function handleCommand (command: string) {
   if (command === 'rename') emit('rename', props.item)
   if (command === 'icon') emit('icon', props.item)
   if (command === 'group') emit('group', props.item)
+  if (command === 'category') emit('assign-category', props.item)
 }
 </script>

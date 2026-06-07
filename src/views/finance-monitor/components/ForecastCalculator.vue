@@ -33,7 +33,7 @@
               :min="0"
               :max="99"
               class="!w-full"
-              controls-position="right"
+              :controls="false"
             />
           </el-form-item>
         </div>
@@ -48,7 +48,7 @@
               :min="0"
               :step="10"
               class="!w-full"
-              controls-position="right"
+              :controls="false"
             />
           </el-form-item>
           <el-form-item label="Топ 5–8">
@@ -57,7 +57,7 @@
               :min="0"
               :step="10"
               class="!w-full"
-              controls-position="right"
+              :controls="false"
             />
           </el-form-item>
           <el-form-item label="Топ 9+">
@@ -66,18 +66,21 @@
               :min="0"
               :step="10"
               class="!w-full"
-              controls-position="right"
+              :controls="false"
             />
           </el-form-item>
         </div>
 
         <el-form-item label="Відсоток у призовий фонд">
-          <el-slider
-            v-model="form.prizePoolPercent"
-            :min="0"
-            :max="100"
-            show-input
-          />
+          <div class="flex items-center gap-16 w-full">
+            <span class="w-24">{{ form.prizePoolPercent }}%</span>
+            <el-slider
+              v-model="form.prizePoolPercent"
+              :min="0"
+              :max="100"
+              class="flex-1"
+            />
+          </div>
         </el-form-item>
 
         <p class="text-sm font-medium text-gray-300 mb-12">
@@ -94,7 +97,7 @@
               :min="0"
               :step="500"
               class="!w-full"
-              controls-position="right"
+              :controls="false"
             />
           </el-form-item>
         </div>

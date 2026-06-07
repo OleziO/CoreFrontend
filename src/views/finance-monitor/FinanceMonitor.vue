@@ -1,6 +1,6 @@
 <template>
-  <div class="h-full text-white w-full overflow-hidden flex flex-col finance-monitor-root">
-    <div class="w-[90%] max-w-[1400px] mx-auto flex flex-col h-full py-20 gap-20">
+  <div class="min-h-full text-white w-full flex flex-col">
+    <div class="w-[90%] max-w-[1400px] mx-auto flex flex-col py-20 gap-20">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-16 shrink-0">
         <div>
           <h1 class="text-4xl font-semibold tracking-tight">
@@ -24,9 +24,12 @@
         :is-error="balanceHasError"
       />
 
-      <!-- Phase 4 reserved slot: category-breakdown card goes here -->
+      <CategoryBreakdownCard
+        :items="operationsQuery.data.value?.items || []"
+        :is-pending="operationsQuery.isPending.value"
+      />
 
-      <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-20">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 auto-rows-[78vh]">
         <TransactionFeed
           :items="operationsQuery.data.value?.items || []"
           :is-pending="operationsQuery.isPending.value"
@@ -34,7 +37,8 @@
           @rename="handleRename"
           @icon="handleIcon"
           @group="handleGroup"
-          @create-category="handleCreateCategory"
+          @assign-category="handleAssignCategory"
+          @manage-categories="handleManageCategories"
           @refetch="refetchAll"
         />
 
@@ -48,6 +52,15 @@
         />
       </div>
     </div>
+
+    <CategoryManagerDrawer
+      v-model="categoryDrawerVisible"
+      :categories="categoriesQuery.data.value || []"
+      :assets="assetsQuery.data.value || []"
+      :on-create="createCategory"
+      :on-update="updateCategory"
+      :on-delete="deleteCategory"
+    />
   </div>
 </template>
 
@@ -56,13 +69,21 @@ import { ElMessage } from 'element-plus'
 import { useAppModals } from '@/composables/use-app-modals'
 import { useFinanceAssets } from '@/composables/query/use-finance-assets'
 import { useFinanceBalance } from '@/composables/query/use-finance-balance'
+import { useFinanceCategories } from '@/composables/query/use-finance-categories'
 import { useFinanceForecast } from '@/composables/query/use-finance-forecast'
 import { useFinanceOperations } from '@/composables/query/use-finance-operations'
 import { queryCache } from '@/core/query-cache-client'
 import BalanceCard from './components/BalanceCard.vue'
 import TransactionFeed from './components/TransactionFeed.vue'
 import ForecastCalculator from './components/ForecastCalculator.vue'
-import type { TFeedItem, TForecastConfig } from './finance.types'
+import CategoryManagerDrawer from './components/CategoryManagerDrawer.vue'
+import CategoryBreakdownCard from './components/CategoryBreakdownCard.vue'
+import type {
+  TCreateCustomCategoryPayload,
+  TFeedItem,
+  TForecastConfig,
+  TUpdateCustomCategoryPayload
+} from './finance.types'
 import { financeService } from './finance.service'
 
 const includeForecast = ref(false)
@@ -73,6 +94,9 @@ const operationsQuery = useFinanceOperations(computed(() => ({
 })))
 const forecastQuery = useFinanceForecast()
 const assetsQuery = useFinanceAssets()
+const categoriesQuery = useFinanceCategories()
+
+const categoryDrawerVisible = ref(false)
 
 const balanceHasError = computed(() => !!balanceQuery.error.value)
 const operationsHasError = computed(() => !!operationsQuery.error.value)
@@ -89,6 +113,12 @@ function refetchAll () {
 function invalidateOperations () {
   queryCache.invalidateQueries({ key: ['finance', 'operations'] })
   queryCache.invalidateQueries({ key: ['finance', 'balance'] })
+}
+
+function invalidateCategories () {
+  queryCache.invalidateQueries({ key: ['finance', 'categories'] })
+  // Matchers/assignments change per-row categories — refresh the feed too.
+  queryCache.invalidateQueries({ key: ['finance', 'operations'] })
 }
 
 function handleRename (item: TFeedItem) {
@@ -144,13 +174,40 @@ function handleGroup (item: TFeedItem) {
   })
 }
 
-function handleCreateCategory () {
-  open('CreateCustomCategoryModal' as any, {
-    assets: assetsQuery.data.value || [],
-    onSubmit: async (payload: { label: string; iconAssetId?: string | null }) => {
-      await financeService.createCustomCategory(payload)
-      ElMessage.success('Категорію створено')
-      close('CreateCustomCategoryModal' as any)
+function handleManageCategories () {
+  categoryDrawerVisible.value = true
+}
+
+async function createCategory (payload: TCreateCustomCategoryPayload) {
+  await financeService.createCustomCategory(payload)
+  ElMessage.success('Категорію створено')
+  invalidateCategories()
+}
+
+async function updateCategory (id: string, payload: TUpdateCustomCategoryPayload) {
+  await financeService.updateCustomCategory(id, payload)
+  ElMessage.success('Категорію оновлено')
+  invalidateCategories()
+}
+
+async function deleteCategory (id: string) {
+  await financeService.deleteCustomCategory(id)
+  ElMessage.success('Категорію видалено')
+  invalidateCategories()
+}
+
+function handleAssignCategory (item: TFeedItem) {
+  const operationId = item.kind === 'OPERATION' ? item.id : item.operationIds[0]
+  if (!operationId) return
+
+  open('AssignCategoryModal' as any, {
+    categories: categoriesQuery.data.value || [],
+    currentCategoryId: item.category?.id ?? null,
+    onSubmit: async (categoryId: string | null) => {
+      await financeService.assignOperationCategory(operationId, categoryId)
+      ElMessage.success('Категорію оновлено')
+      invalidateOperations()
+      close('AssignCategoryModal' as any)
     }
   })
 }
@@ -158,21 +215,9 @@ function handleCreateCategory () {
 async function handleSaveForecast (config: TForecastConfig) {
   await forecastQuery.saveForecast(config)
 }
-
-onMounted(() => {
-  document.body.style.overflow = 'hidden'
-})
-
-onBeforeUnmount(() => {
-  document.body.style.overflow = ''
-})
 </script>
 
 <style scoped>
-.finance-monitor-root {
-  overflow: hidden !important;
-}
-
 .finance-checkbox :deep(.el-checkbox__label) {
   color: #d1d5db;
 }

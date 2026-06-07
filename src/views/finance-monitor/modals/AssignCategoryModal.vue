@@ -27,7 +27,7 @@
         @click="selectedId = cat.id"
       >
         <span class="shrink-0 w-32 h-32 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
-          <el-image v-if="cat.icon" :src="cat.icon.url" fit="cover" class="w-full h-full" />
+          <el-image v-if="cat.icon" :src="resolveFinanceAssetUrl(cat.icon.url)" fit="cover" class="w-full h-full" />
           <PhTag v-else size="16" class="text-gray-400" />
         </span>
         <span class="text-white truncate">{{ cat.label }}</span>
@@ -56,6 +56,7 @@
 <script setup lang="ts">
 import { PhTag, PhProhibit } from '@phosphor-icons/vue'
 import type { TCustomCategoryView } from '../finance.types'
+import { resolveFinanceAssetUrl } from '../utils/resolve-finance-asset-url'
 
 const props = defineProps<{
   categories?: TCustomCategoryView[]

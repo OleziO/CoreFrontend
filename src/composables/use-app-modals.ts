@@ -31,7 +31,9 @@ export const appModals = useModals({
   GroupOperationsModal:
     defineAsyncComponent(() => import('@/views/finance-monitor/modals/GroupOperationsModal.vue')) as Component,
   CreateCustomCategoryModal:
-    defineAsyncComponent(() => import('@/views/finance-monitor/modals/CreateCustomCategoryModal.vue')) as Component
+    defineAsyncComponent(() => import('@/views/finance-monitor/modals/CreateCustomCategoryModal.vue')) as Component,
+  AssignCategoryModal:
+    defineAsyncComponent(() => import('@/views/finance-monitor/modals/AssignCategoryModal.vue')) as Component
 })
 
 export function useAppModals () {
