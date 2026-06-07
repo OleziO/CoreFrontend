@@ -144,7 +144,7 @@
 
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { positionOptions } from '@/components/player-tags/player.constants'
+import { positionOptions } from '@/components/player-tags/player.enums'
 import { isPlayerVerified } from '@/core/helpers'
 import { useAuthStore } from '@/store/modules/auth'
 import { playersService } from '@/views/players/players.service'

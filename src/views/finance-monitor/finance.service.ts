@@ -16,64 +16,64 @@ import type {
 
 class FinanceService {
   async fetchBalance (includeForecast = false): Promise<TBalance> {
-    return financeClient.get('/balance', {
+    return financeClient.get<TBalance>('/balance', {
       params: { includeForecast }
     })
   }
 
   async fetchOperations (params: TOperationsQueryParams = {}): Promise<TFeedView> {
-    return financeClient.get('/operations', { params })
+    return financeClient.get<TFeedView>('/operations', { params })
   }
 
   async fetchForecast (): Promise<TForecastResponse> {
-    return financeClient.get('/forecast')
+    return financeClient.get<TForecastResponse>('/forecast')
   }
 
   async updateForecast (config: TForecastConfig): Promise<NonNullable<TForecastResponse>> {
-    return financeClient.put('/forecast', config)
+    return financeClient.put<NonNullable<TForecastResponse>>('/forecast', config)
   }
 
   async renameOperation (id: string, label: string): Promise<{ status: string }> {
-    return financeClient.patch(`/operations/${id}/rename`, { label })
+    return financeClient.patch<{ status: string }>(`/operations/${id}/rename`, { label })
   }
 
   async setOperationIcon (id: string, iconAssetId: string): Promise<{ status: string }> {
-    return financeClient.patch(`/operations/${id}/icon`, { iconAssetId })
+    return financeClient.patch<{ status: string }>(`/operations/${id}/icon`, { iconAssetId })
   }
 
   async groupOperations (payload: TGroupOperationsPayload): Promise<TOperationGroupView> {
-    return financeClient.post('/operations/group', payload)
+    return financeClient.post<TOperationGroupView>('/operations/group', payload)
   }
 
   async fetchCustomCategories (): Promise<TCustomCategoryView[]> {
-    return financeClient.get('/custom-categories')
+    return financeClient.get<TCustomCategoryView[]>('/custom-categories')
   }
 
   async createCustomCategory (payload: TCreateCustomCategoryPayload): Promise<TCustomCategoryView> {
-    return financeClient.post('/custom-categories', payload)
+    return financeClient.post<TCustomCategoryView>('/custom-categories', payload)
   }
 
   async updateCustomCategory (
     id: string,
     payload: TUpdateCustomCategoryPayload
   ): Promise<TCustomCategoryView> {
-    return financeClient.patch(`/custom-categories/${id}`, payload)
+    return financeClient.patch<TCustomCategoryView>(`/custom-categories/${id}`, payload)
   }
 
   async deleteCustomCategory (id: string): Promise<void> {
-    return financeClient.delete(`/custom-categories/${id}`)
+    return financeClient.delete<void>(`/custom-categories/${id}`)
   }
 
   async assignOperationCategory (id: string, categoryId: string | null): Promise<{ status: string }> {
-    return financeClient.patch(`/operations/${id}/category`, { categoryId })
+    return financeClient.patch<{ status: string }>(`/operations/${id}/category`, { categoryId })
   }
 
   async fetchAssets (): Promise<TAssetView[]> {
-    return financeClient.get('/assets')
+    return financeClient.get<TAssetView[]>('/assets')
   }
 
   async syncBank (payload: TBankSyncPayload): Promise<{ synced: number }> {
-    return financeClient.post('/bank/sync', payload)
+    return financeClient.post<{ synced: number }>('/bank/sync', payload)
   }
 }
 

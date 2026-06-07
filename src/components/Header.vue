@@ -127,7 +127,7 @@
 
               <el-dropdown-item
                 v-if="hasAdminUaRole"
-                @click="$router.push({ name: routeNames.financeMonitor })"
+                @click="router.push({ name: routeNames.financeMonitor })"
               >
                 <PhCurrencyCircleDollar :size="20" />
                 <span class="ml-8">Фінанси</span>
@@ -186,6 +186,7 @@ const showCreateTournamentDrawer = ref(false)
 const hasAdminUaRole = computed(() => hasAdminRole(authStore.user?.roles))
 
 const route = useRoute()
+const router = useRouter()
 
 const navLinks: { name: string; label: string }[] = [
   { name: routeNames.rootPage, label: 'Головна' },

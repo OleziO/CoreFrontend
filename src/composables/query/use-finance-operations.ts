@@ -8,7 +8,7 @@ export const useFinanceOperations = (params: MaybeRefOrGetter<TOperationsQueryPa
   return useQueryWrapper<TFeedView>({
     key: () => {
       const value = toValue(params)
-      return ['finance', 'operations', value.includeForecast, value.from, value.to]
+      return ['finance', 'operations', !!value.includeForecast, value.from ?? null, value.to ?? null]
     },
     query: () => financeService.fetchOperations(toValue(params)),
     refetchOnWindowFocus: false
