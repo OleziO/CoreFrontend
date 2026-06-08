@@ -17,6 +17,15 @@
           class="absolute inset-0 bg-gradient-to-r from-dark-navy/80
            via-transparent to-transparent pointer-events-none"
         />
+        <!-- Акцентні відблиски в стилі головної (cyan/gold) -->
+        <div
+          class="absolute inset-0 pointer-events-none
+           bg-[radial-gradient(ellipse_55%_50%_at_12%_88%,rgba(67,191,238,0.12),transparent_70%)]"
+        />
+        <div
+          class="absolute inset-0 pointer-events-none
+           bg-[radial-gradient(ellipse_45%_40%_at_92%_18%,rgba(232,185,49,0.08),transparent_70%)]"
+        />
       </div>
 
       <div class="relative z-10 pt-24 w-full max-w-7xl mx-auto px-20 sm:px-15 lg:px-20 xl:px-40 pb-14 lg:pb-16">
@@ -47,18 +56,25 @@
       </div>
     </div>
 
+    <SponsorShowcase />
+
     <div class="w-full max-w-7xl mx-auto px-10 sm:px-15 lg:px-20 xl:px-40 py-10 pb-20">
-      <div class="flex items-center gap-12 overflow-x-auto no-scrollbar relative border-b border-white/[0.08]">
+      <div
+        class="sticky top-0 z-30 flex items-center gap-12 overflow-x-auto no-scrollbar relative
+               border-b border-white/[0.08] bg-dark-navy/90 backdrop-blur-md"
+      >
         <el-tabs v-model="activeTab" class="tournament-detail-tabs w-full" tab-position="top" stretch>
           <el-tab-pane v-for="tab in tabs" :key="tab.value" :name="tab.value">
             <template #label>
               <div class="relative flex gap-4 sm:gap-6 items-center py-2">
-                <span class="text-sm sm:text-[15px] font-medium text-white/85">{{ tab.label }}</span>
+                <span class="text-[13px] sm:text-sm font-semibold uppercase tracking-wide text-white/85">
+                  {{ tab.label }}
+                </span>
                 <el-tag
                   v-if="tab.value === 'teams'"
-                  type="danger"
+                  type="info"
                   round
-                  class="border border-blue-500/40 bg-blue-500/15 text-blue-300
+                  class="border border-[#43bfee]/40 bg-[#43bfee]/15 text-[#43bfee]
                 rounded-full size-20 flex justify-center items-center text-xs
                 tracking-wide font-semibold transition-all duration-300"
                 >
@@ -137,17 +153,17 @@ const apiBaseUrl = import.meta.env.VITE_API_PUBLIC_URL
 
 const { open: openAppModal } = useAppModals()
 
-const DUELO_PROMO_LS_KEY = 'dueloPromoLastShownAt'
-const DUELO_PROMO_INTERVAL_MS = 30 * 60 * 1000
+// const DUELO_PROMO_LS_KEY = 'dueloPromoLastShownAt'
+// const DUELO_PROMO_INTERVAL_MS = 30 * 60 * 1000
 let dueloPromoTimer: ReturnType<typeof setInterval> | null = null
 
 /** Показуємо промо-модалку Duelo не частіше, ніж раз на 30 хв (зберігається між візитами). */
-function maybeShowDueloPromo () {
-  const last = Number(localStorage.getItem(DUELO_PROMO_LS_KEY) ?? 0)
-  if (Number.isFinite(last) && last > 0 && Date.now() - last < DUELO_PROMO_INTERVAL_MS) return
-  localStorage.setItem(DUELO_PROMO_LS_KEY, String(Date.now()))
-  openAppModal('DueloPromoModal')
-}
+// function maybeShowDueloPromo () {
+//   const last = Number(localStorage.getItem(DUELO_PROMO_LS_KEY) ?? 0)
+//   if (Number.isFinite(last) && last > 0 && Date.now() - last < DUELO_PROMO_INTERVAL_MS) return
+//   localStorage.setItem(DUELO_PROMO_LS_KEY, String(Date.now()))
+//   openAppModal('DueloPromoModal')
+// }
 
 function isTournamentEndedByDate (tt: TTournament | null | undefined): boolean {
   if (!tt?.tournamentEndsAt) return false
@@ -445,8 +461,8 @@ onMounted(async () => {
   }
   await hydrateMyTeam()
 
-  maybeShowDueloPromo()
-  dueloPromoTimer = setInterval(maybeShowDueloPromo, DUELO_PROMO_INTERVAL_MS)
+  // maybeShowDueloPromo()
+  // dueloPromoTimer = setInterval(maybeShowDueloPromo, DUELO_PROMO_INTERVAL_MS)
 })
 
 onUnmounted(() => {
@@ -484,12 +500,12 @@ onUnmounted(() => {
   gap: 0.25rem;
 }
 
-/** Не брати дефолтний primary EP (синій); під нейтральну лінію з border-батькова */
+/** Акцентна лінія активної вкладки — cyan у стилі головної сторінки. */
 .tournament-detail-tabs :deep(.el-tabs__active-bar) {
   height: 2px;
-  border-radius: 0;
-  background-color: rgb(229 231 235);
-  box-shadow: none;
+  border-radius: 9999px;
+  background-color: #43bfee;
+  box-shadow: 0 0 12px rgba(67, 191, 238, 0.5);
 }
 
 .tournament-detail-tabs :deep(.el-tabs__item) {

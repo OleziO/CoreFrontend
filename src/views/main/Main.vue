@@ -129,6 +129,97 @@
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════
+         SPONSORS
+    ══════════════════════════════════════════════════════════════ -->
+    <section class="py-50 border-t border-white/8">
+      <div class="max-w-5xl mx-auto px-24">
+        <div class="text-center mb-56 reveal">
+          <span
+            class="text-[11px] uppercase tracking-[0.35em] text-[#e8b931] font-semibold block mb-16"
+          >Підтримка</span>
+          <h2 class="text-3xl md:text-4xl font-black uppercase text-white">Партнери та спонсори</h2>
+        </div>
+
+        <!-- Title sponsor -->
+        <div class="mb-48 reveal">
+          <p class="text-center text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-20">Титульний спонсор</p>
+          <div class="flex justify-center">
+            <div
+              class="h-96 w-320 max-w-full rounded-2xl bg-white/[0.02] border border-dashed border-[#e8b931]/25
+                     hover:border-[#e8b931]/50 hover:bg-[#e8b931]/[0.03]
+                     flex items-center justify-center transition-colors duration-300 cursor-default"
+            >
+              <span class="text-gray-600 text-[11px] uppercase tracking-[0.25em]">Місце вільне</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gold sponsors -->
+        <div class="mb-40 reveal">
+          <p class="text-center text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-20">Золоті партнери</p>
+          <div class="flex justify-center gap-20 flex-wrap">
+            <div
+              v-for="i in 3"
+              :key="i"
+              class="h-72 w-208 max-w-full rounded-xl bg-white/[0.02] border border-dashed border-white/12
+                     hover:border-[#e8b931]/35 hover:bg-white/[0.03]
+                     flex items-center justify-center transition-colors duration-300 cursor-default"
+            >
+              <span class="text-gray-600 text-[10px] uppercase tracking-[0.2em]">Місце вільне</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Partners -->
+        <div class="mb-48 reveal">
+          <p class="text-center text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-20">Партнери</p>
+          <div class="flex justify-center gap-16 flex-wrap">
+            <!-- PLAYERS — чинний партнер -->
+            <a
+              href="https://players.com.ua/en/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="PLAYERS"
+              class="h-56 w-160 max-w-full rounded-lg overflow-hidden bg-white/[0.03] border border-[#e8b931]/30
+                     hover:border-[#e8b931]/55 hover:bg-[#e8b931]/[0.04]
+                     flex items-center justify-center transition-colors duration-300 cursor-pointer"
+            >
+              <img
+                :src="playersPartnerLogo"
+                alt="PLAYERS"
+                loading="lazy"
+                class="h-full w-full max-w-full object-cover rounded-[inherit]"
+              >
+            </a>
+            <!-- Вільні місця -->
+            <div
+              v-for="i in 4"
+              :key="i"
+              class="h-56 w-160 max-w-full rounded-lg bg-white/[0.02] border border-dashed border-white/10
+                     hover:border-white/25 hover:bg-white/[0.03]
+                     flex items-center justify-center transition-colors duration-300 cursor-default"
+            >
+              <span class="text-gray-600 text-[10px] uppercase tracking-[0.15em]">Вільне</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center reveal">
+          <a
+            href="https://discord.gg/SvgsPHPU"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-8 text-sm text-gray-500 hover:text-[#43bfee]
+                   transition-colors cursor-pointer"
+          >
+            Зацікавлені у партнерстві? Зв'яжіться з нами в Discord
+            <PhArrowRight :size="15" />
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
          TOURNAMENTS
     ══════════════════════════════════════════════════════════════ -->
     <section v-if="tournamentsLoading || activeTournaments.length" class="py-50">
@@ -260,79 +351,6 @@
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════
-         SPONSORS
-    ══════════════════════════════════════════════════════════════ -->
-    <section class="py-50 border-t border-white/8">
-      <div class="max-w-5xl mx-auto px-24">
-        <div class="text-center mb-56 reveal">
-          <span
-            class="text-[11px] uppercase tracking-[0.35em] text-[#e8b931] font-semibold block mb-16"
-          >Підтримка</span>
-          <h2 class="text-3xl md:text-4xl font-black uppercase text-white">Партнери та спонсори</h2>
-        </div>
-
-        <!-- Title sponsor -->
-        <div class="mb-48 reveal">
-          <p class="text-center text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-20">Титульний спонсор</p>
-          <div class="flex justify-center">
-            <div
-              class="h-96 w-320 max-w-full rounded-2xl bg-white/[0.02] border border-dashed border-[#e8b931]/25
-                     hover:border-[#e8b931]/50 hover:bg-[#e8b931]/[0.03]
-                     flex items-center justify-center transition-colors duration-300 cursor-default"
-            >
-              <span class="text-gray-600 text-[11px] uppercase tracking-[0.25em]">Місце вільне</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Gold sponsors -->
-        <div class="mb-40 reveal">
-          <p class="text-center text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-20">Золоті партнери</p>
-          <div class="flex justify-center gap-20 flex-wrap">
-            <div
-              v-for="i in 3"
-              :key="i"
-              class="h-72 w-208 max-w-full rounded-xl bg-white/[0.02] border border-dashed border-white/12
-                     hover:border-[#e8b931]/35 hover:bg-white/[0.03]
-                     flex items-center justify-center transition-colors duration-300 cursor-default"
-            >
-              <span class="text-gray-600 text-[10px] uppercase tracking-[0.2em]">Місце вільне</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Partners -->
-        <div class="mb-48 reveal">
-          <p class="text-center text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-20">Партнери</p>
-          <div class="flex justify-center gap-16 flex-wrap">
-            <div
-              v-for="i in 5"
-              :key="i"
-              class="h-56 w-160 max-w-full rounded-lg bg-white/[0.02] border border-dashed border-white/10
-                     hover:border-white/25 hover:bg-white/[0.03]
-                     flex items-center justify-center transition-colors duration-300 cursor-default"
-            >
-              <span class="text-gray-600 text-[10px] uppercase tracking-[0.15em]">Вільне</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="text-center reveal">
-          <a
-            href="https://discord.gg/SvgsPHPU"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-8 text-sm text-gray-500 hover:text-[#43bfee]
-                   transition-colors cursor-pointer"
-          >
-            Зацікавлені у партнерстві? Зв'яжіться з нами в Discord
-            <PhArrowRight :size="15" />
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════
          FAQ
     ══════════════════════════════════════════════════════════════ -->
     <section class="py-50 border-t border-white/8">
@@ -377,6 +395,7 @@
 
 <script setup lang="ts">
 import logo from '@/assets/images/core-league-logo-full.png'
+import playersPartnerLogo from '@/assets/images/sponsor-players.png'
 import {
   PhTrophy,
   PhArrowRight,
