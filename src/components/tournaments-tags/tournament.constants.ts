@@ -124,9 +124,9 @@ export const tournamentDivisionCardChipClassMap: Record<TTournamentDivisionValue
 }
 
 export const tournamentDivisionMmrHintMap: Record<TTournamentDivisionValue, string> = {
-  DIVISION_I: 'Максимальний MMR гравця ≤ 3 500',
-  DIVISION_II: 'Максимальний MMR гравця ≤ 5 500',
-  DIVISION_III: 'Максимальний MMR гравця ≤ 7 000'
+  DIVISION_I: 'Середній MMR команди: 0–2 500 • Макс. MMR гравця: 3 500',
+  DIVISION_II: 'Середній MMR команди: 2 500–4 500 • Макс. MMR гравця: 5 500',
+  DIVISION_III: 'Середній MMR команди: 4 500–7 000 • Макс. MMR гравця: без обмежень'
 }
 
 export const PROFILE_CAPTAIN_ROLE_UA = 'Капітан'

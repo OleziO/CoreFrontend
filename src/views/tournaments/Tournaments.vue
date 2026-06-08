@@ -1,8 +1,14 @@
 <template>
   <div
     v-loading.fullscreen="tournamentStore.loading"
-    class="flex flex-col max-h-full w-full overflow-hidden relative"
+    class="flex flex-col max-h-full w-full overflow-hidden relative bg-bg-primary"
   >
+    <!-- Атмосферний відблиск у стилі головної сторінки -->
+    <div
+      class="pointer-events-none absolute inset-x-0 top-0 z-0 h-[260px]
+             bg-[radial-gradient(ellipse_60%_100%_at_50%_0%,rgba(67,191,238,0.07),transparent_70%)]"
+    />
+
     <div
       class="absolute top-0 left-0 z-30 flex justify-center w-full
              bg-white/2 backdrop-blur-lg
@@ -16,12 +22,17 @@
         <!-- DESKTOP -->
         <div
           v-if="!isMobile"
-          class="flex justify-between items-center w-full pt-40 pb-20"
+          class="flex justify-between items-end w-full pt-32 pb-20"
         >
-          <h1 class="text-4xl font-semibold text-white">
-            Командні турніри
-          </h1>
-          <div class="flex items-center gap-25">
+          <div class="flex flex-col gap-6">
+            <span class="text-[11px] uppercase tracking-[0.35em] text-[#43bfee] font-semibold">
+              Змагання
+            </span>
+            <h1 class="text-3xl xl:text-4xl font-black uppercase tracking-tight text-white">
+              Командні турніри
+            </h1>
+          </div>
+          <div class="flex items-center gap-16">
             <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
               <el-button
                 type="primary"
@@ -129,8 +140,6 @@ const tournamentStore = useTournamentStore()
 
 const filteredTournaments = computed(() => {
   const query = route.query
-
-  console.log(tournamentStore.tournamentsData)
 
   return tournamentStore.tournamentsData.filter(tournament => {
     if (!checkQueryFilter(tournament, query)) return false

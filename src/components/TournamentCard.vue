@@ -4,7 +4,7 @@
            bg-gradient-to-b from-gray-900 to-gray-950
            overflow-hidden cursor-pointer shadow-lg shadow-black/45
            transition-[border-color,box-shadow] duration-300 ease-out
-           hover:border-cyan-400/45 hover:shadow-[0_16px_48px_-12px_rgba(6,182,212,0.28)]"
+           hover:border-[#43bfee]/50 hover:shadow-[0_16px_48px_-12px_rgba(67,191,238,0.30)]"
     :style="{ maxWidth: `${width}px`, height: `${TOURNAMENT_CARD_HEIGHT}px` }"
     @click="toTournamentPage(tournament.id)"
   >

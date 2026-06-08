@@ -308,6 +308,7 @@
     "useVirtualGridLayout": true,
     "useVirtualList": true,
     "useWakeLock": true,
+    "useWeightedRotation": true,
     "useWebNotification": true,
     "useWebSocket": true,
     "useWebWorker": true,
