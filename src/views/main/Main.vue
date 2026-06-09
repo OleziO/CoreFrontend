@@ -176,7 +176,7 @@
           <div class="flex justify-center gap-16 flex-wrap">
             <!-- PLAYERS — чинний партнер -->
             <a
-              href="https://players.com.ua/en/"
+              href="https://players.com.ua/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="PLAYERS"
