@@ -6,7 +6,8 @@
       :class="{
         'border-dashed border-white/15': item.virtual,
         'cursor-pointer': isGroup,
-        '!bg-transparent !border-transparent hover:!bg-white/[0.03]': nested
+        '!bg-transparent !border-transparent hover:!bg-white/[0.03]': nested,
+        'opacity-50': item.isHidden
       }"
       @click="isGroup && toggleExpanded()"
     >
@@ -126,6 +127,9 @@
                 <el-dropdown-item command="category" divided>
                   Категорія
                 </el-dropdown-item>
+                <el-dropdown-item command="toggle-hidden">
+                  {{ item.isHidden ? 'Показати' : 'Приховати' }}
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -147,6 +151,7 @@
         @icon="emit('icon', $event)"
         @group="emit('group', $event)"
         @assign-category="emit('assign-category', $event)"
+        @toggle-hidden="emit('toggle-hidden', $event)"
       />
     </div>
   </div>
@@ -170,6 +175,7 @@ const emit = defineEmits<{
   icon: [item: TFeedItem]
   group: [item: TFeedItem]
   'assign-category': [item: TFeedItem]
+  'toggle-hidden': [item: TFeedItem]
 }>()
 
 const expanded = ref(false)
@@ -221,5 +227,6 @@ function handleCommand (command: string) {
   if (command === 'icon') emit('icon', props.item)
   if (command === 'group') emit('group', props.item)
   if (command === 'category') emit('assign-category', props.item)
+  if (command === 'toggle-hidden') emit('toggle-hidden', props.item)
 }
 </script>

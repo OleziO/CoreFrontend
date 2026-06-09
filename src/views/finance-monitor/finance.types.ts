@@ -1,6 +1,4 @@
-export type TOperationType = 'BETKING' | 'DUELO_GG' | 'PRIZE' | 'CUSTOM'
-
-export type TOperationGroupKind = 'PRIZE' | 'CUSTOM'
+export type TOperationGroupKind = 'PRIZE' | 'SPONSOR' | 'CUSTOM'
 
 export type TSponsorKind = 'BETKING' | 'DUELO_GG'
 
@@ -9,11 +7,12 @@ export type TFeedItemKind = 'OPERATION' | 'GROUP' | 'FORECAST'
 export type TFeedItemSign = 'POSITIVE' | 'NEGATIVE'
 
 /**
- * Discriminator for `kind === 'GROUP'` feed items.
+ * Discriminator for `kind === 'GROUP'` feed items (V2 `FeedViewDto.groupKind`).
  * - `TEAM_GIFT` / `OTHER_GIFTS` — computed live by the backend over the requested range.
- * - `CUSTOM` / `PRIZE` — manual groups.
+ * - `SPONSOR` — sponsor-matched payouts.
+ * - `MANUAL` — manually created groups.
  */
-export type TFeedGroupKind = 'TEAM_GIFT' | 'OTHER_GIFTS' | 'CUSTOM' | 'PRIZE'
+export type TFeedGroupKind = 'TEAM_GIFT' | 'OTHER_GIFTS' | 'SPONSOR' | 'MANUAL'
 
 export type TAssetView = {
   id: string
@@ -41,7 +40,6 @@ export type TOperationGroupView = {
   kind: TOperationGroupKind
   title: string
   operationIds: string[]
-  aggregatedAmount: number
   groupKey: string
   icon: TAssetView | null
 }
@@ -76,6 +74,8 @@ export type TFeedItem = {
   /** Assigned category, or `null` when uncategorized. */
   category: TFeedItemCategory | null
   virtual: boolean
+  /** Hidden from the default feed; revealed only when `showHidden` is requested. */
+  isHidden: boolean
   /** Nested child operations for groups (empty for plain operations). */
   children: TFeedItem[]
 }
@@ -131,6 +131,20 @@ export type TOperationsQueryParams = {
   includeForecast?: boolean
   from?: string
   to?: string
+  showHidden?: boolean
+}
+
+/**
+ * Body for the unified `PATCH /operations/{id}` (V2 `UpdateOperationDto`).
+ * Full replace: `title`, `iconAssetId`, `categoryId` and `comment` are all required keys
+ * (the nullable ones clear the value when sent as `null`). `isHidden` is optional.
+ */
+export type TUpdateOperationPayload = {
+  title: string
+  iconAssetId: string | null
+  categoryId: string | null
+  comment: string | null
+  isHidden?: boolean
 }
 
 export type TGroupOperationsPayload = {
@@ -151,10 +165,6 @@ export type TUpdateCustomCategoryPayload = {
   iconAssetId?: string | null
   sign?: TCategorySign
   matchers?: string[]
-}
-
-export type TAssignCategoryPayload = {
-  categoryId: string | null
 }
 
 export type TBankSyncPayload = {

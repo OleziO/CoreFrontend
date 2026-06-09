@@ -15,3 +15,21 @@ export function resolveFinanceAssetUrl (path: string | null | undefined): string
 
   return base ? `${base}${p}` : p
 }
+
+/**
+ * Reverse-map a feed item's resolved `iconUrl` back to a managed asset id.
+ *
+ * The V2 feed only exposes a resolved `iconUrl`, never the underlying `iconAssetId`,
+ * but `PATCH /operations/{id}` is a full replace and needs the id to keep a manual
+ * icon when editing other fields. Matching the resolved URLs recovers it; a non-asset
+ * icon (e.g. a team logo) has no managed id and correctly returns `null`.
+ */
+export function findAssetIdByResolvedUrl (
+  assets: { id: string; url: string }[],
+  iconUrl: string | null | undefined
+): string | null {
+  const target = resolveFinanceAssetUrl(iconUrl)
+  if (!target) return null
+
+  return assets.find(asset => resolveFinanceAssetUrl(asset.url) === target)?.id ?? null
+}

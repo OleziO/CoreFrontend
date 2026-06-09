@@ -55,6 +55,7 @@
         @icon="$emit('icon', $event)"
         @group="$emit('group', $event)"
         @assign-category="$emit('assign-category', $event)"
+        @toggle-hidden="$emit('toggle-hidden', $event)"
       />
     </div>
 
@@ -101,6 +102,7 @@ defineEmits<{
   icon: [item: TFeedItem]
   group: [item: TFeedItem]
   'assign-category': [item: TFeedItem]
+  'toggle-hidden': [item: TFeedItem]
   'manage-categories': []
   refetch: []
 }>()

@@ -11,11 +11,18 @@
           </p>
         </div>
 
-        <el-checkbox
-          v-model="includeForecast"
-          label="Включити прогнозовані значення"
-          class="finance-checkbox"
-        />
+        <div class="flex items-center gap-16">
+          <el-checkbox
+            v-model="includeForecast"
+            label="Включити прогнозовані значення"
+            class="finance-checkbox"
+          />
+          <el-checkbox
+            v-model="showHidden"
+            label="Показати приховані"
+            class="finance-checkbox"
+          />
+        </div>
       </div>
 
       <BalanceCard
@@ -38,6 +45,7 @@
           @icon="handleIcon"
           @group="handleGroup"
           @assign-category="handleAssignCategory"
+          @toggle-hidden="handleToggleHidden"
           @manage-categories="handleManageCategories"
           @refetch="refetchAll"
         />
@@ -82,15 +90,19 @@ import type {
   TCreateCustomCategoryPayload,
   TFeedItem,
   TForecastConfig,
-  TUpdateCustomCategoryPayload
+  TUpdateCustomCategoryPayload,
+  TUpdateOperationPayload
 } from './finance.types'
 import { financeService } from './finance.service'
+import { findAssetIdByResolvedUrl } from './utils/resolve-finance-asset-url'
 
 const includeForecast = ref(false)
+const showHidden = ref(false)
 
 const balanceQuery = useFinanceBalance(includeForecast)
 const operationsQuery = useFinanceOperations(computed(() => ({
-  includeForecast: includeForecast.value
+  includeForecast: includeForecast.value,
+  showHidden: showHidden.value
 })))
 const forecastQuery = useFinanceForecast()
 const assetsQuery = useFinanceAssets()
@@ -121,6 +133,26 @@ function invalidateCategories () {
   queryCache.invalidateQueries({ key: ['finance', 'operations'] })
 }
 
+/**
+ * Build a full `UpdateOperationDto` for the unified `PATCH /operations/{id}`.
+ * The endpoint is a full replace, so we carry the item's current values and let the
+ * caller override just the field being edited. The icon id is recovered from the
+ * resolved `iconUrl` (the feed never returns `iconAssetId`) to avoid wiping it.
+ */
+function buildOperationPayload (
+  item: TFeedItem,
+  overrides: Partial<TUpdateOperationPayload>
+): TUpdateOperationPayload {
+  return {
+    title: item.title,
+    iconAssetId: findAssetIdByResolvedUrl(assetsQuery.data.value || [], item.iconUrl),
+    categoryId: item.category?.id ?? null,
+    comment: null,
+    isHidden: item.isHidden,
+    ...overrides
+  }
+}
+
 function handleRename (item: TFeedItem) {
   const operationId = item.kind === 'OPERATION' ? item.id : item.operationIds[0]
   if (!operationId) return
@@ -129,7 +161,7 @@ function handleRename (item: TFeedItem) {
     operationId,
     initialLabel: item.title,
     onSubmit: async (label: string) => {
-      await financeService.renameOperation(operationId, label)
+      await financeService.updateOperation(operationId, buildOperationPayload(item, { title: label }))
       ElMessage.success('Операцію перейменовано')
       invalidateOperations()
       close('RenameOperationModal' as any)
@@ -145,12 +177,21 @@ function handleIcon (item: TFeedItem) {
     assets: assetsQuery.data.value || [],
     isPending: assetsQuery.isPending.value,
     onSubmit: async (iconAssetId: string) => {
-      await financeService.setOperationIcon(operationId, iconAssetId)
+      await financeService.updateOperation(operationId, buildOperationPayload(item, { iconAssetId }))
       ElMessage.success('Іконку оновлено')
       invalidateOperations()
       close('SelectIconModal' as any)
     }
   })
+}
+
+async function handleToggleHidden (item: TFeedItem) {
+  const operationId = item.kind === 'OPERATION' ? item.id : item.operationIds[0]
+  if (!operationId) return
+
+  await financeService.updateOperation(operationId, buildOperationPayload(item, { isHidden: !item.isHidden }))
+  ElMessage.success(item.isHidden ? 'Операцію показано' : 'Операцію приховано')
+  invalidateOperations()
 }
 
 function handleGroup (item: TFeedItem) {
@@ -204,7 +245,7 @@ function handleAssignCategory (item: TFeedItem) {
     categories: categoriesQuery.data.value || [],
     currentCategoryId: item.category?.id ?? null,
     onSubmit: async (categoryId: string | null) => {
-      await financeService.assignOperationCategory(operationId, categoryId)
+      await financeService.updateOperation(operationId, buildOperationPayload(item, { categoryId }))
       ElMessage.success('Категорію оновлено')
       invalidateOperations()
       close('AssignCategoryModal' as any)

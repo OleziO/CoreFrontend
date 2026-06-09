@@ -11,7 +11,8 @@ import type {
   TGroupOperationsPayload,
   TOperationGroupView,
   TOperationsQueryParams,
-  TUpdateCustomCategoryPayload
+  TUpdateCustomCategoryPayload,
+  TUpdateOperationPayload
 } from './finance.types'
 
 class FinanceService {
@@ -33,12 +34,13 @@ class FinanceService {
     return financeClient.put<NonNullable<TForecastResponse>>('/forecast', config)
   }
 
-  async renameOperation (id: string, label: string): Promise<{ status: string }> {
-    return financeClient.patch<{ status: string }>(`/operations/${id}/rename`, { label })
-  }
-
-  async setOperationIcon (id: string, iconAssetId: string): Promise<{ status: string }> {
-    return financeClient.patch<{ status: string }>(`/operations/${id}/icon`, { iconAssetId })
+  /**
+   * Unified operation edit (V2 `PATCH /operations/{id}`). Replaces the former
+   * `/rename`, `/icon` and `/category` sub-endpoints. Full replace — callers must
+   * pass the current values for fields they are not changing.
+   */
+  async updateOperation (id: string, payload: TUpdateOperationPayload): Promise<{ status: string }> {
+    return financeClient.patch<{ status: string }>(`/operations/${id}`, payload)
   }
 
   async groupOperations (payload: TGroupOperationsPayload): Promise<TOperationGroupView> {
@@ -62,10 +64,6 @@ class FinanceService {
 
   async deleteCustomCategory (id: string): Promise<void> {
     return financeClient.delete<void>(`/custom-categories/${id}`)
-  }
-
-  async assignOperationCategory (id: string, categoryId: string | null): Promise<{ status: string }> {
-    return financeClient.patch<{ status: string }>(`/operations/${id}/category`, { categoryId })
   }
 
   async fetchAssets (): Promise<TAssetView[]> {
