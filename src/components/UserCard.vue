@@ -2,12 +2,9 @@
   <div
     class="relative group z-10 flex !cursor-pointer flex-col items-center rounded-2xl p-20
            bg-gradient-to-br from-gray-900 via-gray-850 to-gray-950
-           border shadow-[0_0_20px_rgba(0,0,0,0.5)]
+           border border-white/10 shadow-elevation-3
            transition-all duration-300 ease-out w-[250px]
-           hover:border-primary/60"
-    :class="isVerified
-      ? 'border-green-800 hover:shadow-green-800'
-      : 'border-red-800 hover:shadow-red-800'"
+           hover:border-primary/60 hover:shadow-glow-primary"
     @click="goToPlayerPage(user.id)"
   >
     <!-- Dropdown три крапки -->
@@ -58,19 +55,12 @@
         placement="bottom"
         effect="dark"
       >
-        <div
-          class="absolute -top-6 -right-6 z-10 flex h-24 w-24 items-center justify-center
-                 rounded-full ring-2 ring-gray-900 shadow-md"
-          :class="isVerified
-            ? 'bg-green-600 text-white'
-            : 'bg-red-600 text-white'"
-        >
-          <component
-            :is="isVerified ? PhSealCheck : PhSealWarning"
-            :size="15"
-            weight="fill"
-          />
-        </div>
+        <StatusBadge
+          :preset="isVerified ? 'verified' : 'unverified'"
+          size="sm"
+          icon-only
+          class="absolute -top-6 -right-6 z-10 ring-2 ring-gray-900"
+        />
       </el-tooltip>
     </div>
 
@@ -102,10 +92,7 @@
     <div
       class="
         -mx-20 mt-10 grid w-[calc(100%+40px)] grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-0
-        border-t border-dashed py-16"
-      :class="isVerified
-        ? 'border-green-800/60'
-        : 'border-red-800/60'"
+        border-t border-dashed border-white/10 py-16"
     >
       <div class="min-w-0 overflow-x-auto pl-20 pr-8 [scrollbar-width:thin]">
         <PlayerTeamTag stretch-in-grid :user />
@@ -118,12 +105,9 @@
     <!-- Рейтинг (ранг) + позиції -->
     <div
       class="mt-8 flex w-full items-stretch justify-center gap-20 rounded-xl
-             border border-gray-800/60
+             border border-white/10
              bg-gradient-to-br from-gray-900/70 via-gray-900/40 to-gray-950/70
              py-12 px-10 shadow-inner"
-      :class="isVerified
-        ? 'border-green-800/60'
-        : 'border-red-800/60'"
     >
       <el-tooltip
         v-if="rankImageSrc"

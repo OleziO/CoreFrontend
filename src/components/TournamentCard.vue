@@ -1,10 +1,10 @@
 <template>
   <div
-    class="relative group flex w-full flex-col rounded-2xl border border-gray-700/90
+    class="relative group flex w-full flex-col rounded-2xl border border-white/10
            bg-gradient-to-b from-gray-900 to-gray-950
-           overflow-hidden cursor-pointer shadow-lg shadow-black/45
+           overflow-hidden cursor-pointer shadow-elevation-3
            transition-[border-color,box-shadow] duration-300 ease-out
-           hover:border-[#43bfee]/50 hover:shadow-[0_16px_48px_-12px_rgba(67,191,238,0.30)]"
+           hover:border-primary/50 hover:shadow-glow-primary"
     :style="{ maxWidth: `${width}px`, height: `${TOURNAMENT_CARD_HEIGHT}px` }"
     @click="toTournamentPage(tournament.id)"
   >
@@ -68,12 +68,12 @@
           :class="tournament.division ? 'flex-1' : 'w-full'"
         >
           <div
-            class="flex min-w-0 items-center justify-center gap-10 rounded-xl border border-green-500/25
-                   bg-green-950/20 px-12 py-10 text-[13px] text-green-100/95 backdrop-blur-sm"
+            class="flex min-w-0 items-center justify-center gap-10 rounded-xl border border-gold/25
+                   bg-gold/10 px-12 py-10 text-[13px] backdrop-blur-sm"
           >
-            <PhTrophy :size="18" weight="duotone" class="shrink-0 text-green-400/90" />
-            <span class="text-[11px] font-semibold uppercase tracking-widest text-green-200/65">Приз</span>
-            <span class="truncate font-semibold tabular-nums text-green-100">
+            <PhTrophy :size="18" weight="duotone" class="shrink-0 text-gold" />
+            <span class="text-[11px] font-semibold uppercase tracking-widest text-gold/70">Приз</span>
+            <span class="truncate font-semibold tabular-nums text-gold">
               {{ formatTournamentPrizeUah(tournament.prizePool) }}
             </span>
           </div>

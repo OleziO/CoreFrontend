@@ -1,11 +1,8 @@
 <template>
   <div
-    class="group/card relative flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border
-           bg-gradient-to-br from-gray-900 via-gray-850 to-gray-950 shadow-[0_0_20px_rgba(0,0,0,0.45)]
-           transition-all duration-300 ease-out hover:border-primary/60"
-    :class="team.isVerified
-      ? 'border-green-800 hover:shadow-green-800'
-      : 'border-red-800 hover:shadow-red-800'"
+    class="group/card relative flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/10
+           bg-gradient-to-br from-gray-900 via-gray-850 to-gray-950 shadow-elevation-3
+           transition-all duration-300 ease-out hover:border-primary/60 hover:shadow-glow-primary"
     @click="goToTeamPage(team.id)"
   >
     <!-- Логотип з тими самими px-12 / pt-12, що й інші блоки картки -->
@@ -36,18 +33,13 @@
           effect="dark"
           :show-after="140"
         >
-          <div
-            class="absolute bottom-10 right-10 z-[1] flex h-[30px] w-[30px] items-center justify-center rounded-full
-                   shadow-md ring-2 ring-black/60"
-            :class="team.isVerified ? 'bg-green-700 text-white' : 'bg-red-700 text-white'"
+          <StatusBadge
+            :preset="team.isVerified ? 'verified' : 'unverified'"
+            size="sm"
+            icon-only
+            class="absolute bottom-10 right-10 z-[1] ring-2 ring-black/60"
             @click.stop
-          >
-            <component
-              :is="team.isVerified ? PhSealCheck : PhSealWarning"
-              :size="16"
-              weight="fill"
-            />
-          </div>
+          />
         </el-tooltip>
       </div>
     </div>
@@ -98,62 +90,49 @@
       </div>
     </div>
 
-    <!-- Один компактний блок: Dota ID + копія + Dotabuff (як на сторінці команди) -->
+    <!-- Dota ID: чіткий поділ значення та дій (копіювати / Dotabuff) -->
     <div class="mt-10 shrink-0 px-12">
       <div
-        class="flex min-h-[36px] min-w-0 items-center justify-between gap-8 rounded-xl border border-gray-700/55
-               bg-black/25 px-10 py-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
+        class="flex min-h-[40px] min-w-0 items-center gap-8 rounded-xl border border-white/10
+               bg-black/25 px-10 py-6"
       >
-        <div class="flex min-w-0 flex-1 items-center gap-8">
-          <span class="shrink-0 text-[9px] font-semibold uppercase tracking-[0.14em] text-gray-600">
+        <div class="flex min-w-0 flex-1 flex-col">
+          <span class="text-[9px] font-semibold uppercase tracking-[0.14em] text-white/40">
             Dota ID
           </span>
-          <el-tooltip
-            :disabled="!dotaTeamIdDisplay"
-            content="Натисніть, щоб скопіювати"
-            placement="top"
-            effect="dark"
-          >
-            <button
-              type="button"
-              class="group/id flex min-w-0 flex-1 items-center gap-6 rounded-md border-0 bg-transparent p-0 text-left
-                     outline-none transition-colors"
-              :class="dotaTeamIdDisplay
-                ? 'cursor-pointer text-gray-400 hover:text-primary'
-                : 'cursor-default text-gray-600'"
-              @click.stop="dotaTeamIdDisplay && copyDotaTeamId()"
-            >
-              <span class="min-w-0 truncate font-mono text-[11px] tabular-nums">
-                {{ dotaTeamIdDisplay || '—' }}
-              </span>
-              <PhCopy
-                v-if="dotaTeamIdDisplay"
-                size="12"
-                class="shrink-0 text-gray-600 opacity-70 transition-opacity group-hover/id:opacity-100"
-              />
-            </button>
-          </el-tooltip>
+          <span class="min-w-0 truncate font-mono text-[12px] tabular-nums text-white/85">
+            {{ dotaTeamIdDisplay || '—' }}
+          </span>
         </div>
 
-        <el-button
-          v-if="dotaTeamIdDisplay"
-          class="!size-30 shrink-0 hover:bg-white/10"
-          tag="a"
-          target="_blank"
-          rel="noopener noreferrer"
-          :href="getDotabuffTeamUrl(team.dotaTeamId)"
-          title="Dotabuff"
-          @click.stop
-        >
-          <Icon :size="14" name="dotabuff" />
-        </el-button>
+        <div v-if="dotaTeamIdDisplay" class="flex shrink-0 items-center gap-4">
+          <el-tooltip content="Скопіювати Dota ID" placement="top" effect="dark">
+            <el-button
+              class="!size-30 hover:bg-white/10"
+              aria-label="Скопіювати Dota ID"
+              @click.stop="copyDotaTeamId()"
+            >
+              <PhCopy :size="14" />
+            </el-button>
+          </el-tooltip>
+          <el-tooltip content="Dotabuff" placement="top" effect="dark">
+            <el-button
+              class="!size-30 hover:bg-white/10"
+              tag="a"
+              target="_blank"
+              rel="noopener noreferrer"
+              :href="getDotabuffTeamUrl(team.dotaTeamId)"
+              aria-label="Відкрити на Dotabuff"
+              @click.stop
+            >
+              <Icon :size="14" name="dotabuff" />
+            </el-button>
+          </el-tooltip>
+        </div>
       </div>
     </div>
 
-    <div
-      class="mx-12 mt-10 shrink-0 border-t border-dashed"
-      :class="team.isVerified ? 'border-green-800/45' : 'border-red-800/45'"
-    />
+    <div class="mx-12 mt-10 shrink-0 border-t border-dashed border-white/10" />
 
     <div class="shrink-0 px-12 pb-12 pt-10">
       <el-badge
@@ -182,7 +161,7 @@
 import { routeNames } from '@/router/route-names'
 import { useClipboard } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
-import { PhChartBar, PhCopy, PhSealCheck, PhSealWarning, PhUsersThree } from '@phosphor-icons/vue'
+import { PhChartBar, PhCopy, PhUsersThree } from '@phosphor-icons/vue'
 import { getDotabuffTeamUrl, resolvePublicOrApiUrl } from '@/core/helpers'
 import {
   resolveTeamDivisionForDisplay,
