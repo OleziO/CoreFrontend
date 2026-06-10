@@ -36,6 +36,7 @@
 .el-dialog {
   @include glass-panel;
   @apply relative rounded-2xl m-auto max-h-[70vh] overflow-hidden flex flex-col px-0;
+  box-shadow: var(--ds-elevation-4);
 
   &::focus,
   &:focus-visible {
@@ -110,8 +111,8 @@
       box-shadow: none;
 
       &:focus {
-        border-color: #43bfee;
-        box-shadow: 0 0 8px rgba(67,191,238,0.4);
+        border-color: var(--ds-primary);
+        box-shadow: var(--ds-glow-primary);
       }
 
       &::placeholder {

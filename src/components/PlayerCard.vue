@@ -4,12 +4,9 @@
       <div
         class="relative flex items-center justify-between py-10 px-10 rounded-2xl
                bg-gradient-to-br from-gray-900 via-gray-850 to-gray-950
-               border shadow-[0_0_20px_rgba(0,0,0,0.5)]
+               border border-white/10 shadow-elevation-3
                transition-all duration-300 ease-out cursor-pointer
-               hover:border-primary/60"
-        :class="isVerified
-          ? 'border-green-800 hover:shadow-green-800'
-          : 'border-red-800 hover:shadow-red-800'"
+               hover:border-primary/60 hover:shadow-glow-primary"
       >
         <div class="flex items-center gap-10 z-10 justify-between w-full">
           <div class="flex items-center justify-between w-full gap-10">
@@ -26,7 +23,7 @@
               <div class="flex truncate flex-col">
                 <div>
                   <h3
-                    class="text-white truncate font-semibold leading-tight
+                    class="text-white truncate font-display font-semibold leading-tight
                            group-hover:text-primary transition-colors duration-300 flex gap-8 items-center min-w-0"
                   >
                     <el-tooltip
@@ -47,6 +44,18 @@
                           :size="18"
                         />
                       </span>
+                    </el-tooltip>
+
+                    <el-tooltip
+                      :content="isVerified ? 'Верифікований' : 'Не верифікований'"
+                      placement="top"
+                      effect="dark"
+                    >
+                      <StatusBadge
+                        :preset="isVerified ? 'verified' : 'unverified'"
+                        size="sm"
+                        icon-only
+                      />
                     </el-tooltip>
 
                     <el-tooltip :content="player.discordName || '-'" placement="top">
