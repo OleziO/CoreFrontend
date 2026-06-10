@@ -30,7 +30,7 @@
           <!-- Основне -->
           <section class="drawer-section">
             <div class="drawer-section__head">
-              <PhSlidersHorizontal :size="18" weight="duotone" class="text-cyan-400/90" />
+              <PhSlidersHorizontal :size="18" weight="duotone" class="text-primary" />
               <span class="drawer-section__title">Основне</span>
             </div>
             <div class="drawer-section__body drawer-section__grid">
