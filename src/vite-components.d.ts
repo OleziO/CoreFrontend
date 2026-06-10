@@ -20,6 +20,7 @@ declare module 'vue' {
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElBadge: typeof import('element-plus/es')['ElBadge']
     ElButton: typeof import('element-plus/es')['ElButton']
+    ElCalendar: typeof import('element-plus/es')['ElCalendar']
     ElCarousel: typeof import('element-plus/es')['ElCarousel']
     ElCarouselItem: typeof import('element-plus/es')['ElCarouselItem']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
@@ -124,6 +125,8 @@ declare module 'vue' {
     UpdateTournamentDrawer: typeof import('./views/admin-panel/components/drawers/UpdateTournamentDrawer.vue')['default']
     UserCard: typeof import('./components/UserCard.vue')['default']
     UserCardRow: typeof import('./components/UserCardRow.vue')['default']
+    VerificationDayDrawer: typeof import('./views/admin-panel/components/drawers/VerificationDayDrawer.vue')['default']
+    VerificationTab: typeof import('./views/admin-panel/components/tabs/VerificationTab.vue')['default']
     VirtualList: typeof import('./components/VirtualList.vue')['default']
   }
   export interface ComponentCustomProperties {

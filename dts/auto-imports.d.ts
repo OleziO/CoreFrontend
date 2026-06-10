@@ -332,6 +332,7 @@ declare global {
   const userRolesCatalogRef: typeof import('../src/views/players/players.service')['userRolesCatalogRef']
   const userRolesService: typeof import('../src/services/user-roles.service')['userRolesService']
   const validateImageFileForUpload: typeof import('../src/services/image-upload.service')['validateImageFileForUpload']
+  const verificationService: typeof import('../src/services/verification.service')['verificationService']
   const watch: typeof import('vue')['watch']
   const watchArray: typeof import('@vueuse/core')['watchArray']
   const watchAtMost: typeof import('@vueuse/core')['watchAtMost']
