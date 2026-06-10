@@ -8,7 +8,6 @@
       <div class="atm-glow-cyan" />
       <div class="atm-glow-purple" />
       <div class="atm-grid" />
-      <div class="atm-particles" />
       <div class="atm-vignette" />
 
       <!-- Hero content -->
@@ -44,7 +43,21 @@
         </p>
 
         <div class="flex flex-col sm:flex-row items-center gap-16 mt-24">
+          <button
+            v-if="!authStore.token"
+            type="button"
+            :disabled="authStore.loginLoading"
+            class="discord-cta flex items-center gap-12 px-32 py-16 rounded-xl font-bold text-base text-white
+                   bg-[#5865F2] hover:bg-[#4752C4] transition-all duration-200 cursor-pointer
+                   shadow-[0_0_30px_rgba(88,101,242,0.45)] hover:shadow-[0_0_55px_rgba(88,101,242,0.65)]
+                   disabled:opacity-60 disabled:cursor-not-allowed"
+            @click="authStore.startDiscordLogin()"
+          >
+            <Icon name="discord" :size="22" />
+            Увійти через Discord
+          </button>
           <a
+            v-else
             href="https://discord.gg/SvgsPHPU"
             target="_blank"
             rel="noopener noreferrer"
@@ -124,6 +137,59 @@
             </div>
             <div class="mt-8 text-[10px] uppercase tracking-[0.2em] text-gray-500">{{ stat.label }}</div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         TOURNAMENTS (competitive content — surfaced above sponsors/FAQ)
+    ══════════════════════════════════════════════════════════════ -->
+    <section v-if="tournamentsLoading || activeTournaments.length" class="py-50">
+      <div class="max-w-6xl mx-auto px-24">
+        <div class="flex items-end justify-between mb-48 reveal">
+          <div>
+            <span
+              class="text-[11px] uppercase tracking-[0.35em] text-[#43bfee]
+                     font-semibold block mb-12"
+            >Змагання</span>
+            <h2 class="text-3xl md:text-4xl font-black uppercase text-white">Активні турніри</h2>
+          </div>
+          <RouterLink
+            to="/tournaments"
+            class="hidden md:flex items-center gap-8 text-sm text-gray-400 hover:text-white
+                   transition-colors group cursor-pointer"
+          >
+            Всі турніри
+            <PhArrowRight :size="16" class="group-hover:translate-x-1 transition-transform" />
+          </RouterLink>
+        </div>
+
+        <!-- Loading skeleton -->
+        <div v-if="tournamentsLoading" class="grid md:grid-cols-2 lg:grid-cols-3 gap-24">
+          <div v-for="i in 3" :key="i" class="h-288 rounded-2xl bg-dark-card animate-pulse" />
+        </div>
+
+        <!-- Active tournament cards -->
+        <div
+          v-else
+          class="grid md:grid-cols-2 lg:grid-cols-3 gap-24 justify-items-center"
+        >
+          <TournamentCard
+            v-for="t in activeTournaments"
+            :key="t.id"
+            :tournament="t"
+            class="reveal w-full"
+          />
+        </div>
+
+        <div class="mt-32 text-center md:hidden reveal">
+          <RouterLink
+            to="/tournaments"
+            class="inline-flex items-center gap-8 text-sm text-gray-400 hover:text-white
+                   transition-colors cursor-pointer"
+          >
+            Всі турніри <PhArrowRight :size="16" />
+          </RouterLink>
         </div>
       </div>
     </section>
@@ -215,59 +281,6 @@
             Зацікавлені у партнерстві? Зв'яжіться з нами в Discord
             <PhArrowRight :size="15" />
           </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════
-         TOURNAMENTS
-    ══════════════════════════════════════════════════════════════ -->
-    <section v-if="tournamentsLoading || activeTournaments.length" class="py-50">
-      <div class="max-w-6xl mx-auto px-24">
-        <div class="flex items-end justify-between mb-48 reveal">
-          <div>
-            <span
-              class="text-[11px] uppercase tracking-[0.35em] text-[#43bfee]
-                     font-semibold block mb-12"
-            >Змагання</span>
-            <h2 class="text-3xl md:text-4xl font-black uppercase text-white">Активні турніри</h2>
-          </div>
-          <RouterLink
-            to="/tournaments"
-            class="hidden md:flex items-center gap-8 text-sm text-gray-400 hover:text-white
-                   transition-colors group cursor-pointer"
-          >
-            Всі турніри
-            <PhArrowRight :size="16" class="group-hover:translate-x-1 transition-transform" />
-          </RouterLink>
-        </div>
-
-        <!-- Loading skeleton -->
-        <div v-if="tournamentsLoading" class="grid md:grid-cols-2 lg:grid-cols-3 gap-24">
-          <div v-for="i in 3" :key="i" class="h-288 rounded-2xl bg-dark-card animate-pulse" />
-        </div>
-
-        <!-- Active tournament cards -->
-        <div
-          v-else
-          class="grid md:grid-cols-2 lg:grid-cols-3 gap-24 justify-items-center"
-        >
-          <TournamentCard
-            v-for="t in activeTournaments"
-            :key="t.id"
-            :tournament="t"
-            class="reveal w-full"
-          />
-        </div>
-
-        <div class="mt-32 text-center md:hidden reveal">
-          <RouterLink
-            to="/tournaments"
-            class="inline-flex items-center gap-8 text-sm text-gray-400 hover:text-white
-                   transition-colors cursor-pointer"
-          >
-            Всі турніри <PhArrowRight :size="16" />
-          </RouterLink>
         </div>
       </div>
     </section>
@@ -406,6 +419,8 @@ import {
   PhUsersThree
 } from '@phosphor-icons/vue'
 import type { TIconName } from '@/components/Icon.vue'
+
+const authStore = useAuthStore()
 
 // ── Feature strip ──────────────────────────────────────────────────────────
 const features = [
@@ -711,68 +726,6 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.atm-particles {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.atm-particles::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 2px;
-  height: 2px;
-  border-radius: 50%;
-  background: rgba(67, 191, 238, 0.7);
-  box-shadow:
-    120px 80px 0 rgba(67, 191, 238, 0.4),
-    250px 180px 0 rgba(232, 185, 49, 0.3),
-    380px 60px 0 rgba(67, 191, 238, 0.5),
-    520px 220px 0 rgba(139, 92, 246, 0.3),
-    680px 100px 0 rgba(67, 191, 238, 0.4),
-    800px 300px 0 rgba(232, 185, 49, 0.25),
-    950px 150px 0 rgba(67, 191, 238, 0.35),
-    1100px 250px 0 rgba(139, 92, 246, 0.25),
-    1300px 80px 0 rgba(67, 191, 238, 0.4),
-    1450px 320px 0 rgba(232, 185, 49, 0.3),
-    60px 350px 0 rgba(67, 191, 238, 0.3),
-    200px 450px 0 rgba(139, 92, 246, 0.2),
-    420px 400px 0 rgba(232, 185, 49, 0.25),
-    600px 480px 0 rgba(67, 191, 238, 0.35),
-    780px 380px 0 rgba(139, 92, 246, 0.2),
-    1050px 430px 0 rgba(67, 191, 238, 0.3),
-    1200px 500px 0 rgba(232, 185, 49, 0.2),
-    1380px 420px 0 rgba(67, 191, 238, 0.25);
-  animation: particle-drift 16s ease-in-out infinite;
-}
-
-.atm-particles::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 1px;
-  height: 1px;
-  border-radius: 50%;
-  background: rgba(232, 185, 49, 0.6);
-  box-shadow:
-    180px 120px 0 rgba(232, 185, 49, 0.3),
-    340px 280px 0 rgba(67, 191, 238, 0.35),
-    500px 140px 0 rgba(139, 92, 246, 0.3),
-    720px 360px 0 rgba(232, 185, 49, 0.25),
-    900px 200px 0 rgba(67, 191, 238, 0.3),
-    1150px 320px 0 rgba(232, 185, 49, 0.2),
-    1350px 180px 0 rgba(139, 92, 246, 0.25),
-    80px 500px 0 rgba(67, 191, 238, 0.25),
-    320px 560px 0 rgba(232, 185, 49, 0.2),
-    560px 520px 0 rgba(139, 92, 246, 0.15),
-    840px 480px 0 rgba(67, 191, 238, 0.3);
-  animation: particle-drift 22s ease-in-out infinite reverse;
-}
-
 .atm-vignette {
   position: absolute;
   inset: 0;
@@ -786,17 +739,9 @@ onBeforeUnmount(() => {
   50% { transform: scale(1.06) translateY(-2%); opacity: 0.8; }
 }
 
-@keyframes particle-drift {
-  0%, 100% { transform: translateY(0px); }
-  33% { transform: translateY(-14px); }
-  66% { transform: translateY(9px); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .atm-glow-cyan,
-  .atm-glow-purple,
-  .atm-particles::before,
-  .atm-particles::after {
+  .atm-glow-purple {
     animation: none;
   }
 }
