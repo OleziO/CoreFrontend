@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-full text-white w-full flex flex-col">
-    <div class="w-[90%] max-w-[1400px] mx-auto flex flex-col py-20 gap-20">
+    <div class="w-full max-w-[1400px] mx-auto flex flex-col py-20 gap-20 px-16 lg:px-24">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-16 shrink-0">
         <div>
           <h1 class="text-4xl font-semibold tracking-tight">
@@ -29,7 +29,7 @@
         :is-pending="operationsQuery.isPending.value"
       />
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 auto-rows-[78vh]">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 auto-rows-[minmax(360px,70vh)]">
         <TransactionFeed
           :items="operationsQuery.data.value?.items || []"
           :is-pending="operationsQuery.isPending.value"
