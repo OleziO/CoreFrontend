@@ -1,11 +1,11 @@
 <template>
   <div
     class="
-      rounded-xl !px-[50px]
-      border border-gray-800/90
+      rounded-xl
+      border border-white/10
       bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90
-      p-12 2md:p-14
-      shadow-[0_10px_30px_rgba(0,0,0,0.35)] w-full
+      p-14 2md:p-16
+      shadow-elevation-2 w-full
       flex flex-col items-stretch gap-10
     "
   >
@@ -39,7 +39,7 @@
     <!-- Завантаження: скелет тієї ж сітки/розміру, без стрибків layout -->
     <div
       v-else-if="isPending"
-      class="grid grid-cols-3 gap-[20px]"
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-[16px]"
     >
       <div
         v-for="i in skeletonCount"
@@ -51,7 +51,7 @@
 
     <p
       v-else-if="isError"
-      class="text-center text-sm text-red-300/80 py-10"
+      class="text-center text-sm text-error py-10"
     >
       Не вдалося завантажити героїв з OpenDota. Спробуйте пізніше.
     </p>
@@ -65,7 +65,7 @@
 
     <div
       v-else
-      class="grid grid-cols-3 gap-[20px]"
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-[16px]"
     >
       <div
         v-for="h in heroes"
@@ -111,7 +111,7 @@
           <template v-if="h.winrate !== null">
             ·
             <span
-              :class="h.winrate >= 50 ? 'text-green-300/90' : 'text-red-300/90'"
+              :class="h.winrate >= 50 ? 'text-success' : 'text-error'"
             >
               {{ h.winrate }}%
             </span>

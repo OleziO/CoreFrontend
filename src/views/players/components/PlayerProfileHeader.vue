@@ -28,17 +28,12 @@
           <el-tooltip
             :content="isVerified ? 'Верифікований' : 'Не верифікований'"
           >
-            <div
-              class="absolute -bottom-4 -right-4 flex h-20 w-20 items-center justify-center
-                   rounded-full ring-2 ring-gray-900"
-              :class="isVerified ? 'bg-green-600' : 'bg-red-600'"
-            >
-              <component
-                :is="isVerified ? PhSealCheck : PhSealWarning"
-                size="12"
-                weight="fill"
-              />
-            </div>
+            <StatusBadge
+              :preset="isVerified ? 'verified' : 'unverified'"
+              size="sm"
+              icon-only
+              class="absolute -bottom-4 -right-4 ring-2 ring-gray-900"
+            />
           </el-tooltip>
         </div>
 
