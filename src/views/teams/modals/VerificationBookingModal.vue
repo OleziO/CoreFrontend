@@ -27,28 +27,37 @@
       <section class="flex flex-col gap-10">
         <label class="vb-label">Гравці</label>
         <div v-if="!rosterPlayers.length" class="vb-empty">У команді немає гравців</div>
-        <el-checkbox-group v-else v-model="selectedPlayerIds" class="flex flex-col gap-8">
-          <label
+        <el-select
+          v-else
+          v-model="selectedPlayerIds"
+          multiple
+          filterable
+          placeholder="Оберіть гравців"
+          popper-class="vb-players-popper"
+          class="w-full"
+        >
+          <el-option
             v-for="p in rosterPlayers"
             :key="p.id"
-            class="vb-player"
-            :class="{ 'vb-player--active': selectedPlayerIds.includes(p.id) }"
+            :value="p.id"
+            :label="p.discordName || '—'"
           >
-            <el-checkbox :value="p.id" class="vb-player__cb" />
-            <el-avatar :size="32" :src="avatarOf(p)" class="shrink-0 bg-white/[0.06]">
-              <template #default>
-                <PhUser :size="16" weight="bold" class="text-white/70" />
-              </template>
-            </el-avatar>
-            <span class="min-w-0 flex-1 truncate text-[14px] text-white/90">{{ p.discordName || '—' }}</span>
-            <span
-              class="vb-pill"
-              :class="isVerified(p) ? 'vb-pill--verified' : 'vb-pill--unverified'"
-            >
-              {{ isVerified(p) ? 'Верифікований' : 'Не верифікований' }}
-            </span>
-          </label>
-        </el-checkbox-group>
+            <div class="flex w-full items-center gap-10">
+              <el-avatar :size="28" :src="avatarOf(p)" class="shrink-0 bg-white/[0.06]">
+                <template #default>
+                  <PhUser :size="14" weight="bold" class="text-white/70" />
+                </template>
+              </el-avatar>
+              <span class="min-w-0 flex-1 truncate text-[14px]">{{ p.discordName || '—' }}</span>
+              <span
+                class="vb-pill"
+                :class="isVerified(p) ? 'vb-pill--verified' : 'vb-pill--unverified'"
+              >
+                {{ isVerified(p) ? 'Верифікований' : 'Не верифікований' }}
+              </span>
+            </div>
+          </el-option>
+        </el-select>
         <p class="vb-hint">
           {{ guidanceText }}
         </p>
@@ -242,31 +251,6 @@ function reset (): void {
   border-radius: 12px;
 }
 
-.vb-player {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-
-.vb-player:hover {
-  border-color: rgba(34, 211, 238, 0.25);
-}
-
-.vb-player--active {
-  border-color: rgba(34, 211, 238, 0.55);
-  background: rgba(34, 211, 238, 0.08);
-}
-
-.vb-player__cb {
-  margin-right: 0;
-}
-
 .vb-slot {
   padding: 8px 14px;
   border-radius: 10px;
@@ -333,25 +317,47 @@ function reset (): void {
   color: white;
 }
 
+:deep(.el-select__wrapper) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: none !important;
+  border-radius: 10px;
+  min-height: 42px;
+}
+
+:deep(.el-select__wrapper:hover) {
+  border-color: rgba(34, 211, 238, 0.25);
+}
+
+:deep(.el-select__wrapper.is-focused) {
+  border-color: rgba(34, 211, 238, 0.55) !important;
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2) !important;
+}
+
+:deep(.el-select__placeholder) {
+  color: theme('colors.gray.500');
+}
+
+/* Only the gradient/border vibe is overridden here — sizing, the 70vh cap, flex-column
+   layout, body scroll and padding all come from the global `.el-dialog` reset (_dialog.scss). */
 :deep(.verification-booking-modal.el-dialog) {
   --el-dialog-bg-color: theme('colors.dark.navy');
   background: linear-gradient(180deg, #0f172a 0%, theme('colors.dark.navy') 45%, #080c16 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  min-height: 640px;
-  max-height: 90vh;
 }
+</style>
 
-:deep(.verification-booking-modal .el-dialog__body) {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 8px 24px;
-}
-
-:deep(.verification-booking-modal .el-dialog__footer) {
-  padding: 8px 24px 20px;
+<!--
+  The select options popper is teleported to <body>, so scoped styles can't reach it.
+  EP fixes `.el-select-dropdown__item` at 34px height/line-height which clips the 28px
+  avatar + verified pill; this non-scoped rule (keyed to the select's popper-class) lets
+  the option rows grow to fit their content.
+-->
+<style>
+.vb-players-popper .el-select-dropdown__item {
+  height: auto;
+  min-height: 44px;
+  line-height: 1.4;
+  overflow: visible;
 }
 </style>

@@ -39,9 +39,13 @@
 
         <!-- Names -->
         <div class="min-w-0">
-          <h2 class="truncate text-lg font-semibold text-white">
-            {{ player.discordName || '-' }}
-          </h2>
+          <div class="flex items-center gap-8 min-w-0">
+            <h2 class="truncate text-lg font-semibold text-white">
+              {{ player.discordName || '-' }}
+            </h2>
+
+            <PlayerModerationTags class="shrink-0" :tags="playerTags" />
+          </div>
 
           <span
             v-if="player.discordUsername"
@@ -193,9 +197,11 @@ import {
   PhCopy
 } from '@phosphor-icons/vue'
 import { getCopy } from '@/core/helpers'
+import type { TTag } from '@/services/tags.types'
 
 interface IProps {
   player: TPlayer
+  playerTags: TTag[]
   isVerified: boolean
   rankImageSrc: string | null
   ratingMmrLabel: string

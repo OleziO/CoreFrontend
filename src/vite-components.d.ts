@@ -79,6 +79,7 @@ declare module 'vue' {
     PlayerCard: typeof import('./components/PlayerCard.vue')['default']
     PlayerFavoriteHeroes: typeof import('./views/players/components/PlayerFavoriteHeroes.vue')['default']
     PlayerMatchStats: typeof import('./views/players/components/PlayerMatchStats.vue')['default']
+    PlayerModerationTags: typeof import('./views/players/components/PlayerModerationTags.vue')['default']
     PlayerPositionsTooltip: typeof import('./components/PlayerPositionsTooltip.vue')['default']
     PlayerProfileHeader: typeof import('./views/players/components/PlayerProfileHeader.vue')['default']
     PlayerRoleTag: typeof import('./components/player-tags/PlayerRoleTag.vue')['default']

@@ -96,7 +96,7 @@
       </div>
 
       <div
-        v-if="canEditTeamProfile || canVerifyPlayers || (isAdmin && team)"
+        v-if="canEditTeamProfile || (isAdmin && team)"
         class="mt-12 flex w-full flex-col gap-10 lg:flex-row lg:items-stretch lg:gap-12"
       >
         <el-button
@@ -107,15 +107,6 @@
         >
           <PhPencil />
           <span class="ml-8">Редагувати{{ windowWidth > 650 ? ' команду' : '' }}</span>
-        </el-button>
-
-        <el-button
-          v-if="canVerifyPlayers"
-          class="h-30 w-full shrink-0 lg:flex-1 max-sm:text-xs max-sm:!px-8"
-          @click="emit('verify-players')"
-        >
-          <PhUserCheck :size="18" class="shrink-0" />
-          <span class="ml-8">Верифікувати гравців</span>
         </el-button>
 
         <el-button
@@ -156,6 +147,13 @@
 
         <template #dropdown>
           <el-dropdown-menu>
+            <el-dropdown-item
+              v-if="canVerifyPlayers"
+              @click="emit('verify-players')"
+            >
+              <PhUserCheck :size="20" />
+              <span class="ml-8">Верифікувати гравців</span>
+            </el-dropdown-item>
             <el-dropdown-item @click="emit('transfer-captain')">
               <PhCrown :size="20" />
               <span class="ml-8">Передати капітанство</span>

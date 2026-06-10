@@ -71,6 +71,28 @@
         </el-select>
       </el-form-item>
 
+      <!-- Tags (admin / moderator only) -->
+      <el-form-item v-if="canManageTags" label="Теги">
+        <el-select
+          v-model="selectedTagIds"
+          :loading="tagsLoading"
+          multiple
+          collapse-tags
+          :show-arrow="false"
+          collapse-tags-tooltip
+          :max-collapse-tags="3"
+          placeholder="Оберіть теги"
+          class="w-full"
+        >
+          <el-option
+            v-for="tag in tagsCatalog"
+            :key="tag.id"
+            :label="tag.title"
+            :value="tag.id"
+          />
+        </el-select>
+      </el-form-item>
+
       <!-- Steam -->
       <el-form-item label="Steam">
         <div
@@ -145,9 +167,11 @@
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { positionOptions } from '@/components/player-tags/player.enums'
+import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { isPlayerVerified } from '@/core/helpers'
 import { useAuthStore } from '@/store/modules/auth'
 import { playersService } from '@/views/players/players.service'
+import type { TTag } from '@/services/tags.types'
 import type {
   TAdminPlayerRoleItem,
   TAdminPlayerRolesResult,
@@ -232,11 +256,13 @@ const modelValue = defineModel<boolean>({ default: false })
 const emit = defineEmits<{
   (e: 'submit', payload: IEditProfileForm): void
   (e: 'updated', player: TPlayer): void
+  (e: 'tagsUpdated', tags: TTag[]): void
 }>()
 
 const props = defineProps<{
   player: TPlayer
   onUpdated?: (player: TPlayer) => void
+  onTagsUpdated?: (tags: TTag[]) => void
 }>()
 
 const authStore = useAuthStore()
@@ -260,6 +286,40 @@ const rolesChanged = computed(() => {
   const b = [...originalRoleNames.value].sort()
   return a.length !== b.length || a.some((name, i) => name !== b[i])
 })
+
+/** Теги — модерація: керують адмін та модератор (v2-ендпоінти `/players/:id/tags`). */
+const canManageTags = computed(() => authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator)
+
+const tagsLoading = ref(false)
+const tagsCatalog = ref<TTag[]>([])
+/** v-model мультиселекту — id тегів. */
+const selectedTagIds = ref<string[]>([])
+/** Теги на момент відкриття — щоб відправити лише різницю (assign/remove). */
+const originalTagIds = ref<string[]>([])
+
+const tagsChanged = computed(() => {
+  const a = [...selectedTagIds.value].sort()
+  const b = [...originalTagIds.value].sort()
+  return a.length !== b.length || a.some((id, i) => id !== b[i])
+})
+
+async function loadTags () {
+  if (!canManageTags.value) return
+  tagsLoading.value = true
+  try {
+    const [catalog, current] = await Promise.all([
+      tagsService.fetchCatalog(),
+      tagsService.fetchPlayerTags(props.player.id)
+    ])
+    tagsCatalog.value = catalog
+    selectedTagIds.value = current.map((tag) => tag.id)
+    originalTagIds.value = current.map((tag) => tag.id)
+  } catch (e) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося завантажити теги'))
+  } finally {
+    tagsLoading.value = false
+  }
+}
 
 const form = ref<IEditProfileForm>({
   mmr: props.player.rating ?? null,
@@ -298,6 +358,7 @@ watch(modelValue, (open) => {
   applyFormFromPlayer(props.player)
   applyRolesFromPlayer(props.player)
   loadRolesCatalog()
+  loadTags()
 }, { immediate: true })
 
 const effectivePlayer = computed(() => playerAfterSteamMutation.value ?? props.player)
@@ -419,6 +480,23 @@ function mergeRolesIntoPlayer (player: TPlayer, result: TAdminPlayerRolesResult)
   }
 }
 
+/** Відправляє лише різницю тегів (assign/remove), потім перечитує актуальний список. */
+async function syncPlayerTags () {
+  const toAdd = selectedTagIds.value.filter((id) => !originalTagIds.value.includes(id))
+  const toRemove = originalTagIds.value.filter((id) => !selectedTagIds.value.includes(id))
+
+  await Promise.all([
+    ...toAdd.map((id) => tagsService.assignTag(props.player.id, id)),
+    ...toRemove.map((id) => tagsService.removeTag(props.player.id, id))
+  ])
+
+  const finalTags = await tagsService.fetchPlayerTags(props.player.id)
+  originalTagIds.value = finalTags.map((tag) => tag.id)
+  selectedTagIds.value = finalTags.map((tag) => tag.id)
+  emit('tagsUpdated', finalTags)
+  props.onTagsUpdated?.(finalTags)
+}
+
 async function onSubmit () {
   if (!isValid.value) return
 
@@ -436,6 +514,10 @@ async function onSubmit () {
     if (canManageRoles.value && rolesChanged.value) {
       const result = await playersService.setPlayerRolesByAdmin(props.player.id, buildRolesPayload())
       updated = mergeRolesIntoPlayer(updated, result)
+    }
+
+    if (canManageTags.value && tagsChanged.value) {
+      await syncPlayerTags()
     }
 
     ElMessage.success('Профіль оновлено')

@@ -354,6 +354,7 @@
     "devService": true,
     "financeClient": true,
     "financeService": true,
-    "verificationService": true
+    "verificationService": true,
+    "tagsService": true
   }
 }
