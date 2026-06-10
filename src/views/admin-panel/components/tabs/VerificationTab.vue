@@ -40,6 +40,7 @@
       :date="drawerDate"
       :data="drawerDate ? cache[drawerDate] ?? null : null"
       :loading="!!drawerDate && loadingDates.has(drawerDate)"
+      @refresh="onDrawerRefresh"
     />
   </div>
 </template>
@@ -132,6 +133,17 @@ async function onCellClick (data: ICalendarCellData): Promise<void> {
   // Refresh the opened day so the drawer shows current data; the toast is shown on failure.
   try {
     await loadDay(data.day)
+  } catch {
+    // already surfaced via toast in loadDay
+  }
+}
+
+// After a slot generate/delete in the drawer, reload the affected day so the drawer rows
+// and the calendar badge both update from the refreshed cache entry.
+async function onDrawerRefresh (): Promise<void> {
+  if (!drawerDate.value) return
+  try {
+    await loadDay(drawerDate.value)
   } catch {
     // already surfaced via toast in loadDay
   }

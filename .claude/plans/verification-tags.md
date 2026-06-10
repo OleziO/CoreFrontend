@@ -64,7 +64,7 @@ Generalize the v2 axios instance into `src/api/client-v2.ts` (`apiClientV2`), re
 
 ---
 
-## Phase 1: Admin read view — slots & requests on the calendar
+## Phase 1: Admin read view — slots & requests on the calendar ✅ Done
 
 **Scope**: load real per-day data, show counts on calendar cells, open a read-only tabbed day-drawer.
 
@@ -76,14 +76,14 @@ For the visible month, fetch each day's `free` slots (`GET /verification/slots?d
 
 ### Acceptance criteria
 
-- [ ] Calendar cells show booked/free counts for the visible month, refreshing on month navigation.
-- [ ] Clicking a date opens the drawer with **Заявки** and **Слоти** tabs populated from the API.
-- [ ] All times display in local tz, 24h, as `HH:mm–HH:mm`.
-- [ ] Statuses render as styled pills matching the design vibe; empty days show a tasteful empty state.
+- [x] Calendar cells show booked/free counts for the visible month, refreshing on month navigation.
+- [x] Clicking a date opens the drawer with **Заявки** and **Слоти** tabs populated from the API.
+- [x] All times display in local tz, 24h, as `HH:mm–HH:mm`.
+- [x] Statuses render as styled pills matching the design vibe; empty days show a tasteful empty state.
 
 ---
 
-## Phase 2: Admin slot management — generate & delete
+## Phase 2: Admin slot management — generate & delete ✅ Done
 
 **Scope**: create 30-min slots from a working-hours range; delete free / cancel booked slots.
 
@@ -93,14 +93,14 @@ In the **Слоти** tab, a "generate slots" form: two 24h time inputs (`from`/
 
 ### Acceptance criteria
 
-- [ ] Admin picks a from/to range (24h, local) and generates 30-min `free` slots for the selected date; they appear immediately.
-- [ ] Out-of-order / cross-midnight ranges are validated client-side before the call.
-- [ ] Deleting a free slot removes it; deleting a booked slot prompts confirmation and cancels its request, freeing the date's counts.
-- [ ] `204` responses are handled (no body) without errors; failures surface a toast.
+- [x] Admin multi-selects 30-min windows (24h, local) and generates `free` slots for the selected date; they appear immediately. (Changed from a from/to range to a multiselect per user request — one create call per window via `Promise.allSettled`; already-existing windows are disabled.)
+- [x] Out-of-order / cross-midnight ranges are impossible by construction (discrete 30-min windows).
+- [x] Deleting a free slot removes it; deleting a booked slot prompts confirmation and cancels its request, freeing the date's counts.
+- [x] `204` responses are handled (no body) without errors; failures surface a toast.
 
 ---
 
-## Phase 3: Admin request lifecycle — process, complete (inline MMR), cancel
+## Phase 3: Admin request lifecycle — process, complete (inline MMR), cancel ✅ Done
 
 **Scope**: full admin verification lifecycle from the **Заявки** tab.
 
@@ -110,14 +110,14 @@ Each `pending` request shows **Взяти в обробку** → `POST …/proc
 
 ### Acceptance criteria
 
-- [ ] `pending → processing → completed` works end-to-end; inline MMR inputs submit correct per-player results.
-- [ ] Complete is blocked client-side until every request player has a valid MMR.
-- [ ] Cancel (with confirm) moves the request to `cancelled` and frees its slot in the day/calendar counts.
-- [ ] Completed/cancelled requests can't be re-actioned; all transitions reflect immediately in the UI.
+- [x] `pending → processing → completed` works end-to-end; inline MMR inputs submit correct per-player results.
+- [x] Complete is blocked client-side until every request player has a valid MMR (`canComplete` — finite, ≥ 0 for every player).
+- [x] Cancel (with confirm) moves the request to `cancelled` and frees its slot in the day/calendar counts (drawer emits `refresh` → `loadDay`).
+- [x] Completed/cancelled requests can't be re-actioned; the actions footer renders only for `pending`/`processing`.
 
 ---
 
-## Phase 4: Captain booking flow
+## Phase 4: Captain booking flow ✅ Done
 
 **Scope**: captain books a free slot for selected players from their team page.
 
@@ -127,10 +127,10 @@ A **"Верифікувати гравців"** button on the captain's own team
 
 ### Acceptance criteria
 
-- [ ] Captain (and only captain) sees the entry point on their team page.
-- [ ] Modal loads free slots for the chosen date and disables/empties gracefully when none exist.
-- [ ] Submitting books the slot; it disappears from free slots and shows up in the admin's day for that date.
-- [ ] Player-count guidance is shown; BE rule violations surface as readable toasts without breaking the modal.
+- [x] Captain (and only captain) sees the entry point on their team page (`canVerifyPlayers = isTeamCaptain`).
+- [x] Modal loads free slots for the chosen date and shows a "Немає вільних слотів" empty state when none exist.
+- [x] Submitting books the slot via `POST /verification/requests`; the slot is consumed and the booking appears in the admin's day for that date (admin calendar derives booked from requests).
+- [x] Player-count guidance is shown (≥3 first / ≥1 established); BE rule violations surface as toasts and keep the modal open.
 
 ---
 

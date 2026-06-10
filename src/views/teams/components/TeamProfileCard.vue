@@ -96,7 +96,7 @@
       </div>
 
       <div
-        v-if="canEditTeamProfile || (isAdmin && team)"
+        v-if="canEditTeamProfile || canVerifyPlayers || (isAdmin && team)"
         class="mt-12 flex w-full flex-col gap-10 lg:flex-row lg:items-stretch lg:gap-12"
       >
         <el-button
@@ -107,6 +107,15 @@
         >
           <PhPencil />
           <span class="ml-8">Редагувати{{ windowWidth > 650 ? ' команду' : '' }}</span>
+        </el-button>
+
+        <el-button
+          v-if="canVerifyPlayers"
+          class="h-30 w-full shrink-0 lg:flex-1 max-sm:text-xs max-sm:!px-8"
+          @click="emit('verify-players')"
+        >
+          <PhUserCheck :size="18" class="shrink-0" />
+          <span class="ml-8">Верифікувати гравців</span>
         </el-button>
 
         <el-button
@@ -167,7 +176,9 @@
 </template>
 
 <script setup lang="ts">
-import { PhCopy, PhCrown, PhDotsThree, PhPencil, PhSealCheck, PhSealWarning, PhTrash, PhUser } from '@phosphor-icons/vue'
+import {
+  PhCopy, PhCrown, PhDotsThree, PhPencil, PhSealCheck, PhSealWarning, PhTrash, PhUser, PhUserCheck
+} from '@phosphor-icons/vue'
 import { useClipboard } from '@vueuse/core'
 import { resolvePublicOrApiUrl, getDotabuffTeamUrl } from '@/core/helpers'
 import { resolveTeamDivisionForDisplay } from '@/components/tournaments-tags/tournament.constants'
@@ -177,6 +188,7 @@ const props = defineProps<{
   canEditTeamProfile: boolean
   canEditTeamRoster: boolean
   isAdmin: boolean
+  canVerifyPlayers: boolean
   verifyTeamLoading: boolean
   isMobile: boolean
   windowWidth: number
@@ -184,6 +196,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'edit-team': []
+  'verify-players': []
   'verify-team': []
   'unverify-team': []
   'transfer-captain': []

@@ -53,12 +53,69 @@
 
               <div class="mt-10 border-t border-white/8 pt-10">
                 <p class="text-[12px] text-gray-400">Гравців: {{ r.players.length }}</p>
-                <div v-if="hasResults(r)" class="mt-6 flex flex-wrap gap-6">
+
+                <!-- processing: per-player MMR entry -->
+                <div v-if="r.status === 'processing'" class="mt-8 flex flex-col gap-8">
+                  <div v-for="(p, i) in r.players" :key="p.id" class="flex items-center justify-between gap-8">
+                    <span class="min-w-0 text-[12px] text-gray-300">
+                      Гравець {{ i + 1 }}
+                      <span class="ml-4 font-mono text-[11px] text-gray-600">{{ shortId(p.playerId) }}</span>
+                    </span>
+                    <el-input-number
+                      v-model="mmrDrafts[r.id][p.playerId]"
+                      :min="0"
+                      :max="20000"
+                      :step="100"
+                      :controls="false"
+                      size="small"
+                      placeholder="MMR"
+                      class="vd-mmr-input"
+                    />
+                  </div>
+                </div>
+
+                <!-- completed: result chips -->
+                <div v-else-if="hasResults(r)" class="mt-6 flex flex-wrap gap-6">
                   <span v-for="p in r.players" :key="p.id" class="vd-mmr-chip">
                     {{ p.resultMmr != null ? `${p.resultMmr} MMR` : '—' }}
                   </span>
                 </div>
               </div>
+
+              <!-- lifecycle actions (read-only once completed/cancelled) -->
+              <footer
+                v-if="r.status !== 'completed' && r.status !== 'cancelled'"
+                class="mt-10 flex items-center justify-end gap-8 border-t border-white/8 pt-10"
+              >
+                <el-button
+                  v-if="r.status === 'pending'"
+                  type="primary"
+                  size="small"
+                  :loading="actioningId === r.id"
+                  @click="handleProcess(r)"
+                >
+                  Взяти в обробку
+                </el-button>
+                <el-button
+                  v-if="r.status === 'processing'"
+                  type="success"
+                  size="small"
+                  :loading="actioningId === r.id"
+                  :disabled="!canComplete(r)"
+                  @click="handleComplete(r)"
+                >
+                  Завершити
+                </el-button>
+                <el-button
+                  type="danger"
+                  size="small"
+                  plain
+                  :disabled="actioningId === r.id"
+                  @click="handleCancel(r)"
+                >
+                  Скасувати
+                </el-button>
+              </footer>
             </article>
           </div>
         </el-tab-pane>
@@ -69,17 +126,71 @@
             <span class="vd-tab-label">Слоти <span class="vd-tab-count">{{ slotRows.length }}</span></span>
           </template>
 
+          <!-- Генерація слотів -->
+          <section class="vd-gen">
+            <div class="vd-gen__head">
+              <PhClock :size="16" weight="duotone" class="text-primary" />
+              <span class="vd-gen__title">Згенерувати слоти</span>
+            </div>
+            <div class="vd-gen__body">
+              <div class="flex items-end gap-8">
+                <div class="min-w-0 flex-1">
+                  <label class="vd-gen__label">Часові вікна (по 30 хв)</label>
+                  <el-select
+                    v-model="selectedWindows"
+                    multiple
+                    filterable
+                    collapse-tags
+                    collapse-tags-tooltip
+                    placeholder="Оберіть слоти"
+                    class="w-full"
+                  >
+                    <el-option
+                      v-for="w in windowOptions"
+                      :key="w.value"
+                      :value="w.value"
+                      :label="w.label"
+                      :disabled="existingStarts.has(w.value)"
+                    />
+                  </el-select>
+                </div>
+                <el-button
+                  type="primary"
+                  :loading="generating"
+                  :disabled="!canGenerate"
+                  @click="handleGenerate"
+                >
+                  Створити
+                </el-button>
+              </div>
+              <p class="vd-gen__hint">
+                Оберіть одне або кілька 30-хвилинних вікон (у вашому часовому поясі). Наявні слоти вимкнені.
+              </p>
+            </div>
+          </section>
+
           <div v-if="loading" class="vd-empty">Завантаження…</div>
           <div v-else-if="!slotRows.length" class="vd-empty">Немає слотів на цей день</div>
           <div v-else class="flex flex-col gap-8">
             <div v-for="s in slotRows" :key="s.id" class="vd-slot-row">
-              <div class="flex items-center gap-10">
+              <div class="flex min-w-0 items-center gap-10">
                 <span class="font-mono text-[14px] text-white/90">{{ formatTimeRange(s.startsAt, s.endsAt) }}</span>
                 <span v-if="s.booked && s.teamName" class="truncate text-[12px] text-gray-400">{{ s.teamName }}</span>
               </div>
-              <span class="vd-pill" :class="s.booked ? 'vd-pill--booked' : 'vd-pill--free'">
-                {{ s.booked ? 'Заброньовано' : 'Вільно' }}
-              </span>
+              <div class="flex shrink-0 items-center gap-8">
+                <span class="vd-pill" :class="s.booked ? 'vd-pill--booked' : 'vd-pill--free'">
+                  {{ s.booked ? 'Заброньовано' : 'Вільно' }}
+                </span>
+                <button
+                  type="button"
+                  class="vd-del"
+                  :disabled="deletingId === s.id"
+                  :title="s.booked ? 'Скасувати бронювання' : 'Видалити слот'"
+                  @click="handleDeleteSlot(s)"
+                >
+                  <PhTrash :size="15" weight="bold" />
+                </button>
+              </div>
             </div>
           </div>
         </el-tab-pane>
@@ -90,8 +201,12 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { PhClock, PhTrash } from '@phosphor-icons/vue'
+import { getApiErrorMessage } from '@/core/utils/api-errors'
 import type {
   IVerificationDayData,
+  TCompleteRequestPayload,
   TVerificationRequest,
   TVerificationRequestStatus,
   TVerificationType
@@ -104,6 +219,10 @@ const props = defineProps<{
 }>()
 
 const open = defineModel<boolean>()
+
+// Emitted after a successful create/delete so the parent reloads the day (refreshing the
+// drawer's `:data` and the calendar badge from a single source of truth).
+const emit = defineEmits<{ refresh: [] }>()
 
 const activeTab = ref<'requests' | 'slots'>('requests')
 
@@ -145,6 +264,10 @@ function hasResults (r: TVerificationRequest): boolean {
   return r.players.some((p) => p.resultMmr != null)
 }
 
+function shortId (id: string): string {
+  return id.slice(0, 8)
+}
+
 const requestStatusMeta: Record<TVerificationRequestStatus, { label: string; class: string }> = {
   pending: { label: 'Очікує', class: 'vd-pill--pending' },
   processing: { label: 'В обробці', class: 'vd-pill--processing' },
@@ -157,9 +280,177 @@ const typeMeta: Record<TVerificationType, { label: string; class: string }> = {
   MMR_UPDATE: { label: 'Оновлення MMR', class: 'vd-pill--type-mmr' }
 }
 
-// Reset to the first tab each time the drawer opens so the day always lands on Заявки.
+// --- Request lifecycle (process / complete / cancel) -------------------------------------
+
+// Id of the request whose action is in flight (drives per-row button loading/disabled state).
+const actioningId = ref('')
+
+// Per-player MMR drafts for `processing` requests, keyed `requestId -> playerId -> mmr`.
+// Seeded (and pruned) from the day's requests so an `el-input-number` always has a live
+// model object to bind to before the row renders.
+const mmrDrafts = reactive<Record<string, Record<string, number | undefined>>>({})
+
+watch(requests, (list) => {
+  const activeIds = new Set<string>()
+  for (const r of list) {
+    if (r.status !== 'processing') continue
+    activeIds.add(r.id)
+    const existing = mmrDrafts[r.id] ?? {}
+    const next: Record<string, number | undefined> = {}
+    for (const p of r.players) {
+      // Preserve an in-progress edit; otherwise seed from any MMR the BE already recorded.
+      next[p.playerId] = p.playerId in existing ? existing[p.playerId] : (p.resultMmr ?? undefined)
+    }
+    mmrDrafts[r.id] = next
+  }
+  for (const id of Object.keys(mmrDrafts)) {
+    if (!activeIds.has(id)) delete mmrDrafts[id]
+  }
+}, { immediate: true })
+
+// Complete is blocked until every player of the request has a valid (finite, ≥ 0) MMR.
+function canComplete (r: TVerificationRequest): boolean {
+  const draft = mmrDrafts[r.id]
+  if (!draft) return false
+  return r.players.every((p) => {
+    const v = draft[p.playerId]
+    return typeof v === 'number' && Number.isFinite(v) && v >= 0
+  })
+}
+
+async function handleProcess (r: TVerificationRequest): Promise<void> {
+  actioningId.value = r.id
+  try {
+    await verificationService.processRequest(r.id)
+    ElMessage.success('Заявку взято в обробку')
+    emit('refresh')
+  } catch (e) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося оновити заявку'))
+  } finally {
+    actioningId.value = ''
+  }
+}
+
+async function handleComplete (r: TVerificationRequest): Promise<void> {
+  if (!canComplete(r)) return
+  const draft = mmrDrafts[r.id]
+  const payload: TCompleteRequestPayload = {
+    results: r.players.map((p) => ({ playerId: p.playerId, mmr: draft[p.playerId] as number }))
+  }
+  actioningId.value = r.id
+  try {
+    await verificationService.completeRequest(r.id, payload)
+    ElMessage.success('Заявку завершено')
+    emit('refresh')
+  } catch (e) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося завершити заявку'))
+  } finally {
+    actioningId.value = ''
+  }
+}
+
+async function handleCancel (r: TVerificationRequest): Promise<void> {
+  try {
+    await ElMessageBox.confirm(
+      'Скасувати цю заявку? Слот буде звільнено.',
+      'Скасування заявки',
+      { type: 'warning', confirmButtonText: 'Так, скасувати', cancelButtonText: 'Назад' }
+    )
+  } catch {
+    return // user dismissed the confirm
+  }
+  actioningId.value = r.id
+  try {
+    await verificationService.cancelRequest(r.id)
+    ElMessage.success('Заявку скасовано')
+    emit('refresh')
+  } catch (e) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося скасувати заявку'))
+  } finally {
+    actioningId.value = ''
+  }
+}
+
+// --- Slot management (generate / delete) -------------------------------------------------
+
+// The 48 half-hour windows of a day, as local `HH:mm` options: 00:00–00:30 … 23:30–00:00.
+const windowOptions = Array.from({ length: 48 }, (_, i) => {
+  const fmt = (mins: number) => {
+    const h = Math.floor(mins / 60) % 24
+    const m = mins % 60
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+  }
+  const start = fmt(i * 30)
+  return { value: start, label: `${start}–${fmt(i * 30 + 30)}` }
+})
+
+const selectedWindows = ref<string[]>([])
+const generating = ref(false)
+const deletingId = ref('')
+
+// Start times (local `HH:mm`) of slots that already exist this day — disabled in the picker
+// so the admin can't create duplicates.
+const existingStarts = computed(() => new Set(slotRows.value.map((s) => dayjs(s.startsAt).format('HH:mm'))))
+
+const canGenerate = computed(() => !!props.date && selectedWindows.value.length > 0)
+
+async function handleGenerate (): Promise<void> {
+  if (!props.date || !canGenerate.value) return
+  const date = props.date
+  // Each selected window is an independent 30-min slot; one create call per window, fired
+  // together. allSettled (not Promise.all) so one rejection doesn't lose the rest.
+  const payloads = selectedWindows.value.map((start) => {
+    const from = dayjs(`${date} ${start}`, 'YYYY-MM-DD HH:mm')
+    return { from: from.toISOString(), to: from.add(30, 'minute').toISOString() }
+  })
+  generating.value = true
+  try {
+    const results = await Promise.allSettled(payloads.map((p) => verificationService.createSlots(p)))
+    const failed = results.filter((r) => r.status === 'rejected').length
+    if (failed === 0) {
+      ElMessage.success(`Створено слотів: ${payloads.length}`)
+    } else if (failed < payloads.length) {
+      ElMessage.warning(`Створено ${payloads.length - failed} із ${payloads.length}; частину не вдалося створити`)
+    } else {
+      ElMessage.error('Не вдалося створити слоти')
+    }
+    selectedWindows.value = []
+    emit('refresh')
+  } finally {
+    generating.value = false
+  }
+}
+
+async function handleDeleteSlot (slot: ISlotRow): Promise<void> {
+  if (slot.booked) {
+    try {
+      await ElMessageBox.confirm(
+        'Цей слот заброньовано. Видалення також скасує заявку команди. Продовжити?',
+        'Скасувати бронювання',
+        { type: 'warning', confirmButtonText: 'Так, скасувати', cancelButtonText: 'Назад' }
+      )
+    } catch {
+      return // user dismissed the confirm
+    }
+  }
+  deletingId.value = slot.id
+  try {
+    await verificationService.deleteSlot(slot.id)
+    ElMessage.success(slot.booked ? 'Бронювання скасовано' : 'Слот видалено')
+    emit('refresh')
+  } catch (e) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося видалити слот'))
+  } finally {
+    deletingId.value = ''
+  }
+}
+
+// Reset to the first tab and clear the generate form each time the drawer opens.
 watch(open, (isOpen) => {
-  if (isOpen) activeTab.value = 'requests'
+  if (isOpen) {
+    activeTab.value = 'requests'
+    selectedWindows.value = []
+  }
 })
 </script>
 
@@ -188,6 +479,130 @@ watch(open, (isOpen) => {
   text-align: center;
   font-size: 13px;
   color: rgb(107 114 128);
+}
+
+.vd-gen {
+  margin-bottom: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.045) 0%, rgba(0, 0, 0, 0.22) 100%);
+}
+
+.vd-gen__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vd-gen__title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(209 213 219);
+}
+
+.vd-gen__body {
+  padding: 14px;
+}
+
+.vd-gen__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgb(156 163 175);
+}
+
+.vd-gen__hint {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgb(107 114 128);
+}
+
+.vd-del {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: rgb(248 113 113 / 0.85);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  background: rgba(248, 113, 113, 0.08);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.vd-del:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.18);
+  color: #fca5a5;
+}
+
+.vd-del:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Dark theming for the el-time-select inputs (the popper is teleported and keeps EP defaults). */
+:deep(.el-input__wrapper) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: none !important;
+  border-radius: 10px;
+}
+
+:deep(.el-input__wrapper:hover) {
+  border-color: rgba(34, 211, 238, 0.25);
+}
+
+:deep(.el-input__wrapper.is-focus) {
+  border-color: rgba(34, 211, 238, 0.55) !important;
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2) !important;
+}
+
+:deep(.el-input__inner) {
+  color: white;
+}
+
+:deep(.el-input__inner::placeholder) {
+  color: theme('colors.gray.500');
+}
+
+:deep(.el-select__wrapper) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: none !important;
+  border-radius: 10px;
+  min-height: 40px;
+}
+
+:deep(.el-select__wrapper:hover) {
+  border-color: rgba(34, 211, 238, 0.25);
+}
+
+:deep(.el-select__wrapper.is-focused) {
+  border-color: rgba(34, 211, 238, 0.55) !important;
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2) !important;
+}
+
+:deep(.el-select__placeholder) {
+  color: theme('colors.gray.500');
+}
+
+:deep(.el-select__selected-item) {
+  color: white;
+}
+
+.vd-mmr-input {
+  width: 104px;
+}
+
+.vd-mmr-input :deep(.el-input__inner) {
+  text-align: left;
 }
 
 .vd-mmr-chip {
