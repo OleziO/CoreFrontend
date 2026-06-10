@@ -1,31 +1,18 @@
 <template>
   <el-dialog
     v-model="open"
-    width="520"
-    class="verification-booking-modal"
-    header-class="hidden"
+    width="500"
+    title="Верифікація гравців"
     destroy-on-close
     :close-on-click-modal="!submitting"
     @closed="reset"
   >
-    <div class="flex flex-col gap-20">
-      <!-- Header -->
-      <div class="flex flex-col gap-12 border-b border-white/8 pb-16">
-        <div
-          class="h-[3px] w-48 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500
-                 shadow-[0_0_20px_rgba(34,211,238,0.35)]"
-        />
-        <div>
-          <h2 class="text-xl font-bold tracking-tight text-white">Верифікація гравців</h2>
-          <p class="mt-6 text-[13px] leading-snug text-gray-500">
-            Оберіть гравців, дату та вільний слот. Час показано у вашому часовому поясі (24 год).
-          </p>
-        </div>
-      </div>
-
+    <el-form
+      label-position="top"
+      class="flex flex-col"
+    >
       <!-- Players -->
-      <section class="flex flex-col gap-10">
-        <label class="vb-label">Гравці</label>
+      <el-form-item label="Гравці">
         <div v-if="!rosterPlayers.length" class="vb-empty">У команді немає гравців</div>
         <el-select
           v-else
@@ -42,13 +29,13 @@
             :value="p.id"
             :label="p.discordName || '—'"
           >
-            <div class="flex w-full items-center gap-10">
-              <el-avatar :size="28" :src="avatarOf(p)" class="shrink-0 bg-white/[0.06]">
+            <div class="flex w-full items-center gap-8">
+              <el-avatar :size="16" :src="avatarOf(p)" class="shrink-0 bg-white/[0.06]">
                 <template #default>
-                  <PhUser :size="14" weight="bold" class="text-white/70" />
+                  <PhUser :size="9" weight="bold" class="text-white/70" />
                 </template>
               </el-avatar>
-              <span class="min-w-0 flex-1 truncate text-[14px]">{{ p.discordName || '—' }}</span>
+              <span class="min-w-0 flex-1 truncate text-[13px]">{{ p.discordName || '—' }}</span>
               <span
                 class="vb-pill"
                 :class="isVerified(p) ? 'vb-pill--verified' : 'vb-pill--unverified'"
@@ -61,11 +48,10 @@
         <p class="vb-hint">
           {{ guidanceText }}
         </p>
-      </section>
+      </el-form-item>
 
       <!-- Date -->
-      <section class="flex flex-col gap-10">
-        <label class="vb-label">Дата</label>
+      <el-form-item label="Дата" class="vb-date-item">
         <el-date-picker
           v-model="selectedDate"
           type="date"
@@ -75,32 +61,36 @@
           :disabled-date="disabledDate"
           class="w-full"
         />
-      </section>
+      </el-form-item>
 
       <!-- Slots -->
-      <section v-if="selectedDate" class="flex flex-col gap-10">
-        <label class="vb-label">Вільні слоти</label>
-        <div v-if="loadingSlots" class="vb-empty">Завантаження…</div>
-        <div v-else-if="!sortedSlots.length" class="vb-empty">Немає вільних слотів на цю дату</div>
-        <div v-else class="flex flex-wrap gap-8">
-          <button
-            v-for="s in sortedSlots"
-            :key="s.id"
-            type="button"
-            class="vb-slot"
-            :class="{ 'vb-slot--active': selectedSlotId === s.id }"
-            @click="selectedSlotId = s.id"
-          >
-            {{ formatTimeRange(s.startsAt, s.endsAt) }}
-          </button>
-        </div>
-      </section>
-    </div>
+      <el-form-item label="Вільні слоти">
+        <el-select
+          v-model="selectedSlotId"
+          filterable
+          :disabled="!selectedDate || loadingSlots"
+          :placeholder="slotPlaceholder"
+          popper-class="vb-slots-popper"
+          class="w-full"
+        >
+          <el-option
+            v-for="o in slotOptions"
+            :key="o.value"
+            :value="o.value"
+            :label="o.label"
+          />
+        </el-select>
+
+        <p v-if="selectedDate && !loadingSlots && !slotOptions.length" class="vb-hint">
+          Немає вільних слотів на цю дату
+        </p>
+      </el-form-item>
+    </el-form>
 
     <template #footer>
-      <div class="flex justify-end gap-10 border-t border-white/8 pt-16">
+      <div class="flex justify-end gap-12 pt-12">
         <el-button :disabled="submitting" @click="open = false">
-          Скасувати
+          <span class="text-sm font-medium">Скасувати</span>
         </el-button>
         <el-button
           type="primary"
@@ -108,7 +98,7 @@
           :disabled="!canSubmit"
           @click="submit"
         >
-          Забронювати
+          <span class="text-sm font-medium">Забронювати</span>
         </el-button>
       </div>
     </template>
@@ -158,9 +148,19 @@ const selectedSlotId = ref<string>('')
 const loadingSlots = ref(false)
 const submitting = ref(false)
 
-const sortedSlots = computed(() =>
-  [...slots.value].sort((a, b) => dayjs(a.startsAt).valueOf() - dayjs(b.startsAt).valueOf())
+// Only the backend's free slots are selectable, each labelled "HH:mm-HH:mm" (a window that
+// ends at midnight reads as "24:00", not "00:00"), sorted chronologically.
+const slotOptions = computed(() =>
+  [...slots.value]
+    .sort((a, b) => dayjs(a.startsAt).valueOf() - dayjs(b.startsAt).valueOf())
+    .map((s) => ({ value: s.id, label: formatSlotRange(s) }))
 )
+
+const slotPlaceholder = computed(() => {
+  if (!selectedDate.value) return 'Спочатку оберіть дату'
+  if (loadingSlots.value) return 'Завантаження…'
+  return 'Оберіть слот'
+})
 
 // Basic sanity gate only (≥ 1 player + a slot). The min-count rule is shown as guidance and
 // enforced by the backend, so violations surface as a toast without blocking the round trip.
@@ -174,8 +174,11 @@ function isVerified (player: Parameters<typeof isPlayerVerified>[0]): boolean {
   return isPlayerVerified(player)
 }
 
-function formatTimeRange (startsAt: string, endsAt: string): string {
-  return `${dayjs(startsAt).format('HH:mm')}–${dayjs(endsAt).format('HH:mm')}`
+// "HH:mm-HH:mm" for a slot; a window ending at midnight reads as "24:00" rather than "00:00".
+function formatSlotRange (slot: TVerificationSlot): string {
+  const start = dayjs(slot.startsAt).format('HH:mm')
+  const end = dayjs(slot.endsAt).format('HH:mm')
+  return `${start}-${end === '00:00' ? '24:00' : end}`
 }
 
 // Past days can't be booked. `?date=` is sent as the locally displayed YYYY-MM-DD, matching
@@ -227,14 +230,6 @@ function reset (): void {
 </script>
 
 <style scoped>
-.vb-label {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgb(156 163 175);
-}
-
 .vb-hint {
   margin: 0;
   font-size: 12px;
@@ -251,35 +246,19 @@ function reset (): void {
   border-radius: 12px;
 }
 
-.vb-slot {
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  font-family: theme('fontFamily.mono', monospace);
-  font-size: 13px;
-  color: rgb(255 255 255 / 0.9);
-  cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
-}
-
-.vb-slot:hover {
-  border-color: rgba(34, 211, 238, 0.35);
-}
-
-.vb-slot--active {
-  border-color: rgba(34, 211, 238, 0.7);
-  background: rgba(34, 211, 238, 0.16);
-  color: #7dd3fc;
+/* EP fixes the date editor to --el-date-editor-width (220px), overriding Tailwind w-full. */
+.vb-date-item :deep(.el-date-editor.el-input) {
+  width: 100%;
+  margin-bottom: 18px;
 }
 
 .vb-pill {
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
-  padding: 2px 9px;
+  padding: 1px 7px;
   border-radius: 9999px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   line-height: 1.4;
   border: 1px solid transparent;
@@ -296,55 +275,6 @@ function reset (): void {
   border-color: rgb(255 255 255 / 0.12);
   color: rgb(156 163 175);
 }
-
-:deep(.el-input__wrapper) {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: none !important;
-  border-radius: 10px;
-}
-
-:deep(.el-input__wrapper:hover) {
-  border-color: rgba(34, 211, 238, 0.25);
-}
-
-:deep(.el-input__wrapper.is-focus) {
-  border-color: rgba(34, 211, 238, 0.55) !important;
-  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2) !important;
-}
-
-:deep(.el-input__inner) {
-  color: white;
-}
-
-:deep(.el-select__wrapper) {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: none !important;
-  border-radius: 10px;
-  min-height: 42px;
-}
-
-:deep(.el-select__wrapper:hover) {
-  border-color: rgba(34, 211, 238, 0.25);
-}
-
-:deep(.el-select__wrapper.is-focused) {
-  border-color: rgba(34, 211, 238, 0.55) !important;
-  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2) !important;
-}
-
-:deep(.el-select__placeholder) {
-  color: theme('colors.gray.500');
-}
-
-/* Only the gradient/border vibe is overridden here — sizing, the 70vh cap, flex-column
-   layout, body scroll and padding all come from the global `.el-dialog` reset (_dialog.scss). */
-:deep(.verification-booking-modal.el-dialog) {
-  --el-dialog-bg-color: theme('colors.dark.navy');
-  background: linear-gradient(180deg, #0f172a 0%, theme('colors.dark.navy') 45%, #080c16 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
 </style>
 
 <!--
@@ -356,8 +286,29 @@ function reset (): void {
 <style>
 .vb-players-popper .el-select-dropdown__item {
   height: auto;
-  min-height: 44px;
+  min-height: 32px;
+  padding-top: 4px;
+  padding-bottom: 4px;
   line-height: 1.4;
   overflow: visible;
+}
+
+/* Global .el-avatar rules override the inline :size prop, so pin the size here. */
+.vb-players-popper .el-select-dropdown__item .el-avatar {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  line-height: 24px;
+  font-size: 12px;
+}
+
+.vb-players-popper .el-select-dropdown__item .el-avatar img {
+  width: 100%;
+  height: 100%;
+}
+
+/* Slot options are monospace so the HH:mm-HH:mm ranges align. */
+.vb-slots-popper .el-select-dropdown__item {
+  font-family: theme('fontFamily.mono', monospace);
 }
 </style>
