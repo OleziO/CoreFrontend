@@ -8,24 +8,24 @@
     <div class="flex flex-col gap-20">
       <div class="flex flex-col gap-10 border-b border-gray-800 pb-20">
         <h1 class="text-2xl font-semibold text-white">
-          Оновлення MMP
+          Оновлення MMR
         </h1>
         <p class="text-gray-500 text-sm">
-          Вкажіть ваш новий MMP
+          Вкажіть ваш новий MMR
         </p>
       </div>
 
       <div class="flex flex-col gap-20">
         <div class="flex flex-col gap-10">
           <label class="text-sm font-medium text-gray-400">
-            Новий MMP
+            Новий MMR
           </label>
           <div class="mmr-input-container">
             <el-input
               v-model.number="newMmr"
               type="number"
               :min="1"
-              placeholder="Введіть новий MMP"
+              placeholder="Введіть новий MMR"
               class="w-full custom-input"
               size="large"
             />
@@ -47,7 +47,7 @@
           :loading="loading"
           @click="updateMmr"
         >
-          Оновити MMP
+          Оновити MMR
         </el-button>
       </div>
     </div>
@@ -64,7 +64,7 @@ const loading = ref(false)
 
 const updateMmr = async () => {
   if (!newMmr.value || newMmr.value <= 0) {
-    ElMessage.error('Введіть коректний MMP')
+    ElMessage.error('Введіть коректний MMR')
     return
   }
 
@@ -76,7 +76,7 @@ const updateMmr = async () => {
     showMmrUnverifiedModal.value = false
     newMmr.value = null
   } catch (error: unknown) {
-    ElMessage.error(getApiErrorMessage(error, 'Помилка при оновленні MMP. Спробуйте ще раз.'))
+    ElMessage.error(getApiErrorMessage(error, 'Помилка при оновленні MMR. Спробуйте ще раз.'))
   } finally {
     loading.value = false
   }
@@ -84,7 +84,7 @@ const updateMmr = async () => {
 
 watch(showMmrUnverifiedModal, (newVal) => {
   if (newVal) {
-    // Устанавливаем текущий MMP при открытии модалки
+    // Устанавливаем текущий MMR при открытии модалки
     newMmr.value = null
   } else {
     // Очищаем форму при закрытии модалки

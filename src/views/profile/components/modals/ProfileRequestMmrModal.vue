@@ -10,10 +10,10 @@
     <div class="flex flex-col gap-20 ">
       <div class="flex flex-col gap-10 border-b border-gray-800 pb-20 ">
         <h1 class="text-2xl font-semibold text-white">
-          Запит на оновлення MMP
+          Запит на оновлення MMR
         </h1>
         <p class="text-gray-500 text-sm">
-          Завантажте скріншот вашого MMP та вкажіть новий рейтинг
+          Завантажте скріншот вашого MMR та вкажіть новий рейтинг
         </p>
       </div>
 
@@ -38,20 +38,20 @@
             >
           </div>
           <p class="text-xs text-gray-600">
-            Завантажте скріншот вашого MMP як доказ
+            Завантажте скріншот вашого MMR як доказ
           </p>
         </div>
 
         <div class="flex flex-col gap-10">
           <label class="text-sm font-medium text-gray-400">
-            Новий MMP
+            Новий MMR
           </label>
           <div class="mmr-input-container">
             <el-input
               v-model.number="newMmr"
               type="number"
               :min="1"
-              placeholder="Введіть новий MMP"
+              placeholder="Введіть новий MMR"
               class="w-full custom-input"
               size="large"
             />
