@@ -74,7 +74,7 @@
                   v-if="tab.value === 'teams'"
                   type="info"
                   round
-                  class="border border-[#43bfee]/40 bg-[#43bfee]/15 text-[#43bfee]
+                  class="border border-primary/40 bg-primary/15 text-primary
                 rounded-full size-20 flex justify-center items-center text-xs
                 tracking-wide font-semibold transition-all duration-300"
                 >
@@ -504,8 +504,8 @@ onUnmounted(() => {
 .tournament-detail-tabs :deep(.el-tabs__active-bar) {
   height: 2px;
   border-radius: 9999px;
-  background-color: #43bfee;
-  box-shadow: 0 0 12px rgba(67, 191, 238, 0.5);
+  background-color: var(--ds-primary);
+  box-shadow: var(--ds-glow-primary);
 }
 
 .tournament-detail-tabs :deep(.el-tabs__item) {
