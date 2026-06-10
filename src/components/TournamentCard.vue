@@ -1,8 +1,8 @@
 <template>
   <div
-    class="relative group flex w-full flex-col rounded-2xl border border-white/10
+    class="relative group flex w-full flex-col rounded-2xl border border-white/30
            bg-gradient-to-b from-gray-900 to-gray-950
-           overflow-hidden cursor-pointer shadow-elevation-3
+           overflow-hidden cursor-pointer shadow-card
            transition-[border-color,box-shadow] duration-300 ease-out
            hover:border-primary/50 hover:shadow-glow-primary"
     :style="{ maxWidth: `${width}px`, height: `${TOURNAMENT_CARD_HEIGHT}px` }"

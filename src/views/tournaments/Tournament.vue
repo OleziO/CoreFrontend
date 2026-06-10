@@ -1,5 +1,5 @@
 <template>
-  <div v-loading.fullscreen="tournamentStore.loading" class="h-full w-full overflow-y-auto bg-dark-navy custom-scroll">
+  <div v-loading.fullscreen="tournamentStore.loading" class="h-full w-full overflow-y-auto custom-scroll">
     <div class="relative w-full min-h-[550px] lg:h-[600px] flex items-end shrink-0">
       <AppBackButton class="top-24 left-20 lg:left-40" />
 

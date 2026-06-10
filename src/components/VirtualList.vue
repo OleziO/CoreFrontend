@@ -92,6 +92,14 @@ const containerClasses = computed(() => {
 })
 
 const itemClasses = computed(() => {
-  return props.isTable ? '' : props.gridCellClass
+  if (props.isTable) return ''
+
+  // Одна колонка (мобільний): прибираємо праве поле-розрив між колонками,
+  // щоб самотня картка центрувалася у своїй клітинці, а не зміщувалась вліво.
+  if ((props.gridItems ?? 1) <= 1) {
+    return props.gridCellClass.replace(/\bpr-\S+/g, '').replace(/\s+/g, ' ').trim()
+  }
+
+  return props.gridCellClass
 })
 </script>

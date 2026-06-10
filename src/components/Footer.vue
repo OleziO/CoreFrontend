@@ -6,7 +6,6 @@
       shadow-[0_-10px_30px_rgba(0,0,0,0.35)]
       bg-surface/80 backdrop-blur-xl
       flex justify-center items-center
-      py-15
       after:absolute after:left-0 after:right-0 after:top-0
       after:h-16 after:bg-gradient-to-t after:from-transparent after:to-black/40 after:pointer-events-none
     "

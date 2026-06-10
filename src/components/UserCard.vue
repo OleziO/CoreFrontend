@@ -2,9 +2,10 @@
   <div
     class="relative group z-10 flex !cursor-pointer flex-col items-center rounded-2xl p-20
            bg-gradient-to-br from-gray-900 via-gray-850 to-gray-950
-           border border-white/10 shadow-elevation-3
-           transition-all duration-300 ease-out w-[250px]
+           border border-white/30 shadow-card
+           transition-all duration-300 ease-out w-full
            hover:border-primary/60 hover:shadow-glow-primary"
+    :style="{ maxWidth: `${width}px` }"
     @click="goToPlayerPage(user.id)"
   >
     <!-- Dropdown три крапки -->

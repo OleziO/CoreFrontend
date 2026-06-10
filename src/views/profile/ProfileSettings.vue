@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-950 text-white py-40 px-20">
+  <div class="min-h-screen text-white py-40 px-20">
     <div
       class="max-w-[600px] mx-auto bg-gradient-to-br from-gray-900 via-gray-850 to-gray-950
         rounded-3xl border border-gray-800 shadow-[0_0_25px_rgba(0,0,0,0.4)]

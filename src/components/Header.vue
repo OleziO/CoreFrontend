@@ -14,7 +14,7 @@
       class="
         flex w-full h-60 px-20 lg:px-40
         bg-surface/80 backdrop-blur-xl
-        items-center justify-between
+        items-center lg:justify-between justify-center
       "
     >
       <!-- LOGO -->
@@ -166,9 +166,6 @@
             Увійти через Discord
           </span>
         </el-button>
-
-        <!-- BURGER -->
-        <Burger class="flex lg:hidden" />
       </div>
     </div>
   </header>

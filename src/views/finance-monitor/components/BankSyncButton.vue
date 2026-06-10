@@ -1,5 +1,6 @@
 <template>
   <el-button
+    v-if="!hideTrigger"
     size="small"
     :loading="loading"
     @click="dialogVisible = true"
@@ -75,11 +76,21 @@ function toIsoUtc (pickerValue: string): string {
   return dayjs(pickerValue, PICKER_FORMAT).toISOString()
 }
 
+defineProps<{
+  // Render only the dialog and let a parent open it via the exposed `open()` —
+  // used when the trigger lives in a dropdown menu instead of an inline button.
+  hideTrigger?: boolean
+}>()
+
 const emit = defineEmits<{
   synced: []
 }>()
 
 const dialogVisible = ref(false)
+
+defineExpose({
+  open: () => { dialogVisible.value = true }
+})
 const loading = ref(false)
 const reclassifying = ref(false)
 const fromDate = ref<string>('')

@@ -22,6 +22,7 @@
 import {
   STATUS_PRESETS,
   STATUS_TONE_CLASS,
+  STATUS_TONE_SOLID_CLASS,
   type TStatusPresetKey,
   type TStatusTone
 } from './status.presets'
@@ -35,7 +36,7 @@ interface IProps {
   label?: string
   /** Explicit Phosphor icon override; falls back to the preset's icon. */
   icon?: Component
-  size?: 'sm' | 'md'
+  size?: 'xs' | 'sm' | 'md' | 'lg'
   /** Render the icon only — label is still exposed to assistive tech. */
   iconOnly?: boolean
   pulse?: boolean
@@ -52,11 +53,26 @@ const resolvedIcon = computed<Component | undefined>(() => props.icon ?? preset.
 const resolvedLabel = computed(() => props.label ?? preset.value?.label ?? '')
 const resolvedPulse = computed(() => props.pulse ?? preset.value?.pulse ?? false)
 
-const toneClass = computed(() => STATUS_TONE_CLASS[resolvedTone.value])
-
-const sizeClass = computed(() =>
-  props.size === 'sm' ? 'gap-4 px-8 py-2 text-caption' : 'gap-6 px-10 py-4 text-small'
+// Icon-only seals render as a solid colored circle with a white glyph for
+// maximum contrast; text badges keep the subtler translucent tint.
+const toneClass = computed(() =>
+  (props.iconOnly ? STATUS_TONE_SOLID_CLASS : STATUS_TONE_CLASS)[resolvedTone.value]
 )
 
-const iconSize = computed(() => (props.size === 'sm' ? 13 : 15))
+const sizeClass = computed(() => {
+  // Icon-only badges sit on avatars as a seal — keep padding square so the
+  // wrapper renders as a clean circle rather than a lopsided pill.
+  if (props.iconOnly) {
+    return { xs: 'p-2', sm: 'p-4', md: 'p-6', lg: 'p-8' }[props.size]
+  }
+
+  return {
+    xs: 'gap-3 px-6 py-1 text-caption',
+    sm: 'gap-4 px-8 py-2 text-caption',
+    md: 'gap-6 px-10 py-4 text-small',
+    lg: 'gap-8 px-12 py-6 text-base'
+  }[props.size]
+})
+
+const iconSize = computed(() => ({ xs: 12, sm: 15, md: 18, lg: 24 }[props.size]))
 </script>

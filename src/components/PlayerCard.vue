@@ -10,15 +10,30 @@
       >
         <div class="flex items-center gap-10 z-10 justify-between w-full">
           <div class="flex items-center justify-between w-full gap-10">
-            <div class="relative truncate flex items-center gap-15">
-              <el-avatar
-                :src="avatarSrc"
-                class="border-2 relative min-w-50 size-50 border-gray-700 shadow-sm transition-all duration-300"
-              >
-                <template #default>
-                  <PhUser :size="22" weight="bold" class="text-white/70" />
-                </template>
-              </el-avatar>
+            <div class="relative min-w-0 flex items-center gap-15">
+              <div class="relative shrink-0">
+                <el-avatar
+                  :src="avatarSrc"
+                  class="border-2 relative min-w-50 size-50 border-gray-700 shadow-sm transition-all duration-300"
+                >
+                  <template #default>
+                    <PhUser :size="22" weight="bold" class="text-white/70" />
+                  </template>
+                </el-avatar>
+
+                <el-tooltip
+                  :content="isVerified ? 'Верифікований' : 'Не верифікований'"
+                  placement="top"
+                  effect="dark"
+                >
+                  <StatusBadge
+                    :preset="isVerified ? 'verified' : 'unverified'"
+                    size="xs"
+                    icon-only
+                    class="absolute -bottom-2 -right-2 ring-2 ring-gray-900"
+                  />
+                </el-tooltip>
+              </div>
 
               <div class="flex truncate flex-col">
                 <div>
@@ -44,18 +59,6 @@
                           :size="18"
                         />
                       </span>
-                    </el-tooltip>
-
-                    <el-tooltip
-                      :content="isVerified ? 'Верифікований' : 'Не верифікований'"
-                      placement="top"
-                      effect="dark"
-                    >
-                      <StatusBadge
-                        :preset="isVerified ? 'verified' : 'unverified'"
-                        size="sm"
-                        icon-only
-                      />
                     </el-tooltip>
 
                     <el-tooltip :content="player.discordName || '-'" placement="top">

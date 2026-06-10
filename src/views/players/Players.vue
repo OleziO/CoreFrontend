@@ -96,12 +96,12 @@
         :grid-width="window.height.value"
         withTopMargin
         :item-height="USER_CARD_HEIGHT"
-        :item-width="USER_CARD_WIDTH"
+        :item-width="effectiveCardWidth"
         empty-text="Гравці не знайдені"
         id-key="id"
       >
         <template #item="{ item }">
-          <UserCard :user="item" :width="USER_CARD_WIDTH" />
+          <UserCard :user="item" :width="effectiveCardWidth" />
         </template>
       </VirtualList>
     </div>
@@ -130,7 +130,7 @@ function parseTeamStatusQuery (query: LocationQuery): boolean[] {
 const USER_CARD_WIDTH = 270
 const USER_CARD_HEIGHT = 360
 
-const { cardsPerRow } = useVirtualGridLayout({ cardWidth: USER_CARD_WIDTH })
+const { cardsPerRow, effectiveCardWidth } = useVirtualGridLayout({ cardWidth: USER_CARD_WIDTH })
 
 const window = useWindowSize()
 const isMobile = computed(() => window.width.value < 850)

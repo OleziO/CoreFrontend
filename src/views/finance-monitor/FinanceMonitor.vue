@@ -4,32 +4,44 @@
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-16 shrink-0">
         <div>
           <h1 class="text-4xl font-semibold tracking-tight">
-            Finance Monitor
+            Фінанси
           </h1>
-          <p class="text-sm text-gray-400 mt-4">
-            Фінансовий аудит та прогнозування
-          </p>
         </div>
 
-        <el-checkbox
-          v-model="includeForecast"
-          label="Включити прогнозовані значення"
-          class="finance-checkbox"
+        <el-tooltip
+          :content="includeForecast ? 'Вимкнути прогнозовані значення' : 'Включити прогнозовані значення'"
+          placement="top"
+        >
+          <el-button
+            class="finance-forecast-toggle"
+            :class="{ 'is-active': includeForecast }"
+            @click="includeForecast = !includeForecast"
+          >
+            <PhChartLineUp size="16" class="mr-8" />
+            Прогнозовані значення
+          </el-button>
+        </el-tooltip>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-20">
+        <BalanceCard
+          class="h-full"
+          :balance="balanceQuery.data.value"
+          :is-pending="balanceQuery.isPending.value"
+          :is-error="balanceHasError"
+        />
+
+        <CategoryBreakdownCard
+          class="h-full"
+          :items="operationsQuery.data.value?.items || []"
+          :is-pending="operationsQuery.isPending.value"
         />
       </div>
 
-      <BalanceCard
-        :balance="balanceQuery.data.value"
-        :is-pending="balanceQuery.isPending.value"
-        :is-error="balanceHasError"
-      />
-
-      <CategoryBreakdownCard
-        :items="operationsQuery.data.value?.items || []"
-        :is-pending="operationsQuery.isPending.value"
-      />
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 auto-rows-[minmax(360px,70vh)]">
+      <div
+        class="grid grid-cols-1 lg:grid-cols-2 gap-20
+               auto-rows-[minmax(360px,auto)] lg:auto-rows-[minmax(360px,70vh)]"
+      >
         <TransactionFeed
           v-model:show-hidden="showHidden"
           :items="operationsQuery.data.value?.items || []"
@@ -67,6 +79,7 @@
 
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { PhChartLineUp } from '@phosphor-icons/vue'
 import { useAppModals } from '@/composables/use-app-modals'
 import { useFinanceAssets } from '@/composables/query/use-finance-assets'
 import { useFinanceBalance } from '@/composables/query/use-finance-balance'
@@ -220,7 +233,16 @@ async function handleSaveForecast (config: TForecastConfig) {
 </script>
 
 <style scoped>
-.finance-checkbox :deep(.el-checkbox__label) {
-  color: #d1d5db;
+/* Match the "show hidden" toggle in the Транзакції block: same height, radius
+   and blue active treatment (see TransactionFeed.vue .finance-icon-btn). */
+.finance-forecast-toggle {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+}
+
+.finance-forecast-toggle.is-active {
+  @apply bg-blue-500/20 border-blue-400/40 text-blue-200;
 }
 </style>

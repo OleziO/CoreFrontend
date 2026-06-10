@@ -1,7 +1,7 @@
 <template>
   <div
-    class="group/card relative flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/10
-           bg-gradient-to-br from-gray-900 via-gray-850 to-gray-950 shadow-elevation-3
+    class="group/card relative flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/30
+           bg-gradient-to-br from-gray-900 via-gray-850 to-gray-950 shadow-card
            transition-all duration-300 ease-out hover:border-primary/60 hover:shadow-glow-primary"
     @click="goToTeamPage(team.id)"
   >
@@ -35,7 +35,7 @@
         >
           <StatusBadge
             :preset="team.isVerified ? 'verified' : 'unverified'"
-            size="sm"
+            size="md"
             icon-only
             class="absolute bottom-10 right-10 z-[1] ring-2 ring-black/60"
             @click.stop

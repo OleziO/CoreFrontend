@@ -6,17 +6,31 @@
   >
     <div class="flex flex-col gap-14">
       <div class="flex items-start gap-16">
-        <el-avatar
-          :size="118"
-          shape="square"
-          :src="teamLogoSrc ?? ''"
-          class="mt-15 !size-118 shrink-0 rounded-2xl bg-white/[0.06] ring-2 ring-gray-700
-            shadow-[0_4px_14px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
-        >
-          <template #default>
-            <PhUser :size="32" weight="bold" class="text-white/70" />
-          </template>
-        </el-avatar>
+        <div class="relative mt-15 shrink-0">
+          <el-avatar
+            :size="118"
+            shape="square"
+            :src="teamLogoSrc ?? ''"
+            class="!size-118 rounded-2xl bg-white/[0.06] ring-2 ring-gray-700
+              shadow-[0_4px_14px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+          >
+            <template #default>
+              <PhUser :size="32" weight="bold" class="text-white/70" />
+            </template>
+          </el-avatar>
+
+          <el-tooltip
+            :content="team?.isVerified ? 'Верифікована команда' : 'Не верифікована'"
+          >
+            <StatusBadge
+              v-if="team"
+              :preset="team.isVerified ? 'verified' : 'unverified'"
+              size="md"
+              icon-only
+              class="absolute -bottom-4 -right-4 ring-2 ring-gray-900"
+            />
+          </el-tooltip>
+        </div>
 
         <div class="flex flex-1 min-w-0 flex-col gap-6 mt-15">
           <div class="flex flex-wrap items-center gap-10">
@@ -28,11 +42,6 @@
                 {{ team?.name }}
               </h1>
             </el-tooltip>
-            <StatusBadge
-              v-if="team"
-              :preset="team.isVerified ? 'verified' : 'unverified'"
-              size="sm"
-            />
           </div>
 
           <div

@@ -21,7 +21,7 @@
             <h1 class="text-4xl font-semibold text-white">
               Команди {{ window.width.value > 1024 ? 'платформи' : '' }}
             </h1>
-            <span class="text-small tabular-nums text-white/40">{{ filteredTeams.length }}</span>
+            <span class="text-2xl font-semibold text-white/40">({{ filteredTeams.length }})</span>
           </div>
 
           <div class="flex items-center gap-16 w-1/2">
@@ -102,7 +102,7 @@
         :grid-width="window.height.value"
         withTopMargin
         :item-height="TEAM_CARD_HEIGHT"
-        :item-width="TEAM_CARD_WIDTH"
+        :item-width="effectiveCardWidth"
         grid-cell-class="pb-10 pr-12"
         empty-text="Команди не знайдені"
         id-key="id"
@@ -110,7 +110,7 @@
         <template #item="{ item }">
           <TeamCard
             v-model="showTeamPlayers"
-            :width="TEAM_CARD_WIDTH"
+            :width="effectiveCardWidth"
             :team="item"
             show-division-tag
           />
@@ -133,7 +133,7 @@ const teamsStore = useTeamsStore()
 const window = useWindowSize()
 const { open } = useAppModals()
 const route = useRoute()
-const { cardsPerRow } = useVirtualGridLayout({ cardWidth: TEAM_CARD_WIDTH })
+const { cardsPerRow, effectiveCardWidth } = useVirtualGridLayout({ cardWidth: TEAM_CARD_WIDTH })
 
 const showTeamPlayers = ref(false)
 

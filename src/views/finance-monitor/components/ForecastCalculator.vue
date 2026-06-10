@@ -1,10 +1,9 @@
 <template>
   <div class="rounded-2xl border border-white/10 bg-white/5 overflow-hidden flex flex-col h-full">
-    <div class="px-20 py-16 border-b border-white/10 shrink-0">
-      <h2 class="text-lg font-semibold text-white">
-        Калькулятор прогнозу
-      </h2>
-    </div>
+    <FinanceBlockHeader
+      :icon="PhCalculator"
+      title="Калькулятор прогнозу"
+    />
 
     <div v-if="isPending" class="flex-1 p-20">
       <el-skeleton :rows="10" animated />
@@ -150,6 +149,7 @@
 
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
+import { PhCalculator } from '@phosphor-icons/vue'
 import type { TForecastConfig, TForecastResult } from '../finance.types'
 import { DEFAULT_FORECAST_CONFIG } from '../finance.types'
 import { formatCompactK, kopecksToUah, uahToKopecks } from '../utils/format-money'

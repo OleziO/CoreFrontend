@@ -39,12 +39,12 @@
     <!-- Завантаження: скелет тієї ж сітки/розміру, без стрибків layout -->
     <div
       v-else-if="isPending"
-      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-[16px]"
+      class="flex justify-center flex-wrap gap-16 items-center"
     >
       <div
         v-for="i in skeletonCount"
         :key="i"
-        class="min-h-[88px] rounded-lg border border-white/10
+        class="min-h-[88px] w-[140px] rounded-lg border border-white/10
           bg-white/[0.04] animate-pulse"
       />
     </div>
@@ -65,13 +65,13 @@
 
     <div
       v-else
-      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-[16px]"
+      class="flex justify-center flex-wrap gap-16 items-center"
     >
       <div
         v-for="h in heroes"
         :key="h.heroId"
         class="
-          flex min-h-[88px] flex-col items-center justify-center gap-4
+          flex w-[140px] min-h-[88px] flex-col items-center justify-center gap-4
           rounded-lg border border-white/10
           bg-gradient-to-b from-white/[0.08] to-white/[0.02]
           px-6 py-20
