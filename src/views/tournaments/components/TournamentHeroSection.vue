@@ -19,19 +19,53 @@
       />
     </div>
 
-    <!-- tournament.description not in new API schema -->
+    <!-- Meta: prize / participants / start — icon + label hierarchy -->
+    <div class="flex flex-wrap items-center gap-x-16 gap-y-8 text-small">
+      <span class="inline-flex items-center gap-6 font-semibold text-gold">
+        <PhTrophy :size="18" weight="fill" />
+        {{ prizeLabel }}
+      </span>
+      <span class="inline-flex items-center gap-6 text-white/80">
+        <PhUsersThree :size="18" weight="bold" />
+        {{ participantsLabel }}
+      </span>
+      <span v-if="startLabel" class="inline-flex items-center gap-6 text-white/80">
+        <PhCalendarBlank :size="18" weight="bold" />
+        {{ startLabel }}
+      </span>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
 import DivisionTag from '@/components/team-tags/DivisionTag.vue'
+import { PhTrophy, PhUsersThree, PhCalendarBlank } from '@phosphor-icons/vue'
+import { formatTournamentPrizeUah } from '@/core/utils/formatters'
 
 interface IProps {
   tournament: TTournament | null
 }
 
-defineProps<IProps>()
+const props = defineProps<IProps>()
+
+const prizeLabel = computed(() => formatTournamentPrizeUah(props.tournament?.prizePool))
+
+const participantsLabel = computed(() => {
+  const count = props.tournament?.teams?.length ?? 0
+  const slots = props.tournament?.tournamentSlots
+  return slots ? `${count}/${slots} команд` : `${count} команд`
+})
+
+const startLabel = computed(() => {
+  const starts = props.tournament?.tournamentStartsAt
+  if (!starts) return ''
+  return new Intl.DateTimeFormat('uk-UA', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  }).format(new Date(starts))
+})
 </script>
 
 <style scoped>

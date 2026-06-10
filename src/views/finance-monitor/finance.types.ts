@@ -1,6 +1,7 @@
 export type TOperationType = 'BETKING' | 'DUELO_GG' | 'PRIZE' | 'CUSTOM'
 
-export type TOperationGroupKind = 'PRIZE' | 'CUSTOM'
+/** `OperationGroupViewDto.kind` — persisted group classification. */
+export type TOperationGroupKind = 'PRIZE' | 'SPONSOR' | 'CUSTOM'
 
 export type TSponsorKind = 'BETKING' | 'DUELO_GG'
 
@@ -11,9 +12,10 @@ export type TFeedItemSign = 'POSITIVE' | 'NEGATIVE'
 /**
  * Discriminator for `kind === 'GROUP'` feed items.
  * - `TEAM_GIFT` / `OTHER_GIFTS` — computed live by the backend over the requested range.
- * - `CUSTOM` / `PRIZE` — manual groups.
+ * - `SPONSOR` — sponsor-matched operations.
+ * - `MANUAL` — manually grouped operations (the only editable/deletable kind).
  */
-export type TFeedGroupKind = 'TEAM_GIFT' | 'OTHER_GIFTS' | 'CUSTOM' | 'PRIZE'
+export type TFeedGroupKind = 'TEAM_GIFT' | 'OTHER_GIFTS' | 'SPONSOR' | 'MANUAL'
 
 export type TAssetView = {
   id: string
@@ -21,11 +23,15 @@ export type TAssetView = {
   url: string
 }
 
-/** Per-row category assigned to an operation (top-level or group child). */
+/**
+ * Per-row category assigned to an operation (top-level or group child).
+ * The feed flattens the category icon to a resolved `iconUrl` string
+ * (unlike `TCustomCategoryView`, which carries the full asset object).
+ */
 export type TFeedItemCategory = {
   id: string
   label: string
-  icon: TAssetView | null
+  iconUrl: string | null
 }
 
 export type TSponsorView = {
@@ -41,7 +47,6 @@ export type TOperationGroupView = {
   kind: TOperationGroupKind
   title: string
   operationIds: string[]
-  aggregatedAmount: number
   groupKey: string
   icon: TAssetView | null
 }
@@ -76,6 +81,8 @@ export type TFeedItem = {
   /** Assigned category, or `null` when uncategorized. */
   category: TFeedItemCategory | null
   virtual: boolean
+  /** Operation is hidden from the default feed (still returned when `showHidden`). */
+  isHidden: boolean
   /** Nested child operations for groups (empty for plain operations). */
   children: TFeedItem[]
 }
@@ -131,12 +138,37 @@ export type TOperationsQueryParams = {
   includeForecast?: boolean
   from?: string
   to?: string
+  showHidden?: boolean
+}
+
+/**
+ * Full-replace payload for `PATCH /operations/{id}`. The backend requires every
+ * field to be present (each may be `null`), so the edit UI must send the operation's
+ * complete desired state, not a partial patch.
+ */
+export type TUpdateOperationPayload = {
+  title: string
+  iconAssetId: string | null
+  categoryId: string | null
+  comment: string | null
+  isHidden?: boolean
 }
 
 export type TGroupOperationsPayload = {
   operationIds: string[]
   title: string
   iconAssetId?: string
+}
+
+/** Full-replace payload for `PATCH /operations/group/{id}`. */
+export type TUpdateOperationGroupPayload = {
+  title: string
+  iconAssetId: string | null
+  operationIds: string[]
+}
+
+export type TReclassifyResult = {
+  reclassified: number
 }
 
 export type TCreateCustomCategoryPayload = {
@@ -151,10 +183,6 @@ export type TUpdateCustomCategoryPayload = {
   iconAssetId?: string | null
   sign?: TCategorySign
   matchers?: string[]
-}
-
-export type TAssignCategoryPayload = {
-  categoryId: string | null
 }
 
 export type TBankSyncPayload = {

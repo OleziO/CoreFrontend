@@ -49,6 +49,16 @@ img, svg {
   display: initial;
 }
 
+// Utility: hide the scrollbar while keeping scroll (used by horizontally
+// scrollable nav rows / tab strips). Referenced across the app.
+.no-scrollbar {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 label {
   @apply block text-sm font-semibold text-gray-600;
 }

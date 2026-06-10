@@ -2,7 +2,7 @@
   <el-dialog v-model="showMmrModal" width="400">
     <div class="flex flex-col gap-10">
       <h1 class="text-2xl">
-        MMP Гравця
+        MMR Гравця
       </h1>
 
       <div class="flex flex-col gap-15">
@@ -18,7 +18,7 @@
         class="mt-15"
         @click="updatePlayerMmr"
       >
-        Оновити MMP
+        Оновити MMR
       </el-button>
     </div>
   </el-dialog>

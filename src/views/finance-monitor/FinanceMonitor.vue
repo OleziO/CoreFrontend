@@ -1,43 +1,56 @@
 <template>
   <div class="min-h-full text-white w-full flex flex-col">
-    <div class="w-[90%] max-w-[1400px] mx-auto flex flex-col py-20 gap-20">
+    <div class="w-full max-w-[1400px] mx-auto flex flex-col py-20 gap-20 px-16 lg:px-24">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-16 shrink-0">
         <div>
           <h1 class="text-4xl font-semibold tracking-tight">
-            Finance Monitor
+            Фінанси
           </h1>
-          <p class="text-sm text-gray-400 mt-4">
-            Фінансовий аудит та прогнозування
-          </p>
         </div>
 
-        <el-checkbox
-          v-model="includeForecast"
-          label="Включити прогнозовані значення"
-          class="finance-checkbox"
+        <el-tooltip
+          :content="includeForecast ? 'Вимкнути прогнозовані значення' : 'Включити прогнозовані значення'"
+          placement="top"
+        >
+          <el-button
+            class="finance-forecast-toggle"
+            :class="{ 'is-active': includeForecast }"
+            @click="includeForecast = !includeForecast"
+          >
+            <PhChartLineUp size="16" class="mr-8" />
+            Прогнозовані значення
+          </el-button>
+        </el-tooltip>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-20">
+        <BalanceCard
+          class="h-full"
+          :balance="balanceQuery.data.value"
+          :is-pending="balanceQuery.isPending.value"
+          :is-error="balanceHasError"
+        />
+
+        <CategoryBreakdownCard
+          class="h-full"
+          :items="operationsQuery.data.value?.items || []"
+          :is-pending="operationsQuery.isPending.value"
         />
       </div>
 
-      <BalanceCard
-        :balance="balanceQuery.data.value"
-        :is-pending="balanceQuery.isPending.value"
-        :is-error="balanceHasError"
-      />
-
-      <CategoryBreakdownCard
-        :items="operationsQuery.data.value?.items || []"
-        :is-pending="operationsQuery.isPending.value"
-      />
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 auto-rows-[78vh]">
+      <div
+        class="grid grid-cols-1 lg:grid-cols-2 gap-20
+               auto-rows-[minmax(360px,auto)] lg:auto-rows-[minmax(360px,70vh)]"
+      >
         <TransactionFeed
+          v-model:show-hidden="showHidden"
           :items="operationsQuery.data.value?.items || []"
           :is-pending="operationsQuery.isPending.value"
           :is-error="operationsHasError"
-          @rename="handleRename"
-          @icon="handleIcon"
+          @edit="handleEdit"
           @group="handleGroup"
-          @assign-category="handleAssignCategory"
+          @edit-group="handleEditGroup"
+          @delete-group="handleDeleteGroup"
           @manage-categories="handleManageCategories"
           @refetch="refetchAll"
         />
@@ -65,7 +78,8 @@
 </template>
 
 <script setup lang="ts">
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { PhChartLineUp } from '@phosphor-icons/vue'
 import { useAppModals } from '@/composables/use-app-modals'
 import { useFinanceAssets } from '@/composables/query/use-finance-assets'
 import { useFinanceBalance } from '@/composables/query/use-finance-balance'
@@ -82,15 +96,19 @@ import type {
   TCreateCustomCategoryPayload,
   TFeedItem,
   TForecastConfig,
-  TUpdateCustomCategoryPayload
+  TUpdateCustomCategoryPayload,
+  TUpdateOperationGroupPayload,
+  TUpdateOperationPayload
 } from './finance.types'
 import { financeService } from './finance.service'
 
 const includeForecast = ref(false)
+const showHidden = ref(false)
 
 const balanceQuery = useFinanceBalance(includeForecast)
 const operationsQuery = useFinanceOperations(computed(() => ({
-  includeForecast: includeForecast.value
+  includeForecast: includeForecast.value,
+  showHidden: showHidden.value
 })))
 const forecastQuery = useFinanceForecast()
 const assetsQuery = useFinanceAssets()
@@ -121,36 +139,49 @@ function invalidateCategories () {
   queryCache.invalidateQueries({ key: ['finance', 'operations'] })
 }
 
-function handleRename (item: TFeedItem) {
+function handleEdit (item: TFeedItem) {
   const operationId = item.kind === 'OPERATION' ? item.id : item.operationIds[0]
   if (!operationId) return
 
-  open('RenameOperationModal' as any, {
-    operationId,
-    initialLabel: item.title,
-    onSubmit: async (label: string) => {
-      await financeService.renameOperation(operationId, label)
-      ElMessage.success('Операцію перейменовано')
+  open('EditOperationModal' as any, {
+    item,
+    categories: categoriesQuery.data.value || [],
+    assets: assetsQuery.data.value || [],
+    onSubmit: async (payload: TUpdateOperationPayload) => {
+      await financeService.updateOperation(operationId, payload)
+      ElMessage.success('Операцію оновлено')
       invalidateOperations()
-      close('RenameOperationModal' as any)
+      close('EditOperationModal' as any)
     }
   })
 }
 
-function handleIcon (item: TFeedItem) {
-  const operationId = item.kind === 'OPERATION' ? item.id : item.operationIds[0]
-  if (!operationId) return
-
-  open('SelectIconModal' as any, {
+function handleEditGroup (item: TFeedItem) {
+  open('EditGroupModal' as any, {
+    item,
     assets: assetsQuery.data.value || [],
-    isPending: assetsQuery.isPending.value,
-    onSubmit: async (iconAssetId: string) => {
-      await financeService.setOperationIcon(operationId, iconAssetId)
-      ElMessage.success('Іконку оновлено')
+    onSubmit: async (payload: TUpdateOperationGroupPayload) => {
+      await financeService.updateOperationGroup(item.id, payload)
+      ElMessage.success('Групу оновлено')
       invalidateOperations()
-      close('SelectIconModal' as any)
+      close('EditGroupModal' as any)
     }
   })
+}
+
+async function handleDeleteGroup (item: TFeedItem) {
+  try {
+    await ElMessageBox.confirm(
+      `Видалити групу «${item.title}»? Операції залишаться, але будуть розгруповані.`,
+      'Підтвердження',
+      { confirmButtonText: 'Видалити', cancelButtonText: 'Скасувати', type: 'warning' }
+    )
+  } catch {
+    return
+  }
+  await financeService.deleteOperationGroup(item.id)
+  ElMessage.success('Групу видалено')
+  invalidateOperations()
 }
 
 function handleGroup (item: TFeedItem) {
@@ -196,29 +227,22 @@ async function deleteCategory (id: string) {
   invalidateCategories()
 }
 
-function handleAssignCategory (item: TFeedItem) {
-  const operationId = item.kind === 'OPERATION' ? item.id : item.operationIds[0]
-  if (!operationId) return
-
-  open('AssignCategoryModal' as any, {
-    categories: categoriesQuery.data.value || [],
-    currentCategoryId: item.category?.id ?? null,
-    onSubmit: async (categoryId: string | null) => {
-      await financeService.assignOperationCategory(operationId, categoryId)
-      ElMessage.success('Категорію оновлено')
-      invalidateOperations()
-      close('AssignCategoryModal' as any)
-    }
-  })
-}
-
 async function handleSaveForecast (config: TForecastConfig) {
   await forecastQuery.saveForecast(config)
 }
 </script>
 
 <style scoped>
-.finance-checkbox :deep(.el-checkbox__label) {
-  color: #d1d5db;
+/* Match the "show hidden" toggle in the Транзакції block: same height, radius
+   and blue active treatment (see TransactionFeed.vue .finance-icon-btn). */
+.finance-forecast-toggle {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+}
+
+.finance-forecast-toggle.is-active {
+  @apply bg-blue-500/20 border-blue-400/40 text-blue-200;
 }
 </style>

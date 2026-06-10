@@ -22,7 +22,6 @@
       <el-button
         v-if="canSubmitPlayoffMatch"
         type="primary"
-        class="!bg-cyan-600 !border-cyan-600"
         @click="emit('openPlayoffSubmit')"
       >
         Подати результат матчу
@@ -40,16 +39,20 @@
           Завантаження сітки…
         </p>
       </div>
-      <iframe
+      <div
         v-else-if="playoffEmbedUrl"
-        :src="getBracketUrl(playoffEmbedUrl)"
-        width="100%"
-        height="500"
-        class="sm:h-[600px] rounded-lg border-0"
-        frameborder="0"
-        scrolling="auto"
-        allowtransparency="true"
-      />
+        class="w-full overflow-x-auto rounded-xl border border-white/10 bg-surface/40 p-8 shadow-elevation-2"
+      >
+        <iframe
+          :src="getBracketUrl(playoffEmbedUrl)"
+          width="100%"
+          height="500"
+          class="sm:h-[600px] min-w-[640px] rounded-lg border-0"
+          frameborder="0"
+          scrolling="auto"
+          allowtransparency="true"
+        />
+      </div>
       <div
         v-else-if="!isPlayoffPhase"
         class="w-full py-20 flex justify-center items-center flex-col text-center

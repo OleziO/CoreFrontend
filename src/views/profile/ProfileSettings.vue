@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-950 text-white py-40 px-20">
+  <div class="min-h-screen text-white py-40 px-20">
     <div
       class="max-w-[600px] mx-auto bg-gradient-to-br from-gray-900 via-gray-850 to-gray-950
         rounded-3xl border border-gray-800 shadow-[0_0_25px_rgba(0,0,0,0.4)]
@@ -20,7 +20,7 @@
       </div>
 
       <div
-        class="bg-gray-900/60 border border-gray-800 rounded-2xl p-20 flex flex-col gap-10"
+        class="bg-elevated-surface/60 border border-white/10 rounded-2xl p-20 flex flex-col gap-10"
       >
         <div class="flex flex-col items-start justify-between w-full gap-20">
           <h2 class="text-lg font-semibold text-white">
@@ -49,14 +49,17 @@
       </div>
 
       <div
-        class="bg-gray-900/60 border border-gray-800 rounded-2xl p-20 flex flex-col gap-10"
+        class="bg-elevated-surface/60 border border-white/10 rounded-2xl p-20 flex flex-col gap-10"
       >
         <div class="flex flex-col items-start gap-20">
           <h2 class="text-lg font-semibold text-white">
             Ігрові дані
           </h2>
           <div class="flex items-center gap-x-20 justify-between w-full">
-            <p class="text-green-500 text-sm">
+            <p
+              class="text-sm"
+              :class="user?.rating ? 'text-success' : 'text-warning'"
+            >
               {{ user?.rating
                 ?
                   "Дані гравця успішно додані"
@@ -68,7 +71,7 @@
               tag="a"
               @click="showPositionModal = true"
             >
-              Оновити дані гравця
+              Оновити позицію
             </el-button>
           </div>
         </div>
@@ -76,15 +79,15 @@
 
       <RoleGuard :exclude-roles="['unverified']">
         <div
-          class="bg-gray-900/60 border border-gray-800 rounded-2xl p-20 flex flex-col gap-10"
+          class="bg-elevated-surface/60 border border-white/10 rounded-2xl p-20 flex flex-col gap-10"
         >
           <div class="flex flex-col items-start gap-20">
             <h2 class="text-lg font-semibold text-white">
-              Запит на оновлення MMP
+              Запит на оновлення MMR
             </h2>
             <div class="flex items-center gap-x-20 justify-between w-full">
               <p class="text-gray-400 text-sm">
-                Надішліть запит на оновлення вашого MMP з доказом
+                Надішліть запит на оновлення вашого MMR з доказом
               </p>
               <el-button
                 type="primary"
@@ -100,22 +103,22 @@
 
       <RoleGuard :roles="['unverified']">
         <div
-          class="bg-gray-900/60 border border-gray-800 rounded-2xl p-20 flex flex-col gap-10"
+          class="bg-elevated-surface/60 border border-white/10 rounded-2xl p-20 flex flex-col gap-10"
         >
           <div class="flex flex-col items-start gap-20">
             <h2 class="text-lg font-semibold text-white">
-              Оновлення MMP
+              Оновлення MMR
             </h2>
             <div class="flex items-center gap-x-20 justify-between w-full">
               <p class="text-gray-400 text-sm">
-                Вкажіть ваш новий MMP
+                Вкажіть ваш новий MMR
               </p>
               <el-button
                 type="primary"
                 class="bg-primary hover:bg-primary/90 transition-all duration-300"
                 @click="showMmrUnverifiedModal = true"
               >
-                Оновити MMP
+                Оновити MMR
               </el-button>
             </div>
           </div>
@@ -124,7 +127,7 @@
 
       <!-- <RoleGuard :roles="['admin', 'moderator']">
         <div
-          class="bg-gray-900/60 border border-gray-800 rounded-2xl p-20 flex flex-col gap-10"
+          class="bg-elevated-surface/60 border border-white/10 rounded-2xl p-20 flex flex-col gap-10"
         >
           <div class="flex flex-col items-start gap-20">
             <h2 class="text-lg font-semibold text-white">
@@ -134,8 +137,8 @@
               <p class="text-green-500 text-sm">
                 {{ user?.mmr
                   ?
-                    user?.mmr + ' MMP'
-                  : "Гравець ще не вказав свій MMP" }}
+                    user?.mmr + ' MMR'
+                  : "Гравець ще не вказав свій MMR" }}
               </p>
               <el-button
                 type="primary"
@@ -143,7 +146,7 @@
                 tag="a"
                 @click="showMmrModal = true"
               >
-                Оновити MMP гравця
+                Оновити MMR гравця
               </el-button>
             </div>
           </div>

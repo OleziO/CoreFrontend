@@ -8,8 +8,8 @@
 
     <!-- Error -->
     <template v-else-if="error">
-      <PhWarningCircle :size="56" class="text-red-400 mb-16" />
-      <h2 class="text-xl font-semibold text-red-400 mb-8">{{ error }}</h2>
+      <PhWarningCircle :size="56" class="text-error mb-16" />
+      <h2 class="text-xl font-semibold text-error mb-8">{{ error }}</h2>
       <el-button @click="router.push({ name: routeNames.rootPage })">
         На головну
       </el-button>
@@ -18,8 +18,8 @@
     <!-- Invite card -->
     <template v-else-if="invite">
       <div
-        class="bg-bg-secondary rounded-xl border border-white/10 p-40
-          flex flex-col items-center gap-20 w-full max-w-sm text-center shadow-xl"
+        class="bg-elevated-surface rounded-xl border border-white/10 p-40
+          flex flex-col items-center gap-20 w-full max-w-sm text-center shadow-elevation-3"
       >
         <!-- Team logo -->
         <el-avatar

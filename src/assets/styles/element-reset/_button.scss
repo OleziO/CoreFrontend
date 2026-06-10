@@ -55,11 +55,11 @@
   transition: filter 0.2s ease, transform 0.2s ease, background 0.2s ease;
 
   &.el-button:not(.is-disabled, .is-link):hover {
-    filter: drop-shadow(0 0 15px #43bfee);
+    filter: drop-shadow(var(--ds-glow-primary));
   }
 
   &:active {
-    filter: drop-shadow(0 0 12px #43bfee);
+    filter: drop-shadow(0 0 12px rgba(67, 191, 238, 0.6));
   }
 
   &.is-disabled {

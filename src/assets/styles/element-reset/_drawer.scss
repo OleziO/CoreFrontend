@@ -2,7 +2,8 @@
 @use "element-plus/theme-chalk/src/drawer";
 
 .el-drawer {
-  @apply bg-gray-900;
+  background: var(--ds-surface);
+  box-shadow: var(--ds-elevation-4);
 
   .el-drawer__header {
     @apply mb-0 text-white;

@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-loading.fullscreen="tournamentStore.loading"
-    class="flex flex-col max-h-full w-full overflow-hidden relative bg-bg-primary"
-  >
+  <div class="flex flex-col max-h-full w-full overflow-hidden relative">
     <!-- Атмосферний відблиск у стилі головної сторінки -->
     <div
       class="pointer-events-none absolute inset-x-0 top-0 z-0 h-[260px]
@@ -55,60 +52,64 @@
           </div>
         </div>
 
-        <!-- MOBILE -->
-        <div v-else class="w-full">
-          <el-carousel
-            :loop="false"
-            :autoplay="false"
-            :dots="false"
-            indicator-position="none"
-            arrow="always"
-            height="80px"
-            class="w-full !flex-1 py-10 relative"
-          >
-            <el-carousel-item class="flex w-full items-center justify-center">
-              <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
-                <el-button
-                  type="primary"
-                  class="flex mx-auto min-w-[195px] h-full items-center justify-center gap-2"
-                  @click="openTournamentFilterModal"
-                >
-                  <PhSlidersHorizontal size="20" weight="bold" />
-                  <span class="text-sm font-medium">Фільтрувати</span>
-                </el-button>
-              </el-badge>
-            </el-carousel-item>
-
-            <el-carousel-item class="flex w-full items-center justify-center px-70">
-              <el-input
-                v-model="search"
-                placeholder="Введіть назву турніру"
+        <!-- MOBILE — persistent search + filter (no carousel) -->
+        <div v-else class="w-full py-12">
+          <div class="flex items-center gap-10">
+            <el-input
+              v-model="search"
+              class="flex-1"
+              placeholder="Назва турніру"
+              clearable
+            >
+              <template #prepend>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
+            <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
+              <el-button
+                type="primary"
+                class="!h-40 !w-40 shrink-0"
+                aria-label="Фільтрувати"
+                @click="openTournamentFilterModal"
               >
-                <template #prepend>
-                  <el-icon><Search /></el-icon>
-                </template>
-              </el-input>
-            </el-carousel-item>
-          </el-carousel>
+                <PhSlidersHorizontal size="20" weight="bold" />
+              </el-button>
+            </el-badge>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="h-full w-full relative z-10">
+      <!-- Skeletons while the first load is in flight -->
+      <div
+        v-if="tournamentStore.loading"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-24
+               justify-items-center px-20 pt-110 lg:pt-130 pb-20"
+      >
+        <div
+          v-for="i in 8"
+          :key="i"
+          class="w-full max-w-[280px] rounded-2xl border border-white/10 bg-dark-card animate-pulse"
+          :style="{ height: `${TOURNAMENT_CARD_HEIGHT}px` }"
+        />
+      </div>
+
       <VirtualList
+        v-else
         :items="filteredTournaments"
         :grid-items="cardsPerRow"
         :grid-width="window.height.value"
         withTopMargin
         :item-height="TOURNAMENT_LIST_ITEM_HEIGHT"
-        :item-width="TOURNAMENT_LIST_ITEM_WIDTH"
+        :item-width="tournamentItemWidth"
         empty-text="Турніри не знайдені"
         id-key="id"
       >
         <template #item="{ item }">
           <TournamentCard
             :tournament="item"
-            :width="TOURNAMENT_CARD_WIDTH"
+            :width="effectiveCardWidth"
           />
         </template>
       </VirtualList>
@@ -125,7 +126,6 @@ import { useTournamentStore } from './tournaments.store'
 import type { LocationQuery } from 'vue-router'
 
 /** Як Teams/Players: `VirtualList` додає `pb-20 pr-20`, тому розмір кроку сітки = картка + gap (px те саме число у `useVirtualGridLayout`). */
-const TOURNAMENT_LIST_ITEM_WIDTH = TOURNAMENT_CARD_WIDTH + VIRTUAL_GRID_CARD_GAP_PX
 const TOURNAMENT_LIST_ITEM_HEIGHT = TOURNAMENT_CARD_HEIGHT + VIRTUAL_GRID_CARD_GAP_PX
 
 const { open } = useAppModals()
@@ -135,7 +135,14 @@ const search = ref('')
 
 const isMobile = computed(() => window.width.value < 850)
 
-const { cardsPerRow } = useVirtualGridLayout({ cardWidth: TOURNAMENT_CARD_WIDTH })
+const { cardsPerRow, effectiveCardWidth } = useVirtualGridLayout({ cardWidth: TOURNAMENT_CARD_WIDTH })
+
+// У багатоколонковому режимі додаємо gap до кроку сітки (праве поле `pr-20` лишається);
+// в одноколонковому `VirtualList` прибирає `pr-20`, тож крок = ширині картки.
+const tournamentItemWidth = computed(() =>
+  cardsPerRow.value > 1
+    ? effectiveCardWidth.value + VIRTUAL_GRID_CARD_GAP_PX
+    : effectiveCardWidth.value)
 const tournamentStore = useTournamentStore()
 
 const filteredTournaments = computed(() => {

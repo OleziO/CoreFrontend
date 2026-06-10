@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-loading.fullscreen="teamsStore.loading"
-    class="flex flex-col max-h-full w-full overflow-hidden relative"
-  >
+  <div class="flex flex-col max-h-full w-full overflow-hidden relative">
     <div
       class="absolute top-0 left-0 z-30 flex justify-center w-full
              bg-white/2 backdrop-blur-lg
@@ -15,99 +12,97 @@
       <div
         class="w-full px-20 lg:px-40"
       >
+        <!-- DESKTOP / TABLET -->
         <div
           v-if="!isMobile"
           class="flex justify-between items-center w-full pt-40 pb-20"
         >
-          <h1 class="text-4xl font-semibold text-white">
-            Команди {{ window.width.value > 1024 ? 'платформи' : '' }}
-          </h1>
+          <div class="flex items-baseline gap-12">
+            <h1 class="text-4xl font-semibold text-white">
+              Команди {{ window.width.value > 1024 ? 'платформи' : '' }}
+            </h1>
+            <span class="text-2xl font-semibold text-white/40">({{ filteredTeams.length }})</span>
+          </div>
 
-          <div class="flex items-center gap-25">
-            <el-tooltip
-              :content="String(filteredTeams?.length)"
-              placement="top"
-              :disabled="filteredTeams?.length < 100"
-              effect="dark"
-              :show-arrow="false"
+          <div class="flex items-center gap-16 w-1/2">
+            <el-input
+              v-model="search"
+              class="flex-1"
+              v-bind="$attrs"
+              placeholder="Введіть назву команди"
+              clearable
             >
-              <el-badge
-                :value="filteredTeams?.length"
-                class="cursor-pointer"
-                :class="{'cursor-default': filteredTeams.length < 100}"
-                type="primary"
-              >
-                <el-button
-                  type="primary"
-                  class="h-full w-fit"
-                  @click="openTeamFiltersModal"
-                >
-                  <PhSlidersHorizontal size="20" weight="bold" />
-                  <span v-if="window.width.value > 1400" class="ml-10 text-sm font-medium">Фільтрувати</span>
-                </el-button>
-              </el-badge>
-            </el-tooltip>
-            <el-input v-model="search" class="w-[540px]" v-bind="$attrs" placeholder="Введіть назву команди">
               <template #prepend>
                 <el-icon>
                   <Search />
                 </el-icon>
               </template>
             </el-input>
+            <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
+              <el-button
+                type="primary"
+                class="h-40 px-16 shrink-0"
+                @click="openTeamFiltersModal"
+              >
+                <PhSlidersHorizontal size="20" weight="bold" />
+                <span v-if="window.width.value > 1400" class="ml-10 text-sm font-medium">Фільтрувати</span>
+              </el-button>
+            </el-badge>
           </div>
         </div>
 
-        <!-- MOBILE TOOLBAR -->
-        <div v-else class="w-full px-4">
-          <el-carousel
-            :loop="false"
-            :autoplay="false"
-            :dots="false"
-            indicator-position="none"
-            arrow="always"
-            height="80px"
-            class="w-full !flex-1 py-10 relative"
-          >
-            <!-- Кнопка Фільтрувати -->
-            <el-carousel-item class="flex w-full items-center justify-center">
-              <el-tooltip
-                :content="String(filteredTeams?.length)"
-                placement="top"
-                :disabled="filteredTeams?.length < 100"
-                effect="dark"
-                :show-arrow="false"
+        <!-- MOBILE — persistent search + filter (no carousel) -->
+        <div v-else class="w-full py-12">
+          <div class="flex items-center gap-10">
+            <el-input
+              v-model="search"
+              class="flex-1"
+              placeholder="Назва команди"
+              clearable
+            >
+              <template #prepend>
+                <el-icon>
+                  <Search />
+                </el-icon>
+              </template>
+            </el-input>
+            <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
+              <el-button
+                type="primary"
+                class="!h-40 !w-40 shrink-0"
+                aria-label="Фільтрувати"
+                @click="openTeamFiltersModal"
               >
-                <el-badge
-                  :value="filteredTeams?.length"
-                  :hidden="!filteredTeams"
-                  class="cursor-pointer"
-                  :class="{'cursor-default': filteredTeams.length < 100}"
-                  type="primary"
-                >
-                  <el-button
-                    type="primary"
-                    class="flex w-[240px] h-full"
-                    @click="openTeamFiltersModal"
-                  >
-                    <PhSlidersHorizontal size="20" weight="bold" />
-                    <span class="ml-10 text-sm font-medium">Фільтрувати</span>
-                  </el-button>
-                </el-badge>
-              </el-tooltip>
-            </el-carousel-item>
-          </el-carousel>
+                <PhSlidersHorizontal size="20" weight="bold" />
+              </el-button>
+            </el-badge>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="h-full w-full relative z-10">
+      <div
+        v-if="teamsStore.loading"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-24
+               justify-items-center px-20 pt-130 pb-20"
+      >
+        <div
+          v-for="i in 8"
+          :key="i"
+          class="w-full max-w-[300px] rounded-2xl border border-white/10 bg-dark-card animate-pulse"
+          :style="{ height: `${TEAM_CARD_HEIGHT}px` }"
+        />
+      </div>
+
       <VirtualList
+        v-else
         :items="filteredTeams"
         :grid-items="cardsPerRow"
         :grid-width="window.height.value"
         withTopMargin
         :item-height="TEAM_CARD_HEIGHT"
-        :item-width="TEAM_CARD_WIDTH"
+        :item-width="effectiveCardWidth"
         grid-cell-class="pb-10 pr-12"
         empty-text="Команди не знайдені"
         id-key="id"
@@ -115,7 +110,7 @@
         <template #item="{ item }">
           <TeamCard
             v-model="showTeamPlayers"
-            :width="TEAM_CARD_WIDTH"
+            :width="effectiveCardWidth"
             :team="item"
             show-division-tag
           />
@@ -138,7 +133,7 @@ const teamsStore = useTeamsStore()
 const window = useWindowSize()
 const { open } = useAppModals()
 const route = useRoute()
-const { cardsPerRow } = useVirtualGridLayout({ cardWidth: TEAM_CARD_WIDTH })
+const { cardsPerRow, effectiveCardWidth } = useVirtualGridLayout({ cardWidth: TEAM_CARD_WIDTH })
 
 const showTeamPlayers = ref(false)
 
@@ -172,6 +167,8 @@ const filteredTeams = computed(() => {
 })
 
 const isMobile = computed(() => window.width.value < 850)
+
+const activeFiltersCount = computed(() => (filters.value.status.length ? 1 : 0))
 
 function openTeamFiltersModal () {
   open('TeamsFilterModal')

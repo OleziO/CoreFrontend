@@ -55,7 +55,7 @@ const props = withDefaults(defineProps<{
   sponsors: () => getSponsors(),
   variant: 'full',
   title: 'Спонсори',
-  inviteUrl: 'https://discord.gg/SvgsPHPU',
+  inviteUrl: 'https://discord.gg/QeDj9TjmgM',
   inviteText: 'Місце для вашого бренду перед активною Dota 2 аудиторією.'
 })
 

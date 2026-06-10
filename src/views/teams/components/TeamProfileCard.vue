@@ -1,22 +1,36 @@
 <template>
   <div
-    class="rounded-xl w-full bg-gray-900 p-20 flex flex-col gap-20 relative
+    class="rounded-xl w-full bg-surface p-20 flex flex-col gap-20 relative
            border border-white/[0.08] transition-all duration-300 ease-out"
     :class="teamProfileCardShadowClass"
   >
     <div class="flex flex-col gap-14">
       <div class="flex items-start gap-16">
-        <el-avatar
-          :size="118"
-          shape="square"
-          :src="teamLogoSrc ?? ''"
-          class="mt-15 !size-118 shrink-0 rounded-2xl bg-white/[0.06] ring-2 ring-gray-700
-            shadow-[0_4px_14px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
-        >
-          <template #default>
-            <PhUser :size="32" weight="bold" class="text-white/70" />
-          </template>
-        </el-avatar>
+        <div class="relative mt-15 shrink-0">
+          <el-avatar
+            :size="118"
+            shape="square"
+            :src="teamLogoSrc ?? ''"
+            class="!size-118 rounded-2xl bg-white/[0.06] ring-2 ring-gray-700
+              shadow-[0_4px_14px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+          >
+            <template #default>
+              <PhUser :size="32" weight="bold" class="text-white/70" />
+            </template>
+          </el-avatar>
+
+          <el-tooltip
+            :content="team?.isVerified ? 'Верифікована команда' : 'Не верифікована'"
+          >
+            <StatusBadge
+              v-if="team"
+              :preset="team.isVerified ? 'verified' : 'unverified'"
+              size="md"
+              icon-only
+              class="absolute -bottom-4 -right-4 ring-2 ring-gray-900"
+            />
+          </el-tooltip>
+        </div>
 
         <div class="flex flex-1 min-w-0 flex-col gap-6 mt-15">
           <div class="flex flex-wrap items-center gap-10">
@@ -194,21 +208,13 @@ const teamDivisionForDisplay = computed(() =>
     : null
 )
 
-const teamProfileCardShadowClass = computed(() => {
-  const drop = 'shadow-[0_4px_16px_rgba(0,0,0,0.35)]'
-  const t = props.team
-  if (!t) return drop
-  if (t.isVerified) {
-    return (
-      'shadow-[0_4px_16px_rgba(0,0,0,0.35),0_0_32px_rgba(34,197,94,0.38),0_0_64px_rgba(34,197,94,0.14)] ' +
-      'hover:shadow-[0_4px_16px_rgba(0,0,0,0.35),0_0_46px_rgba(34,197,94,0.52),0_0_84px_rgba(34,197,94,0.2)]'
-    )
-  }
-  return (
-    'shadow-[0_4px_16px_rgba(0,0,0,0.35),0_0_32px_rgba(248,113,113,0.34),0_0_64px_rgba(248,113,113,0.11)] ' +
-    'hover:shadow-[0_4px_16px_rgba(0,0,0,0.35),0_0_46px_rgba(248,113,113,0.44),0_0_84px_rgba(248,113,113,0.16)]'
-  )
-})
+// Verification is now signaled by the StatusBadge (icon + label), so the card
+// uses a neutral elevation — verified teams keep a subtle primary hover glow.
+const teamProfileCardShadowClass = computed(() =>
+  props.team?.isVerified
+    ? 'shadow-elevation-3 hover:shadow-glow-primary'
+    : 'shadow-elevation-3'
+)
 
 function copyDotaTeamId () {
   const id = dotaTeamIdTrimmed.value

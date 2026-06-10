@@ -47,9 +47,9 @@
           class="grid w-full grid-cols-1 gap-16 md:grid-cols-2 md:items-stretch"
         >
           <div
-            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-gray-800/90
+            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-white/10
               bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 md:h-full
-              px-16 py-14 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)] 2md:px-18 2md:py-16"
+              px-16 py-14 text-center shadow-elevation-2 2md:px-18 2md:py-16"
           >
             <h2 class="shrink-0 text-sm font-semibold uppercase tracking-wider text-gray-500">
               Команда
@@ -117,9 +117,9 @@
           </div>
 
           <div
-            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-gray-800/90
+            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-white/10
               bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 md:h-full
-              px-16 py-14 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)] 2md:px-18 2md:py-16"
+              px-16 py-14 text-center shadow-elevation-2 2md:px-18 2md:py-16"
           >
             <h2 class="shrink-0 text-sm font-semibold uppercase tracking-wider text-gray-500">
               Позиції
@@ -165,9 +165,9 @@
           class="grid w-full grid-cols-1 gap-16 md:grid-cols-2 md:items-stretch"
         >
           <div
-            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-gray-800/90
+            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-white/10
               bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 md:h-full
-              px-16 py-14 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)] 2md:px-18 2md:py-16"
+              px-16 py-14 text-center shadow-elevation-2 2md:px-18 2md:py-16"
           >
             <h2 class="shrink-0 text-sm font-semibold uppercase tracking-wider text-gray-500">
               Команда
@@ -228,9 +228,9 @@
           </div>
 
           <div
-            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-gray-800/90
+            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-white/10
               bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 md:h-full
-              px-16 py-14 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)] 2md:px-18 2md:py-16"
+              px-16 py-14 text-center shadow-elevation-2 2md:px-18 2md:py-16"
           >
             <h2 class="shrink-0 text-sm font-semibold uppercase tracking-wider text-gray-500">
               Позиції

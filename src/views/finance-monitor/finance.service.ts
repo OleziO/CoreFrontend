@@ -11,7 +11,10 @@ import type {
   TGroupOperationsPayload,
   TOperationGroupView,
   TOperationsQueryParams,
-  TUpdateCustomCategoryPayload
+  TReclassifyResult,
+  TUpdateCustomCategoryPayload,
+  TUpdateOperationGroupPayload,
+  TUpdateOperationPayload
 } from './finance.types'
 
 class FinanceService {
@@ -33,16 +36,31 @@ class FinanceService {
     return financeClient.put<NonNullable<TForecastResponse>>('/forecast', config)
   }
 
-  async renameOperation (id: string, label: string): Promise<{ status: string }> {
-    return financeClient.patch<{ status: string }>(`/operations/${id}/rename`, { label })
+  /**
+   * Full-replace update of a single operation. The backend requires the complete
+   * desired state (title, icon, category, comment), so callers must pass every field.
+   */
+  async updateOperation (id: string, payload: TUpdateOperationPayload): Promise<{ status: string }> {
+    return financeClient.patch<{ status: string }>(`/operations/${id}`, payload)
   }
 
-  async setOperationIcon (id: string, iconAssetId: string): Promise<{ status: string }> {
-    return financeClient.patch<{ status: string }>(`/operations/${id}/icon`, { iconAssetId })
+  async fetchOperationGroups (): Promise<TOperationGroupView[]> {
+    return financeClient.get<TOperationGroupView[]>('/operations/groups')
   }
 
   async groupOperations (payload: TGroupOperationsPayload): Promise<TOperationGroupView> {
     return financeClient.post<TOperationGroupView>('/operations/group', payload)
+  }
+
+  async updateOperationGroup (
+    id: string,
+    payload: TUpdateOperationGroupPayload
+  ): Promise<TOperationGroupView> {
+    return financeClient.patch<TOperationGroupView>(`/operations/group/${id}`, payload)
+  }
+
+  async deleteOperationGroup (id: string): Promise<{ status: string }> {
+    return financeClient.delete<{ status: string }>(`/operations/group/${id}`)
   }
 
   async fetchCustomCategories (): Promise<TCustomCategoryView[]> {
@@ -64,16 +82,16 @@ class FinanceService {
     return financeClient.delete<void>(`/custom-categories/${id}`)
   }
 
-  async assignOperationCategory (id: string, categoryId: string | null): Promise<{ status: string }> {
-    return financeClient.patch<{ status: string }>(`/operations/${id}/category`, { categoryId })
-  }
-
   async fetchAssets (): Promise<TAssetView[]> {
     return financeClient.get<TAssetView[]>('/assets')
   }
 
   async syncBank (payload: TBankSyncPayload): Promise<{ synced: number }> {
     return financeClient.post<{ synced: number }>('/bank/sync', payload)
+  }
+
+  async reclassifyBank (): Promise<TReclassifyResult> {
+    return financeClient.post<TReclassifyResult>('/bank/sync/reclassify')
   }
 }
 

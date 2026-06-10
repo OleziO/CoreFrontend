@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bank/sync/reclassify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-run classification over all stored transactions */
+        post: operations["SyncController_reclassify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/operations": {
         parameters: {
             query?: never;
@@ -72,7 +89,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/operations/{id}/rename": {
+    "/operations/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -85,25 +102,25 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Rename an operation */
-        patch: operations["OperationsController_rename"];
+        /** Update an operation (title, icon, category, comment) */
+        patch: operations["OperationsController_update"];
         trace?: never;
     };
-    "/operations/{id}/icon": {
+    "/operations/groups": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List all operation groups */
+        get: operations["OperationsController_listGroups"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** Set an operation icon */
-        patch: operations["OperationsController_setIcon"];
+        patch?: never;
         trace?: never;
     };
     "/operations/group": {
@@ -123,7 +140,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/operations/{id}/category": {
+    "/operations/group/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -133,11 +150,12 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete a group; its operations are ungrouped */
+        delete: operations["OperationsController_deleteGroup"];
         options?: never;
         head?: never;
-        /** Assign or clear the operation category (null clears it) */
-        patch: operations["OperationsController_setCategory"];
+        /** Update a group (title, icon, members) */
+        patch: operations["OperationsController_updateGroup"];
         trace?: never;
     };
     "/custom-categories": {
@@ -268,6 +286,9 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        StatusResponseDto: {
+            status: string;
+        };
         SyncRequestDto: {
             accountId?: string;
             /** Format: date-time */
@@ -275,12 +296,74 @@ export interface components {
             /** Format: date-time */
             to?: string;
         };
-        RenameOperationDto: {
-            label: string;
+        SyncResultDto: {
+            synced: number;
         };
-        SetIconDto: {
+        ReclassifyResultDto: {
+            reclassified: number;
+        };
+        FeedViewDto__schema0: {
+            /** @enum {string} */
+            kind: "OPERATION" | "GROUP" | "FORECAST";
+            id: string;
+            amount: number;
+            /** @enum {string} */
+            sign: "POSITIVE" | "NEGATIVE";
+            /** Format: date-time */
+            time: string | null;
+            title: string;
+            iconUrl: string | null;
+            /** @default [] */
+            operationIds: string[];
+            /**
+             * @default null
+             * @enum {string|null}
+             */
+            groupKind: "TEAM_GIFT" | "OTHER_GIFTS" | "SPONSOR" | "MANUAL" | null;
+            /** @default null */
+            groupKey: string | null;
+            /** @default 0 */
+            count: number;
+            /** @default null */
+            category: {
+                id: string;
+                label: string;
+                iconUrl: string | null;
+            } | null;
+            /** @default false */
+            virtual: boolean;
+            /** @default false */
+            isHidden: boolean;
+            /** @default [] */
+            children: components["schemas"]["FeedViewDto__schema0"][];
+        };
+        FeedViewDto: {
+            items: components["schemas"]["FeedViewDto__schema0"][];
+            includesForecast: boolean;
+        };
+        UpdateOperationDto: {
+            title: string;
             /** Format: uuid */
-            iconAssetId: string;
+            iconAssetId: string | null;
+            /** Format: uuid */
+            categoryId: string | null;
+            comment: string | null;
+            /** @default false */
+            isHidden: boolean;
+        };
+        OperationGroupViewDto: {
+            id: string;
+            /** @enum {string} */
+            kind: "PRIZE" | "SPONSOR" | "CUSTOM";
+            title: string;
+            /** @default [] */
+            operationIds: string[];
+            groupKey: string;
+            icon: {
+                id: string;
+                name: string;
+                url: string;
+            } | null;
         };
         GroupOperationsDto: {
             operationIds: string[];
@@ -288,9 +371,27 @@ export interface components {
             /** Format: uuid */
             iconAssetId?: string;
         };
-        AssignCategoryDto: {
+        UpdateOperationGroupDto: {
+            title: string;
             /** Format: uuid */
-            categoryId: string | null;
+            iconAssetId: string | null;
+            operationIds: string[];
+        };
+        CustomCategoryViewDto: {
+            id: string;
+            label: string;
+            /**
+             * @default EXPENSE
+             * @enum {string}
+             */
+            sign: "INCOME" | "EXPENSE";
+            /** @default [] */
+            matchers: string[];
+            icon: {
+                id: string;
+                name: string;
+                url: string;
+            } | null;
         };
         CreateCategoryDto: {
             label: string;
@@ -315,6 +416,25 @@ export interface components {
             sign?: "INCOME" | "EXPENSE";
             matchers?: string[];
         };
+        BalanceDto: {
+            actual: number;
+            forecast: number;
+            total: number;
+            includesForecast: boolean;
+        };
+        SponsorViewDto: {
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "BETKING" | "DUELO_GG";
+            /** @default [] */
+            matchers: string[];
+            logo: {
+                id: string;
+                name: string;
+                url: string;
+            } | null;
+        };
         SponsorInputDto: {
             name: string;
             logoAssetId: string | null;
@@ -322,6 +442,11 @@ export interface components {
             kind: "BETKING" | "DUELO_GG";
             /** @default [] */
             matchers: string[];
+        };
+        AssetViewDto: {
+            id: string;
+            name: string;
+            url: string;
         };
         CreateAssetDto: {
             name: string;
@@ -331,6 +456,51 @@ export interface components {
              * @enum {string}
              */
             storageType: "LOCAL" | "EXTERNAL_URL";
+        };
+        ForecastViewDto: {
+            config: {
+                divisions: [
+                    {
+                        teamCount: number;
+                        projectContribution: number;
+                    },
+                    {
+                        teamCount: number;
+                        projectContribution: number;
+                    },
+                    {
+                        teamCount: number;
+                        projectContribution: number;
+                    }
+                ];
+                fees: {
+                    top1_4: number;
+                    top5_8: number;
+                    top8plus: number;
+                };
+                /** @default 60 */
+                prizePoolPercent: number;
+            };
+            result: {
+                divisions: [
+                    {
+                        collected: number;
+                        prizePool: number;
+                    },
+                    {
+                        collected: number;
+                        prizePool: number;
+                    },
+                    {
+                        collected: number;
+                        prizePool: number;
+                    }
+                ];
+                totalCollected: number;
+                totalPrizePool: number;
+                projectedExpenses: number;
+                projectedProfit: number;
+            };
         };
         ForecastConfigDto: {
             divisions: [
@@ -394,7 +564,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StatusResponseDto"];
+                };
             };
         };
     };
@@ -411,7 +583,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StatusResponseDto"];
+                };
             };
         };
     };
@@ -432,7 +606,28 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SyncResultDto"];
+                };
+            };
+        };
+    };
+    SyncController_reclassify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReclassifyResultDto"];
+                };
             };
         };
     };
@@ -442,6 +637,7 @@ export interface operations {
                 includeForecast?: boolean;
                 from?: string;
                 to?: string;
+                showHidden?: boolean;
             };
             header?: never;
             path?: never;
@@ -453,11 +649,13 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["FeedViewDto"];
+                };
             };
         };
     };
-    OperationsController_rename: {
+    OperationsController_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -468,7 +666,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RenameOperationDto"];
+                "application/json": components["schemas"]["UpdateOperationDto"];
             };
         };
         responses: {
@@ -476,30 +674,28 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StatusResponseDto"];
+                };
             };
         };
     };
-    OperationsController_setIcon: {
+    OperationsController_listGroups: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SetIconDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OperationGroupViewDto"][];
+                };
             };
         };
     };
@@ -520,11 +716,34 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OperationGroupViewDto"];
+                };
             };
         };
     };
-    OperationsController_setCategory: {
+    OperationsController_deleteGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatusResponseDto"];
+                };
+            };
+        };
+    };
+    OperationsController_updateGroup: {
         parameters: {
             query?: never;
             header?: never;
@@ -535,7 +754,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AssignCategoryDto"];
+                "application/json": components["schemas"]["UpdateOperationGroupDto"];
             };
         };
         responses: {
@@ -543,7 +762,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OperationGroupViewDto"];
+                };
             };
         };
     };
@@ -560,7 +781,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CustomCategoryViewDto"][];
+                };
             };
         };
     };
@@ -581,7 +804,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CustomCategoryViewDto"];
+                };
             };
         };
     };
@@ -600,7 +825,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StatusResponseDto"];
+                };
             };
         };
     };
@@ -623,7 +850,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CustomCategoryViewDto"];
+                };
             };
         };
     };
@@ -642,7 +871,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BalanceDto"];
+                };
             };
         };
     };
@@ -659,7 +890,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SponsorViewDto"][];
+                };
             };
         };
     };
@@ -680,7 +913,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SponsorViewDto"];
+                };
             };
         };
     };
@@ -703,7 +938,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SponsorViewDto"];
+                };
             };
         };
     };
@@ -720,7 +957,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AssetViewDto"][];
+                };
             };
         };
     };
@@ -741,7 +980,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AssetViewDto"];
+                };
             };
         };
     };
@@ -759,7 +1000,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["ForecastViewDto"];
                 };
             };
         };
@@ -781,7 +1022,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ForecastViewDto"];
+                };
             };
         };
     };

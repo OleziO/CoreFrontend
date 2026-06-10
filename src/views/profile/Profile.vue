@@ -42,7 +42,7 @@
           </template>
         </el-dropdown>
       </div>
-      <div class="flex items-center gap-30 border-b border-gray-800 pb-20">
+      <div class="flex items-center gap-30 border-b border-white/10 pb-20">
         <el-avatar
           :src="user?.avatarUrl ?? ''"
           size="large"
@@ -62,7 +62,7 @@
         <!-- Позиції: ті самі Ph-іконки, що в positionOptions (фільтри / редагування) -->
         <div
           class="col-span-2 w-full flex flex-col gap-14
-            bg-gray-900/60 border border-gray-800
+            bg-elevated-surface/60 border border-white/10
             rounded-2xl px-24 py-24 transition-all duration-300 md:py-28"
         >
           <h2 class="text-sm uppercase font-semibold tracking-wider text-gray-400">
@@ -99,41 +99,11 @@
 
         <div
           class="col-span-2 flex flex-col items-center justify-center
-            bg-gray-900/60 border border-gray-800
+            bg-elevated-surface/60 border border-white/10
             rounded-2xl py-20 transition-all duration-300"
         >
           <span class="text-sm text-gray-400 mb-2">Рейтинг (MMR)</span>
           <span class="text-white text-base font-semibold tabular-nums">{{ user?.rating ?? '-' }}</span>
-        </div>
-
-        <div
-          class="bg-gray-900/60 border border-gray-800 rounded-2xl p-20 flex flex-col gap-10"
-        >
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-sm uppercase font-semibold text-white">
-                Команда:
-              </h2>
-            </div>
-          </div>
-          <!-- TODO: team info not in TPlayer API schema yet -->
-          <div class="text-gray-500 text-sm italic">
-            Ви ще не приєднані до жодної команди
-          </div>
-        </div>
-        <div
-          class="bg-gray-900/60 border border-gray-800 rounded-2xl p-20 flex flex-col gap-10"
-        >
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-sm uppercase font-semibold text-white">
-                MIX Команда:
-              </h2>
-            </div>
-          </div>
-          <div class="text-gray-500 text-sm italic w-full h-full flex items-center justify-center">
-            Ви ще не приєднані до жодної MIX команди
-          </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 <template>
-  <div class="home-page overflow-x-hidden bg-bg-primary">
+  <div class="home-page overflow-x-hidden">
     <!-- ═══════════════════════════════════════════════════════════
          HERO
     ══════════════════════════════════════════════════════════════ -->
@@ -8,7 +8,6 @@
       <div class="atm-glow-cyan" />
       <div class="atm-glow-purple" />
       <div class="atm-grid" />
-      <div class="atm-particles" />
       <div class="atm-vignette" />
 
       <!-- Hero content -->
@@ -44,8 +43,22 @@
         </p>
 
         <div class="flex flex-col sm:flex-row items-center gap-16 mt-24">
+          <button
+            v-if="!authStore.token"
+            type="button"
+            :disabled="authStore.loginLoading"
+            class="discord-cta flex items-center gap-12 px-32 py-16 rounded-xl font-bold text-base text-white
+                   bg-[#5865F2] hover:bg-[#4752C4] transition-all duration-200 cursor-pointer
+                   shadow-[0_0_30px_rgba(88,101,242,0.45)] hover:shadow-[0_0_55px_rgba(88,101,242,0.65)]
+                   disabled:opacity-60 disabled:cursor-not-allowed"
+            @click="authStore.startDiscordLogin()"
+          >
+            <Icon name="discord" :size="22" />
+            Увійти через Discord
+          </button>
           <a
-            href="https://discord.gg/SvgsPHPU"
+            v-else
+            href="https://discord.gg/QeDj9TjmgM"
             target="_blank"
             rel="noopener noreferrer"
             class="discord-cta flex items-center gap-12 px-32 py-16 rounded-xl font-bold text-base text-white
@@ -129,6 +142,59 @@
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════
+         TOURNAMENTS (competitive content — surfaced above sponsors/FAQ)
+    ══════════════════════════════════════════════════════════════ -->
+    <section v-if="tournamentsLoading || activeTournaments.length" class="py-50">
+      <div class="max-w-6xl mx-auto px-24">
+        <div class="flex items-end justify-between mb-48 reveal">
+          <div>
+            <span
+              class="text-[11px] uppercase tracking-[0.35em] text-[#43bfee]
+                     font-semibold block mb-12"
+            >Змагання</span>
+            <h2 class="text-3xl md:text-4xl font-black uppercase text-white">Активні турніри</h2>
+          </div>
+          <RouterLink
+            to="/tournaments"
+            class="hidden md:flex items-center gap-8 text-sm text-gray-400 hover:text-white
+                   transition-colors group cursor-pointer"
+          >
+            Всі турніри
+            <PhArrowRight :size="16" class="group-hover:translate-x-1 transition-transform" />
+          </RouterLink>
+        </div>
+
+        <!-- Loading skeleton -->
+        <div v-if="tournamentsLoading" class="grid md:grid-cols-2 lg:grid-cols-3 gap-24">
+          <div v-for="i in 3" :key="i" class="h-288 rounded-2xl bg-dark-card animate-pulse" />
+        </div>
+
+        <!-- Active tournament cards -->
+        <div
+          v-else
+          class="grid md:grid-cols-2 lg:grid-cols-3 gap-24 justify-items-center"
+        >
+          <TournamentCard
+            v-for="t in activeTournaments"
+            :key="t.id"
+            :tournament="t"
+            class="reveal w-full"
+          />
+        </div>
+
+        <div class="mt-32 text-center md:hidden reveal">
+          <RouterLink
+            to="/tournaments"
+            class="inline-flex items-center gap-8 text-sm text-gray-400 hover:text-white
+                   transition-colors cursor-pointer"
+          >
+            Всі турніри <PhArrowRight :size="16" />
+          </RouterLink>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
          SPONSORS
     ══════════════════════════════════════════════════════════════ -->
     <section class="py-50 border-t border-white/8">
@@ -206,7 +272,7 @@
 
         <div class="text-center reveal">
           <a
-            href="https://discord.gg/SvgsPHPU"
+            href="https://discord.gg/QeDj9TjmgM"
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-8 text-sm text-gray-500 hover:text-[#43bfee]
@@ -215,59 +281,6 @@
             Зацікавлені у партнерстві? Зв'яжіться з нами в Discord
             <PhArrowRight :size="15" />
           </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════
-         TOURNAMENTS
-    ══════════════════════════════════════════════════════════════ -->
-    <section v-if="tournamentsLoading || activeTournaments.length" class="py-50">
-      <div class="max-w-6xl mx-auto px-24">
-        <div class="flex items-end justify-between mb-48 reveal">
-          <div>
-            <span
-              class="text-[11px] uppercase tracking-[0.35em] text-[#43bfee]
-                     font-semibold block mb-12"
-            >Змагання</span>
-            <h2 class="text-3xl md:text-4xl font-black uppercase text-white">Активні турніри</h2>
-          </div>
-          <RouterLink
-            to="/tournaments"
-            class="hidden md:flex items-center gap-8 text-sm text-gray-400 hover:text-white
-                   transition-colors group cursor-pointer"
-          >
-            Всі турніри
-            <PhArrowRight :size="16" class="group-hover:translate-x-1 transition-transform" />
-          </RouterLink>
-        </div>
-
-        <!-- Loading skeleton -->
-        <div v-if="tournamentsLoading" class="grid md:grid-cols-2 lg:grid-cols-3 gap-24">
-          <div v-for="i in 3" :key="i" class="h-288 rounded-2xl bg-dark-card animate-pulse" />
-        </div>
-
-        <!-- Active tournament cards -->
-        <div
-          v-else
-          class="grid md:grid-cols-2 lg:grid-cols-3 gap-24 justify-items-center"
-        >
-          <TournamentCard
-            v-for="t in activeTournaments"
-            :key="t.id"
-            :tournament="t"
-            class="reveal w-full"
-          />
-        </div>
-
-        <div class="mt-32 text-center md:hidden reveal">
-          <RouterLink
-            to="/tournaments"
-            class="inline-flex items-center gap-8 text-sm text-gray-400 hover:text-white
-                   transition-colors cursor-pointer"
-          >
-            Всі турніри <PhArrowRight :size="16" />
-          </RouterLink>
         </div>
       </div>
     </section>
@@ -315,7 +328,7 @@
               </p>
             </div>
             <a
-              href="https://discord.gg/SvgsPHPU"
+              href="https://discord.gg/QeDj9TjmgM"
               target="_blank"
               rel="noopener noreferrer"
               class="flex-shrink-0 flex items-center gap-12 px-28 py-16 rounded-xl bg-[#5865F2]
@@ -407,6 +420,8 @@ import {
 } from '@phosphor-icons/vue'
 import type { TIconName } from '@/components/Icon.vue'
 
+const authStore = useAuthStore()
+
 // ── Feature strip ──────────────────────────────────────────────────────────
 const features = [
   {
@@ -488,35 +503,43 @@ const openFaq = ref<number | null>(null)
 const faqItems = [
   {
     q: 'Як зареєструватися на Core League?',
-    a: 'Натисніть кнопку "Увійти через Discord" у шапці сайту. Авторизація відбувається через ваш Discord-акаунт — жодних довгих форм. Після входу ваш профіль створюється автоматично.'
+    a: 'Натисніть кнопку "Увійти через Discord" у шапці сайту. Авторизація відбувається через ваш Discord-акаунт — жодних довгих форм. Після входу ваш профіль створюється автоматично, після чого можна прив’язати Steam-акаунт і вступати до команди.'
   },
   {
-    q: 'Який рівень гри потрібен для участі?',
-    a: 'Core League має три дивізіони (I, II, III), що охоплюють різні рівні MMR. Дивізіон III підходить для початківців та аматорів, тоді як Дивізіон I — для більш досвідчених команд. Детальні вимоги до MMR вказані в описі кожного турніру.'
+    q: 'Які є дивізіони і який рівень MMR потрібен?',
+    a: 'У Core League три дивізіони за рівнем гри. Дивізіон I — середній рейтинг команди 0–2500 MMR (макс. 3500 у гравця); Дивізіон II — 2500–4500 MMR (макс. 5500 у гравця); Дивізіон III — 4500–7000 MMR (без обмежень для гравця). Середній рейтинг рахується як AVG усіх п’яти гравців складу.'
   },
   {
     q: 'Як створити або приєднатися до команди?',
-    a: 'Після реєстрації перейдіть у розділ "Команди". Там ви можете створити власну команду або прийняти запрошення від капітана існуючої команди. Для участі в турнірі команда має мати повний склад.'
+    a: 'Після реєстрації перейдіть у розділ "Команди" — там можна створити власну команду або прийняти запрошення капітана. Склад — 5 гравців; дозволено до 3 замін, заявлених і верифікованих до старту турніру. Один гравець може бути лише в одній команді; після вибуття команди він не переходить до іншої в межах цього турніру.'
   },
   {
-    q: 'Чи безкоштовна участь у турнірах?',
-    a: 'Так, участь у турнірах Core League безкоштовна. Наша ціль — зробити якісний кіберспорт доступним для всіх українських гравців Dota 2.'
+    q: 'Як проходить верифікація?',
+    a: 'Верифікація проходить у голосовому каналі ⁠🎙️・Верифікація в Discord. Нова команда верифікується одночасно мінімум 3 гравцями (вона вважається сформованою, коли верифікацію пройшли щонайменше 3 гравці); далі учасники можуть верифікуватися поодинці. Під час верифікації гравець надає всю інформацію щодо своїх акаунтів. Неявка на верифікацію — бан на 12 годин і пропуск наступного слоту.'
   },
   {
-    q: 'Де і як проводяться матчі?',
-    a: 'Матчі проводяться в Dota 2 через функцію лоббі. Розклад, правила та деталі матчів публікуються в Discord. Адміністратори стежать за дотриманням регламенту і вирішують спірні ситуації.'
+    q: 'Скільки коштує участь і як формується призовий фонд?',
+    a: 'Внесок залежить від місця на кваліфікаціях: ТОП 1–4 — 100 грн з гравця (500 грн з команди), ТОП 5–8 — 150 грн (750 грн), ТОП 9+ — 200 грн (1000 грн). Призовий фонд складається з 10 000 грн від організації та 60% усіх внесків команд. Капітан оплачує внесок одним платежем не пізніше ніж за 2 дні до Play-off, вказавши в коментарі назву команди та дивізіон.'
+  },
+  {
+    q: 'Коли і де проводяться матчі?',
+    a: 'Розклад: п’ятниця — матчі о 19:00; субота та неділя — матчі о 16:00. Матчі граються в Dota 2 через офіційне лобі ліги, створене капітаном верхньої команди.'
+  },
+  {
+    q: 'Як влаштована турнірна сітка?',
+    a: 'Сітка розміщена на сторінці турніру на сайті й оновлюється після кожного матчу. Верхня сітка: усі раунди — BO1, фінал — BO3, гранд-фінал — BO3. Нижня сітка: усі раунди — BO1, фінал — BO3.'
   },
   {
     q: 'Де можна дивитися трансляції матчів?',
-    a: 'Матчі транслюються на нашому Twitch каналі — twitch.tv/core_league. Записи VOD доступні після завершення ефіру на YouTube каналі.'
+    a: 'Матчі транслюються на нашому Twitch каналі — twitch.tv/core_league.'
   },
   {
     q: 'Як дізнаватися про нові турніри та новини?',
     a: 'Підпишіться на наш Discord та Telegram — там ми публікуємо всі анонси, розклади та результати. Також стежте за розділом "Турніри" на сайті.'
   },
   {
-    q: 'Що робити, якщо стався технічний збій або конфлікт під час матчу?',
-    a: 'Негайно повідомте адміністраторів у відповідному каналі Discord. Зробіть скриншот або запис ситуації — адміністратори розглянуть звернення та ухвалять рішення згідно з регламентом.'
+    q: 'Що робити у разі технічного збою, порушення чи конфлікту під час матчу?',
+    a: 'Скаргу подають протягом 25 хвилин після завершення гри в каналі ⚠️・скарги одним повідомленням — звернення в особисті чати модерації не розглядаються. Зробіть скриншот або запис ситуації (Адміністрація рекомендує запис екрана та звуку через OBS). Доказові матеріали мають бути не пізніше поточного ігрового дня; термін розгляду — 1–2 доби.'
   }
 ]
 
@@ -594,7 +617,7 @@ async function fetchAllStats () {
 
 async function fetchDiscordMembers () {
   try {
-    const res = await fetch('https://discord.com/api/v10/invites/SvgsPHPU?with_counts=true')
+    const res = await fetch('https://discord.com/api/v10/invites/QeDj9TjmgM?with_counts=true')
     const data = await res.json()
     if (typeof data.approximate_member_count === 'number') {
       discordMembers.value = data.approximate_member_count
@@ -711,68 +734,6 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.atm-particles {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.atm-particles::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 2px;
-  height: 2px;
-  border-radius: 50%;
-  background: rgba(67, 191, 238, 0.7);
-  box-shadow:
-    120px 80px 0 rgba(67, 191, 238, 0.4),
-    250px 180px 0 rgba(232, 185, 49, 0.3),
-    380px 60px 0 rgba(67, 191, 238, 0.5),
-    520px 220px 0 rgba(139, 92, 246, 0.3),
-    680px 100px 0 rgba(67, 191, 238, 0.4),
-    800px 300px 0 rgba(232, 185, 49, 0.25),
-    950px 150px 0 rgba(67, 191, 238, 0.35),
-    1100px 250px 0 rgba(139, 92, 246, 0.25),
-    1300px 80px 0 rgba(67, 191, 238, 0.4),
-    1450px 320px 0 rgba(232, 185, 49, 0.3),
-    60px 350px 0 rgba(67, 191, 238, 0.3),
-    200px 450px 0 rgba(139, 92, 246, 0.2),
-    420px 400px 0 rgba(232, 185, 49, 0.25),
-    600px 480px 0 rgba(67, 191, 238, 0.35),
-    780px 380px 0 rgba(139, 92, 246, 0.2),
-    1050px 430px 0 rgba(67, 191, 238, 0.3),
-    1200px 500px 0 rgba(232, 185, 49, 0.2),
-    1380px 420px 0 rgba(67, 191, 238, 0.25);
-  animation: particle-drift 16s ease-in-out infinite;
-}
-
-.atm-particles::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 1px;
-  height: 1px;
-  border-radius: 50%;
-  background: rgba(232, 185, 49, 0.6);
-  box-shadow:
-    180px 120px 0 rgba(232, 185, 49, 0.3),
-    340px 280px 0 rgba(67, 191, 238, 0.35),
-    500px 140px 0 rgba(139, 92, 246, 0.3),
-    720px 360px 0 rgba(232, 185, 49, 0.25),
-    900px 200px 0 rgba(67, 191, 238, 0.3),
-    1150px 320px 0 rgba(232, 185, 49, 0.2),
-    1350px 180px 0 rgba(139, 92, 246, 0.25),
-    80px 500px 0 rgba(67, 191, 238, 0.25),
-    320px 560px 0 rgba(232, 185, 49, 0.2),
-    560px 520px 0 rgba(139, 92, 246, 0.15),
-    840px 480px 0 rgba(67, 191, 238, 0.3);
-  animation: particle-drift 22s ease-in-out infinite reverse;
-}
-
 .atm-vignette {
   position: absolute;
   inset: 0;
@@ -786,17 +747,9 @@ onBeforeUnmount(() => {
   50% { transform: scale(1.06) translateY(-2%); opacity: 0.8; }
 }
 
-@keyframes particle-drift {
-  0%, 100% { transform: translateY(0px); }
-  33% { transform: translateY(-14px); }
-  66% { transform: translateY(9px); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .atm-glow-cyan,
-  .atm-glow-purple,
-  .atm-particles::before,
-  .atm-particles::after {
+  .atm-glow-purple {
     animation: none;
   }
 }

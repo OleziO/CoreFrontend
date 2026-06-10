@@ -12,19 +12,19 @@ export const formatUah = (
   sign?: TFeedItemSign,
   options?: { showSign?: boolean }
 ): string => {
+  // `showSign: false` only suppresses the leading `+` on positive values — a negative
+  // amount must always render its `-`, otherwise a negative balance reads as positive.
   const showSign = options?.showSign ?? true
   const absUah = Math.abs(kopecksToUah(kopecks))
-  const prefix = showSign
-    ? sign === 'POSITIVE'
+
+  const isNegative = sign === 'NEGATIVE' || (sign === undefined && kopecks < 0)
+  const isPositive = sign === 'POSITIVE' || (sign === undefined && kopecks > 0)
+
+  const prefix = isNegative
+    ? '- '
+    : showSign && isPositive
       ? '+ '
-      : sign === 'NEGATIVE'
-        ? '- '
-        : kopecks < 0
-          ? '- '
-          : kopecks > 0
-            ? '+ '
-            : ''
-    : ''
+      : ''
 
   return `${prefix}₴${formatNumber(absUah)}`
 }

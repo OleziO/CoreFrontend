@@ -217,7 +217,7 @@
       padding: 0.5rem 1rem;
 
       &:focus {
-        border-color: theme('colors.primary');
+        border-color: var(--ds-primary);
         box-shadow: none;
       }
 
