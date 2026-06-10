@@ -2,9 +2,9 @@
   <footer
     class="
       sticky bottom-0 z-50 w-full
-      border-t-2 border-white/15
+      border-t border-white/10
       shadow-[0_-10px_30px_rgba(0,0,0,0.35)]
-      bg-black/20 backdrop-blur-xl
+      bg-surface/80 backdrop-blur-xl
       flex justify-center items-center
       py-15
       after:absolute after:left-0 after:right-0 after:top-0
