@@ -7,8 +7,8 @@
     </template>
 
     <template v-else-if="authStore.loginError">
-      <PhWarningCircle :size="48" class="text-red-400 mb-16" />
-      <h2 class="text-xl font-semibold text-red-400">Помилка авторизації</h2>
+      <PhWarningCircle :size="48" class="text-error mb-16" />
+      <h2 class="text-xl font-semibold text-error">Помилка авторизації</h2>
       <p class="text-gray-400 mt-10 max-w-md">{{ authStore.loginError }}</p>
       <el-button
         type="primary"

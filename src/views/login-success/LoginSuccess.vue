@@ -1,7 +1,8 @@
 <template>
-  <div class="flex flex-col items-center justify-center h-screen text-center">
-    <h2 class="text-xl font-semibold text-white">Вхід виконується...</h2>
-    <p class="text-gray-400 mt-4">Будь ласка, зачекайте.</p>
+  <div class="flex flex-col items-center justify-center h-screen text-center px-20">
+    <div class="animate-spin rounded-full h-40 w-40 border-4 border-primary border-t-transparent mb-20" />
+    <h2 class="font-display text-xl font-semibold text-white">Вхід виконується...</h2>
+    <p class="text-gray-400 mt-10">Будь ласка, зачекайте — ми завершуємо авторизацію.</p>
   </div>
 </template>
 
