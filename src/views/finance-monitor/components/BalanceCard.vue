@@ -13,7 +13,10 @@
     </p>
 
     <div v-else-if="balance" class="flex flex-col gap-4">
-      <p class="text-4xl font-bold text-white tracking-tight">
+      <p
+        class="text-4xl font-bold tracking-tight"
+        :class="displayAmount < 0 ? 'text-red-400' : 'text-white'"
+      >
         {{ formatUah(displayAmount, undefined, { showSign: false }) }}
       </p>
 

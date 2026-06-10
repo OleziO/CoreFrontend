@@ -6,6 +6,12 @@
       </h2>
 
       <div class="flex items-center gap-8">
+        <el-checkbox
+          v-model="showHidden"
+          label="Приховані"
+          size="small"
+          class="finance-checkbox shrink-0"
+        />
         <el-input
           v-model="search"
           size="small"
@@ -51,10 +57,10 @@
         v-for="item in filteredItems"
         :key="item.id"
         :item="item"
-        @rename="$emit('rename', $event)"
-        @icon="$emit('icon', $event)"
+        @edit="$emit('edit', $event)"
         @group="$emit('group', $event)"
-        @assign-category="$emit('assign-category', $event)"
+        @edit-group="$emit('edit-group', $event)"
+        @delete-group="$emit('delete-group', $event)"
       />
     </div>
 
@@ -79,6 +85,8 @@ const props = defineProps<{
   isError?: boolean
 }>()
 
+const showHidden = defineModel<boolean>('showHidden', { default: false })
+
 const search = ref('')
 
 // Client-side free-text search over title and category; a group matches if it
@@ -97,11 +105,17 @@ const filteredItems = computed(() => {
 })
 
 defineEmits<{
-  rename: [item: TFeedItem]
-  icon: [item: TFeedItem]
+  edit: [item: TFeedItem]
   group: [item: TFeedItem]
-  'assign-category': [item: TFeedItem]
+  'edit-group': [item: TFeedItem]
+  'delete-group': [item: TFeedItem]
   'manage-categories': []
   refetch: []
 }>()
 </script>
+
+<style scoped>
+.finance-checkbox :deep(.el-checkbox__label) {
+  color: #d1d5db;
+}
+</style>

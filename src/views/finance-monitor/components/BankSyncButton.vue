@@ -35,6 +35,18 @@
       </el-form-item>
     </el-form>
 
+    <div class="mt-8 pt-12 border-t border-white/10">
+      <p class="text-xs text-gray-500 mb-8">
+        Перекласифікувати — повторно застосувати правила категорій та спонсорів до вже збережених транзакцій.
+      </p>
+      <el-button
+        :loading="reclassifying"
+        @click="handleReclassify"
+      >
+        Перекласифікувати
+      </el-button>
+    </div>
+
     <template #footer>
       <el-button @click="dialogVisible = false">
         Скасувати
@@ -69,6 +81,7 @@ const emit = defineEmits<{
 
 const dialogVisible = ref(false)
 const loading = ref(false)
+const reclassifying = ref(false)
 const fromDate = ref<string>('')
 const toDate = ref<string | null>(null)
 
@@ -89,6 +102,21 @@ async function handleSync () {
     ElMessage.error('Помилка синхронізації')
   } finally {
     loading.value = false
+  }
+}
+
+async function handleReclassify () {
+  reclassifying.value = true
+  try {
+    const result = await financeService.reclassifyBank()
+    ElMessage.success(`Перекласифіковано ${result.reclassified} транзакцій`)
+    queryCache.invalidateQueries({ key: ['finance'] })
+    emit('synced')
+    dialogVisible.value = false
+  } catch {
+    ElMessage.error('Помилка перекласифікації')
+  } finally {
+    reclassifying.value = false
   }
 }
 </script>

@@ -31,13 +31,14 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 auto-rows-[minmax(360px,70vh)]">
         <TransactionFeed
+          v-model:show-hidden="showHidden"
           :items="operationsQuery.data.value?.items || []"
           :is-pending="operationsQuery.isPending.value"
           :is-error="operationsHasError"
-          @rename="handleRename"
-          @icon="handleIcon"
+          @edit="handleEdit"
           @group="handleGroup"
-          @assign-category="handleAssignCategory"
+          @edit-group="handleEditGroup"
+          @delete-group="handleDeleteGroup"
           @manage-categories="handleManageCategories"
           @refetch="refetchAll"
         />
@@ -65,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAppModals } from '@/composables/use-app-modals'
 import { useFinanceAssets } from '@/composables/query/use-finance-assets'
 import { useFinanceBalance } from '@/composables/query/use-finance-balance'
@@ -82,15 +83,19 @@ import type {
   TCreateCustomCategoryPayload,
   TFeedItem,
   TForecastConfig,
-  TUpdateCustomCategoryPayload
+  TUpdateCustomCategoryPayload,
+  TUpdateOperationGroupPayload,
+  TUpdateOperationPayload
 } from './finance.types'
 import { financeService } from './finance.service'
 
 const includeForecast = ref(false)
+const showHidden = ref(false)
 
 const balanceQuery = useFinanceBalance(includeForecast)
 const operationsQuery = useFinanceOperations(computed(() => ({
-  includeForecast: includeForecast.value
+  includeForecast: includeForecast.value,
+  showHidden: showHidden.value
 })))
 const forecastQuery = useFinanceForecast()
 const assetsQuery = useFinanceAssets()
@@ -121,36 +126,49 @@ function invalidateCategories () {
   queryCache.invalidateQueries({ key: ['finance', 'operations'] })
 }
 
-function handleRename (item: TFeedItem) {
+function handleEdit (item: TFeedItem) {
   const operationId = item.kind === 'OPERATION' ? item.id : item.operationIds[0]
   if (!operationId) return
 
-  open('RenameOperationModal' as any, {
-    operationId,
-    initialLabel: item.title,
-    onSubmit: async (label: string) => {
-      await financeService.renameOperation(operationId, label)
-      ElMessage.success('Операцію перейменовано')
+  open('EditOperationModal' as any, {
+    item,
+    categories: categoriesQuery.data.value || [],
+    assets: assetsQuery.data.value || [],
+    onSubmit: async (payload: TUpdateOperationPayload) => {
+      await financeService.updateOperation(operationId, payload)
+      ElMessage.success('Операцію оновлено')
       invalidateOperations()
-      close('RenameOperationModal' as any)
+      close('EditOperationModal' as any)
     }
   })
 }
 
-function handleIcon (item: TFeedItem) {
-  const operationId = item.kind === 'OPERATION' ? item.id : item.operationIds[0]
-  if (!operationId) return
-
-  open('SelectIconModal' as any, {
+function handleEditGroup (item: TFeedItem) {
+  open('EditGroupModal' as any, {
+    item,
     assets: assetsQuery.data.value || [],
-    isPending: assetsQuery.isPending.value,
-    onSubmit: async (iconAssetId: string) => {
-      await financeService.setOperationIcon(operationId, iconAssetId)
-      ElMessage.success('Іконку оновлено')
+    onSubmit: async (payload: TUpdateOperationGroupPayload) => {
+      await financeService.updateOperationGroup(item.id, payload)
+      ElMessage.success('Групу оновлено')
       invalidateOperations()
-      close('SelectIconModal' as any)
+      close('EditGroupModal' as any)
     }
   })
+}
+
+async function handleDeleteGroup (item: TFeedItem) {
+  try {
+    await ElMessageBox.confirm(
+      `Видалити групу «${item.title}»? Операції залишаться, але будуть розгруповані.`,
+      'Підтвердження',
+      { confirmButtonText: 'Видалити', cancelButtonText: 'Скасувати', type: 'warning' }
+    )
+  } catch {
+    return
+  }
+  await financeService.deleteOperationGroup(item.id)
+  ElMessage.success('Групу видалено')
+  invalidateOperations()
 }
 
 function handleGroup (item: TFeedItem) {
@@ -194,22 +212,6 @@ async function deleteCategory (id: string) {
   await financeService.deleteCustomCategory(id)
   ElMessage.success('Категорію видалено')
   invalidateCategories()
-}
-
-function handleAssignCategory (item: TFeedItem) {
-  const operationId = item.kind === 'OPERATION' ? item.id : item.operationIds[0]
-  if (!operationId) return
-
-  open('AssignCategoryModal' as any, {
-    categories: categoriesQuery.data.value || [],
-    currentCategoryId: item.category?.id ?? null,
-    onSubmit: async (categoryId: string | null) => {
-      await financeService.assignOperationCategory(operationId, categoryId)
-      ElMessage.success('Категорію оновлено')
-      invalidateOperations()
-      close('AssignCategoryModal' as any)
-    }
-  })
 }
 
 async function handleSaveForecast (config: TForecastConfig) {

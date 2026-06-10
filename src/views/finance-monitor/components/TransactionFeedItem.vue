@@ -6,6 +6,7 @@
       :class="{
         'border-dashed border-white/15': item.virtual,
         'cursor-pointer': isGroup,
+        'opacity-50': item.isHidden,
         '!bg-transparent !border-transparent hover:!bg-white/[0.03]': nested
       }"
       @click="isGroup && toggleExpanded()"
@@ -82,6 +83,14 @@
               />
               {{ item.category.label }}
             </span>
+
+            <span
+              v-if="item.isHidden"
+              class="shrink-0 text-[10px] uppercase tracking-wider px-6 py-2 rounded
+                     bg-white/10 text-gray-400"
+            >
+              Прихована
+            </span>
           </div>
           <p
             v-if="item.time"
@@ -113,18 +122,20 @@
               <PhDotsThreeVertical size="18" />
             </el-button>
             <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="rename">
-                  Перейменувати
-                </el-dropdown-item>
-                <el-dropdown-item command="icon">
-                  Змінити іконку
+              <el-dropdown-menu v-if="canEditOperation">
+                <el-dropdown-item command="edit">
+                  Редагувати
                 </el-dropdown-item>
                 <el-dropdown-item command="group">
                   Групувати
                 </el-dropdown-item>
-                <el-dropdown-item command="category" divided>
-                  Категорія
+              </el-dropdown-menu>
+              <el-dropdown-menu v-else-if="canEditGroup">
+                <el-dropdown-item command="edit-group">
+                  Редагувати групу
+                </el-dropdown-item>
+                <el-dropdown-item command="delete-group" divided>
+                  Видалити групу
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -143,10 +154,10 @@
         :key="child.id"
         :item="child"
         nested
-        @rename="emit('rename', $event)"
-        @icon="emit('icon', $event)"
+        @edit="emit('edit', $event)"
         @group="emit('group', $event)"
-        @assign-category="emit('assign-category', $event)"
+        @edit-group="emit('edit-group', $event)"
+        @delete-group="emit('delete-group', $event)"
       />
     </div>
   </div>
@@ -166,10 +177,10 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  rename: [item: TFeedItem]
-  icon: [item: TFeedItem]
+  edit: [item: TFeedItem]
   group: [item: TFeedItem]
-  'assign-category': [item: TFeedItem]
+  'edit-group': [item: TFeedItem]
+  'delete-group': [item: TFeedItem]
 }>()
 
 const expanded = ref(false)
@@ -185,12 +196,15 @@ const teamId = computed(() =>
 )
 
 const resolvedIcon = computed(() => resolveFinanceAssetUrl(props.item.iconUrl))
-const categoryIconUrl = computed(() => resolveFinanceAssetUrl(props.item.category?.icon?.url))
+const categoryIconUrl = computed(() => resolveFinanceAssetUrl(props.item.category?.iconUrl))
 
 const fallbackIcon = computed(() => (isGiftGroup.value ? PhGift : isGroup.value ? PhStack : PhCoins))
 
-// Only plain operations (including group children) can be renamed / re-iconed / grouped.
-const showMenu = computed(() => props.item.kind === 'OPERATION' && !props.item.virtual)
+// Only plain operations (including group children) can be edited / grouped.
+const canEditOperation = computed(() => props.item.kind === 'OPERATION' && !props.item.virtual)
+// Only manually-created groups can be edited or deleted; computed groups are read-only.
+const canEditGroup = computed(() => props.item.kind === 'GROUP' && props.item.groupKind === 'MANUAL')
+const showMenu = computed(() => canEditOperation.value || canEditGroup.value)
 
 const formattedTime = computed(() =>
   props.item.time ? dayjs(props.item.time).format('DD.MM.YYYY HH:mm') : ''
@@ -217,9 +231,9 @@ function toggleExpanded () {
 }
 
 function handleCommand (command: string) {
-  if (command === 'rename') emit('rename', props.item)
-  if (command === 'icon') emit('icon', props.item)
+  if (command === 'edit') emit('edit', props.item)
   if (command === 'group') emit('group', props.item)
-  if (command === 'category') emit('assign-category', props.item)
+  if (command === 'edit-group') emit('edit-group', props.item)
+  if (command === 'delete-group') emit('delete-group', props.item)
 }
 </script>

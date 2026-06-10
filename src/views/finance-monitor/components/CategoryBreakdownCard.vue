@@ -67,7 +67,7 @@ const rows = computed(() => {
   const map = new Map<string, TBreakdownRow>()
 
   const add = (op: TFeedItem) => {
-    if (op.virtual || op.kind === 'FORECAST') return
+    if (op.virtual || op.kind === 'FORECAST' || op.isHidden) return
     const key = op.category?.id ?? NO_CATEGORY_KEY
     const label = op.category?.label ?? 'Без категорії'
     const entry = map.get(key) ?? { key, label, income: 0, expense: 0 }
