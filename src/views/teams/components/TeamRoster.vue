@@ -1,7 +1,7 @@
 <template>
   <div
-    class="rounded-xl border border-white/5 shadow-[0_4px_16px_rgba(0,0,0,0.3)]
-     bg-gray-900 flex relative flex-col w-full flex-1 gap-20 lg:self-stretch min-h-0 p-20 2xs:min-w-[400px]
+    class="rounded-xl border border-white/10 shadow-elevation-2
+     bg-surface flex relative flex-col w-full flex-1 gap-20 lg:self-stretch min-h-0 p-20 2xs:min-w-[400px]
      overflow-y-auto"
   >
     <div class="grid min-h-0 h-fit grid-cols-1 gap-20 2sm:grid-cols-2">

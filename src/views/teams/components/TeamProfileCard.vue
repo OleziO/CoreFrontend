@@ -1,6 +1,6 @@
 <template>
   <div
-    class="rounded-xl w-full bg-gray-900 p-20 flex flex-col gap-20 relative
+    class="rounded-xl w-full bg-surface p-20 flex flex-col gap-20 relative
            border border-white/[0.08] transition-all duration-300 ease-out"
     :class="teamProfileCardShadowClass"
   >
@@ -28,6 +28,11 @@
                 {{ team?.name }}
               </h1>
             </el-tooltip>
+            <StatusBadge
+              v-if="team"
+              :preset="team.isVerified ? 'verified' : 'unverified'"
+              size="sm"
+            />
           </div>
 
           <div
@@ -194,21 +199,13 @@ const teamDivisionForDisplay = computed(() =>
     : null
 )
 
-const teamProfileCardShadowClass = computed(() => {
-  const drop = 'shadow-[0_4px_16px_rgba(0,0,0,0.35)]'
-  const t = props.team
-  if (!t) return drop
-  if (t.isVerified) {
-    return (
-      'shadow-[0_4px_16px_rgba(0,0,0,0.35),0_0_32px_rgba(34,197,94,0.38),0_0_64px_rgba(34,197,94,0.14)] ' +
-      'hover:shadow-[0_4px_16px_rgba(0,0,0,0.35),0_0_46px_rgba(34,197,94,0.52),0_0_84px_rgba(34,197,94,0.2)]'
-    )
-  }
-  return (
-    'shadow-[0_4px_16px_rgba(0,0,0,0.35),0_0_32px_rgba(248,113,113,0.34),0_0_64px_rgba(248,113,113,0.11)] ' +
-    'hover:shadow-[0_4px_16px_rgba(0,0,0,0.35),0_0_46px_rgba(248,113,113,0.44),0_0_84px_rgba(248,113,113,0.16)]'
-  )
-})
+// Verification is now signaled by the StatusBadge (icon + label), so the card
+// uses a neutral elevation — verified teams keep a subtle primary hover glow.
+const teamProfileCardShadowClass = computed(() =>
+  props.team?.isVerified
+    ? 'shadow-elevation-3 hover:shadow-glow-primary'
+    : 'shadow-elevation-3'
+)
 
 function copyDotaTeamId () {
   const id = dotaTeamIdTrimmed.value
