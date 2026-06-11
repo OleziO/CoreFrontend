@@ -306,6 +306,8 @@ watch(requests, (list) => {
   for (const id of Object.keys(mmrDrafts)) {
     if (!activeIds.has(id)) delete mmrDrafts[id]
   }
+
+  console.log(mmrDrafts)
 }, { immediate: true })
 
 // Complete is blocked until every player of the request has a valid (finite, ≥ 0) MMR.

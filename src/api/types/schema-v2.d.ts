@@ -717,8 +717,17 @@ export interface components {
             } | null;
             players: {
                 id: string;
-                playerId: string;
                 resultMmr: number | null;
+                player: {
+                    id: string;
+                    steamId: string | null;
+                    avatarUrl: string | null;
+                    discordName: string | null;
+                    discordUsername: string | null;
+                    rating: number;
+                    positions: number[] | null;
+                    verifiedAt: string | null;
+                };
             }[];
         };
         CompleteRequestDto: {
