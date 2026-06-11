@@ -22,6 +22,9 @@
           placeholder="Оберіть гравців"
           popper-class="vb-players-popper"
           class="w-full"
+          collapse-tags
+          collapse-tags-tooltip
+          :max-collapse-tags="2"
         >
           <el-option
             v-for="p in rosterPlayers"
