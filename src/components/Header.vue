@@ -30,26 +30,6 @@
         />
       </RouterLink>
 
-      <!-- DESKTOP NAV -->
-      <nav class="hidden h-full items-center gap-20 lg:flex">
-        <RouterLink
-          v-for="link in navLinks"
-          :key="link.name"
-          :to="{ name: link.name }"
-          active-class=""
-          exact-active-class=""
-          class="
-            inline-flex h-full items-center text-sm font-medium tracking-wide no-underline
-            !text-white/70 transition-colors hover:!text-primary rounded-none
-          "
-          :class="{
-            '!border-b-2 !border-b-primary': isNavActive(link.name)
-          }"
-        >
-          {{ link.label }}
-        </RouterLink>
-      </nav>
-
       <!-- RIGHT SIDE -->
       <div class="flex items-center gap-12 py-15">
         <!-- USER -->
@@ -191,20 +171,4 @@ const userMenuLabel = computed(
 
 const route = useRoute()
 const router = useRouter()
-
-const navLinks: { name: string; label: string }[] = [
-  { name: routeNames.rootPage, label: 'Головна' },
-  { name: routeNames.tournaments, label: 'Турніри' },
-  { name: routeNames.teams, label: 'Команди' },
-  { name: routeNames.players, label: 'Гравці' }
-]
-
-function isNavActive (linkName: string): boolean {
-  if (route.name === linkName) return true
-  if (linkName === routeNames.tournaments && route.name === routeNames.tournament) return true
-  if (linkName === routeNames.teams && route.name === routeNames.team) return true
-  if (linkName === routeNames.players && route.name === routeNames.player) return true
-  return false
-}
-
 </script>

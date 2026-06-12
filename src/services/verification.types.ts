@@ -40,6 +40,18 @@ export type TCreateRequestPayload = components['schemas']['CreateRequestDto']
 export type TCompleteRequestPayload = components['schemas']['CompleteRequestDto']
 
 /**
+ * UTC calendar-day range (`YYYY-MM-DD`, no time part) for the list endpoints' `from`/`to`
+ * query (`GET /verification/slots`, `GET /verification/requests`). Both default to today
+ * when omitted, but the frontend always sends explicit bounds — padded ±1 day, since the
+ * UI works in local days and a local day can straddle two UTC days; callers re-filter
+ * results by each item's local start day.
+ */
+export interface IVerificationRange {
+  from: string
+  to: string
+}
+
+/**
  * Aggregated per-day data for the admin verification calendar: a day's free slots
  * (`GET /verification/slots`) plus that day's bookings (`GET /verification/requests`).
  * Cached by `YYYY-MM-DD` in the calendar tab; booked slots are derived from each request.

@@ -289,10 +289,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List free slots for a day (UTC, defaults to today) */
+        /** List free slots across a UTC day range (defaults to today) */
         get: operations["VerificationUserController_listFreeSlots"];
         put?: never;
-        /** Generate free 30-min slots from a working-hours range */
+        /** Publish free 30-min slots for explicit start times */
         post: operations["VerificationAdminController_createSlots"];
         delete?: never;
         options?: never;
@@ -324,7 +324,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Admin daily list of a day's bookings (UTC) */
+        /** Admin list of bookings across a UTC day range (defaults to today) */
         get: operations["VerificationAdminController_listRequests"];
         put?: never;
         /** Captain books a free slot to verify players */
@@ -380,6 +380,23 @@ export interface paths {
         put?: never;
         /** Admin cancels a request and frees its slot */
         post: operations["VerificationAdminController_cancelRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/verification/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The current player's verification requests (newest first) */
+        get: operations["VerificationUserController_listMyRequests"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -686,10 +703,7 @@ export interface components {
             prizePoolPercent: number;
         };
         CreateSlotsDto: {
-            /** Format: date-time */
-            from: string;
-            /** Format: date-time */
-            to: string;
+            starts: string[];
         };
         VerificationSlotViewDto: {
             id: string;
@@ -701,7 +715,20 @@ export interface components {
         VerificationRequestViewDto: {
             id: string;
             teamId: string;
-            teamName: string | null;
+            team: {
+                id: string;
+                name: string;
+                logoUrl: string | null;
+                dotaTeamId: string | null;
+                discordRoleId: string | null;
+                discordChannelId: string | null;
+                isVerified: boolean;
+                isPlayingTournament: boolean;
+                captainId: string;
+                coachId: string | null;
+                verifiedAt: string | null;
+                disbandedAt: string | null;
+            } | null;
             /** @enum {string} */
             type: "FIRST" | "MMR_UPDATE";
             /** @enum {string} */
@@ -1255,7 +1282,8 @@ export interface operations {
     VerificationUserController_listFreeSlots: {
         parameters: {
             query?: {
-                date?: string;
+                from?: string;
+                to?: string;
             };
             header?: never;
             path?: never;
@@ -1318,7 +1346,8 @@ export interface operations {
     VerificationAdminController_listRequests: {
         parameters: {
             query?: {
-                date?: string;
+                from?: string;
+                to?: string;
             };
             header?: never;
             path?: never;
@@ -1422,6 +1451,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VerificationRequestViewDto"];
+                };
+            };
+        };
+    };
+    VerificationUserController_listMyRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationRequestViewDto"][];
                 };
             };
         };

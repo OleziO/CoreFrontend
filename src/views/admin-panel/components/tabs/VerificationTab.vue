@@ -20,6 +20,7 @@
                   :title="`${countsFor(data.day)!.free} вільних слотів`"
                 >
                   {{ countsFor(data.day)!.free }}
+                  {{ ukPlural(countsFor(data.day)!.free, 'слот', 'слоти', 'слотів') }}
                 </span>
                 <span
                   v-if="countsFor(data.day)!.booked"
@@ -27,6 +28,7 @@
                   :title="`${countsFor(data.day)!.booked} заброньовано`"
                 >
                   {{ countsFor(data.day)!.booked }}
+                  {{ ukPlural(countsFor(data.day)!.booked, 'запис', 'записи', 'записів') }}
                 </span>
               </div>
             </div>
@@ -66,50 +68,71 @@ const elementPlusUk = uk
 // el-calendar derives the visible month from its model; navigating months updates it too.
 const selectedDate = ref(dayjs().toDate())
 
-// Day data cached by `YYYY-MM-DD`. Endpoints are per-day only, so the month view fans out
-// one slots + one requests fetch per day (acceptable for a low-traffic admin tool).
-// TODO(be): a date-range endpoint would replace this fan-out with a single request.
+// Day data cached by `YYYY-MM-DD`. The list endpoints filter by an inclusive date-only
+// `from`/`to` range, so a whole month is one slots + one requests fetch, bucketed by day.
 const cache = reactive<Record<string, IVerificationDayData>>({})
 const loadingDates = reactive(new Set<string>())
 
-// The `?date=` param is the locally displayed calendar day, sent verbatim as YYYY-MM-DD so the
-// fetched UTC day aligns with the cell. Slots near UTC midnight may surface on the adjacent
-// local day — acceptable here; the future range endpoint removes the ambiguity.
-async function loadDay (date: string, opts?: { silent?: boolean }): Promise<void> {
-  loadingDates.add(date)
+// Fetch the whole month containing `anchor` in one round trip. The backend range is in
+// UTC days while cells are local days, so the request is padded ±1 day and each result
+// is rebucketed by its local start day (out-of-month days drop via the `?.` push).
+// Every refresh (month switch, cell click, drawer mutation) reloads the month so the
+// calendar and drawer stay in sync.
+async function loadMonth (anchor: string | Date, opts?: { silent?: boolean }): Promise<void> {
+  const start = dayjs(anchor).startOf('month')
+  const days = Array.from({ length: start.daysInMonth() }, (_, i) => start.add(i, 'day').format('YYYY-MM-DD'))
+  days.forEach((d) => loadingDates.add(d))
   try {
+    const range = {
+      from: start.subtract(1, 'day').format('YYYY-MM-DD'),
+      to: start.endOf('month').add(1, 'day').format('YYYY-MM-DD')
+    }
     const [slots, requests] = await Promise.all([
-      verificationService.fetchSlots(date),
-      verificationService.fetchRequests(date)
+      verificationService.fetchSlots(range),
+      verificationService.fetchRequests(range)
     ])
-    cache[date] = { slots, requests }
+    const buckets: Record<string, IVerificationDayData> = {}
+    days.forEach((d) => { buckets[d] = { slots: [], requests: [] } })
+    for (const s of slots) {
+      buckets[dayjs(s.startsAt).format('YYYY-MM-DD')]?.slots.push(s)
+    }
+    for (const r of requests) {
+      // A request without a slot (shown as «слот не призначено») lands on its creation day.
+      buckets[dayjs(r.slot?.startsAt ?? r.createdAt).format('YYYY-MM-DD')]?.requests.push(r)
+    }
+    Object.assign(cache, buckets)
   } catch (e) {
-    if (!opts?.silent) ElMessage.error(getApiErrorMessage(e, 'Не вдалося завантажити дані дня'))
+    if (!opts?.silent) ElMessage.error(getApiErrorMessage(e, 'Не вдалося завантажити дані верифікації'))
     throw e
   } finally {
-    loadingDates.delete(date)
-  }
-}
-
-async function loadMonth (anchor: Date): Promise<void> {
-  const start = dayjs(anchor).startOf('month')
-  const dates = Array.from({ length: start.daysInMonth() }, (_, i) => start.add(i, 'day').format('YYYY-MM-DD'))
-  const results = await Promise.allSettled(dates.map((d) => loadDay(d, { silent: true })))
-  if (results.length && results.every((r) => r.status === 'rejected')) {
-    ElMessage.error('Не вдалося завантажити дані верифікації')
+    days.forEach((d) => loadingDates.delete(d))
   }
 }
 
 // Refetch whenever the visible month changes (initial load + month navigation).
-// loadMonth swallows per-day failures (allSettled), so awaiting it never rejects.
 watch(
   () => dayjs(selectedDate.value).format('YYYY-MM'),
-  async () => { await loadMonth(selectedDate.value) },
+  async () => {
+    try {
+      await loadMonth(selectedDate.value)
+    } catch {
+      // already surfaced via toast in loadMonth
+    }
+  },
   { immediate: true }
 )
 
 function dayNumber (day: string): number {
   return dayjs(day).date()
+}
+
+// Ukrainian plural form: 1 слот / 2–4 слоти / 5+ слотів (with the 11–14 exception).
+function ukPlural (n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return one
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few
+  return many
 }
 
 // Booked = active bookings (a cancelled request frees its slot, so it is excluded).
@@ -130,22 +153,22 @@ async function onCellClick (data: ICalendarCellData): Promise<void> {
   if (data.type !== 'current-month') return
   drawerDate.value = data.day
   drawerOpen.value = true
-  // Refresh the opened day so the drawer shows current data; the toast is shown on failure.
+  // Refresh the month so the drawer shows current data; the toast is shown on failure.
   try {
-    await loadDay(data.day)
+    await loadMonth(data.day)
   } catch {
-    // already surfaced via toast in loadDay
+    // already surfaced via toast in loadMonth
   }
 }
 
-// After a slot generate/delete in the drawer, reload the affected day so the drawer rows
-// and the calendar badge both update from the refreshed cache entry.
+// After a mutation in the drawer, reload the month so the drawer rows and the calendar
+// badges all update from the refreshed cache entries.
 async function onDrawerRefresh (): Promise<void> {
   if (!drawerDate.value) return
   try {
-    await loadDay(drawerDate.value)
+    await loadMonth(drawerDate.value)
   } catch {
-    // already surfaced via toast in loadDay
+    // already surfaced via toast in loadMonth
   }
 }
 </script>
@@ -171,6 +194,33 @@ async function onDrawerRefresh (): Promise<void> {
 
 .verification-calendar :deep(.el-calendar__title) {
   color: rgb(255 255 255 / 0.9);
+}
+
+/* Month-nav buttons: flatter corners (the var keeps the group's outer-corner-only
+   rounding intact), larger hit area, dark skin instead of EP's light default. */
+.verification-calendar :deep(.el-calendar__button-group) {
+  --el-border-radius-base: 5px;
+}
+
+.verification-calendar :deep(.el-calendar__button-group .el-button) {
+  height: 36px;
+  padding: 0 18px;
+  font-size: 13px;
+  background: rgb(255 255 255 / 0.04);
+  border-color: rgb(255 255 255 / 0.15);
+  color: rgb(255 255 255 / 0.85);
+}
+
+.verification-calendar :deep(.el-calendar__button-group .el-button:hover),
+.verification-calendar :deep(.el-calendar__button-group .el-button:focus-visible) {
+  background: rgb(67 191 238 / 0.15);
+  border-color: rgb(67 191 238 / 0.4);
+  color: #fff;
+  z-index: 1;
+}
+
+.verification-calendar :deep(.el-calendar__button-group .el-button:active) {
+  background: rgb(67 191 238 / 0.25);
 }
 
 /* The day cell content lives in `.el-calendar-day`; keep it light in every state. */
@@ -212,36 +262,40 @@ async function onDrawerRefresh (): Promise<void> {
   line-height: 1;
 }
 
+/* Badges sit at the cell bottom and split the row evenly (1 badge = full width, 2 = 50/50). */
 .cal-cell__badges {
   display: flex;
-  flex-wrap: wrap;
   gap: 4px;
+  margin-top: auto;
 }
 
 .cal-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 9999px;
-  font-size: 11px;
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-block;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 12px;
   font-weight: 700;
-  line-height: 1;
+  line-height: 20px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   border: 1px solid transparent;
 }
 
-/* Free slots — cyan (primary). Booked — emerald. */
+/* Free slots — emerald. Bookings — amber. */
 .cal-badge--free {
-  background: rgb(67 191 238 / 0.16);
-  border-color: rgb(67 191 238 / 0.35);
-  color: #7dd3fc;
-}
-
-.cal-badge--booked {
   background: rgb(16 185 129 / 0.16);
   border-color: rgb(16 185 129 / 0.35);
   color: #6ee7b7;
+}
+
+.cal-badge--booked {
+  background: rgb(245 158 11 / 0.16);
+  border-color: rgb(245 158 11 / 0.35);
+  color: #fcd34d;
 }
 </style>

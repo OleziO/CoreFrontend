@@ -73,6 +73,7 @@
           filterable
           :disabled="!selectedDate || loadingSlots"
           :placeholder="slotPlaceholder"
+          no-data-text="Немає вільних слотів на цю дату"
           popper-class="vb-slots-popper"
           class="w-full"
         >
@@ -83,10 +84,6 @@
             :label="o.label"
           />
         </el-select>
-
-        <p v-if="selectedDate && !loadingSlots && !slotOptions.length" class="vb-hint">
-          Немає вільних слотів на цю дату
-        </p>
       </el-form-item>
     </el-form>
 
@@ -184,8 +181,8 @@ function formatSlotRange (slot: TVerificationSlot): string {
   return `${start}-${end === '00:00' ? '24:00' : end}`
 }
 
-// Past days can't be booked. `?date=` is sent as the locally displayed YYYY-MM-DD, matching
-// the admin calendar's convention so a booked slot lands on the admin's same day.
+// Past days can't be booked. The picked local YYYY-MM-DD becomes a `from`/`to` day range,
+// matching the admin calendar's convention so a booked slot lands on the admin's same day.
 function disabledDate (date: Date): boolean {
   return dayjs(date).isBefore(dayjs(), 'day')
 }
@@ -197,7 +194,7 @@ watch(selectedDate, async (date) => {
   if (!date) return
   loadingSlots.value = true
   try {
-    slots.value = await verificationService.fetchSlots(date)
+    slots.value = await verificationService.fetchSlotsForDay(date)
   } catch (e) {
     ElMessage.error(getApiErrorMessage(e, 'Не вдалося завантажити слоти'))
   } finally {

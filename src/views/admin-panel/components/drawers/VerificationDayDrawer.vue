@@ -35,13 +35,25 @@
           <div v-else class="flex flex-col gap-12">
             <article v-for="r in requests" :key="r.id" class="vd-card">
               <header class="flex items-start justify-between gap-8">
-                <div class="min-w-0">
-                  <h3 class="truncate text-[15px] font-semibold text-white">
-                    {{ r.teamName || 'Без назви' }}
-                  </h3>
-                  <p class="mt-2 text-[12px] text-gray-500">
-                    {{ r.slot ? formatTimeRange(r.slot.startsAt, r.slot.endsAt) : 'слот не призначено' }}
-                  </p>
+                <div class="flex min-w-0 items-center gap-10">
+                  <el-avatar
+                    :size="34"
+                    shape="square"
+                    :src="resolvePublicOrApiUrl(r.team?.logoUrl)"
+                    class="shrink-0 rounded-lg border border-white/10 bg-gray-800"
+                  >
+                    <template #default>
+                      <PhUsersThree :size="16" weight="bold" class="text-white/70" />
+                    </template>
+                  </el-avatar>
+                  <div class="min-w-0">
+                    <h3 class="truncate text-[15px] font-semibold text-white">
+                      {{ r.team?.name || 'Без назви' }}
+                    </h3>
+                    <p class="mt-2 text-[12px] text-gray-500">
+                      {{ r.slot ? formatTimeRange(r.slot.startsAt, r.slot.endsAt) : 'слот не призначено' }}
+                    </p>
+                  </div>
                 </div>
                 <div class="flex shrink-0 flex-col items-end gap-6">
                   <span class="vd-pill" :class="requestStatusMeta[r.status].class">
@@ -52,69 +64,121 @@
               </header>
 
               <div class="mt-10 border-t border-white/8 pt-10">
-                <p class="text-[12px] text-gray-400">Гравців: {{ r.players.length }}</p>
+                <p class="vd-section-label">Гравці · {{ r.players.length }}</p>
 
-                <!-- processing: per-player MMR entry -->
-                <div v-if="r.status === 'processing'" class="mt-8 flex flex-col gap-8">
-                  <div v-for="(p, i) in r.players" :key="p.id" class="flex items-center justify-between gap-8">
-                    <span class="min-w-0 text-[12px] text-gray-300">
-                      Гравець {{ i + 1 }}
-                      <span class="ml-4 font-mono text-[11px] text-gray-600">{{ shortId(p.playerId) }}</span>
-                    </span>
-                    <el-input-number
-                      v-model="mmrDrafts[r.id][p.playerId]"
-                      :min="0"
-                      :max="20000"
-                      :step="100"
-                      :controls="false"
-                      size="small"
-                      placeholder="MMR"
-                      class="vd-mmr-input"
-                    />
+                <div class="mt-8 flex flex-col gap-6">
+                  <div v-for="p in r.players" :key="p.id" class="vd-player-row">
+                    <!-- Identity opens the profile in a new tab so in-progress MMR drafts survive. -->
+                    <RouterLink
+                      :to="{ name: routeNames.player, params: { id: p.player.id } }"
+                      target="_blank"
+                      class="group flex min-w-0 flex-1 items-center gap-10"
+                    >
+                      <div class="relative shrink-0">
+                        <el-avatar
+                          :size="36"
+                          :src="resolvePublicOrApiUrl(p.player.avatarUrl)"
+                          class="border border-white/10 bg-gray-800"
+                        >
+                          <template #default>
+                            <PhUser :size="16" weight="bold" class="text-white/70" />
+                          </template>
+                        </el-avatar>
+                        <el-tooltip
+                          :content="isPlayerVerified(p.player) ? 'Верифікований' : 'Не верифікований'"
+                          placement="top"
+                          effect="dark"
+                        >
+                          <StatusBadge
+                            :preset="isPlayerVerified(p.player) ? 'verified' : 'unverified'"
+                            size="xs"
+                            icon-only
+                            class="absolute -bottom-2 -right-2 ring-2 ring-gray-900"
+                          />
+                        </el-tooltip>
+                      </div>
+                      <div class="flex min-w-0 flex-col">
+                        <span
+                          class="truncate text-[13px] font-semibold text-white
+                                 transition-colors group-hover:text-primary"
+                        >
+                          {{ p.player.discordName || p.player.discordUsername || 'Без імені' }}
+                        </span>
+                        <span class="flex items-center gap-4 text-[11px] text-gray-500">
+                          <span class="truncate">
+                            {{ p.player.discordUsername ? `@${p.player.discordUsername}` : '—' }}
+                          </span>
+                          <span class="shrink-0 text-gray-400">· {{ formatPlayerRatingMmr(p.player.rating) }}</span>
+                          <span v-if="playerPositionsLabel(p.player)" class="shrink-0">
+                            · {{ playerPositionsLabel(p.player) }}
+                          </span>
+                        </span>
+                      </div>
+                    </RouterLink>
+
+                    <!-- processing: new-MMR entry (placeholder = current rating); otherwise result chip -->
+                    <div class="shrink-0">
+                      <el-input-number
+                        v-if="r.status === 'processing'"
+                        v-model="mmrDrafts[r.id][p.player.id]"
+                        :min="0"
+                        :max="20000"
+                        :step="100"
+                        :controls="false"
+                        size="small"
+                        :placeholder="String(p.player.rating)"
+                        class="vd-mmr-input"
+                      />
+                      <span v-else-if="p.resultMmr != null" class="vd-mmr-chip vd-mmr-chip--result">
+                        {{ p.resultMmr }} MMR
+                      </span>
+                    </div>
                   </div>
-                </div>
-
-                <!-- completed: result chips -->
-                <div v-else-if="hasResults(r)" class="mt-6 flex flex-wrap gap-6">
-                  <span v-for="p in r.players" :key="p.id" class="vd-mmr-chip">
-                    {{ p.resultMmr != null ? `${p.resultMmr} MMR` : '—' }}
-                  </span>
                 </div>
               </div>
 
               <!-- lifecycle actions (read-only once completed/cancelled) -->
               <footer
                 v-if="r.status !== 'completed' && r.status !== 'cancelled'"
-                class="mt-10 flex items-center justify-end gap-8 border-t border-white/8 pt-10"
+                class="mt-10 flex items-center justify-between gap-8 border-t border-white/8 pt-10"
               >
-                <el-button
-                  v-if="r.status === 'pending'"
-                  type="primary"
-                  size="small"
-                  :loading="actioningId === r.id"
-                  @click="handleProcess(r)"
+                <p
+                  v-if="r.status === 'processing' && !canComplete(r)"
+                  class="min-w-0 text-[11px] leading-snug text-gray-500"
                 >
-                  Взяти в обробку
-                </el-button>
-                <el-button
-                  v-if="r.status === 'processing'"
-                  type="success"
-                  size="small"
-                  :loading="actioningId === r.id"
-                  :disabled="!canComplete(r)"
-                  @click="handleComplete(r)"
-                >
-                  Завершити
-                </el-button>
-                <el-button
-                  type="danger"
-                  size="small"
-                  plain
-                  :disabled="actioningId === r.id"
-                  @click="handleCancel(r)"
-                >
-                  Скасувати
-                </el-button>
+                  Вкажіть новий MMR кожному гравцю, щоб завершити
+                </p>
+                <span v-else />
+                <div class="flex shrink-0 items-center gap-8">
+                  <el-button
+                    v-if="r.status === 'pending'"
+                    type="primary"
+                    size="small"
+                    :loading="actioningId === r.id"
+                    @click="handleProcess(r)"
+                  >
+                    Взяти в обробку
+                  </el-button>
+                  <el-button
+                    v-if="r.status === 'processing'"
+                    type="success"
+                    size="small"
+                    :loading="actioningId === r.id"
+                    :disabled="!canComplete(r)"
+                    @click="handleComplete(r)"
+                  >
+                    Завершити
+                  </el-button>
+                  <el-button
+                    type="danger"
+                    size="small"
+                    plain
+                    :disabled="actioningId === r.id"
+                    @click="handleCancel(r)"
+                  >
+                    Скасувати
+                  </el-button>
+                </div>
               </footer>
             </article>
           </div>
@@ -202,12 +266,20 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { PhClock, PhTrash } from '@phosphor-icons/vue'
+import { PhClock, PhTrash, PhUser, PhUsersThree } from '@phosphor-icons/vue'
+import { routeNames } from '@/router/route-names'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
+import {
+  formatPlayerRatingMmr,
+  getPlayerDotaPositions,
+  isPlayerVerified,
+  resolvePublicOrApiUrl
+} from '@/core/helpers'
 import type {
   IVerificationDayData,
   TCompleteRequestPayload,
   TVerificationRequest,
+  TVerificationRequestPlayer,
   TVerificationRequestStatus,
   TVerificationType
 } from '@/services/verification.types'
@@ -251,7 +323,13 @@ const slotRows = computed<ISlotRow[]>(() => {
   }))
   const booked: ISlotRow[] = data.requests.flatMap((r) => {
     if (!r.slot || r.status === 'cancelled') return []
-    return [{ id: r.slot.id, startsAt: r.slot.startsAt, endsAt: r.slot.endsAt, booked: true, teamName: r.teamName }]
+    return [{
+      id: r.slot.id,
+      startsAt: r.slot.startsAt,
+      endsAt: r.slot.endsAt,
+      booked: true,
+      teamName: r.team?.name ?? null
+    }]
   })
   return [...free, ...booked].sort((a, b) => dayjs(a.startsAt).valueOf() - dayjs(b.startsAt).valueOf())
 })
@@ -260,12 +338,10 @@ function formatTimeRange (startsAt: string, endsAt: string): string {
   return `${dayjs(startsAt).format('HH:mm')}–${dayjs(endsAt).format('HH:mm')}`
 }
 
-function hasResults (r: TVerificationRequest): boolean {
-  return r.players.some((p) => p.resultMmr != null)
-}
-
-function shortId (id: string): string {
-  return id.slice(0, 8)
+// «поз. 1, 2» suffix for the player meta line; empty when the player has no positions set.
+function playerPositionsLabel (player: TVerificationRequestPlayer['player']): string {
+  const positions = getPlayerDotaPositions(player)
+  return positions.length ? `поз. ${positions.join(', ')}` : ''
 }
 
 const requestStatusMeta: Record<TVerificationRequestStatus, { label: string; class: string }> = {
@@ -299,7 +375,7 @@ watch(requests, (list) => {
     const next: Record<string, number | undefined> = {}
     for (const p of r.players) {
       // Preserve an in-progress edit; otherwise seed from any MMR the BE already recorded.
-      next[p.playerId] = p.playerId in existing ? existing[p.playerId] : (p.resultMmr ?? undefined)
+      next[p.player.id] = p.player.id in existing ? existing[p.player.id] : (p.resultMmr ?? undefined)
     }
     mmrDrafts[r.id] = next
   }
@@ -315,7 +391,7 @@ function canComplete (r: TVerificationRequest): boolean {
   const draft = mmrDrafts[r.id]
   if (!draft) return false
   return r.players.every((p) => {
-    const v = draft[p.playerId]
+    const v = draft[p.player.id]
     return typeof v === 'number' && Number.isFinite(v) && v >= 0
   })
 }
@@ -337,7 +413,7 @@ async function handleComplete (r: TVerificationRequest): Promise<void> {
   if (!canComplete(r)) return
   const draft = mmrDrafts[r.id]
   const payload: TCompleteRequestPayload = {
-    results: r.players.map((p) => ({ playerId: p.playerId, mmr: draft[p.playerId] as number }))
+    results: r.players.map((p) => ({ playerId: p.player.id, mmr: draft[p.player.id] as number }))
   }
   actioningId.value = r.id
   try {
@@ -399,25 +475,19 @@ const canGenerate = computed(() => !!props.date && selectedWindows.value.length 
 async function handleGenerate (): Promise<void> {
   if (!props.date || !canGenerate.value) return
   const date = props.date
-  // Each selected window is an independent 30-min slot; one create call per window, fired
-  // together. allSettled (not Promise.all) so one rejection doesn't lose the rest.
-  const payloads = selectedWindows.value.map((start) => {
-    const from = dayjs(`${date} ${start}`, 'YYYY-MM-DD HH:mm')
-    return { from: from.toISOString(), to: from.add(30, 'minute').toISOString() }
-  })
+  // One call for all windows: each selected local HH:mm becomes an ISO start, and the
+  // backend publishes a 30-min slot per start.
+  const starts = selectedWindows.value.map(
+    (start) => dayjs(`${date} ${start}`, 'YYYY-MM-DD HH:mm').toISOString()
+  )
   generating.value = true
   try {
-    const results = await Promise.allSettled(payloads.map((p) => verificationService.createSlots(p)))
-    const failed = results.filter((r) => r.status === 'rejected').length
-    if (failed === 0) {
-      ElMessage.success(`Створено слотів: ${payloads.length}`)
-    } else if (failed < payloads.length) {
-      ElMessage.warning(`Створено ${payloads.length - failed} із ${payloads.length}; частину не вдалося створити`)
-    } else {
-      ElMessage.error('Не вдалося створити слоти')
-    }
+    const created = await verificationService.createSlots({ starts })
+    ElMessage.success(`Створено слотів: ${created.length}`)
     selectedWindows.value = []
     emit('refresh')
+  } catch (e) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося створити слоти'))
   } finally {
     generating.value = false
   }
@@ -474,6 +544,31 @@ watch(open, (isOpen) => {
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
+}
+
+.vd-player-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.vd-player-row:hover {
+  border-color: rgba(34, 211, 238, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.vd-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(107 114 128);
 }
 
 .vd-empty {
@@ -617,6 +712,12 @@ watch(open, (isOpen) => {
   color: rgb(209 213 219);
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vd-mmr-chip--result {
+  color: #6ee7b7;
+  background: rgb(16 185 129 / 0.12);
+  border-color: rgb(16 185 129 / 0.3);
 }
 
 .vd-pill {
