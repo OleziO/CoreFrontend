@@ -19,6 +19,33 @@
   @apply -ml-2;
 }
 
+/* ---------------- Disabled trigger ---------------- */
+/* EP puts `is-disabled` on the WRAPPER (not the root `.el-select`) and paints it
+   with a pale `fill-color-light` fill — which reads "light" on the dark theme.
+   Key off the wrapper directly and use a darkened surface so a disabled select
+   stays dark; `!important` beats the dialog/drawer `glass-input` (bg-white/10). */
+.el-select__wrapper.is-disabled {
+  @apply cursor-not-allowed;
+  background-color: rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 0 0 1px var(--el-border-color) inset !important;
+  opacity: 0.6;
+
+  &:hover {
+    box-shadow: 0 0 0 1px var(--el-border-color) inset !important;
+  }
+
+  .el-select__caret,
+  .el-select__placeholder,
+  .el-select__selected-item {
+    @apply cursor-not-allowed;
+  }
+
+  /* keep the chosen value at full strength — the wrapper opacity does the dimming */
+  .el-select__selected-item {
+    color: var(--el-text-color-regular);
+  }
+}
+
 /* Для випадку popper + tooltip */
 .el-popper.is-light.el-tooltip {
   @include glass-popper;

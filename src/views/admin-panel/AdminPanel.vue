@@ -38,12 +38,16 @@
 
 <script setup lang="ts">
 import { createHashedObject } from '@/core/helpers'
-import { PhTrophy, PhClipboardText, PhBug } from '@phosphor-icons/vue'
-import TournamentsDetails from './components/TournamentsDetails.vue'
-import RequestsDetails from './components/RequestsDetails.vue'
-import BugsTab from './components/tabs/BugsTab.vue'
+import { PhCalendarCheck } from '@phosphor-icons/vue'
+import VerificationTab from './components/tabs/VerificationTab.vue'
+// Tabs hidden for now — out of scope (verification feature only) / broken.
+// Restore the imports + entries below to re-enable.
+// import { PhTrophy, PhClipboardText, PhBug } from '@phosphor-icons/vue'
+// import TournamentsDetails from './components/TournamentsDetails.vue'
+// import RequestsDetails from './components/RequestsDetails.vue'
+// import BugsTab from './components/tabs/BugsTab.vue'
 
-type TAdminTabType = 'tournaments' | 'requests' | 'bugs'
+type TAdminTabType = 'tournaments' | 'requests' | 'verification' | 'bugs'
 
 const tabs: {
   value: TAdminTabType
@@ -52,28 +56,20 @@ const tabs: {
   count?: number
   component: Component
 }[] = [
+  // Hidden for now — out of scope (verification feature only) / broken:
+  // { value: 'tournaments', label: 'Турніри', icon: PhTrophy, component: TournamentsDetails },
+  // { value: 'requests', label: 'Запити', icon: PhClipboardText, component: RequestsDetails },
   {
-    value: 'tournaments',
-    label: 'Турніри',
-    icon: PhTrophy,
-    component: TournamentsDetails
-  },
-  {
-    value: 'requests',
-    label: 'Запити',
-    icon: PhClipboardText,
-    component: RequestsDetails
-  },
-  {
-    value: 'bugs',
-    label: 'Баги',
-    icon: PhBug,
-    component: BugsTab
+    value: 'verification',
+    label: 'Верифікація',
+    icon: PhCalendarCheck,
+    component: VerificationTab
   }
+  // { value: 'bugs', label: 'Баги', icon: PhBug, component: BugsTab }
 ]
 
 const tabsObject = createHashedObject(tabs, 'value')
-const activeTab = ref<TAdminTabType>('tournaments')
+const activeTab = ref<TAdminTabType>('verification')
 
 onMounted(() => {
   document.body.style.overflow = 'hidden'

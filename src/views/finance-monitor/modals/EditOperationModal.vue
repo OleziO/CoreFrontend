@@ -22,6 +22,7 @@
           clearable
           placeholder="Без категорії"
           class="w-full"
+          :value-on-clear="null"
         >
           <el-option
             v-for="cat in categories"

@@ -353,6 +353,8 @@
     "useAnalyticsUserTracking": true,
     "devService": true,
     "financeClient": true,
-    "financeService": true
+    "financeService": true,
+    "verificationService": true,
+    "tagsService": true
   }
 }

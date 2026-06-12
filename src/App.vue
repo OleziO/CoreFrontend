@@ -1,5 +1,5 @@
 <template>
-  <ElConfigProvider>
+  <ElConfigProvider :message="{ showClose: true }">
     <router-view #default="{ Component }">
       <component :is="Component" />
     </router-view>

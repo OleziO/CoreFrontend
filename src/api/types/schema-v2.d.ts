@@ -282,10 +282,187 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/verification/slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List free slots across a UTC day range (defaults to today) */
+        get: operations["VerificationUserController_listFreeSlots"];
+        put?: never;
+        /** Publish free 30-min slots for explicit start times */
+        post: operations["VerificationAdminController_createSlots"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/verification/slots/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a free slot, or cancel a booked slot + its request */
+        delete: operations["VerificationAdminController_deleteSlot"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/verification/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin list of bookings across a UTC day range (defaults to today) */
+        get: operations["VerificationAdminController_listRequests"];
+        put?: never;
+        /** Captain books a free slot to verify players */
+        post: operations["VerificationUserController_createRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/verification/requests/{id}/process": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin takes a request into processing */
+        post: operations["VerificationAdminController_processRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/verification/requests/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin completes a request and writes per-player MMR */
+        post: operations["VerificationAdminController_completeRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/verification/requests/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin cancels a request and frees its slot */
+        post: operations["VerificationAdminController_cancelRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/verification/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The current player's verification requests (newest first) */
+        get: operations["VerificationUserController_listMyRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the moderation tag catalog */
+        get: operations["TagsController_listTags"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/players/{playerId}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List a player's tags */
+        get: operations["TagsController_getPlayerTags"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/players/{playerId}/tags/{tagId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assign a tag to a player (idempotent); returns the updated list */
+        post: operations["TagsController_assignTag"];
+        /** Remove a tag from a player */
+        delete: operations["TagsController_unassignTag"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        HealthResponseDto: {
+            /** @enum {string} */
+            status: "ok";
+        };
         StatusResponseDto: {
             status: string;
         };
@@ -525,6 +702,78 @@ export interface components {
             /** @default 60 */
             prizePoolPercent: number;
         };
+        CreateSlotsDto: {
+            starts: string[];
+        };
+        VerificationSlotViewDto: {
+            id: string;
+            startsAt: string;
+            endsAt: string;
+            /** @enum {string} */
+            status: "free" | "booked" | "cancelled";
+        };
+        VerificationRequestViewDto: {
+            id: string;
+            teamId: string;
+            team: {
+                id: string;
+                name: string;
+                logoUrl: string | null;
+                dotaTeamId: string | null;
+                discordRoleId: string | null;
+                discordChannelId: string | null;
+                isVerified: boolean;
+                isPlayingTournament: boolean;
+                captainId: string;
+                coachId: string | null;
+                verifiedAt: string | null;
+                disbandedAt: string | null;
+            } | null;
+            /** @enum {string} */
+            type: "FIRST" | "MMR_UPDATE";
+            /** @enum {string} */
+            status: "pending" | "processing" | "completed" | "cancelled";
+            createdByPlayerId: string;
+            createdAt: string;
+            slot: {
+                id: string;
+                startsAt: string;
+                endsAt: string;
+                /** @enum {string} */
+                status: "free" | "booked" | "cancelled";
+            } | null;
+            players: {
+                id: string;
+                resultMmr: number | null;
+                player: {
+                    id: string;
+                    steamId: string | null;
+                    avatarUrl: string | null;
+                    discordName: string | null;
+                    discordUsername: string | null;
+                    rating: number;
+                    positions: number[] | null;
+                    verifiedAt: string | null;
+                };
+            }[];
+        };
+        CompleteRequestDto: {
+            results: {
+                /** Format: uuid */
+                playerId: string;
+                mmr: number;
+            }[];
+        };
+        CreateRequestDto: {
+            /** Format: uuid */
+            slotId: string;
+            playerIds: string[];
+        };
+        TagViewDto: {
+            id: string;
+            name: string;
+            title: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -547,7 +796,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["HealthResponseDto"];
+                };
             };
         };
     };
@@ -1025,6 +1276,283 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ForecastViewDto"];
                 };
+            };
+        };
+    };
+    VerificationUserController_listFreeSlots: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationSlotViewDto"][];
+                };
+            };
+        };
+    };
+    VerificationAdminController_createSlots: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSlotsDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationSlotViewDto"][];
+                };
+            };
+        };
+    };
+    VerificationAdminController_deleteSlot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    VerificationAdminController_listRequests: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationRequestViewDto"][];
+                };
+            };
+        };
+    };
+    VerificationUserController_createRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRequestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationRequestViewDto"];
+                };
+            };
+        };
+    };
+    VerificationAdminController_processRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationRequestViewDto"];
+                };
+            };
+        };
+    };
+    VerificationAdminController_completeRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompleteRequestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationRequestViewDto"];
+                };
+            };
+        };
+    };
+    VerificationAdminController_cancelRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationRequestViewDto"];
+                };
+            };
+        };
+    };
+    VerificationUserController_listMyRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationRequestViewDto"][];
+                };
+            };
+        };
+    };
+    TagsController_listTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagViewDto"][];
+                };
+            };
+        };
+    };
+    TagsController_getPlayerTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                playerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagViewDto"][];
+                };
+            };
+        };
+    };
+    TagsController_assignTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                playerId: string;
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagViewDto"][];
+                };
+            };
+        };
+    };
+    TagsController_unassignTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                playerId: string;
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

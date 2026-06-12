@@ -147,6 +147,13 @@
 
         <template #dropdown>
           <el-dropdown-menu>
+            <el-dropdown-item
+              v-if="canVerifyPlayers"
+              @click="emit('verify-players')"
+            >
+              <PhUserCheck :size="20" />
+              <span class="ml-8">Верифікувати гравців</span>
+            </el-dropdown-item>
             <el-dropdown-item @click="emit('transfer-captain')">
               <PhCrown :size="20" />
               <span class="ml-8">Передати капітанство</span>
@@ -167,7 +174,9 @@
 </template>
 
 <script setup lang="ts">
-import { PhCopy, PhCrown, PhDotsThree, PhPencil, PhSealCheck, PhSealWarning, PhTrash, PhUser } from '@phosphor-icons/vue'
+import {
+  PhCopy, PhCrown, PhDotsThree, PhPencil, PhSealCheck, PhSealWarning, PhTrash, PhUser, PhUserCheck
+} from '@phosphor-icons/vue'
 import { useClipboard } from '@vueuse/core'
 import { resolvePublicOrApiUrl, getDotabuffTeamUrl } from '@/core/helpers'
 import { resolveTeamDivisionForDisplay } from '@/components/tournaments-tags/tournament.constants'
@@ -177,6 +186,7 @@ const props = defineProps<{
   canEditTeamProfile: boolean
   canEditTeamRoster: boolean
   isAdmin: boolean
+  canVerifyPlayers: boolean
   verifyTeamLoading: boolean
   isMobile: boolean
   windowWidth: number
@@ -184,6 +194,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'edit-team': []
+  'verify-players': []
   'verify-team': []
   'unverify-team': []
   'transfer-captain': []

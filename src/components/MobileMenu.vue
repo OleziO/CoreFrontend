@@ -35,27 +35,25 @@
           <span>Профіль</span>
         </RouterLink>
 
-        <RoleGuard :roles="['admin', 'moderator']">
-          <RouterLink
-            class="mobile-menu-link no-underline"
-            :to="{ name: routeNames.adminPanel }"
-            @click="close"
-          >
-            <PhGauge :size="20" />
-            <span>Адмінка</span>
-          </RouterLink>
-        </RoleGuard>
+        <RouterLink
+          v-if="hasAdminUaRole"
+          class="mobile-menu-link no-underline"
+          :to="{ name: routeNames.adminPanel }"
+          @click="close"
+        >
+          <PhGauge :size="20" />
+          <span>Адмінка</span>
+        </RouterLink>
 
-        <RoleGuard :roles="['admin', 'moderator']">
-          <RouterLink
-            class="mobile-menu-link no-underline"
-            :to="{ name: routeNames.financeMonitor }"
-            @click="close"
-          >
-            <PhCurrencyCircleDollar :size="20" />
-            <span>Фінанси</span>
-          </RouterLink>
-        </RoleGuard>
+        <RouterLink
+          v-if="hasAdminUaRole"
+          class="mobile-menu-link no-underline"
+          :to="{ name: routeNames.financeMonitor }"
+          @click="close"
+        >
+          <PhCurrencyCircleDollar :size="20" />
+          <span>Фінанси</span>
+        </RouterLink>
 
         <div class="mobile-menu-socials">
           <a
@@ -98,12 +96,15 @@
 
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
-import RoleGuard from '@/guards/RoleGuard.vue'
 import Icon, { type TIconName } from '@/components/Icon.vue'
 import { PhDiscordLogo, PhUser, PhGauge, PhCurrencyCircleDollar, PhSignOut, PhX } from '@phosphor-icons/vue'
+import { hasAdminRole } from '@/core/helpers'
 
 const togglerStore = useTogglerStore()
 const authStore = useAuthStore()
+
+/** Єдиний предикат адмінського доступу — за прапором `isAdminRole`, спільний із гардом /finance. */
+const hasAdminUaRole = computed(() => hasAdminRole(authStore.user?.roles))
 
 const panelRef = ref<HTMLElement | null>(null)
 let previouslyFocused: HTMLElement | null = null

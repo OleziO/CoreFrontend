@@ -15,10 +15,12 @@
           :can-edit-team-profile="canEditTeamProfile"
           :can-edit-team-roster="canEditTeamRoster"
           :is-admin="isAdmin"
+          :can-verify-players="isTeamCaptain"
           :verify-team-loading="verifyTeamLoading"
           :is-mobile="isMobile"
           :window-width="currWindow.width.value"
           @edit-team="open('TeamCreateModal', { team, onSubmit: handleTeamUpdate })"
+          @verify-players="openVerificationBooking"
           @verify-team="handleVerifyTeam"
           @unverify-team="handleUnverifyTeam"
           @transfer-captain="changeCapTeam"
@@ -68,7 +70,9 @@ const isTeamCaptain = computed(
   () =>
     !!authStore.user?.id &&
     !!team.value?.captain?.id &&
-    authStore.user.id === team.value!.captain!.id
+    authStore.user.id === team.value!.captain!.id &&
+    // TODO: Remove check for admin after BE checks
+    isAdmin.value
 )
 
 const rosterLockedForEdits = computed(() => false)
@@ -154,6 +158,11 @@ async function handleTeamUpdate (payload: TUpdateTeamPayload) {
     team.value = updated
     close('TeamCreateModal')
   }
+}
+
+function openVerificationBooking () {
+  if (!team.value) return
+  open('VerificationBookingModal', { team: team.value })
 }
 
 function changeCapTeam () {

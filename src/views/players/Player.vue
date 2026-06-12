@@ -15,6 +15,7 @@
           <PlayerProfileHeader
             v-if="player"
             :player="player"
+            :player-tags="playerTags"
             :is-verified="isVerified"
             :rank-image-src="rankImageSrc"
             :rating-mmr-label="ratingMmrLabel"
@@ -294,6 +295,7 @@ import {
 } from '@/core/helpers'
 import { positionOptions } from '@/components/player-tags/player.enums'
 import { routeNames } from '@/router/route-names'
+import type { TTag } from '@/services/tags.types'
 import { playersService } from '@/views/players/players.service'
 import type { TCreateTeamPayload } from '@/views/teams/teams.service'
 import { teamsService } from '@/views/teams/teams.service'
@@ -302,6 +304,8 @@ import { usePlayerFavoriteHeroes } from '@/views/players/composables/use-player-
 const route = useRoute()
 const router = useRouter()
 const player = ref<TPlayer | null>(null)
+/** Модераційні теги гравця (лише для адмін/модер перегляду) — не входять у `TPlayer`. */
+const playerTags = ref<TTag[]>([])
 
 const { open, close } = useAppModals()
 
@@ -421,8 +425,22 @@ async function onOpen () {
   try {
     player.value = isMePage ? (me.user as TPlayer) : await playerStore.findPlayer(id)
     if (!player.value) router.push('/')
+    await loadPlayerTags()
   } finally {
     loading.value = false
+  }
+}
+
+/** Теги бачать і редагують лише адмін/модер (та сама умова, що й верифікаційні дії). */
+async function loadPlayerTags () {
+  if (!player.value || !showAdminVerificationActions.value) {
+    playerTags.value = []
+    return
+  }
+  try {
+    playerTags.value = await tagsService.fetchPlayerTags(player.value.id)
+  } catch {
+    playerTags.value = []
   }
 }
 
@@ -473,6 +491,9 @@ function openEditProfileModal () {
         await me.fetchUser()
         player.value = me.user as TPlayer
       }
+    },
+    onTagsUpdated: (tags: TTag[]) => {
+      playerTags.value = tags
     }
   })
 }

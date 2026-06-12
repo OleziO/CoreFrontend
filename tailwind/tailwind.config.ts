@@ -28,7 +28,7 @@ const boxShadow = {
   // The card outline itself comes from the uniform `border-white/30`, so the edge
   // reads consistently on all four sides (no directional emboss that washes the
   // border out on the bottom/sides — most noticeable on small mobile cards).
-  'card': '0 10px 28px rgba(0, 0, 0, 0.55)',
+  card: '0 10px 28px rgba(0, 0, 0, 0.55)',
   'glow-primary': '0 0 16px rgba(67, 191, 238, 0.45)',
   'glow-gold': '0 0 16px rgba(232, 185, 49, 0.45)'
 }
