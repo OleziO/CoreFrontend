@@ -70,9 +70,7 @@ const isTeamCaptain = computed(
   () =>
     !!authStore.user?.id &&
     !!team.value?.captain?.id &&
-    authStore.user.id === team.value!.captain!.id &&
-    // TODO: Remove check for admin after BE checks
-    isAdmin.value
+    authStore.user.id === team.value!.captain!.id
 )
 
 const rosterLockedForEdits = computed(() => false)
