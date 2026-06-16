@@ -288,7 +288,7 @@
       leave-to-class="opacity-0 translate-y-4"
     >
       <div
-        v-if="isProfilePage && !mmrNotificationDismissed"
+        v-if="isProfilePage && !mmrNotificationDismissed && pendingMmrRequest?.status === 'pending'"
         class="fixed bottom-32 right-24 z-50 w-[420px] rounded-2xl
                border border-white/10
                shadow-[0_20px_48px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset]"
@@ -319,11 +319,11 @@
           <!-- MMR change -->
           <div class="flex items-center gap-10">
             <span class="text-2xl font-bold tabular-nums text-gray-400">
-              {{ pendingMmrRequest?.oldMmr ?? 1 }}
+              {{ pendingMmrRequest?.oldMmr }}
             </span>
             <PhArrowRight :size="16" class="text-gray-600 shrink-0" />
             <span class="text-2xl font-bold tabular-nums text-white">
-              {{ pendingMmrRequest?.newMmr ?? 20000 }}
+              {{ pendingMmrRequest?.newMmr }}
             </span>
           </div>
 
@@ -340,7 +340,7 @@
 
           <!-- Date -->
           <span class="text-xs text-gray-500">
-            Подано {{ dayjs(pendingMmrRequest?.createdAt ?? new Date().toISOString()).format('DD.MM.YYYY') }}
+            Подано {{ dayjs(pendingMmrRequest?.createdAt).format('DD.MM.YYYY') }}
           </span>
         </div>
       </div>

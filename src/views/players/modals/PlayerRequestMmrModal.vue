@@ -28,6 +28,9 @@
         <span class="text-sm font-medium text-gray-300">
           Завантажте до 3 скріншотів
         </span>
+        <span class="text-xs text-gray-500">
+          Скріншот рейтингу з Dota 2
+        </span>
 
         <!-- Thumbnails -->
         <div class="flex flex-wrap gap-10">
