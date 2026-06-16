@@ -5,28 +5,50 @@
    Dropdown wrapper (popper)
    ========================= */
 .el-dropdown-menu {
-  @include glass-popper;
-  @apply rounded-xl border-white/20 shadow-[0_20px_40px_rgba(0,0,0,0.45)] overflow-hidden p-0;
-  min-width: 200px;
+  // Override EL Plus variables so its own rules don't bleed through
+  --el-bg-color-overlay: #111827;
+  --el-dropdown-menuItem-hover-fill: rgba(255, 255, 255, 0.07);
+  --el-dropdown-menuItem-hover-color: #fff;
+  --el-text-color-regular: rgba(255, 255, 255, 0.85);
+
+  background: rgba(15, 20, 37, 0.92) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  overflow: hidden;
+  padding: 4px;
+  min-width: 220px;
 }
 
 /* =========================
    Dropdown items
    ========================= */
 .el-dropdown-menu__item {
-  @apply px-4 py-3 text-white/90 cursor-pointer transition-colors duration-200 rounded-lg;
+  color: rgba(255, 255, 255, 0.80);
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  line-height: 1.4;
 
-  &:hover {
-    @apply bg-white/10 text-white;
-    filter: drop-shadow(0 0 8px rgba(255,255,255,0.2));
+  &:not(.is-disabled):hover,
+  &:not(.is-disabled):focus {
+    background: rgba(255, 255, 255, 0.07) !important;
+    color: #fff !important;
   }
 
   &.is-disabled {
-    @apply opacity-40 cursor-not-allowed;
+    opacity: 0.35;
+    cursor: not-allowed;
   }
 
   &.is-active {
-    @apply bg-white/20 text-white font-medium;
+    background: rgba(67, 191, 238, 0.12);
+    color: #43bfee;
+    font-weight: 500;
   }
 }
 
