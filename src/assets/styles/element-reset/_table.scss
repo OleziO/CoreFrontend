@@ -101,6 +101,14 @@
     display: none;
   }
 
+  // Fix header/body column misalignment — EL Plus reserves gutter width for a
+  // scrollbar even when none is present, shifting header columns vs body columns.
+  .el-table__header th.gutter,
+  .el-table__header colgroup col[name='gutter'] {
+    display: none;
+    width: 0;
+  }
+
   .el-table th.el-table__cell {
     background-color: rgba(17, 24, 39, 0.8) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;

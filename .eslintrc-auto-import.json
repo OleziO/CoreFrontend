@@ -355,6 +355,7 @@
     "financeClient": true,
     "financeService": true,
     "verificationService": true,
-    "tagsService": true
+    "tagsService": true,
+    "mmrRequestsService": true
   }
 }

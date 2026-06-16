@@ -75,7 +75,16 @@
             loading="lazy"
             draggable="false"
           >
-          <span class="mt-2 text-[10px] uppercase tracking-widest text-gray-400">Рейтинг</span>
+          <div class="mt-2 flex items-center gap-4">
+            <span class="text-[10px] uppercase tracking-widest text-gray-400">Рейтинг</span>
+            <el-tooltip
+              v-if="pendingMmrRequest?.status === 'pending'"
+              content="Запит на оновлення MMR обробляється"
+              placement="top"
+            >
+              <PhInfo size="12" class="text-primary cursor-help shrink-0" />
+            </el-tooltip>
+          </div>
         </div>
       </el-tooltip>
       <el-tooltip
@@ -85,7 +94,16 @@
       >
         <div class="flex flex-col items-center shrink-0">
           <span class="text-lg font-semibold text-white tabular-nums">{{ player.rating }}</span>
-          <span class="mt-2 text-[10px] uppercase tracking-widest text-gray-400">Рейтинг</span>
+          <div class="mt-2 flex items-center gap-4">
+            <span class="text-[10px] uppercase tracking-widest text-gray-400">Рейтинг</span>
+            <el-tooltip
+              v-if="pendingMmrRequest?.status === 'pending'"
+              content="Запит на оновлення MMR обробляється"
+              placement="top"
+            >
+              <PhInfo size="12" class="text-primary cursor-help shrink-0" />
+            </el-tooltip>
+          </div>
         </div>
       </el-tooltip>
     </div>
@@ -109,15 +127,40 @@
           {{ isVerified ? 'Зняти верифікацію' : 'Верифікувати' }}
         </el-button>
 
+        <el-dropdown
+          v-if="showAdditionalInfo && canRequestMmr"
+          trigger="click"
+          class="flex-1 shrink-0"
+          :class="{ 'w-full': !showAdminVerificationActions }"
+        >
+          <el-button
+            type="primary"
+            class="h-30 w-full max-sm:text-xs max-sm:!px-8"
+          >
+            <PhPencil />
+            <span class="ml-8">Редагувати {{ showFullLabel ? ' профіль' : '' }}</span>
+            <PhCaretDown class="ml-6" size="12" />
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="emit('editProfile')">
+                Редагування основної інформації
+              </el-dropdown-item>
+              <el-dropdown-item @click="emit('requestMmr')">
+                Змінити MMR
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+
         <el-button
-          v-if="showAdditionalInfo"
+          v-else-if="showAdditionalInfo"
           type="primary"
           class="h-30 flex-1 shrink-0 max-sm:text-xs max-sm:!px-8"
           :class="{ 'w-full': !showAdminVerificationActions }"
           @click="emit('editProfile')"
         >
           <PhPencil />
-
           <span class="ml-8">Редагувати {{ showFullLabel ? ' профіль' : '' }}</span>
         </el-button>
       </div>
@@ -194,7 +237,9 @@ import {
   PhSealWarning,
   PhUser,
   PhPencil,
-  PhCopy
+  PhCopy,
+  PhCaretDown,
+  PhInfo
 } from '@phosphor-icons/vue'
 import { getCopy } from '@/core/helpers'
 import type { TTag } from '@/services/tags.types'
@@ -211,6 +256,8 @@ interface IProps {
   linkingSteam: boolean
   isProfilePage: boolean
   links: { discord: string | undefined; steam: string | undefined; dotabuff: string | undefined }
+  canRequestMmr?: boolean
+  pendingMmrRequest?: import('@/views/players/mmr-requests.service').TMmrUpdateRequest | null
 }
 
 defineProps<IProps>()
@@ -219,6 +266,7 @@ const emit = defineEmits<{
   toggleVerification: []
   editProfile: []
   linkSteam: []
+  requestMmr: []
 }>()
 
 const windowSize = useWindowSize()

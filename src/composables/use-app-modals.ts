@@ -17,6 +17,7 @@ export const appModals = useModals({
     defineAsyncComponent(() => import('@/views/teams/modals/VerificationBookingModal.vue')) as Component,
   ProfileRequestMmrModal: defineAsyncComponent(() => import('@/views/profile/components/modals/ProfileRequestMmrModal.vue')) as Component,
   AdminUpdateMmrModal: defineAsyncComponent(() => import('@/views/players/modals/AdminUpdateMmrModal.vue')) as Component,
+  PlayerRequestMmrModal: defineAsyncComponent(() => import('@/views/players/modals/PlayerRequestMmrModal.vue')) as Component,
   DueloPromoModal: defineAsyncComponent(() => import('@/views/tournaments/modals/DueloPromoModal.vue')) as Component,
   PlayoffSubmitResultModal:
     defineAsyncComponent(() => import('@/views/tournaments/modals/PlayoffSubmitResultModal.vue')) as Component,

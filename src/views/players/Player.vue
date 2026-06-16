@@ -25,9 +25,12 @@
             :linking-steam="linkingSteam"
             :is-profile-page="isProfilePage"
             :links="links"
+            :can-request-mmr="canRequestMmr"
+            :pending-mmr-request="pendingMmrRequest"
             @toggle-verification="togglePlayerVerification"
             @edit-profile="openEditProfileModal"
             @link-steam="handleSteamLink"
+            @request-mmr="openRequestMmrModal"
           />
           <PlayerMatchStats :match-stats="matchStats" />
         </div>
@@ -273,13 +276,88 @@
       </div>
     </div>
   </div>
+
+  <!-- Pending MMR request notification -->
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 translate-y-4"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 translate-y-4"
+    >
+      <div
+        v-if="isProfilePage && !mmrNotificationDismissed"
+        class="fixed bottom-32 right-24 z-50 w-[420px] rounded-2xl
+               border border-white/10
+               shadow-[0_20px_48px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset]"
+        style="background: rgba(13,18,35,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);"
+      >
+        <!-- Header -->
+        <div class="flex items-center gap-8 px-16 pt-14 pb-10 border-b border-white/[0.07]">
+          <PhClockCountdown :size="15" weight="duotone" class="text-primary shrink-0" />
+          <span class="text-xs font-semibold uppercase tracking-wider text-gray-300">
+            Запит на оновлення MMR
+          </span>
+          <span class="ml-auto flex items-center gap-5 text-[10px] font-semibold text-warning">
+            <span class="inline-block w-5 h-5 rounded-full bg-warning animate-pulse" />
+            Pending
+          </span>
+          <button
+            type="button"
+            class="ml-8 flex items-center justify-center w-20 h-20 rounded-lg
+                   text-gray-500 hover:text-white hover:bg-white/10 transition-colors"
+            @click="mmrNotificationDismissed = true"
+          >
+            <PhX :size="13" weight="bold" />
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="px-16 py-14 flex flex-col gap-12">
+          <!-- MMR change -->
+          <div class="flex items-center gap-10">
+            <span class="text-2xl font-bold tabular-nums text-gray-400">
+              {{ pendingMmrRequest?.oldMmr ?? 1 }}
+            </span>
+            <PhArrowRight :size="16" class="text-gray-600 shrink-0" />
+            <span class="text-2xl font-bold tabular-nums text-white">
+              {{ pendingMmrRequest?.newMmr ?? 20000 }}
+            </span>
+          </div>
+
+          <!-- Proof thumbnails -->
+          <div v-if="pendingMmrRequest?.proofs?.length" class="flex gap-6">
+            <img
+              v-for="proof in pendingMmrRequest.proofs"
+              :key="proof.id"
+              :src="proof.url"
+              :alt="proof.name"
+              class="h-[40px] w-[71px] rounded-md object-cover border border-white/10"
+            >
+          </div>
+
+          <!-- Date -->
+          <span class="text-xs text-gray-500">
+            Подано {{ dayjs(pendingMmrRequest?.createdAt ?? new Date().toISOString()).format('DD.MM.YYYY') }}
+          </span>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
 import {
   PhCopy,
-  PhUsersThree
+  PhUsersThree,
+  PhArrowRight,
+  PhClockCountdown,
+  PhX
 } from '@phosphor-icons/vue'
+import dayjs from 'dayjs'
+import type { TMmrUpdateRequest } from '@/views/players/mmr-requests.service'
 
 import {
   getCopy,
@@ -357,6 +435,14 @@ const showAdminVerificationActions = computed(() => {
 })
 
 const isProfilePage = computed(() => route.name === routeNames.profile)
+
+const canRequestMmr = computed(() =>
+  isProfilePage.value &&
+  isVerified.value
+)
+
+const pendingMmrRequest = ref<TMmrUpdateRequest | null>(null)
+const mmrNotificationDismissed = ref(false)
 
 const playerTeamLinkId = computed(() => {
   const id = player.value?.teamId
@@ -480,6 +566,10 @@ function openCreateTeamModal () {
   })
 }
 
+function openRequestMmrModal () {
+  open('PlayerRequestMmrModal', {})
+}
+
 function openEditProfileModal () {
   if (!player.value) return
 
@@ -500,6 +590,10 @@ function openEditProfileModal () {
 
 onMounted(async () => {
   await onOpen()
+  if (isProfilePage.value) {
+    mmrNotificationDismissed.value = false
+    pendingMmrRequest.value = await mmrRequestsService.getMyRequest().catch(() => null)
+  }
   const result = me.handleSteamCallback(route.query)
   if (result === 'linked') {
     await me.fetchUser()

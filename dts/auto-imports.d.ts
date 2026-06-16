@@ -73,6 +73,7 @@ declare global {
   const markRaw: typeof import('vue')['markRaw']
   const matchesService: typeof import('../src/views/matches/matches.service')['matchesService']
   const mixTournamentsService: typeof import('../src/views/mix-tournaments/mix-tournaments.service')['mixTournamentsService']
+  const mmrRequestsService: typeof import('../src/views/players/mmr-requests.service')['mmrRequestsService']
   const nextTick: typeof import('vue')['nextTick']
   const onActivated: typeof import('vue')['onActivated']
   const onBeforeMount: typeof import('vue')['onBeforeMount']
