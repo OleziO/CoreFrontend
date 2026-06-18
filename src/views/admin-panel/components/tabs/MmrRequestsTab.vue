@@ -106,28 +106,33 @@
     <!-- Proof carousel dialog -->
     <el-dialog
       v-model="carouselVisible"
-      width="700"
+      width="90vw"
       append-to-body
       destroy-on-close
       title="Докази"
+      class="mmr-proof-dialog"
     >
       <el-carousel
         :initial-index="carouselStart"
-        height="400px"
+        height="100%"
         :autoplay="false"
         trigger="click"
         indicator-position="outside"
       >
         <el-carousel-item
-          v-for="proof in carouselProofs"
+          v-for="(proof, idx) in carouselProofs"
           :key="proof.id"
         >
           <div class="flex items-center justify-center h-full bg-black/30 rounded-lg overflow-hidden">
-            <img
+            <el-image
               :src="proof.url"
-              alt=""
-              class="max-w-full max-h-full object-contain"
-            >
+              :preview-src-list="proofUrls"
+              :initial-index="idx as number"
+              fit="contain"
+              preview-teleported
+              hide-on-click-modal
+              class="w-full h-full cursor-zoom-in"
+            />
           </div>
         </el-carousel-item>
       </el-carousel>
@@ -158,6 +163,8 @@ const processingId = ref<string | null>(null)
 const carouselVisible = ref(false)
 const carouselProofs = ref<TMmrProof[]>([])
 const carouselStart = ref(0)
+
+const proofUrls = computed(() => carouselProofs.value.map((p) => p.url))
 
 async function fetchRequests () {
   isLoading.value = true
@@ -222,3 +229,43 @@ function statusLabel (status: string): string {
 
 onMounted(fetchRequests)
 </script>
+
+<!--
+  Не scoped: el-dialog з append-to-body телепортується в <body>,
+  тому scoped :deep() селектори не доходять до нього.
+  Стилі прив'язані до унікального класу .mmr-proof-dialog.
+-->
+<style>
+/* Майже повноекранне вікно з доказами — 80vw x 80vh, адаптивне */
+.mmr-proof-dialog.el-dialog {
+  max-width: 90vw;
+  height: 90vh;
+  margin: 5vh auto !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.mmr-proof-dialog.el-dialog .el-dialog__body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Карусель заповнює доступну висоту; лишаємо місце для індикаторів (outside) */
+.mmr-proof-dialog.el-dialog .el-carousel {
+  height: 100% !important;
+}
+
+.mmr-proof-dialog.el-dialog .el-carousel__container {
+  height: calc(100% - 40px) !important;
+}
+
+@media (max-width: 768px) {
+  .mmr-proof-dialog.el-dialog {
+    width: 95vw !important;
+    max-width: 95vw;
+    height: 90vh;
+    margin: 5vh auto !important;
+  }
+}
+</style>
