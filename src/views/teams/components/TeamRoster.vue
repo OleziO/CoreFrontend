@@ -37,8 +37,46 @@
               :is-captain="player.id === team?.captain?.id"
             />
             <template v-if="showRemoveButton(player)">
+              <el-popover
+                v-if="isAdmin"
+                trigger="click"
+                placement="top-end"
+                :width="260"
+              >
+                <template #reference>
+                  <button
+                    type="button"
+                    class="player-remove-from-team-btn"
+                    :disabled="removePlayerLoadingId === player.id"
+                    aria-label="Прибрати з команди"
+                    @click.stop
+                  >
+                    <PhX :size="14" weight="bold" class="pointer-events-none" />
+                  </button>
+                </template>
+                <div class="flex flex-col gap-10">
+                  <p class="text-sm leading-snug text-gray-300">
+                    {{ hasActiveTournaments ? tournamentRemovePlayerWarning : removePlayerPenaltyPrompt }}
+                  </p>
+                  <el-button
+                    type="danger"
+                    size="small"
+                    :loading="removePlayerLoadingId === player.id"
+                    @click.stop="emit('remove-player', player.id, ERemovePlayerPenalty.SUBTRACT)"
+                  >
+                    З втратою пойнтів
+                  </el-button>
+                  <el-button
+                    size="small"
+                    :loading="removePlayerLoadingId === player.id"
+                    @click.stop="emit('remove-player', player.id, ERemovePlayerPenalty.NONE)"
+                  >
+                    Без втрати пойнтів
+                  </el-button>
+                </div>
+              </el-popover>
               <el-popconfirm
-                v-if="hasActiveTournaments"
+                v-else-if="hasActiveTournaments"
                 width="320"
                 placement="top-end"
                 :title="tournamentRemovePlayerWarning"
@@ -111,8 +149,46 @@
               :is-captain="player.id === team?.captain?.id"
             />
             <template v-if="showRemoveButton(player)">
+              <el-popover
+                v-if="isAdmin"
+                trigger="click"
+                placement="top-end"
+                :width="260"
+              >
+                <template #reference>
+                  <button
+                    type="button"
+                    class="player-remove-from-team-btn"
+                    :disabled="removePlayerLoadingId === player.id"
+                    aria-label="Прибрати з команди"
+                    @click.stop
+                  >
+                    <PhX :size="14" weight="bold" class="pointer-events-none" />
+                  </button>
+                </template>
+                <div class="flex flex-col gap-10">
+                  <p class="text-sm leading-snug text-gray-300">
+                    {{ hasActiveTournaments ? tournamentRemovePlayerWarning : removePlayerPenaltyPrompt }}
+                  </p>
+                  <el-button
+                    type="danger"
+                    size="small"
+                    :loading="removePlayerLoadingId === player.id"
+                    @click.stop="emit('remove-player', player.id, ERemovePlayerPenalty.SUBTRACT)"
+                  >
+                    З втратою пойнтів
+                  </el-button>
+                  <el-button
+                    size="small"
+                    :loading="removePlayerLoadingId === player.id"
+                    @click.stop="emit('remove-player', player.id, ERemovePlayerPenalty.NONE)"
+                  >
+                    Без втрати пойнтів
+                  </el-button>
+                </div>
+              </el-popover>
               <el-popconfirm
-                v-if="hasActiveTournaments"
+                v-else-if="hasActiveTournaments"
                 width="320"
                 placement="top-end"
                 :title="tournamentRemovePlayerWarning"
@@ -212,6 +288,7 @@
 <script setup lang="ts">
 import { ElMessageBox } from 'element-plus'
 import { PhInfo, PhX } from '@phosphor-icons/vue'
+import { ERemovePlayerPenalty } from '@/views/teams/teams.enums'
 
 const props = defineProps<{
   team: TTeam | null
@@ -222,7 +299,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'remove-player': [playerId: string]
+  'remove-player': [playerId: string, penalty?: ERemovePlayerPenalty]
   'remove-coach': []
   'add-player': [slot: 'main' | 'reserved' | 'coach']
 }>()
@@ -231,6 +308,8 @@ const hasActiveTournaments = computed(() => !!props.team?.tournaments?.length)
 
 const tournamentRemovePlayerWarning =
   'Гравець бере участь у турнірі. Після виходу він втратить 70% зароблених очок у цьому турнірі. Продовжити?'
+
+const removePlayerPenaltyPrompt = 'Прибрати гравця зі складу команди?'
 
 const mainSlotCounts = computed(() => {
   const count = props.team?.mainPlayers?.length ?? 0

@@ -49,6 +49,7 @@ import { ElMessageBox } from 'element-plus'
 import { useWindowSize } from '@vueuse/core'
 import { teamsService } from '@/views/teams/teams.service'
 import type { TUpdateTeamPayload } from '@/views/teams/teams.service'
+import { ERemovePlayerPenalty } from '@/views/teams/teams.enums'
 
 const route = useRoute()
 const id = String(route.params.id)
@@ -122,11 +123,11 @@ async function handleUnverifyTeam () {
   verifyTeamLoading.value = false
 }
 
-async function handleRemovePlayer (playerId: string) {
+async function handleRemovePlayer (playerId: string, penalty?: ERemovePlayerPenalty) {
   const tid = team.value?.id
   if (!tid) return
   removePlayerLoadingId.value = playerId
-  const updated = await teamsService.removePlayerFromTeam(tid, playerId)
+  const updated = await teamsService.removePlayerFromTeam(tid, playerId, penalty)
   if (updated) {
     playersStore.setPlayerTeamIdClientside(playerId, null)
     teamsStore.patchTeamInList(updated)

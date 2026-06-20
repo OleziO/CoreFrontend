@@ -2142,7 +2142,10 @@ export interface operations {
     };
     TeamsController_removePlayer: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Point penalty applied to the removed player. `subtract` (default) reduces their tournament points to 30%; `none` removes the player without touching points (admin override). */
+                penalty?: "subtract" | "none";
+            };
             header?: never;
             path: {
                 id: string;
