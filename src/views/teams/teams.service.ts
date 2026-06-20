@@ -9,6 +9,7 @@ import type {
 import { postTeamLogoUpload } from '@/services/image-upload.service'
 import { hydrateTeamPlayersRanks } from '@/views/teams/team-roster-hydrate.utils'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
+import { ERemovePlayerPenalty } from '@/views/teams/teams.enums'
 
 export type TCreateTeamPayload = CreateTeamDto & { logoFile?: File | null }
 export type TUpdateTeamPayload = UpdateTeamDto & { logoFile?: File | null }
@@ -131,11 +132,20 @@ class TeamsService {
     }
   }
 
-  /** Full-cycle: remove player + success toast. Returns null on error. */
-  async removePlayerFromTeam (teamId: string, playerId: string): Promise<TTeam | null> {
+  /**
+   * Full-cycle: remove player + success toast. Returns null on error.
+   * `penalty` — query param: `subtract` (бекенд-дефолт, -70% очок) або `none` (адмін-оверрайд).
+   * Якщо не передано — бекенд застосовує `subtract`.
+   */
+  async removePlayerFromTeam (
+    teamId: string,
+    playerId: string,
+    penalty?: ERemovePlayerPenalty
+  ): Promise<TTeam | null> {
     try {
       const res = await apiClient.delete('/teams/{id}/players/{playerId}', {
-        dynamicKeys: { id: teamId, playerId }
+        dynamicKeys: { id: teamId, playerId },
+        params: penalty ? { penalty } : undefined
       })
 
       const updated = res?.id
