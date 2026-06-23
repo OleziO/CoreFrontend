@@ -6,6 +6,8 @@
   </ElConfigProvider>
 
   <Modals :modals="appModals" />
+
+  <AgeGate />
 </template>
 
 <script setup lang="ts">

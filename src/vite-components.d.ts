@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AgeGate: typeof import('./components/AgeGate.vue')['default']
     AppBackButton: typeof import('./components/AppBackButton.vue')['default']
     BalanceCard: typeof import('./views/finance-monitor/components/BalanceCard.vue')['default']
     BankSyncButton: typeof import('./views/finance-monitor/components/BankSyncButton.vue')['default']
