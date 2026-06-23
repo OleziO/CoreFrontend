@@ -12,8 +12,6 @@
  * переписати `getSponsors`; компоненти (SponsorShowcase/SponsorBanner) не зміняться.
  */
 
-import sponsorsPlaceholderBanner from '@/assets/images/sponsors-placeholder-banner.png'
-
 /** Рівень спонсорства. Визначає вагу ротації (дорожчі — довше в кадрі). */
 export type TSponsorTier = 'title' | 'gold' | 'silver' | 'partner'
 
@@ -41,21 +39,22 @@ const TIER_WEIGHT: Record<TSponsorTier, number> = {
   partner: 1
 }
 
-/**
- * ⚠️ ТИМЧАСОВІ ПЛЕЙСХОЛДЕРИ, доки немає реальних спонсорів — кілька слайдів
- * з одним брендованим банером «SPONSORS · Thank you for supporting Core League»,
- * щоб карусель демонструвала ротацію.
- *
- * Коли з'являться реальні спонсори — замініть на по запису на кожного зі своїм
- * `bannerUrl` (широке зображення-банер). Перед релізом без спонсорів — `[]`.
- */
-const SPONSORS: TSponsor[] = Array.from({ length: 3 }, (_, i) => ({
-  id: `placeholder-${i + 1}`,
-  name: 'Спонсори',
-  tier: 'title' as TSponsorTier,
-  bannerUrl: sponsorsPlaceholderBanner,
-  websiteUrl: null
-}))
+const SPONSORS: TSponsor[] = [
+  {
+    id: 'bet-1',
+    name: 'Sponsor 1',
+    tier: 'title',
+    bannerUrl: '/sponsors/bet_1.png',
+    websiteUrl: 'https://25660255.uatracer.link/'
+  },
+  {
+    id: 'bet-2',
+    name: 'Sponsor 2',
+    tier: 'title',
+    bannerUrl: '/sponsors/bet_2.png',
+    websiteUrl: 'https://25660255.uatracer.link/'
+  }
+]
 
 export function getSponsors (): TSponsor[] {
   return SPONSORS
