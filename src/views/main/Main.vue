@@ -210,13 +210,22 @@
         <div class="mb-48 reveal">
           <p class="text-center text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-20">Титульний спонсор</p>
           <div class="flex justify-center">
-            <div
-              class="h-96 w-320 max-w-full rounded-2xl bg-white/[0.02] border border-dashed border-[#e8b931]/25
-                     hover:border-[#e8b931]/50 hover:bg-[#e8b931]/[0.03]
-                     flex items-center justify-center transition-colors duration-300 cursor-default"
+            <a
+              href="https://25660255.uatracer.link/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="betking"
+              class="h-fit w-208 max-w-full rounded-xl bg-white/[0.02] border border-[#e8b931]/35
+                     overflow-hidden flex items-center justify-center
+                     hover:border-[#e8b931]/60 transition-colors duration-300"
             >
-              <span class="text-gray-600 text-[11px] uppercase tracking-[0.25em]">Місце вільне</span>
-            </div>
+              <img
+                src="/sponsors/bet_logo.png"
+                alt="betking"
+                loading="lazy"
+                class="h-full w-full object-contain"
+              >
+            </a>
           </div>
         </div>
 
