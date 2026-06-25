@@ -174,7 +174,6 @@ import { playersService } from '@/views/players/players.service'
 import type { TTag } from '@/services/tags.types'
 import type {
   TAdminPlayerRoleItem,
-  TAdminPlayerRolesResult,
   TUpdatePlayerDto
 } from '@/api/types/api.types'
 
@@ -471,15 +470,6 @@ function buildRolesPayload (): TAdminPlayerRoleItem[] {
   }))
 }
 
-/** Відповідь ендпоінта ролей — джерело істини: переписуємо roles + verifiedAt. */
-function mergeRolesIntoPlayer (player: TPlayer, result: TAdminPlayerRolesResult): TPlayer {
-  return {
-    ...player,
-    verifiedAt: result.verifiedAt,
-    roles: result.roles as unknown as TPlayer['roles']
-  }
-}
-
 /** Відправляє лише різницю тегів (assign/remove), потім перечитує актуальний список. */
 async function syncPlayerTags () {
   const toAdd = selectedTagIds.value.filter((id) => !originalTagIds.value.includes(id))
@@ -513,7 +503,7 @@ async function onSubmit () {
 
     if (canManageRoles.value && rolesChanged.value) {
       const result = await playersService.setPlayerRolesByAdmin(props.player.id, buildRolesPayload())
-      updated = mergeRolesIntoPlayer(updated, result)
+      updated = result
     }
 
     if (canManageTags.value && tagsChanged.value) {
