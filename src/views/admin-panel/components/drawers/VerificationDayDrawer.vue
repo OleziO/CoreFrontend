@@ -482,8 +482,8 @@ async function handleGenerate (): Promise<void> {
   )
   generating.value = true
   try {
-    await verificationStore.createSlots(date, starts)
-    ElMessage.success(`Створено слотів: ${starts.length}`)
+    const created = await verificationStore.createSlots(date, starts)
+    ElMessage.success(`Створено слотів: ${created}`)
     selectedWindows.value = []
   } catch (e) {
     ElMessage.error(getApiErrorMessage(e, 'Не вдалося створити слоти'))

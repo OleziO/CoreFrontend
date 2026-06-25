@@ -63,9 +63,10 @@ export const useVerificationStore = defineStore('verification', () => {
     await refreshMonth(day)
   }
 
-  async function createSlots (day: string, starts: string[]): Promise<void> {
-    await verificationService.createSlots({ starts })
+  async function createSlots (day: string, starts: string[]): Promise<number> {
+    const created = await verificationService.createSlots({ starts })
     await refreshMonth(day)
+    return created.length
   }
 
   async function deleteSlot (day: string, slotId: string): Promise<void> {
