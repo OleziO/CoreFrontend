@@ -45,9 +45,6 @@
 </template>
 
 <script setup lang="ts">
-import { ElMessage } from 'element-plus'
-import { teamsService } from '@/views/teams/teams.service'
-
 const props = defineProps<{
   team: TTeam | undefined
   teamId: string
@@ -55,6 +52,8 @@ const props = defineProps<{
 }>()
 
 const modelValue = defineModel<boolean>({ default: false })
+
+const teamsStore = useTeamsStore()
 
 const selectedPlayerId = ref<string | null>(null)
 const loading = ref(false)
@@ -80,8 +79,7 @@ async function transferCaptaincy () {
 
   loading.value = true
   try {
-    const updated = await teamsService.transferCaptaincy(props.teamId, selectedPlayerId.value)
-    useTeamsStore().patchTeamInList(updated)
+    const updated = await teamsStore.transferCaptaincy(props.teamId, selectedPlayerId.value)
     ElMessage.success('Капітанство успішно передано')
     props.onUpdated?.(updated)
     modelValue.value = false

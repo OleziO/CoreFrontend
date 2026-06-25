@@ -110,7 +110,6 @@
 import { isPlayerVerified, searchPlayer } from '@/core/helpers'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { PhCheck, PhMagnifyingGlass, PhPlus } from '@phosphor-icons/vue'
-import { teamsService } from '@/views/teams/teams.service'
 
 const props = defineProps<{
   team: TTeam | undefined
@@ -253,9 +252,7 @@ async function submitAdd () {
     let added = 0
     for (const pid of ids) {
       try {
-        const updatedTeam = await teamsService.addPlayerToTeam(tid, { playerId: pid, slot })
-        teamsStore.patchTeamInList(updatedTeam)
-        playerStore.setPlayerTeamIdClientside(pid, tid)
+        await teamsStore.addPlayerToTeam(tid, { playerId: pid, slot })
         added++
       } catch (e: unknown) {
         ElMessage.error(getApiErrorMessage(e, 'Не вдалося додати гравця'))
