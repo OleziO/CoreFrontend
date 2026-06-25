@@ -133,7 +133,6 @@
 
 <script setup lang="ts">
 import { tournamentFields } from '@/views/tournaments/tournaments.enums'
-import { queryCache } from '@/core/query-cache-client'
 import { tournamentStatuses } from '@/core/utils/formatters'
 import { Plus, Edit } from '@element-plus/icons-vue'
 import type { UploadFile } from 'element-plus'
@@ -198,14 +197,12 @@ function handleImageChange (uploadFile: UploadFile) {
 const handleSubmit = async () => {
   loading.value = true
   try {
-    const updated = await tournamentsService.updateTournament(
+    await tournamentStore.updateTournament(
       props.newTournamentData?.id ?? '',
       tournamentData.value as UpdateTournamentDto
     )
-    tournamentStore.patchTournamentInList(updated)
     ElMessage({ message: 'Турнір успішно оновлено', type: 'success' })
     showUpdateTournamentDrawer.value = false
-    queryCache.invalidateQueries({ key: ['tournaments'] })
   } catch (e: unknown) {
     ElMessage.error(getApiErrorMessage(e, 'Помилка при оновленні турніру'))
   } finally {
