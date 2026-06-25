@@ -1,4 +1,4 @@
-import type { TUserRoleCatalog } from '@/api/types/api.types'
+import type { TUserRoleCatalog, TAdminPlayerRoleItem, TUpdatePlayerDto } from '@/api/types/api.types'
 
 import { useAuthStore } from '@/store/modules/auth'
 import { playersService } from '@/views/players/players.service'
@@ -26,6 +26,30 @@ export const usePlayersStore = defineStore('players', () => {
     } else {
       list.push(updated)
     }
+  }
+
+  function removePlayerFromList (id: string) {
+    players.value = players.value.filter(p => p.id !== id)
+  }
+
+  async function updatePlayer (id: string, data: Partial<TUpdatePlayerDto>): Promise<TPlayer> {
+    const updated = await playersService.updatePlayer(id, data)
+    patchPlayerInList(updated)
+    return updated
+  }
+
+  async function deletePlayer (id: string): Promise<void> {
+    const removedId = await playersService.deletePlayer(id)
+    removePlayerFromList(removedId)
+  }
+
+  async function setPlayerRoles (
+    playerId: string,
+    roles: TAdminPlayerRoleItem[]
+  ): Promise<TPlayer> {
+    const updated = await playersService.setPlayerRolesByAdmin(playerId, roles)
+    patchPlayerInList(updated)
+    return updated
   }
 
   async function fetchUserRoles (opts?: { force?: boolean }) {
@@ -91,6 +115,10 @@ export const usePlayersStore = defineStore('players', () => {
     userRolesCatalog,
     setUserRolesCatalog,
     patchPlayerInList,
+    removePlayerFromList,
+    updatePlayer,
+    deletePlayer,
+    setPlayerRoles,
     fetchUserRoles,
     findPlayer,
     clearTeamMembershipClientside,
