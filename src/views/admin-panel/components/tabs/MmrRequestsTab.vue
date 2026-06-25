@@ -17,7 +17,7 @@
     <div class="flex-1 min-h-0 rounded-xl border border-white/10 bg-gray-900 shadow-xl overflow-hidden">
       <el-table
         v-loading="isLoading"
-        :data="requests"
+        :data="mmrStore.requests"
         height="100%"
         class="w-full custom-table"
         empty-text="Запитів немає"
@@ -155,8 +155,9 @@ const filters: { value: TFilter; label: string }[] = [
   { value: 'rejected', label: 'Відхилені' }
 ]
 
+const mmrStore = useMmrRequestsStore()
+
 const activeFilter = ref<TFilter>('pending')
-const requests = ref<TMmrUpdateRequest[]>([])
 const isLoading = ref(false)
 const processingId = ref<string | null>(null)
 
@@ -169,7 +170,7 @@ const proofUrls = computed(() => carouselProofs.value.map((p) => p.url))
 async function fetchRequests () {
   isLoading.value = true
   try {
-    requests.value = await mmrRequestsService.listRequests(activeFilter.value)
+    await mmrStore.fetchRequests(activeFilter.value)
   } catch {
     ElMessage.error('Не вдалося завантажити запити')
   } finally {
@@ -186,8 +187,7 @@ async function approve (row: TMmrUpdateRequest) {
   if (processingId.value) return
   processingId.value = row.id
   try {
-    await mmrRequestsService.approveRequest(row.id)
-    requests.value = requests.value.filter((r) => r.id !== row.id)
+    await mmrStore.approve(row.id)
     ElMessage.success('Запит схвалено')
   } catch {
     ElMessage.error('Не вдалося схвалити запит')
@@ -200,8 +200,7 @@ async function reject (row: TMmrUpdateRequest) {
   if (processingId.value) return
   processingId.value = row.id
   try {
-    await mmrRequestsService.rejectRequest(row.id)
-    requests.value = requests.value.filter((r) => r.id !== row.id)
+    await mmrStore.reject(row.id)
     ElMessage.success('Запит відхилено')
   } catch {
     ElMessage.error('Не вдалося відхилити запит')
