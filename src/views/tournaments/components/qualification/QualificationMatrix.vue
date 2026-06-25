@@ -1,5 +1,5 @@
 <template>
-  <div class="qual-matrix-scroll overflow-x-auto w-full flex justify-center items-center min-w-[320px] pb-12">
+  <div class="qual-matrix-scroll overflow-x-auto w-full flex min-w-[320px] pb-12">
     <table
       class="qual-matrix-table border-collapse text-sm sm:text-base w-max min-w-[320px]"
       role="grid"
@@ -126,6 +126,17 @@ function cellPresentation (rowId: string, colId: string): { label: string; class
 </script>
 
 <style scoped>
+/*
+ * Center the matrix when it fits, but fall back to start-alignment when it
+ * overflows. Plain `justify-content: center` makes the left columns unreachable
+ * by scrolling once the table is wider than the container (overflow is pushed
+ * to both sides). `safe` keeps the start edge scrollable.
+ */
+.qual-matrix-scroll {
+  justify-content: safe center;
+  align-items: center;
+}
+
 .qual-matrix-cell {
   width: 3rem;
   min-width: 3rem;

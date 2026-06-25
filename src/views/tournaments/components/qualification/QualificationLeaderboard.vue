@@ -16,11 +16,11 @@
     </header>
 
     <div
-      class="flex-1 min-h-0 flex flex-col min-w-0 border-t border-white/[0.04] bg-black/[0.12] px-12 sm:px-14"
+      class="flex-1 min-h-0 flex flex-col min-w-0 border-t border-white/[0.04] bg-black/[0.12] pl-12 sm:pl-14"
     >
       <div
         class="qual-lb-colhead shrink-0 grid grid-cols-2 gap-x-8 items-end
-          qual-lb-grid-pad py-10 border-b border-white/[0.06]"
+          qual-lb-grid-pad py-10 pr-12 sm:pr-14 border-b border-white/[0.06]"
       >
         <span
           class="min-w-0 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-500 leading-none pb-1"
@@ -36,13 +36,13 @@
       </div>
 
       <div
-        class="qual-lb-scroll flex-1 min-h-0 overflow-y-auto custom-lb-scroll py-12 sm:py-14 flex flex-col gap-14
-          max-h-[52vh] lg:max-h-[min(70vh,680px)]"
+        class="qual-lb-scroll flex-1 min-h-0 overflow-y-auto custom-lb-scroll py-12 sm:py-14 pr-12 sm:pr-14
+          flex flex-col gap-14 max-h-[52vh] lg:max-h-[min(70vh,680px)]"
       >
         <section
           v-for="block in sectionBlocks"
           :key="block.key"
-          class="rounded-xl border overflow-hidden"
+          class="rounded-xl border overflow-hidden shrink-0"
           :class="block.shellClass"
         >
           <div
