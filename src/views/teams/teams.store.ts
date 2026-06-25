@@ -78,6 +78,12 @@ export const useTeamsStore = defineStore('teams', () => {
     }
   }
 
+  async function updateTeamProfile (id: string, data: TUpdateTeamPayload): Promise<TTeam | null> {
+    const updated = await teamsService.updateTeamProfile(id, data)
+    if (updated) patchTeamInList(updated)
+    return updated
+  }
+
   // async function getTeam (id: string) {
   //   loading.value = true
   //   try {
@@ -183,6 +189,7 @@ export const useTeamsStore = defineStore('teams', () => {
     removeCoach,
     verifyTeam,
     unverifyTeam,
-    transferCaptaincy
+    transferCaptaincy,
+    updateTeamProfile
   }
 })

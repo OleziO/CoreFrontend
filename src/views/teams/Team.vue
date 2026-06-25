@@ -146,9 +146,8 @@ async function handleRemoveCoach () {
 async function handleTeamUpdate (payload: TUpdateTeamPayload) {
   const tid = team.value?.id
   if (!tid) return
-  const updated = await teamsService.updateTeamProfile(tid, payload)
+  const updated = await teamsStore.updateTeamProfile(tid, payload)
   if (updated) {
-    teamsStore.patchTeamInList(updated)
     team.value = updated
     close('TeamCreateModal')
   }
