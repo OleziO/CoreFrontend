@@ -356,6 +356,8 @@
     "financeService": true,
     "verificationService": true,
     "tagsService": true,
-    "mmrRequestsService": true
+    "mmrRequestsService": true,
+    "useVerificationStore": true,
+    "useMmrRequestsStore": true
   }
 }
