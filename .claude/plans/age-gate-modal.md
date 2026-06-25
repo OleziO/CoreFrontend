@@ -12,11 +12,11 @@ Durable decisions that apply across all phases:
   [`src/App.vue`](../../src/App.vue) — **not** the on-demand `useAppModals` registry
   (that registry is for user-triggered modals; the gate must appear automatically before
   any content is visible). It sits as a sibling to `<router-view>` so it covers every route.
-- **Persistence**: `sessionStorage` (explicitly requested). Per-tab; clears when the tab/session
+- **Persistence**: `localStorage` (explicitly requested). Per-tab; clears when the tab/session
   closes, so the gate re-prompts on a fresh session. Suggested key: `age-gate` with values
   `'confirmed'` (21+, access granted) / `'denied'` (under 21, blocked). Absence of the key =
   not yet answered → show the question.
-- **Gate visibility logic**: Show the gate whenever `sessionStorage['age-gate'] !== 'confirmed'`.
+- **Gate visibility logic**: Show the gate whenever `localStorage['age-gate'] !== 'confirmed'`.
   This means both the unanswered state and the `'denied'` state keep the site blocked.
 - **Overlay style**: Opaque, full-screen layer that completely hides site content behind it
   (not a dimmed/blurred backdrop). "Blocks access entirely" — nothing readable leaks through.
@@ -38,20 +38,20 @@ Durable decisions that apply across all phases:
 
 ## Phase 1: Core age gate + session persistence
 
-**Scope**: A working, always-mounted overlay that gates the whole site based on `sessionStorage`.
+**Scope**: A working, always-mounted overlay that gates the whole site based on `localStorage`.
 
 ### What to build
 
 A standalone overlay component mounted in `App.vue`. On app load it reads the `age-gate`
-sessionStorage key:
+localStorage key:
 
 - **Not confirmed** (key absent or `'denied'`) → an opaque full-screen overlay covers the
   entire site, blocking view and interaction with everything behind it.
 - **Unanswered** → show the question «Щоб увійти, вам має бути щонайменше 21 рік» with two
   actions, «Так» and «Ні».
-  - «Так» → write `'confirmed'` to sessionStorage and remove the overlay; the site becomes
+  - «Так» → write `'confirmed'` to localStorage and remove the overlay; the site becomes
     fully visible and interactive.
-  - «Ні» → write `'denied'` to sessionStorage and replace the question with the denial
+  - «Ні» → write `'denied'` to localStorage and replace the question with the denial
     message «Доступ заборонено. Цей сайт призначений для осіб віком від 21 року.» and no buttons.
 - **Confirmed** → overlay never renders; site is fully accessible.
 - A page refresh while the key is `'denied'` (or absent) re-shows the question.
@@ -64,7 +64,7 @@ than answering «Так».
 
 - [ ] On first load in a fresh tab, the opaque gate covers the entire site with the question and two buttons.
 - [ ] Content behind the overlay is neither visible nor interactable while the gate is shown.
-- [ ] Clicking «Так» stores `age-gate=confirmed` in sessionStorage and reveals the site.
+- [ ] Clicking «Так» stores `age-gate=confirmed` in localStorage and reveals the site.
 - [ ] Reloading the tab after «Так» does NOT re-show the gate (stays confirmed within the session).
 - [ ] Clicking «Ні» stores `age-gate=denied` and swaps to the denial message with no buttons.
 - [ ] After «Ні», the site remains blocked; refreshing the page re-shows the original question.

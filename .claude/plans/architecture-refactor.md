@@ -98,9 +98,9 @@ Each view is audited for: (a) architectural layer violations, (b) code that belo
 
 ### What was built
 
-- `POST_LOGIN_REDIRECT_KEY` moved from `invites.service.ts` to `src/services/auth.service.ts` (correct domain); `savePostLoginRedirect` / `consumePostLoginRedirect` helpers added to encapsulate sessionStorage access.
+- `POST_LOGIN_REDIRECT_KEY` moved from `invites.service.ts` to `src/services/auth.service.ts` (correct domain); `savePostLoginRedirect` / `consumePostLoginRedirect` helpers added to encapsulate localStorage access.
 - `AuthCallback.vue` cross-view import of `POST_LOGIN_REDIRECT_KEY` replaced with `authService.consumePostLoginRedirect()`.
-- `InvitePage.vue` sessionStorage.setItem call replaced with `authService.savePostLoginRedirect()`.
+- `InvitePage.vue` localStorage.setItem call replaced with `authService.savePostLoginRedirect()`.
 - `invites.service.ts`: `POST_LOGIN_REDIRECT_KEY` export removed; `acceptInvite` body changed from `{}` to `undefined` (correct for `requestBody?: never` endpoint); both `as any` casts removed.
 - `src/views/main/main.route.ts` created; `src/views/login-success/login-success.route.ts` created; `route-names.ts` updated to spread both, removing the last inline route definitions.
 - `matches/` deleted in Phase 2; `login-success/login-success.service.ts` deleted in Phase 2 — no stubs remain.
