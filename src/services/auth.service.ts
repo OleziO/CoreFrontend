@@ -22,12 +22,12 @@ class AuthService {
   }
 
   savePostLoginRedirect (path: string) {
-    sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, path)
+    localStorage.setItem(POST_LOGIN_REDIRECT_KEY, path)
   }
 
   consumePostLoginRedirect (): string | null {
-    const redirect = sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY)
-    sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY)
+    const redirect = localStorage.getItem(POST_LOGIN_REDIRECT_KEY)
+    localStorage.removeItem(POST_LOGIN_REDIRECT_KEY)
     return redirect
   }
 }
