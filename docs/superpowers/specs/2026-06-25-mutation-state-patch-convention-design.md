@@ -85,24 +85,64 @@ action is the single owner of reactive-state mutation.**
 "Re-fetch" below means **the service issues a GET-by-id and returns the full
 entity**, so the store always splices a complete object.
 
-### Tournaments (`src/views/tournaments/`)
+### Tournaments — two reactive targets
+
+Tournament mutations split across **two** state owners and the convention must
+name which one a given flow updates:
+
+1. **The list** — `tournamentsData[]` in `tournaments.store.ts`. Owns the
+   tournaments list page and cards. Updated via
+   `patchTournamentInList` / `removeTournamentFromList`.
+2. **The detail page's local ref** — `Tournament.vue:140` holds its own
+   `tournament = ref<TTournament | null>(null)`; admin sub-tabs and result modals
+   read it through `props.tournament`. Patching the *list* does **not** refresh
+   this ref.
+
+`Tournament.vue:344` `reloadTournament()` already re-fetches by id and updates
+**both** targets (`tournament.value = fresh` **and** `patchTournamentInList(fresh)`).
+Flows that work today do `emit('refresh')` → `reloadTournament()`.
+
+- **List-scoped mutations** (create / update / delete from admin-panel drawers
+  and the list page): store action → `patchTournamentInList` /
+  `removeTournamentFromList`. `CreateTournamentDrawer` / `UpdateTournamentDrawer`
+  already do this; keep.
+- **Detail-scoped mutations** (join / leave / playoff staging / start /
+  disqualify / match-submit / tech-loss, run inside the `Tournament.vue`
+  subtree): the canonical refresh is `reloadTournament()`, which updates both
+  targets. The fix is ensuring every such modal/tab reliably triggers it. The
+  **per-call-site choice** (keep `emit('refresh')` where a parent path exists vs.
+  promote `reloadTournament` into a store action for orphan modals) is made in
+  the implementation plan. No new per-method list-patch is added for these.
+
+The table below lists the list-scoped methods (store-patched directly). Detail-
+scoped methods are handled by the `reloadTournament` wiring described above.
+
+**List-scoped (store-patched directly):**
 
 | Method | Service returns | Store action patches |
 |---|---|---|
 | `createTournament` | full `TTournament` (API returns full) | `patchTournamentInList` + invalidate `['tournaments']` |
 | `updateTournament` | full `TTournament` (API returns full) | `patchTournamentInList` + invalidate `['tournaments']` |
 | `deleteTournament` | the `id` | `removeTournamentFromList(id)` + invalidate |
-| `joinTournament` | re-fetch → full `TTournament` (API returns void) | `patchTournamentInList` |
-| `leaveTournament` | re-fetch → full `TTournament` (API returns void) | `patchTournamentInList` |
-| `addPlayoffTeams` | re-fetch → full `TTournament` | `patchTournamentInList` |
-| `removePlayoffTeams` | re-fetch → full `TTournament` | `patchTournamentInList` |
-| `startPlayoff` | re-fetch → full `TTournament` | `patchTournamentInList` |
-| `submitQualificationMatch` | re-fetch → full `TTournament` | `patchTournamentInList` |
-| `submitPlayoffMatch` | re-fetch → full `TTournament` | `patchTournamentInList` |
 
-New store actions are added to `tournaments.store.ts` for every method above —
-the store currently has the helpers but **no mutating actions**, so components
-call the service directly. That is the largest gap.
+**Detail-scoped (refresh via `reloadTournament`, per-call-site wiring decided in
+the plan):**
+
+| Method | UI refresh mechanism |
+|---|---|
+| `joinTournament` / `leaveTournament` | `reloadTournament()` (already wired via `emit('refresh')` in `TournamentAdminTab` / `Tournament.vue`) |
+| `addPlayoffTeams` / `removePlayoffTeams` | local staging ref in `TournamentAdminTab`; `reloadTournament` on start |
+| `startPlayoff` / `disqualifyPlayoffTeam` | `reloadTournament()` via existing `emit('refresh')` |
+| `submitQualificationMatch` | wire `QualificationAddResultModal` → `reloadTournament()` |
+| `submitPlayoffMatch` | wire `PlayoffSubmitResultModal` → `reloadTournament()` (currently missing) |
+| `adminTechLossQualificationMatch` / `adminTechLossPlayoffMatch` | wire TechLoss modals → `reloadTournament()` (currently missing) |
+
+`tournaments.store.ts` gains list-scoped mutating actions (create/update/delete)
+that wrap the service and patch the list. The detail-scoped fix is wiring the
+result modals to `reloadTournament`; whether a given orphan modal instead calls a
+promoted `tournamentStore.reloadTournament(id)` action is decided per call site in
+the plan. `CreateTournamentDrawer` / `UpdateTournamentDrawer` already patch the
+list and only need to route through the new store action for consistency.
 
 ### Players (`src/views/players/`)
 
@@ -161,9 +201,13 @@ ops that bypass the store today through store actions.
 
 ## Phasing (each phase independently shippable)
 
-- **Phase 1 — Tournaments.** Add store actions for all 10 mutation methods; move
-  the create patch out of the drawer; redirect every component/modal that calls
-  `tournamentsService.*` to the new store actions. Highest-impact, worst module.
+- **Phase 1 — Tournaments.** Add list-scoped store actions (create/update/delete)
+  that wrap the service and patch the list; route the two tournament drawers
+  through them. Wire the detail-scoped result modals (`PlayoffSubmitResultModal`,
+  `TechLossQualificationModal`, `TechLossPlayoffModal`, `QualificationAddResultModal`)
+  to refresh the detail page via `reloadTournament()` — per call site, either an
+  existing `emit('refresh')` path or a promoted `tournamentStore.reloadTournament`
+  action for orphan modals. Highest-impact, worst module.
 - **Phase 2 — Players.** Add update/delete/roles store actions; make
   `setPlayerRolesByAdmin` return a merged `TPlayer`; redirect callers.
 - **Phase 3 — Teams.** Replace store `unshift`/`Object.assign` with
