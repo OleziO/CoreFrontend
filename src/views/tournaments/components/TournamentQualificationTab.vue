@@ -219,6 +219,8 @@ function openTechLossModal () {
         list[i] = { ...m, winner: fullWinner, dotaMatchId: `tech_loss_${matchId}` }
       }
       qualificationPhase.value = { ...q, matches: list }
+      const t = props.tournament
+      if (t) emit('patch-tournament', { ...t, qualification: { ...q, matches: list } })
     }
   })
 }
