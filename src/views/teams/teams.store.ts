@@ -50,7 +50,7 @@ export const useTeamsStore = defineStore('teams', () => {
     loading.value = true
     try {
       const newTeam = await teamsService.createTeam(data)
-      teams.value.unshift(newTeam)
+      patchTeamInList(newTeam)
       ElMessage.success('Команду успішно створено')
       return newTeam
     } catch (e: unknown) {
@@ -69,10 +69,7 @@ export const useTeamsStore = defineStore('teams', () => {
     loading.value = true
     try {
       const updatedTeam = await teamsService.updateTeam(id, data)
-      const currTeam = await findTeam(id)
-      if (currTeam) {
-        Object.assign(currTeam, updatedTeam)
-      }
+      patchTeamInList(updatedTeam)
       return updatedTeam
     } finally {
       loading.value = false
