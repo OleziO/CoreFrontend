@@ -92,9 +92,8 @@ async function handleVerifyTeam () {
   const tid = team.value?.id
   if (!tid || team.value?.isVerified) return
   verifyTeamLoading.value = true
-  const updated = await teamsService.verifyTeam(tid)
+  const updated = await teamsStore.verifyTeam(tid)
   if (updated) {
-    teamsStore.patchTeamInList(updated)
     team.value = updated
   }
   verifyTeamLoading.value = false
@@ -115,9 +114,8 @@ async function handleUnverifyTeam () {
   ).then(() => true).catch(() => false)
   if (!confirmed) return
   verifyTeamLoading.value = true
-  const updated = await teamsService.unverifyTeam(tid)
+  const updated = await teamsStore.unverifyTeam(tid)
   if (updated) {
-    teamsStore.patchTeamInList(updated)
     team.value = updated
   }
   verifyTeamLoading.value = false
@@ -127,10 +125,8 @@ async function handleRemovePlayer (playerId: string, penalty?: ERemovePlayerPena
   const tid = team.value?.id
   if (!tid) return
   removePlayerLoadingId.value = playerId
-  const updated = await teamsService.removePlayerFromTeam(tid, playerId, penalty)
+  const updated = await teamsStore.removePlayerFromTeam(tid, playerId, penalty)
   if (updated) {
-    playersStore.setPlayerTeamIdClientside(playerId, null)
-    teamsStore.patchTeamInList(updated)
     team.value = updated
   }
   removePlayerLoadingId.value = null
@@ -140,9 +136,8 @@ async function handleRemoveCoach () {
   const tid = team.value?.id
   if (!tid) return
   removeCoachLoading.value = true
-  const updated = await teamsService.removeCoach(tid)
+  const updated = await teamsStore.removeCoach(tid)
   if (updated) {
-    teamsStore.patchTeamInList(updated)
     team.value = updated
   }
   removeCoachLoading.value = false
@@ -151,9 +146,8 @@ async function handleRemoveCoach () {
 async function handleTeamUpdate (payload: TUpdateTeamPayload) {
   const tid = team.value?.id
   if (!tid) return
-  const updated = await teamsService.updateTeamProfile(tid, payload)
+  const updated = await teamsStore.updateTeamProfile(tid, payload)
   if (updated) {
-    teamsStore.patchTeamInList(updated)
     team.value = updated
     close('TeamCreateModal')
   }

@@ -40,18 +40,20 @@ class PlayersService {
     }
   }
 
-  async updatePlayer (id: string, data: Partial<TUpdatePlayerDto>) {
-    return await apiClient.patch('/players/{id}',
+  async updatePlayer (id: string, data: Partial<TUpdatePlayerDto>): Promise<TPlayer> {
+    await apiClient.patch('/players/{id}',
       data as Partial<components['schemas']['UpdatePlayerDto']>,
       {
         dynamicKeys: { id }
       })
+    return await apiClient.get('/players/{id}', { dynamicKeys: { id } }) as TPlayer
   }
 
-  async deletePlayer (id: string) {
+  async deletePlayer (id: string): Promise<string> {
     await apiClient.delete('/players/{id}', {
       dynamicKeys: { id }
     })
+    return id
   }
 
   private mergePlayerAfterVerifyMutation (player: TPlayer, apiBody: unknown): TPlayer {
@@ -138,12 +140,14 @@ class PlayersService {
   async setPlayerRolesByAdmin (
     playerId: string,
     roles: TAdminPlayerRoleItem[]
-  ) {
-    return await apiClient.patch('/admin/players/{playerId}/roles',
+  ): Promise<TPlayer> {
+    const result = await apiClient.patch('/admin/players/{playerId}/roles',
       { roles },
       {
         dynamicKeys: { playerId }
-      })
+      }) as { roles: TPlayer['roles']; verifiedAt: string | null }
+    const fresh = await apiClient.get('/players/{id}', { dynamicKeys: { id: playerId } }) as TPlayer
+    return { ...fresh, roles: result.roles, verifiedAt: result.verifiedAt }
   }
 }
 

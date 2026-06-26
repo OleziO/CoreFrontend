@@ -1,4 +1,6 @@
 import { AxiosError } from 'axios'
+import { queryCache } from '@/core/query-cache-client'
+import type { TCreateTournamentDto, TUpdateTournamentDto } from '@/api/types/api.types'
 
 export const useTournamentStore = defineStore('tournaments', () => {
   const tournamentsData = ref<TTournament[]>([])
@@ -15,6 +17,40 @@ export const useTournamentStore = defineStore('tournaments', () => {
 
   function removeTournamentFromList (id: string) {
     tournamentsData.value = tournamentsData.value.filter(t => t.id !== id)
+  }
+
+  function invalidateTournamentsCache () {
+    queryCache.invalidateQueries({ key: ['tournaments'] })
+  }
+
+  async function createTournament (data: TCreateTournamentDto): Promise<TTournament> {
+    const created = await tournamentsService.createTournament(data) as TTournament
+    patchTournamentInList(created)
+    invalidateTournamentsCache()
+    return created
+  }
+
+  async function updateTournament (id: string, data: TUpdateTournamentDto): Promise<TTournament> {
+    const updated = await tournamentsService.updateTournament(id, data) as TTournament
+    patchTournamentInList(updated)
+    invalidateTournamentsCache()
+    return updated
+  }
+
+  async function deleteTournament (id: string): Promise<void> {
+    await tournamentsService.deleteTournament(id)
+    removeTournamentFromList(id)
+    invalidateTournamentsCache()
+  }
+
+  /**
+   * Перечитує турнір з беку та оновлює і список, і поточну сутність деталки.
+   * Повертає TTournament або null (помилку показує сервіс через ElMessage).
+   */
+  async function reloadTournament (id: string): Promise<TTournament | null> {
+    const fresh = await tournamentsService.reloadTournament(id)
+    if (fresh) patchTournamentInList(fresh)
+    return fresh
   }
 
   async function getTournaments (opts?: { force?: boolean }) {
@@ -50,6 +86,10 @@ export const useTournamentStore = defineStore('tournaments', () => {
     getTournaments,
     findTournament,
     patchTournamentInList,
-    removeTournamentFromList
+    removeTournamentFromList,
+    createTournament,
+    updateTournament,
+    deleteTournament,
+    reloadTournament
   }
 })

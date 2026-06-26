@@ -291,10 +291,7 @@ const props = defineProps<{
 }>()
 
 const open = defineModel<boolean>()
-
-// Emitted after a successful create/delete so the parent reloads the day (refreshing the
-// drawer's `:data` and the calendar badge from a single source of truth).
-const emit = defineEmits<{ refresh: [] }>()
+const verificationStore = useVerificationStore()
 
 const activeTab = ref<'requests' | 'slots'>('requests')
 
@@ -397,11 +394,12 @@ function canComplete (r: TVerificationRequest): boolean {
 }
 
 async function handleProcess (r: TVerificationRequest): Promise<void> {
+  const day = props.date
+  if (!day) return
   actioningId.value = r.id
   try {
-    await verificationService.processRequest(r.id)
+    await verificationStore.processRequest(day, r.id)
     ElMessage.success('Заявку взято в обробку')
-    emit('refresh')
   } catch (e) {
     ElMessage.error(getApiErrorMessage(e, 'Не вдалося оновити заявку'))
   } finally {
@@ -410,6 +408,8 @@ async function handleProcess (r: TVerificationRequest): Promise<void> {
 }
 
 async function handleComplete (r: TVerificationRequest): Promise<void> {
+  const day = props.date
+  if (!day) return
   if (!canComplete(r)) return
   const draft = mmrDrafts[r.id]
   const payload: TCompleteRequestPayload = {
@@ -417,9 +417,8 @@ async function handleComplete (r: TVerificationRequest): Promise<void> {
   }
   actioningId.value = r.id
   try {
-    await verificationService.completeRequest(r.id, payload)
+    await verificationStore.completeRequest(day, r.id, payload)
     ElMessage.success('Заявку завершено')
-    emit('refresh')
   } catch (e) {
     ElMessage.error(getApiErrorMessage(e, 'Не вдалося завершити заявку'))
   } finally {
@@ -437,11 +436,12 @@ async function handleCancel (r: TVerificationRequest): Promise<void> {
   } catch {
     return // user dismissed the confirm
   }
+  const day = props.date
+  if (!day) return
   actioningId.value = r.id
   try {
-    await verificationService.cancelRequest(r.id)
+    await verificationStore.cancelRequest(day, r.id)
     ElMessage.success('Заявку скасовано')
-    emit('refresh')
   } catch (e) {
     ElMessage.error(getApiErrorMessage(e, 'Не вдалося скасувати заявку'))
   } finally {
@@ -482,10 +482,9 @@ async function handleGenerate (): Promise<void> {
   )
   generating.value = true
   try {
-    const created = await verificationService.createSlots({ starts })
-    ElMessage.success(`Створено слотів: ${created.length}`)
+    const created = await verificationStore.createSlots(date, starts)
+    ElMessage.success(`Створено слотів: ${created}`)
     selectedWindows.value = []
-    emit('refresh')
   } catch (e) {
     ElMessage.error(getApiErrorMessage(e, 'Не вдалося створити слоти'))
   } finally {
@@ -505,11 +504,12 @@ async function handleDeleteSlot (slot: ISlotRow): Promise<void> {
       return // user dismissed the confirm
     }
   }
+  const day = props.date
+  if (!day) return
   deletingId.value = slot.id
   try {
-    await verificationService.deleteSlot(slot.id)
+    await verificationStore.deleteSlot(day, slot.id)
     ElMessage.success(slot.booked ? 'Бронювання скасовано' : 'Слот видалено')
-    emit('refresh')
   } catch (e) {
     ElMessage.error(getApiErrorMessage(e, 'Не вдалося видалити слот'))
   } finally {

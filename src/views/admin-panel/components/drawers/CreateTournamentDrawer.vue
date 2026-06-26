@@ -267,7 +267,6 @@ import { ElMessage } from 'element-plus'
 import type { UploadFile } from 'element-plus'
 import { Edit, Plus } from '@element-plus/icons-vue'
 import { PhCalendar, PhImageSquare, PhSlidersHorizontal, PhTrophy } from '@phosphor-icons/vue'
-import { queryCache } from '@/core/query-cache-client'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { UPLOAD_ERROR, validateImageFileForUpload } from '@/services/image-upload.service'
 import {
@@ -425,8 +424,8 @@ const handleSubmit = async () => {
   loading.value = true
   try {
     const saved = isEditMode.value && props.tournament
-      ? await tournamentsService.updateTournament(props.tournament.id, basePayload as UpdateTournamentDto)
-      : await tournamentsService.createTournament(basePayload as CreateTournamentDto)
+      ? await tournamentStore.updateTournament(props.tournament.id, basePayload as UpdateTournamentDto)
+      : await tournamentStore.createTournament(basePayload as CreateTournamentDto)
     const id = saved.id
 
     try {
@@ -436,17 +435,13 @@ const handleSubmit = async () => {
       const um = up instanceof Error ? up.message : String(up)
       const action = isEditMode.value ? 'оновлено' : 'створено'
       ElMessage.warning(`Турнір ${action}, але зображення не завантажились: ${translateUploadErr(um)}`)
-      tournamentStore.patchTournamentInList(saved)
       showCreateTournamentDrawer.value = false
-      queryCache.invalidateQueries({ key: ['tournaments'] })
       clearData()
       return
     }
 
-    tournamentStore.patchTournamentInList(saved)
     ElMessage.success(isEditMode.value ? 'Турнір успішно оновлено' : 'Турнір успішно створено')
     showCreateTournamentDrawer.value = false
-    queryCache.invalidateQueries({ key: ['tournaments'] })
   } catch (e: unknown) {
     const action = isEditMode.value ? 'оновленні' : 'створенні'
     ElMessage.error(getApiErrorMessage(e, `Помилка при ${action} турніру`))

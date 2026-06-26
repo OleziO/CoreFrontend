@@ -434,8 +434,7 @@ async function deleteTournament () {
   if (!props.tournament?.id) return
   deleteLoading.value = true
   try {
-    await tournamentsService.deleteTournament(props.tournament.id)
-    tournamentStore.removeTournamentFromList(props.tournament.id)
+    await tournamentStore.deleteTournament(props.tournament.id)
     ElMessage.success('Турнір видалено')
     router.push('/tournaments')
   } catch {

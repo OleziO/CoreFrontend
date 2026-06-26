@@ -226,6 +226,7 @@ function openTechLossPlayoff () {
     teams: playoff.value?.teams ?? [],
     onSubmitted: (response: TPlayoff) => {
       playoff.value = response
+      reloadTournament()
     }
   })
 }
@@ -342,10 +343,9 @@ function joinFriendlyHintFromApi (msg: string): string {
 }
 
 async function reloadTournament () {
-  const data = await tournamentsService.reloadTournament(tournamentId)
+  const data = await tournamentStore.reloadTournament(tournamentId)
   if (data) {
     tournament.value = data
-    useTournamentStore().patchTournamentInList(data)
   }
 }
 

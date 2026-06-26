@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 
 import { teamsService, type TCreateTeamPayload, type TUpdateTeamPayload } from '@/views/teams/teams.service'
+import type { TAddTeamPlayerDto } from '@/api/types/api.types'
+import type { ERemovePlayerPenalty } from '@/views/teams/teams.enums'
 
 export const useTeamsStore = defineStore('teams', () => {
   const router = useRouter()
@@ -50,7 +52,7 @@ export const useTeamsStore = defineStore('teams', () => {
     loading.value = true
     try {
       const newTeam = await teamsService.createTeam(data)
-      teams.value.unshift(newTeam)
+      patchTeamInList(newTeam)
       ElMessage.success('Команду успішно створено')
       return newTeam
     } catch (e: unknown) {
@@ -69,14 +71,17 @@ export const useTeamsStore = defineStore('teams', () => {
     loading.value = true
     try {
       const updatedTeam = await teamsService.updateTeam(id, data)
-      const currTeam = await findTeam(id)
-      if (currTeam) {
-        Object.assign(currTeam, updatedTeam)
-      }
+      patchTeamInList(updatedTeam)
       return updatedTeam
     } finally {
       loading.value = false
     }
+  }
+
+  async function updateTeamProfile (id: string, data: TUpdateTeamPayload): Promise<TTeam | null> {
+    const updated = await teamsService.updateTeamProfile(id, data)
+    if (updated) patchTeamInList(updated)
+    return updated
   }
 
   // async function getTeam (id: string) {
@@ -87,6 +92,52 @@ export const useTeamsStore = defineStore('teams', () => {
   //     loading.value = false
   //   }
   // }
+
+  async function addPlayerToTeam (teamId: string, body: TAddTeamPlayerDto): Promise<TTeam | null> {
+    const updated = await teamsService.addPlayerToTeam(teamId, body)
+    if (updated) {
+      patchTeamInList(updated)
+      usePlayersStore().setPlayerTeamIdClientside(body.playerId, teamId)
+    }
+    return updated
+  }
+
+  async function removePlayerFromTeam (
+    teamId: string,
+    playerId: string,
+    penalty?: ERemovePlayerPenalty
+  ): Promise<TTeam | null> {
+    const updated = await teamsService.removePlayerFromTeam(teamId, playerId, penalty)
+    if (updated) {
+      patchTeamInList(updated)
+      usePlayersStore().setPlayerTeamIdClientside(playerId, null)
+    }
+    return updated
+  }
+
+  async function removeCoach (teamId: string): Promise<TTeam | null> {
+    const updated = await teamsService.removeCoach(teamId)
+    if (updated) patchTeamInList(updated)
+    return updated
+  }
+
+  async function verifyTeam (teamId: string): Promise<TTeam | null> {
+    const updated = await teamsService.verifyTeam(teamId)
+    if (updated) patchTeamInList(updated)
+    return updated
+  }
+
+  async function unverifyTeam (teamId: string): Promise<TTeam | null> {
+    const updated = await teamsService.unverifyTeam(teamId)
+    if (updated) patchTeamInList(updated)
+    return updated
+  }
+
+  async function transferCaptaincy (teamId: string, newCaptainPlayerId: string): Promise<TTeam> {
+    const updated = await teamsService.transferCaptaincy(teamId, newCaptainPlayerId)
+    patchTeamInList(updated)
+    return updated
+  }
 
   async function deleteTeam (id: string) {
     loading.value = true
@@ -132,6 +183,13 @@ export const useTeamsStore = defineStore('teams', () => {
     patchTeamInList,
     createTeam,
     updateTeam,
-    deleteTeam
+    deleteTeam,
+    addPlayerToTeam,
+    removePlayerFromTeam,
+    removeCoach,
+    verifyTeam,
+    unverifyTeam,
+    transferCaptaincy,
+    updateTeamProfile
   }
 })

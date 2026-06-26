@@ -170,11 +170,9 @@ import { positionOptions } from '@/components/player-tags/player.enums'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { isPlayerVerified } from '@/core/helpers'
 import { useAuthStore } from '@/store/modules/auth'
-import { playersService } from '@/views/players/players.service'
 import type { TTag } from '@/services/tags.types'
 import type {
   TAdminPlayerRoleItem,
-  TAdminPlayerRolesResult,
   TUpdatePlayerDto
 } from '@/api/types/api.types'
 
@@ -442,7 +440,7 @@ async function onDisconnectSteam () {
 
   disconnectingSteam.value = true
   try {
-    const updated = await playersService.updatePlayer(props.player.id, {
+    const updated = await playersStore.updatePlayer(props.player.id, {
       steamId: ''
     })
     playerAfterSteamMutation.value = updated
@@ -469,15 +467,6 @@ function buildRolesPayload (): TAdminPlayerRoleItem[] {
     name: name as TAdminPlayerRoleItem['name'],
     isAdminRole: adminFlagByName.get(name) ?? false
   }))
-}
-
-/** Відповідь ендпоінта ролей — джерело істини: переписуємо roles + verifiedAt. */
-function mergeRolesIntoPlayer (player: TPlayer, result: TAdminPlayerRolesResult): TPlayer {
-  return {
-    ...player,
-    verifiedAt: result.verifiedAt,
-    roles: result.roles as unknown as TPlayer['roles']
-  }
 }
 
 /** Відправляє лише різницю тегів (assign/remove), потім перечитує актуальний список. */
@@ -509,11 +498,10 @@ async function onSubmit () {
 
   saving.value = true
   try {
-    let updated = await playersService.updatePlayer(props.player.id, payload)
+    let updated = await playersStore.updatePlayer(props.player.id, payload)
 
     if (canManageRoles.value && rolesChanged.value) {
-      const result = await playersService.setPlayerRolesByAdmin(props.player.id, buildRolesPayload())
-      updated = mergeRolesIntoPlayer(updated, result)
+      updated = await playersStore.setPlayerRoles(props.player.id, buildRolesPayload())
     }
 
     if (canManageTags.value && tagsChanged.value) {

@@ -40,9 +40,8 @@
     <VerificationDayDrawer
       v-model="drawerOpen"
       :date="drawerDate"
-      :data="drawerDate ? cache[drawerDate] ?? null : null"
-      :loading="!!drawerDate && loadingDates.has(drawerDate)"
-      @refresh="onDrawerRefresh"
+      :data="drawerDate ? verificationStore.cache[drawerDate] ?? null : null"
+      :loading="!!drawerDate && verificationStore.loadingDates.has(drawerDate)"
     />
   </div>
 </template>
@@ -50,10 +49,6 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import uk from 'element-plus/es/locale/lang/uk'
-import { ElMessage } from 'element-plus'
-import { getApiErrorMessage } from '@/core/utils/api-errors'
-import type { IVerificationDayData } from '@/services/verification.types'
-
 // Shape of the el-calendar `date-cell` slot scope (EP types `type` loosely as a string:
 // 'prev-month' | 'current-month' | 'next-month').
 interface ICalendarCellData {
@@ -64,57 +59,17 @@ interface ICalendarCellData {
 }
 
 const elementPlusUk = uk
+const verificationStore = useVerificationStore()
 
 // el-calendar derives the visible month from its model; navigating months updates it too.
 const selectedDate = ref(dayjs().toDate())
-
-// Day data cached by `YYYY-MM-DD`. The list endpoints filter by an inclusive date-only
-// `from`/`to` range, so a whole month is one slots + one requests fetch, bucketed by day.
-const cache = reactive<Record<string, IVerificationDayData>>({})
-const loadingDates = reactive(new Set<string>())
-
-// Fetch the whole month containing `anchor` in one round trip. The backend range is in
-// UTC days while cells are local days, so the request is padded ±1 day and each result
-// is rebucketed by its local start day (out-of-month days drop via the `?.` push).
-// Every refresh (month switch, cell click, drawer mutation) reloads the month so the
-// calendar and drawer stay in sync.
-async function loadMonth (anchor: string | Date, opts?: { silent?: boolean }): Promise<void> {
-  const start = dayjs(anchor).startOf('month')
-  const days = Array.from({ length: start.daysInMonth() }, (_, i) => start.add(i, 'day').format('YYYY-MM-DD'))
-  days.forEach((d) => loadingDates.add(d))
-  try {
-    const range = {
-      from: start.subtract(1, 'day').format('YYYY-MM-DD'),
-      to: start.endOf('month').add(1, 'day').format('YYYY-MM-DD')
-    }
-    const [slots, requests] = await Promise.all([
-      verificationService.fetchSlots(range),
-      verificationService.fetchRequests(range)
-    ])
-    const buckets: Record<string, IVerificationDayData> = {}
-    days.forEach((d) => { buckets[d] = { slots: [], requests: [] } })
-    for (const s of slots) {
-      buckets[dayjs(s.startsAt).format('YYYY-MM-DD')]?.slots.push(s)
-    }
-    for (const r of requests) {
-      // A request without a slot (shown as «слот не призначено») lands on its creation day.
-      buckets[dayjs(r.slot?.startsAt ?? r.createdAt).format('YYYY-MM-DD')]?.requests.push(r)
-    }
-    Object.assign(cache, buckets)
-  } catch (e) {
-    if (!opts?.silent) ElMessage.error(getApiErrorMessage(e, 'Не вдалося завантажити дані верифікації'))
-    throw e
-  } finally {
-    days.forEach((d) => loadingDates.delete(d))
-  }
-}
 
 // Refetch whenever the visible month changes (initial load + month navigation).
 watch(
   () => dayjs(selectedDate.value).format('YYYY-MM'),
   async () => {
     try {
-      await loadMonth(selectedDate.value)
+      await verificationStore.loadMonth(selectedDate.value)
     } catch {
       // already surfaced via toast in loadMonth
     }
@@ -137,7 +92,7 @@ function ukPlural (n: number, one: string, few: string, many: string): string {
 
 // Booked = active bookings (a cancelled request frees its slot, so it is excluded).
 function countsFor (day: string): { free: number; booked: number } | null {
-  const data = cache[day]
+  const data = verificationStore.cache[day]
   if (!data) return null
   const free = data.slots.length
   const booked = data.requests.filter((r) => r.status !== 'cancelled').length
@@ -155,18 +110,7 @@ async function onCellClick (data: ICalendarCellData): Promise<void> {
   drawerOpen.value = true
   // Refresh the month so the drawer shows current data; the toast is shown on failure.
   try {
-    await loadMonth(data.day)
-  } catch {
-    // already surfaced via toast in loadMonth
-  }
-}
-
-// After a mutation in the drawer, reload the month so the drawer rows and the calendar
-// badges all update from the refreshed cache entries.
-async function onDrawerRefresh (): Promise<void> {
-  if (!drawerDate.value) return
-  try {
-    await loadMonth(drawerDate.value)
+    await verificationStore.loadMonth(data.day)
   } catch {
     // already surfaced via toast in loadMonth
   }
