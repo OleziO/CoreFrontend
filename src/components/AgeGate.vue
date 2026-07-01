@@ -57,7 +57,7 @@ const DENIAL_MESSAGE = 'Доступ заборонено. Цей сайт пр�
 // Per-tab persistence: 'confirmed' grants access; anything else keeps the site
 // blocked. Absence of the key = unanswered. 'denied' records the answer but, on a
 // fresh page load, still re-shows the question (only 'confirmed' unlocks the site).
-const status = useSessionStorage<'confirmed' | 'denied' | null>(STORAGE_KEY, null)
+const status = useLocalStorage<'confirmed' | 'denied' | null>(STORAGE_KEY, null)
 
 const confirmed = computed(() => status.value === 'confirmed')
 
