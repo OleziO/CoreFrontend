@@ -242,6 +242,7 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
+import { inferTournamentDivisionFromAvgRating } from '@/components/tournaments-tags/tournament.constants'
 import { tournamentsService } from '@/views/tournaments/tournaments.service'
 import { teamsService } from '@/views/teams/teams.service'
 import { friendlyPlayoffError } from '@/views/tournaments/utils/playoff-errors.utils'
@@ -265,14 +266,13 @@ const selectedTeamId = ref<string>('')
 const allTeams = ref<Array<TTeam | TTeam>>([])
 const teamsLoading = ref(false)
 
+// Дивізіон рахуємо лише за середнім MMR основи (без верхньої межі по гравцю),
+// щоб фільтр збігався з бекендом (tournament-division.util.ts, поріг 6500).
 function computeDivision (mainPlayers: { rating: number }[]): string | null {
+  if (mainPlayers.length === 0) return null
   const ratings = mainPlayers.map((p) => p.rating)
   const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length
-  const max = Math.max(...ratings)
-  if (avg <= 2500 && max <= 3500) return 'DIVISION_I'
-  if (avg <= 4500 && max <= 5500) return 'DIVISION_II'
-  if (avg <= 7000) return 'DIVISION_III'
-  return null
+  return inferTournamentDivisionFromAvgRating(avg)
 }
 
 const eligibleTeams = computed(() => {

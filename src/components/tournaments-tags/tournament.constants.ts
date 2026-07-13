@@ -40,6 +40,16 @@ export const TOURNAMENT_DIVISION_VALUES = [
 
 export type TTournamentDivisionValue = typeof TOURNAMENT_DIVISION_VALUES[number]
 
+/**
+ * Дивізіони, доступні для вибору при створенні/редагуванні турніру.
+ * DIVISION_III — застарілий: не пропонуємо його для нових турнірів,
+ * але лишаємо у TOURNAMENT_DIVISION_VALUES, щоб коректно відображати старі записи.
+ */
+export const TOURNAMENT_DIVISION_CREATE_VALUES = [
+  'DIVISION_I',
+  'DIVISION_II'
+] as const
+
 const TOURNAMENT_DIVISION_VALUE_SET = new Set<string>(TOURNAMENT_DIVISION_VALUES)
 
 export function normalizeTournamentDivision (
@@ -63,14 +73,15 @@ export function normalizeTournamentDivision (
   return TOURNAMENT_DIVISION_VALUE_SET.has(key) ? (key as TTournamentDivisionValue) : null
 }
 
+/** Поріг середнього MMR між дивізіонами: ≤ 6500 → Дивізіон I, інакше → Дивізіон II. */
+export const DIVISION_AVG_MMR_THRESHOLD = 6500
+
 /**
- * Якщо API не повернув `division`, оцінюємо за середнім рейтингом основи
- * (ті самі пороги, що в tournamentDivisionMmrHintMap).
+ * Якщо API не повернув `division`, оцінюємо лише за середнім рейтингом основи
+ * (без верхньої межі по гравцю): ≤ 6500 → Дивізіон I, інакше → Дивізіон II.
  */
 export function inferTournamentDivisionFromAvgRating (avg: number): TTournamentDivisionValue {
-  if (avg <= 3500) return 'DIVISION_I'
-  if (avg <= 5500) return 'DIVISION_II'
-  return 'DIVISION_III'
+  return avg <= DIVISION_AVG_MMR_THRESHOLD ? 'DIVISION_I' : 'DIVISION_II'
 }
 
 /** Дивізіон для відображення: спочатку нормалізоване значення API, інакше — за середнім рейтингом основи. */
@@ -124,9 +135,10 @@ export const tournamentDivisionCardChipClassMap: Record<TTournamentDivisionValue
 }
 
 export const tournamentDivisionMmrHintMap: Record<TTournamentDivisionValue, string> = {
-  DIVISION_I: 'Середній MMR команди: 0–2 500 • Макс. MMR гравця: 3 500',
-  DIVISION_II: 'Середній MMR команди: 2 500–4 500 • Макс. MMR гравця: 5 500',
-  DIVISION_III: 'Середній MMR команди: 4 500–7 000 • Макс. MMR гравця: без обмежень'
+  DIVISION_I: 'Середній MMR команди: 0–6 500',
+  DIVISION_II: 'Середній MMR команди: 6 500+ (без ліміту)',
+  // DIVISION_III — застарілий дивізіон, лишаємо лише для відображення старих турнірів.
+  DIVISION_III: 'Середній MMR команди: без обмежень'
 }
 
 export const PROFILE_CAPTAIN_ROLE_UA = 'Капітан'
