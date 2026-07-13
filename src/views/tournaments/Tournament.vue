@@ -51,6 +51,7 @@
               :entry-fee="entryFee"
               :payment-required="paymentRequired"
               :my-team-payment-status="myTeamPaymentStatus"
+              :my-team-amount-paid="myTeamPaymentSummary?.amountPaid ?? 0"
               :payment-intent-loading="paymentIntentLoading"
               :payment-polling="paymentPolling"
               :payment-reference="paymentIntent?.reference ?? null"

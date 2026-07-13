@@ -101,6 +101,9 @@
             </template>
 
             <template v-else>
+              <p v-if="myTeamPaymentStatus === 'UNDERPAID'" class="text-xs font-semibold text-amber-300">
+                Сплачено {{ formatEntryFeeUah(myTeamAmountPaid) }} з {{ formatEntryFeeUah(entryFee) }}
+              </p>
               <p class="text-xs leading-snug text-gray-400">
                 {{ paymentStatusHint }}
               </p>
@@ -112,7 +115,7 @@
                  !bg-gradient-to-br !from-emerald-500 !to-teal-500 border-none"
                 @click="emit('pay')"
               >
-                Оплатити внесок
+                {{ myTeamPaymentStatus === 'UNDERPAID' ? 'Доплатити внесок' : 'Оплатити внесок' }}
               </el-button>
             </template>
           </div>
@@ -213,6 +216,7 @@ interface IProps {
   entryFee?: number | null
   paymentRequired: boolean
   myTeamPaymentStatus: TTournamentPaymentStatus | null
+  myTeamAmountPaid: number
   paymentIntentLoading: boolean
   paymentPolling: boolean
   paymentReference: string | null
