@@ -48,6 +48,9 @@
               :inactive-tournament-banner="inactiveTournamentBanner"
               :muted-qualifications-hint-for-logged-user="mutedQualificationsHintForLoggedUser"
               :api-base-url="apiBaseUrl"
+              :entry-fee="entryFee"
+              :payment-required="paymentRequired"
+              :my-team-payment-status="myTeamPaymentStatus"
               @join="registerOnTeamTournament"
               @leave="handleLeaveTournament"
             />
@@ -140,6 +143,7 @@ import { getApiErrorMessage } from '@/core/utils/api-errors'
 const tournament = ref<TTournament | null>(null)
 const activeTab = ref('teams')
 const myTeam = shallowRef<TTeam | null>(null)
+const payments = ref<TTournamentPaymentSummary[]>([])
 const joinLoading = ref(false)
 const leaveTournamentLoading = ref(false)
 const joinHiddenQualificationsClosedByApi = ref(false)
@@ -303,6 +307,18 @@ const freeSlots = computed(() => {
   return tournament.value.tournamentSlots - (tournament.value.teams?.length ?? 0) > 0
 })
 
+const entryFee = computed(() => tournament.value?.entryFee ?? 0)
+
+const myTeamPaymentSummary = computed(() =>
+  myTeamId.value
+    ? payments.value.find((p) => p.teamId === myTeamId.value) ?? null
+    : null
+)
+
+const myTeamPaymentStatus = computed(() => myTeamPaymentSummary.value?.status ?? null)
+
+const myTeamPaid = computed(() => myTeamPaymentSummary.value?.status === 'PAID')
+
 const captainJoinContextOk = computed(() =>
   !!(authStore.token &&
     tournament.value?.tournamentStatus === 'QUALIFICATIONS' &&
@@ -311,11 +327,22 @@ const captainJoinContextOk = computed(() =>
     !joinHiddenCaptainByApi.value)
 )
 
+/** Капітану треба сплатити внесок перед приєднанням до платного турніру. */
+const paymentRequired = computed(() =>
+  captainJoinContextOk.value &&
+    !!myTeam.value &&
+    !isMyTeamInThisTournament.value &&
+    freeSlots.value &&
+    entryFee.value > 0 &&
+    !myTeamPaid.value
+)
+
 const showJoinPrimary = computed(() =>
   captainJoinContextOk.value &&
     !!myTeam.value &&
     !isMyTeamInThisTournament.value &&
-    freeSlots.value
+    freeSlots.value &&
+    (entryFee.value <= 0 || myTeamPaid.value)
 )
 
 function joinFriendlyHintFromApi (msg: string): string {
@@ -329,7 +356,9 @@ function joinFriendlyHintFromApi (msg: string): string {
     'Всі основні гравці повинні бути верифіковані': 'Усі основні гравці мають бути верифіковані.',
     'Рейтинг команди виходить за межі дозволених дивізіонів': 'Середній MMR команди не відповідає дивізіону турніру.',
     'Дозволено не більшше 3 запасних гравців': 'У команді занадто багато запасних гравців.',
-    'Усі місця в турнірі зайняті': 'Ліміт учасників турніру вже вичерпано.'
+    'Усі місця в турнірі зайняті': 'Ліміт учасників турніру вже вичерпано.',
+    'Необхідно сплатити вступний внесок за участь у турнірі':
+      'Спершу сплатіть вступний внесок за участь у турнірі.'
   }
 
   const direct = hints[msg.trim()]
@@ -342,11 +371,25 @@ function joinFriendlyHintFromApi (msg: string): string {
   return msg
 }
 
+async function loadPayments () {
+  // Ендпоінт вимагає авторизації; для гостей пропускаємо, щоб уникнути 401 → редіректу на '/'.
+  if (!authStore.token) {
+    payments.value = []
+    return
+  }
+  try {
+    payments.value = await tournamentsService.fetchTournamentPayments(tournamentId)
+  } catch {
+    payments.value = []
+  }
+}
+
 async function reloadTournament () {
   const data = await tournamentStore.reloadTournament(tournamentId)
   if (data) {
     tournament.value = data
   }
+  await loadPayments()
 }
 
 function patchTournament (next: TTournament) {
@@ -388,6 +431,9 @@ async function registerOnTeamTournament () {
       }
       if (result.errorMsg.includes('Команда вже бере участь у турнірі')) {
         await reloadTournament()
+      }
+      if (result.errorMsg.includes('вступний внесок')) {
+        await loadPayments()
       }
     }
   } finally {
@@ -460,6 +506,7 @@ onMounted(async () => {
     }
   }
   await hydrateMyTeam()
+  await loadPayments()
 
   // maybeShowDueloPromo()
   // dueloPromoTimer = setInterval(maybeShowDueloPromo, DUELO_PROMO_INTERVAL_MS)

@@ -56,6 +56,28 @@ class TournamentsService {
     await apiClient.post('/tournaments/{id}/leave', {}, { dynamicKeys: { id: tournamentId } })
   }
 
+  /**
+   * GET /tournaments/:id/payments — статус оплати вступного внеску по кожній команді.
+   * Ендпоінт ще відсутній у згенерованій схемі, тож викликаємо через нетипізований клієнт.
+   */
+  async fetchTournamentPayments (tournamentId: string): Promise<TTournamentPaymentSummary[]> {
+    const rawGet = apiClient.get as unknown as (url: string) => Promise<unknown>
+    return await rawGet(`/tournaments/${tournamentId}/payments`) as TTournamentPaymentSummary[]
+  }
+
+  /** POST /tournaments/:id/payments/:teamId/mark-paid — адмін позначає команду як таку, що сплатила внесок. */
+  async adminMarkTeamPaid (
+    tournamentId: string,
+    teamId: string,
+    note?: string
+  ): Promise<TTournamentPaymentSummary> {
+    const rawPost = apiClient.post as unknown as (url: string, data?: unknown) => Promise<unknown>
+    return await rawPost(
+      `/tournaments/${tournamentId}/payments/${teamId}/mark-paid`,
+      note ? { note } : {}
+    ) as TTournamentPaymentSummary
+  }
+
   async submitQualificationMatch (
     tournamentId: string,
     dotaMatchId: string

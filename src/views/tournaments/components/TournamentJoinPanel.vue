@@ -48,13 +48,37 @@
           </span>
         </div>
       </div>
+
+      <div
+        v-if="entryFee && entryFee > 0"
+        class="col-span-2 bg-black/25 rounded-xl p-8 sm:p-10 border border-white/[0.06]
+         flex flex-col items-center gap-1.5"
+      >
+        <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Вступний внесок</span>
+        <div class="flex items-center gap-2 text-emerald-400 font-bold text-lg">
+          <el-icon><Wallet /></el-icon>
+          <span class="truncate">{{ formatEntryFeeUah(entryFee) }}</span>
+        </div>
+      </div>
     </div>
 
     <div class="flex flex-col gap-3">
       <template v-if="token">
         <template v-if="captainJoinContextOk">
+          <div
+            v-if="paymentRequired"
+            class="flex flex-col gap-6 rounded-xl border border-emerald-400/20 bg-emerald-400/[0.06]
+             px-10 py-10 text-center"
+          >
+            <p class="text-sm font-semibold text-emerald-300">
+              Необхідно сплатити вступний внесок — {{ formatEntryFeeUah(entryFee) }}
+            </p>
+            <p class="text-xs leading-snug text-gray-400">
+              {{ paymentStatusHint }}
+            </p>
+          </div>
           <el-button
-            v-if="showJoinPrimary"
+            v-else-if="showJoinPrimary"
             type="primary"
             size="large"
             :loading="joinLoading"
@@ -130,10 +154,10 @@
 </template>
 
 <script setup lang="ts">
-import { Trophy, Calendar, User } from '@element-plus/icons-vue'
+import { Trophy, Calendar, User, Wallet } from '@element-plus/icons-vue'
 import { PhSteamLogo } from '@phosphor-icons/vue'
 import { formatDate } from '@/core/helpers'
-import { formatTournamentPrizeUah } from '@/core/utils/formatters'
+import { formatTournamentPrizeUah, formatEntryFeeUah } from '@/core/utils/formatters'
 
 interface IProps {
   tournament: TTournament | null
@@ -147,9 +171,19 @@ interface IProps {
   inactiveTournamentBanner: string
   mutedQualificationsHintForLoggedUser: string
   apiBaseUrl: string
+  entryFee?: number | null
+  paymentRequired: boolean
+  myTeamPaymentStatus: TTournamentPaymentStatus | null
 }
 
-defineProps<IProps>()
+const props = defineProps<IProps>()
+
+const paymentStatusHint = computed(() => {
+  if (props.myTeamPaymentStatus === 'UNDERPAID') {
+    return 'Отримано неповну оплату. Доплатіть різницю, щоб приєднатися до турніру.'
+  }
+  return 'Після підтвердження оплати зʼявиться кнопка приєднання до турніру.'
+})
 
 const emit = defineEmits<{
   join: []

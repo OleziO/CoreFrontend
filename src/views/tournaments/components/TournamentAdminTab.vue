@@ -96,6 +96,28 @@
               <span class="text-sm text-white">{{ row.name }}</span>
             </template>
           </el-table-column>
+
+          <el-table-column label="Оплата внеску" width="150">
+            <template #default="{ row }">
+              <span :class="paymentStatusClass(row.id)">{{ paymentStatusLabel(row.id) }}</span>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="Дія" width="210">
+            <template #default="{ row }">
+              <el-button
+                v-if="!isTeamPaid(row.id)"
+                type="success"
+                size="small"
+                plain
+                :loading="markPaidLoadingId === row.id"
+                @click="markPaid(row.id)"
+              >
+                Позначити оплаченим
+              </el-button>
+              <span v-else class="text-xs text-emerald-400">Оплачено</span>
+            </template>
+          </el-table-column>
         </el-table>
       </div>
     </div>
@@ -261,9 +283,65 @@ async function loadTeams () {
 }
 
 watch(activeTab, (tab) => {
-  if (tab === 'participants') loadTeams()
+  if (tab === 'participants') {
+    loadTeams()
+    loadPaymentsData()
+  }
   if (tab === 'playoff') loadPlayoffData()
 }, { immediate: false })
+
+// --- Оплата вступного внеску (адмін) ---
+const payments = ref<TTournamentPaymentSummary[]>([])
+const markPaidLoadingId = ref<string | null>(null)
+
+async function loadPaymentsData () {
+  const id = props.tournament?.id
+  if (!id) return
+  try {
+    payments.value = await tournamentsService.fetchTournamentPayments(id)
+  } catch {
+    payments.value = []
+  }
+}
+
+function paymentStatusOf (teamId: string): TTournamentPaymentStatus | null {
+  return payments.value.find((p) => p.teamId === teamId)?.status ?? null
+}
+
+function isTeamPaid (teamId: string): boolean {
+  return paymentStatusOf(teamId) === 'PAID'
+}
+
+function paymentStatusLabel (teamId: string): string {
+  const status = paymentStatusOf(teamId)
+  if (status === 'PAID') return 'Оплачено'
+  if (status === 'UNDERPAID') return 'Неповна оплата'
+  if (status === 'PENDING') return 'Очікує оплату'
+  return '—'
+}
+
+function paymentStatusClass (teamId: string): string {
+  const status = paymentStatusOf(teamId)
+  if (status === 'PAID') return 'text-sm text-emerald-400'
+  if (status === 'UNDERPAID') return 'text-sm text-amber-400'
+  return 'text-sm text-gray-400'
+}
+
+async function markPaid (teamId: string) {
+  const id = props.tournament?.id
+  if (!id) return
+  markPaidLoadingId.value = teamId
+  try {
+    await tournamentsService.adminMarkTeamPaid(id, teamId)
+    ElMessage.success('Команду позначено як таку, що сплатила внесок')
+    await loadPaymentsData()
+    emit('refresh')
+  } catch {
+    ElMessage.error('Не вдалося позначити оплату')
+  } finally {
+    markPaidLoadingId.value = null
+  }
+}
 
 // --- Плей-оф (адмін) ---
 const playoff = ref<TPlayoff | null>(null)
