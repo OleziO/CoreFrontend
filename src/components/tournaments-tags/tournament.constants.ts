@@ -84,16 +84,23 @@ export function inferTournamentDivisionFromAvgRating (avg: number): TTournamentD
   return avg <= DIVISION_AVG_MMR_THRESHOLD ? 'DIVISION_I' : 'DIVISION_II'
 }
 
-/** Дивізіон для відображення: спочатку нормалізоване значення API, інакше — за середнім рейтингом основи. */
+/**
+ * Дивізіон команди для відображення. 2-дивізіонна модель: команди не мають
+ * Дивізіону III — валідні I/II беремо з API, а застарілий III (або відсутнє
+ * значення) переобчислюємо за середнім рейтингом основи. Без рейтингу застарілий
+ * III показуємо як Професійний (був «без обмежень»).
+ */
 export function resolveTeamDivisionForDisplay (
   rawDivision: string | null | undefined,
   mainAvgRatingRounded: number | null | undefined
 ): TTournamentDivisionValue | null {
   const fromApi = normalizeTournamentDivision(rawDivision)
-  if (fromApi != null) return fromApi
+  if (fromApi != null && fromApi !== 'DIVISION_III') return fromApi
   const avg = mainAvgRatingRounded
-  if (avg == null || Number.isNaN(Number(avg))) return null
-  return inferTournamentDivisionFromAvgRating(Number(avg))
+  if (avg != null && !Number.isNaN(Number(avg))) {
+    return inferTournamentDivisionFromAvgRating(Number(avg))
+  }
+  return fromApi === 'DIVISION_III' ? 'DIVISION_II' : null
 }
 
 /** Підпис дивізіону (ключі як у API турніру / команди). */
