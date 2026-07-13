@@ -2,6 +2,7 @@
 // `npm run api` picks it up from the deployed backend.
 type TTournament = TResponse<'/tournaments', 'get'>[number] & {
   entryFee?: number | null
+  paymentJarUrl?: string | null
   // Populated client-side by hydrating from GET /tournaments/:id/qualification
   qualification?: import('@/api/types/api.types').TQualificationPhase | null
 }
