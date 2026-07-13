@@ -46,11 +46,14 @@
 
           <div
             v-if="teamDivisionForDisplay"
-            class="flex items-center"
+            class="flex items-center gap-10"
           >
+            <span class="shrink-0 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500">
+              Дивізіон
+            </span>
             <DivisionTag
               :division="teamDivisionForDisplay"
-              variant="card"
+              variant="profile"
             />
           </div>
 

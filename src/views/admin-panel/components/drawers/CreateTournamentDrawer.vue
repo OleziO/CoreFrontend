@@ -46,7 +46,7 @@
               <el-form-item label="Дивізіон" required class="drawer-field span-full">
                 <el-select v-model="form.division" placeholder="Оберіть дивізіон" size="large" class="w-full">
                   <el-option
-                    v-for="d in TOURNAMENT_DIVISION_VALUES"
+                    v-for="d in divisionOptions"
                     :key="d"
                     :value="d"
                     :label="tournamentDivisionLabelMap[d]"
@@ -270,10 +270,11 @@ import { PhCalendar, PhImageSquare, PhSlidersHorizontal, PhTrophy } from '@phosp
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { UPLOAD_ERROR, validateImageFileForUpload } from '@/services/image-upload.service'
 import {
-  TOURNAMENT_DIVISION_VALUES,
+  TOURNAMENT_DIVISION_CREATE_VALUES,
   tournamentCreateStatusOptions,
   tournamentDivisionLabelMap,
   tournamentStatusLabelMap,
+  type TTournamentDivisionValue,
   type TTournamentStatusValue
 } from '@/components/tournaments-tags/tournament.constants'
 import { getImageUrl } from '@/core/helpers'
@@ -285,6 +286,15 @@ const props = defineProps<{ tournament?: TTournament | null }>()
 const showCreateTournamentDrawer = defineModel<boolean>()
 const isEditMode = computed(() => !!props.tournament)
 const loading = ref(false)
+
+// Для нових турнірів пропонуємо лише активні дивізіони (I, II). При редагуванні
+// старого турніру з DIVISION_III лишаємо його в списку, щоб значення відображалось коректно.
+const divisionOptions = computed<TTournamentDivisionValue[]>(() => {
+  const base = [...TOURNAMENT_DIVISION_CREATE_VALUES] as TTournamentDivisionValue[]
+  const current = props.tournament?.division as TTournamentDivisionValue | undefined
+  if (current && !base.includes(current)) base.push(current)
+  return base
+})
 const tournamentStore = useTournamentStore()
 
 const elementPlusUk = uk
