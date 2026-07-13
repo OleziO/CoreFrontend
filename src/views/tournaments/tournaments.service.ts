@@ -65,6 +65,21 @@ class TournamentsService {
     return await rawGet(`/tournaments/${tournamentId}/payments`) as TTournamentPaymentSummary[]
   }
 
+  /**
+   * POST /tournaments/:id/payments/intent — створити або отримати наявний намір оплати
+   * для команди поточного капітана (повертає reference + посилання на банку monobank).
+   */
+  async createPaymentIntent (tournamentId: string): Promise<TTournamentPaymentIntent> {
+    const rawPost = apiClient.post as unknown as (url: string, data?: unknown) => Promise<unknown>
+    return await rawPost(`/tournaments/${tournamentId}/payments/intent`, {}) as TTournamentPaymentIntent
+  }
+
+  /** GET /tournaments/:id/payments/me — статус оплати команди поточного капітана (для полінгу). */
+  async fetchMyPayment (tournamentId: string): Promise<TTournamentPaymentIntent | null> {
+    const rawGet = apiClient.get as unknown as (url: string) => Promise<unknown>
+    return await rawGet(`/tournaments/${tournamentId}/payments/me`) as TTournamentPaymentIntent | null
+  }
+
   /** POST /tournaments/:id/payments/:teamId/mark-paid — адмін позначає команду як таку, що сплатила внесок. */
   async adminMarkTeamPaid (
     tournamentId: string,

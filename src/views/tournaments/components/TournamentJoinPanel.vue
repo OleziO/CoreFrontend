@@ -67,15 +67,54 @@
         <template v-if="captainJoinContextOk">
           <div
             v-if="paymentRequired"
-            class="flex flex-col gap-6 rounded-xl border border-emerald-400/20 bg-emerald-400/[0.06]
+            class="flex flex-col gap-8 rounded-xl border border-emerald-400/20 bg-emerald-400/[0.06]
              px-10 py-10 text-center"
           >
             <p class="text-sm font-semibold text-emerald-300">
               Необхідно сплатити вступний внесок — {{ formatEntryFeeUah(entryFee) }}
             </p>
-            <p class="text-xs leading-snug text-gray-400">
-              {{ paymentStatusHint }}
-            </p>
+
+            <template v-if="paymentPolling">
+              <p class="flex items-center justify-center gap-4 text-xs text-gray-300">
+                <el-icon class="animate-spin"><Loading /></el-icon>
+                Очікуємо підтвердження оплати…
+              </p>
+              <p v-if="paymentReference" class="text-xs text-gray-400">
+                Призначення платежу:
+                <span class="font-mono font-semibold text-white">{{ paymentReference }}</span>
+              </p>
+              <div class="flex flex-col gap-4">
+                <el-button size="small" plain @click="emit('recheck')">
+                  Перевірити зараз
+                </el-button>
+                <el-button
+                  v-if="paymentJarUrl"
+                  size="small"
+                  tag="a"
+                  :href="paymentJarUrl"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  Відкрити банку monobank
+                </el-button>
+              </div>
+            </template>
+
+            <template v-else>
+              <p class="text-xs leading-snug text-gray-400">
+                {{ paymentStatusHint }}
+              </p>
+              <el-button
+                type="primary"
+                size="large"
+                :loading="paymentIntentLoading"
+                class="!h-[48px] !w-full !text-base !font-bold !rounded-xl
+                 !bg-gradient-to-br !from-emerald-500 !to-teal-500 border-none"
+                @click="emit('pay')"
+              >
+                Оплатити внесок
+              </el-button>
+            </template>
           </div>
           <el-button
             v-else-if="showJoinPrimary"
@@ -154,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { Trophy, Calendar, User, Wallet } from '@element-plus/icons-vue'
+import { Trophy, Calendar, User, Wallet, Loading } from '@element-plus/icons-vue'
 import { PhSteamLogo } from '@phosphor-icons/vue'
 import { formatDate } from '@/core/helpers'
 import { formatTournamentPrizeUah, formatEntryFeeUah } from '@/core/utils/formatters'
@@ -174,6 +213,10 @@ interface IProps {
   entryFee?: number | null
   paymentRequired: boolean
   myTeamPaymentStatus: TTournamentPaymentStatus | null
+  paymentIntentLoading: boolean
+  paymentPolling: boolean
+  paymentReference: string | null
+  paymentJarUrl: string | null
 }
 
 const props = defineProps<IProps>()
@@ -182,11 +225,13 @@ const paymentStatusHint = computed(() => {
   if (props.myTeamPaymentStatus === 'UNDERPAID') {
     return 'Отримано неповну оплату. Доплатіть різницю, щоб приєднатися до турніру.'
   }
-  return 'Після підтвердження оплати зʼявиться кнопка приєднання до турніру.'
+  return 'Натисніть «Оплатити внесок» — відкриється банка monobank, а сторінка чекатиме підтвердження.'
 })
 
 const emit = defineEmits<{
   join: []
   leave: []
+  pay: []
+  recheck: []
 }>()
 </script>

@@ -16,3 +16,12 @@ type TTournamentPaymentSummary = {
   status: TTournamentPaymentStatus
   amountPaid: number
 }
+
+// Captain-scoped payment intent (POST .../payments/intent, GET .../payments/me).
+type TTournamentPaymentIntent = {
+  reference: string
+  status: TTournamentPaymentStatus
+  amount: number
+  amountPaid: number
+  jarUrl: string | null
+}

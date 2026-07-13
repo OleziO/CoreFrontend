@@ -51,8 +51,14 @@
               :entry-fee="entryFee"
               :payment-required="paymentRequired"
               :my-team-payment-status="myTeamPaymentStatus"
+              :payment-intent-loading="paymentIntentLoading"
+              :payment-polling="paymentPolling"
+              :payment-reference="paymentIntent?.reference ?? null"
+              :payment-jar-url="paymentIntent?.jarUrl ?? null"
               @join="registerOnTeamTournament"
               @leave="handleLeaveTournament"
+              @pay="startPayment"
+              @recheck="recheckPayment"
             />
           </div>
         </div>
@@ -144,6 +150,11 @@ const tournament = ref<TTournament | null>(null)
 const activeTab = ref('teams')
 const myTeam = shallowRef<TTeam | null>(null)
 const payments = ref<TTournamentPaymentSummary[]>([])
+const paymentIntent = ref<TTournamentPaymentIntent | null>(null)
+const paymentIntentLoading = ref(false)
+const paymentPolling = ref(false)
+let paymentPollAttempts = 0
+const MAX_PAYMENT_POLL_ATTEMPTS = 150 // ~10 хв при інтервалі 4с
 const joinLoading = ref(false)
 const leaveTournamentLoading = ref(false)
 const joinHiddenQualificationsClosedByApi = ref(false)
@@ -392,6 +403,77 @@ async function reloadTournament () {
   await loadPayments()
 }
 
+/** Локально оновлюємо статус оплати своєї команди, щоб гейт перерахувався без повного перезавантаження. */
+function upsertMyPayment (intent: TTournamentPaymentIntent) {
+  const tid = myTeamId.value
+  if (!tid) return
+  payments.value = [
+    ...payments.value.filter((p) => p.teamId !== tid),
+    { teamId: tid, status: intent.status, amountPaid: intent.amountPaid }
+  ]
+}
+
+const { pause: pausePaymentPoll, resume: resumePaymentPoll } = useIntervalFn(
+  pollPaymentStatus,
+  4000,
+  { immediate: false }
+)
+
+function stopPaymentPolling () {
+  paymentPolling.value = false
+  pausePaymentPoll()
+}
+
+function startPaymentPolling () {
+  paymentPollAttempts = 0
+  paymentPolling.value = true
+  resumePaymentPoll()
+}
+
+async function pollPaymentStatus () {
+  paymentPollAttempts += 1
+  if (paymentPollAttempts > MAX_PAYMENT_POLL_ATTEMPTS) {
+    stopPaymentPolling()
+    return
+  }
+  const intent = await tournamentsService.fetchMyPayment(tournamentId).catch(() => null)
+  if (!intent) return
+  paymentIntent.value = intent
+  upsertMyPayment(intent)
+  if (intent.status === 'PAID') {
+    stopPaymentPolling()
+    ElMessage.success('Оплату підтверджено — тепер можна приєднатися до турніру')
+    await reloadTournament()
+  } else if (intent.status === 'UNDERPAID') {
+    stopPaymentPolling()
+    ElMessage.warning('Отримано неповну оплату. Доплатіть різницю, щоб приєднатися.')
+  }
+}
+
+async function startPayment () {
+  paymentIntentLoading.value = true
+  try {
+    const intent = await tournamentsService.createPaymentIntent(tournamentId)
+    paymentIntent.value = intent
+    upsertMyPayment(intent)
+    if (intent.jarUrl) {
+      window.open(intent.jarUrl, '_blank', 'noopener')
+    } else {
+      ElMessage.warning('Посилання на банку monobank не налаштоване. Зверніться до організатора.')
+    }
+    startPaymentPolling()
+  } catch (e: unknown) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося створити оплату'))
+  } finally {
+    paymentIntentLoading.value = false
+  }
+}
+
+/** Ручна перевірка статусу оплати (кнопка «Перевірити зараз»). */
+async function recheckPayment () {
+  await pollPaymentStatus()
+}
+
 function patchTournament (next: TTournament) {
   tournament.value = next
 }
@@ -513,6 +595,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  stopPaymentPolling()
   if (dueloPromoTimer != null) {
     clearInterval(dueloPromoTimer)
     dueloPromoTimer = null
