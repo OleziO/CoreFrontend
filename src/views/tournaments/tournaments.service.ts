@@ -77,38 +77,11 @@ class TournamentsService {
     })
   }
 
-  /** GET /tournaments/:id/playoff/teams — поточний (ще не стартований) склад плей-оф. */
-  async getPlayoffTeams (tournamentId: string) {
-    return await apiClient.get('/tournaments/{id}/playoff/teams', {
-      dynamicKeys: { id: tournamentId }
-    })
-  }
-
-  /** POST /tournaments/:id/playoff/teams — додати команди до складу плей-оф (ідемпотентно). */
-  async addPlayoffTeams (tournamentId: string, teamIds: string[]) {
-    return await apiClient.post(
-      '/tournaments/{id}/playoff/teams',
-      { teamIds },
-      { dynamicKeys: { id: tournamentId } }
-    )
-  }
-
-  /** DELETE /tournaments/:id/playoff/teams — прибрати команди зі складу плей-оф (ідемпотентно). */
-  async removePlayoffTeams (tournamentId: string, teamIds: string[]) {
-    return await apiClient.delete('/tournaments/{id}/playoff/teams', {
-      dynamicKeys: { id: tournamentId },
-      data: { teamIds }
-    })
-  }
-
-  /** POST /tournaments/:id/playoff/start — одноразовий запуск плей-оф (409, якщо вже стартовано). */
-  async startPlayoff (tournamentId: string, teamIds: string[]) {
-    return await apiClient.post(
-      '/tournaments/{id}/playoff/start',
-      { teamIds },
-      { dynamicKeys: { id: tournamentId } }
-    )
-  }
+  /**
+   * Плей-оф стартує автоматично планувальником бекенду о `tournamentStartsAt`
+   * (див. TournamentPlayoffScheduler) з усіма допущеними командами, тож ручні
+   * ендпоінти стейджингу/старту (`playoff/teams`, `playoff/start`) фронтенд більше не викликає.
+   */
 
   /** GET /tournaments/:id/playoff/open-matches — відкриті матчі сітки (для адмін-дії «Технічна поразка»). */
   async fetchPlayoffOpenMatches (tournamentId: string) {

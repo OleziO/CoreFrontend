@@ -156,43 +156,28 @@
 
       <template v-else>
         <div class="bg-surface border border-white/10 rounded-xl p-10 md:p-20 flex flex-col gap-12">
-          <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Додати команди до плей-оф</span>
-          <div class="flex gap-10 items-center">
-            <el-select
-              v-model="selectedEligibleIds"
-              multiple
-              filterable
-              placeholder="Оберіть команди (допущені за кваліфікацією)"
-              class="flex-1"
-              :loading="eligibleLoading"
-            >
-              <el-option
-                v-for="t in addableEligibleTeams"
-                :key="t.id"
-                :label="t.name"
-                :value="t.id"
-              />
-            </el-select>
-            <el-button
-              type="primary"
-              :loading="actionLoading"
-              :disabled="!selectedEligibleIds.length"
-              @click="addStaged"
-            >
-              Додати
-            </el-button>
+          <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Автоматичний старт плей-оф</span>
+          <p class="text-sm leading-relaxed text-gray-300">
+            Плей-оф стартує автоматично о
+            <span class="font-semibold text-white">{{ playoffStartLabel }}</span>
+            з усіма командами, допущеними за кваліфікацією. Ручний запуск вимкнено.
+          </p>
+          <div class="flex items-center gap-8">
+            <span class="text-xs text-gray-500">Поточний статус:</span>
+            <TournamentStatusTag :status="tournament?.tournamentStatus" />
           </div>
         </div>
 
         <div class="bg-surface border border-white/10 rounded-xl p-10 md:p-20 flex flex-col gap-12">
           <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">
-            Склад плей-оф (ще не запущено)
+            Команди, допущені до плей-оф ({{ playoffEligibleTeams.length }})
           </span>
           <el-table
-            :data="stagedTeams"
+            v-loading="eligibleLoading"
+            :data="playoffEligibleTeams"
             row-key="id"
             class="rounded-md overflow-auto"
-            empty-text="Команди ще не додані"
+            empty-text="Немає допущених команд"
             border
           >
             <el-table-column label="Назва команди">
@@ -200,39 +185,7 @@
                 <span class="text-sm text-white">{{ row.name }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="Дія" width="140">
-              <template #default="{ row }">
-                <el-button
-                  type="danger"
-                  size="small"
-                  :loading="actionLoading"
-                  plain
-                  @click="removeStaged(row.id)"
-                >
-                  Прибрати
-                </el-button>
-              </template>
-            </el-table-column>
           </el-table>
-
-          <div class="flex items-center gap-10">
-            <el-popconfirm
-              width="320"
-              title="Запустити плей-оф? Дію не можна скасувати."
-              confirm-button-text="Запустити"
-              cancel-button-text="Скасувати"
-              @confirm="startPlayoff"
-            >
-              <template #reference>
-                <el-button type="primary" :loading="actionLoading" :disabled="stagedTeams.length < 2">
-                  Запустити плей-оф
-                </el-button>
-              </template>
-            </el-popconfirm>
-            <span v-if="stagedTeams.length < 2" class="text-gray-500 text-xs">
-              Потрібно щонайменше 2 команди.
-            </span>
-          </div>
         </div>
       </template>
     </div>
@@ -240,6 +193,7 @@
 </template>
 
 <script setup lang="ts">
+import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
 import { inferTournamentDivisionFromAvgRating } from '@/components/tournaments-tags/tournament.constants'
@@ -317,13 +271,11 @@ const playoffLoading = ref(false)
 const actionLoading = ref(false)
 const eligibleLoading = ref(false)
 const playoffEligibleTeams = ref<TTeam[]>([])
-const stagedTeams = ref<TTeam[]>([])
-const selectedEligibleIds = ref<string[]>([])
 
-/** Допущені команди, яких ще немає в складі плей-оф. */
-const addableEligibleTeams = computed(() => {
-  const staged = new Set(stagedTeams.value.map((t) => t.id))
-  return playoffEligibleTeams.value.filter((t) => !staged.has(t.id))
+/** Час автоматичного старту плей-оф (tournamentStartsAt). */
+const playoffStartLabel = computed(() => {
+  const startsAt = props.tournament?.tournamentStartsAt
+  return startsAt ? dayjs(startsAt).format('DD.MM.YYYY HH:mm') : '—'
 })
 
 async function loadPlayoffData () {
@@ -335,66 +287,14 @@ async function loadPlayoffData () {
     playoff.value = started
     if (!started) {
       eligibleLoading.value = true
-      const [staged, eligible] = await Promise.all([
-        tournamentsService.getPlayoffTeams(id),
-        tournamentsService.fetchQualificationTeams(id)
-      ])
-      stagedTeams.value = staged
-      playoffEligibleTeams.value = eligible
+      // Плей-оф стартує планувальник із усіма допущеними командами — показуємо їх лише для перегляду.
+      playoffEligibleTeams.value = await tournamentsService.fetchQualificationTeams(id)
     }
   } catch (e: unknown) {
     ElMessage.error(friendlyPlayoffError(e, 'Не вдалося завантажити дані плей-оф'))
   } finally {
     eligibleLoading.value = false
     playoffLoading.value = false
-  }
-}
-
-async function addStaged () {
-  const id = props.tournament?.id
-  if (!id || !selectedEligibleIds.value.length) return
-  actionLoading.value = true
-  try {
-    stagedTeams.value = await tournamentsService.addPlayoffTeams(id, selectedEligibleIds.value)
-    selectedEligibleIds.value = []
-    ElMessage.success('Команди додано до складу плей-оф')
-  } catch (e: unknown) {
-    ElMessage.error(friendlyPlayoffError(e, 'Не вдалося додати команди'))
-  } finally {
-    actionLoading.value = false
-  }
-}
-
-async function removeStaged (teamId: string) {
-  const id = props.tournament?.id
-  if (!id) return
-  actionLoading.value = true
-  try {
-    stagedTeams.value = await tournamentsService.removePlayoffTeams(id, [teamId])
-  } catch (e: unknown) {
-    ElMessage.error(friendlyPlayoffError(e, 'Не вдалося прибрати команду'))
-  } finally {
-    actionLoading.value = false
-  }
-}
-
-async function startPlayoff () {
-  const id = props.tournament?.id
-  if (!id) return
-  actionLoading.value = true
-  try {
-    playoff.value = await tournamentsService.startPlayoff(
-      id,
-      stagedTeams.value.map((t) => t.id)
-    )
-    ElMessage.success('Плей-оф запущено')
-    emit('refresh')
-  } catch (e: unknown) {
-    ElMessage.error(friendlyPlayoffError(e, 'Не вдалося запустити плей-оф'))
-    // 409 — можливо, плей-оф уже стартовано іншим адміном; перезавантажуємо стан.
-    await loadPlayoffData()
-  } finally {
-    actionLoading.value = false
   }
 }
 
