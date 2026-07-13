@@ -70,8 +70,12 @@ import {
 const props = withDefaults(
   defineProps<{
     division?: string | null
-    /** Великий тег поруч із TournamentStatusTag. */
-    variant?: 'hero' | 'card' | 'tournamentCard'
+    /**
+     * hero — великий тег поруч із TournamentStatusTag;
+     * card — компактний чіп; profile — акцентний бейдж на картці профілю команди;
+     * tournamentCard — чіп у картці турніру.
+     */
+    variant?: 'hero' | 'card' | 'profile' | 'tournamentCard'
     showTooltip?: boolean
     /** На всю ширину батька (наприклад, картка команди). */
     fullWidth?: boolean
@@ -109,6 +113,9 @@ const sizeClass = computed(() => {
   }
   if (props.variant === 'card') {
     return 'relative overflow-hidden rounded-lg px-12 py-6 text-[10px] uppercase tracking-[0.14em]'
+  }
+  if (props.variant === 'profile') {
+    return 'relative overflow-hidden rounded-xl px-16 py-8 text-[15px] uppercase tracking-[0.16em]'
   }
   return 'relative overflow-hidden rounded-lg px-14 py-8 text-[12px] uppercase'
 })

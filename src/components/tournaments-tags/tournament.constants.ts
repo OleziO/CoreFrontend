@@ -98,8 +98,9 @@ export function resolveTeamDivisionForDisplay (
 
 /** Підпис дивізіону (ключі як у API турніру / команди). */
 export const tournamentDivisionLabelMap: Record<TTournamentDivisionValue, string> = {
-  DIVISION_I: 'Дивізіон I',
-  DIVISION_II: 'Дивізіон II',
+  DIVISION_I: 'Аматорський',
+  DIVISION_II: 'Професійний',
+  // DIVISION_III — застарілий, лишаємо підпис лише для старих турнірів.
   DIVISION_III: 'Дивізіон III'
 }
 
