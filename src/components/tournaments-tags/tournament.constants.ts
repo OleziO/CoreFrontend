@@ -40,14 +40,11 @@ export const TOURNAMENT_DIVISION_VALUES = [
 
 export type TTournamentDivisionValue = typeof TOURNAMENT_DIVISION_VALUES[number]
 
-/**
- * Дивізіони, доступні для вибору при створенні/редагуванні турніру.
- * DIVISION_III — застарілий: не пропонуємо його для нових турнірів,
- * але лишаємо у TOURNAMENT_DIVISION_VALUES, щоб коректно відображати старі записи.
- */
+/** Усі три дивізіони доступні для створення/редагування турніру. */
 export const TOURNAMENT_DIVISION_CREATE_VALUES = [
   'DIVISION_I',
-  'DIVISION_II'
+  'DIVISION_II',
+  'DIVISION_III'
 ] as const
 
 const TOURNAMENT_DIVISION_VALUE_SET = new Set<string>(TOURNAMENT_DIVISION_VALUES)
@@ -73,42 +70,113 @@ export function normalizeTournamentDivision (
   return TOURNAMENT_DIVISION_VALUE_SET.has(key) ? (key as TTournamentDivisionValue) : null
 }
 
-/** Поріг середнього MMR між дивізіонами: ≤ 6500 → Дивізіон I, інакше → Дивізіон II. */
-export const DIVISION_AVG_MMR_THRESHOLD = 6500
-
-/**
- * Якщо API не повернув `division`, оцінюємо лише за середнім рейтингом основи
- * (без верхньої межі по гравцю): ≤ 6500 → Дивізіон I, інакше → Дивізіон II.
- */
-export function inferTournamentDivisionFromAvgRating (avg: number): TTournamentDivisionValue {
-  return avg <= DIVISION_AVG_MMR_THRESHOLD ? 'DIVISION_I' : 'DIVISION_II'
+export interface IDivisionRule {
+  label: string
+  /** Нижня межа середнього рейтингу, включно. */
+  minAvg: number
+  /** Верхня межа середнього рейтингу, включно; null — без обмежень. */
+  maxAvg: number | null
+  /** Ліміт по окремому гравцю, включно; null — без ліміту. */
+  maxPlayerRating: number | null
 }
 
 /**
- * Дивізіон команди для відображення. 2-дивізіонна модель: команди не мають
- * Дивізіону III — валідні I/II беремо з API, а застарілий III (або відсутнє
- * значення) переобчислюємо за середнім рейтингом основи. Без рейтингу застарілий
- * III показуємо як Професійний (був «без обмежень»).
+ * Дзеркало бекенду: src/tournaments/tournament-division.util.ts (DIVISION_RULES).
+ * Межі включні з обох боків, тому АВГ рівно 7000 підходить і під DIVISION_II,
+ * і під DIVISION_III — це нормально, бо команда може грати вгору, а на картці
+ * показуємо найнижчий збіг.
+ *
+ * Увага: «Аматорський» тепер НАЙВИЩИЙ дивізіон (раніше був найнижчим).
  */
+export const DIVISION_RULES: Record<TTournamentDivisionValue, IDivisionRule> = {
+  DIVISION_I: { label: 'Початковий', minAvg: 0, maxAvg: 3500, maxPlayerRating: 5500 },
+  DIVISION_II: { label: 'Любительський', minAvg: 0, maxAvg: 7000, maxPlayerRating: null },
+  DIVISION_III: { label: 'Аматорський', minAvg: 7000, maxAvg: null, maxPlayerRating: null }
+}
+
+/** За зростанням сили. Порядок важливий: resolveTeamDivision бере перший збіг. */
+const DIVISIONS_BY_STRENGTH: readonly TTournamentDivisionValue[] = [
+  'DIVISION_I',
+  'DIVISION_II',
+  'DIVISION_III'
+]
+
+type TRatedPlayer = { rating?: number | null }
+
+/**
+ * Точний середній рейтинг основи, БЕЗ округлення — дзеркалить бекенд
+ * (computeTeamAvgRating у tournament-division.util.ts).
+ *
+ * Округлювати тут не можна: допуск рахується за точним значенням. `rating` у
+ * БД — `real`, тому дробовий АВГ звичайна річ, і склад з АВГ 3500.4 бекенд у
+ * Початковий НЕ пустить, а округлений до 3500 — пустив би. Тоді фронт показав
+ * би кнопку «Приєднатися», а запит впав би з помилкою.
+ *
+ * Для показу є computeTeamAvgRatingRounded.
+ */
+export function computeTeamAvgRating (
+  players: TRatedPlayer[] | null | undefined
+): number | null {
+  const list = players ?? []
+  if (!list.length) return null
+  return list.reduce((acc, p) => acc + (Number(p.rating) || 0), 0) / list.length
+}
+
+/** Середній рейтинг для показу — округлений, щоб збігатися з `avgRating` з API. */
+export function computeTeamAvgRatingRounded (
+  players: TRatedPlayer[] | null | undefined
+): number | null {
+  const avg = computeTeamAvgRating(players)
+  return avg == null ? null : Math.round(avg)
+}
+
+/**
+ * Чи може склад зайти в турнір цього дивізіону. Саме це — не власний дивізіон
+ * команди — вирішує допуск, і саме це дозволяє грати вгору.
+ */
+export function isTeamEligibleForDivision (
+  players: TRatedPlayer[] | null | undefined,
+  division: TTournamentDivisionValue
+): boolean {
+  const list = players ?? []
+  const avg = computeTeamAvgRating(list)
+  if (avg == null) return false
+
+  const rule = DIVISION_RULES[division]
+  if (avg < rule.minAvg) return false
+  if (rule.maxAvg != null && avg > rule.maxAvg) return false
+
+  // Локальна змінна, щоб TypeScript звузив тип усередині колбека.
+  const cap = rule.maxPlayerRating
+  if (cap != null && list.some((p) => (Number(p.rating) || 0) > cap)) return false
+
+  return true
+}
+
+/** Найнижчий дивізіон, якому склад відповідає. Лише для відображення. */
+export function resolveTeamDivision (
+  players: TRatedPlayer[] | null | undefined
+): TTournamentDivisionValue | null {
+  const list = players ?? []
+  if (!list.length) return null
+  return DIVISIONS_BY_STRENGTH.find((d) => isTeamEligibleForDivision(list, d)) ?? null
+}
+
+/** Дивізіон для відображення: значення з API, інакше — рахуємо зі складу основи. */
 export function resolveTeamDivisionForDisplay (
   rawDivision: string | null | undefined,
-  mainAvgRatingRounded: number | null | undefined
+  mainPlayers: TRatedPlayer[] | null | undefined
 ): TTournamentDivisionValue | null {
   const fromApi = normalizeTournamentDivision(rawDivision)
-  if (fromApi != null && fromApi !== 'DIVISION_III') return fromApi
-  const avg = mainAvgRatingRounded
-  if (avg != null && !Number.isNaN(Number(avg))) {
-    return inferTournamentDivisionFromAvgRating(Number(avg))
-  }
-  return fromApi === 'DIVISION_III' ? 'DIVISION_II' : null
+  if (fromApi != null) return fromApi
+  return resolveTeamDivision(mainPlayers)
 }
 
-/** Підпис дивізіону (ключі як у API турніру / команди). */
+/** Підпис дивізіону (ключі як у API турніру / команди). Джерело — DIVISION_RULES. */
 export const tournamentDivisionLabelMap: Record<TTournamentDivisionValue, string> = {
-  DIVISION_I: 'Аматорський',
-  DIVISION_II: 'Професійний',
-  // DIVISION_III — застарілий, лишаємо підпис лише для старих турнірів.
-  DIVISION_III: 'Дивізіон III'
+  DIVISION_I: DIVISION_RULES.DIVISION_I.label,
+  DIVISION_II: DIVISION_RULES.DIVISION_II.label,
+  DIVISION_III: DIVISION_RULES.DIVISION_III.label
 }
 
 /** Стилі тега дивізіону — рамка, градієнт на темному фоні картки / hero. */
@@ -143,10 +211,9 @@ export const tournamentDivisionCardChipClassMap: Record<TTournamentDivisionValue
 }
 
 export const tournamentDivisionMmrHintMap: Record<TTournamentDivisionValue, string> = {
-  DIVISION_I: 'Середній MMR команди: 0–6 500',
-  DIVISION_II: 'Середній MMR команди: 6 500+ (без ліміту)',
-  // DIVISION_III — застарілий дивізіон, лишаємо лише для відображення старих турнірів.
-  DIVISION_III: 'Середній MMR команди: без обмежень'
+  DIVISION_I: 'Середній MMR команди: 0–3 500, максимум 5 500 на гравця',
+  DIVISION_II: 'Середній MMR команди: 0–7 000, без ліміту на гравця',
+  DIVISION_III: 'Середній MMR команди: 7 000+, без ліміту на гравця'
 }
 
 export const PROFILE_CAPTAIN_ROLE_UA = 'Капітан'

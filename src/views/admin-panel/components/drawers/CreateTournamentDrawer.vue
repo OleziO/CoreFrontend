@@ -317,14 +317,10 @@ const showCreateTournamentDrawer = defineModel<boolean>()
 const isEditMode = computed(() => !!props.tournament)
 const loading = ref(false)
 
-// Для нових турнірів пропонуємо лише активні дивізіони (I, II). При редагуванні
-// старого турніру з DIVISION_III лишаємо його в списку, щоб значення відображалось коректно.
-const divisionOptions = computed<TTournamentDivisionValue[]>(() => {
-  const base = [...TOURNAMENT_DIVISION_CREATE_VALUES] as TTournamentDivisionValue[]
-  const current = props.tournament?.division as TTournamentDivisionValue | undefined
-  if (current && !base.includes(current)) base.push(current)
-  return base
-})
+// Усі три дивізіони активні, тому окремий фолбек для застарілих значень більше не потрібен.
+const divisionOptions = computed<TTournamentDivisionValue[]>(
+  () => [...TOURNAMENT_DIVISION_CREATE_VALUES]
+)
 const tournamentStore = useTournamentStore()
 
 const elementPlusUk = uk

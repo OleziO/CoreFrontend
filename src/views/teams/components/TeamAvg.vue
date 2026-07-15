@@ -8,13 +8,13 @@
 
 <script setup lang="ts">
 import { PhInfo } from '@phosphor-icons/vue'
+import { computeTeamAvgRatingRounded } from '@/components/tournaments-tags/tournament.constants'
 
 const props = defineProps<{ team: TTeam | undefined | null }>()
 
-const teamAvg = computed(() => {
-  if (!props.team) return null
-  const allPlayers = [...(props.team.mainPlayers || []), ...(props.team.reservedPlayers || [])]
-  if (!allPlayers.length) return 0
-  return Math.round(allPlayers.reduce((acc, curr) => acc + (curr.rating ?? 0), 0) / allPlayers.length)
-})
+// Основа без запасних — так само, як рахує бекенд (`avgRating`) і як показують
+// картка та профіль команди.
+const teamAvg = computed(() =>
+  props.team?.avgRating ?? computeTeamAvgRatingRounded(props.team?.mainPlayers)
+)
 </script>

@@ -234,7 +234,7 @@ import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatEntryFeeUah } from '@/core/utils/formatters'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
-import { inferTournamentDivisionFromAvgRating } from '@/components/tournaments-tags/tournament.constants'
+import { isTeamEligibleForDivision, normalizeTournamentDivision } from '@/components/tournaments-tags/tournament.constants'
 import { tournamentsService } from '@/views/tournaments/tournaments.service'
 import { teamsService } from '@/views/teams/teams.service'
 import { friendlyPlayoffError } from '@/views/tournaments/utils/playoff-errors.utils'
@@ -258,23 +258,17 @@ const selectedTeamId = ref<string>('')
 const allTeams = ref<Array<TTeam | TTeam>>([])
 const teamsLoading = ref(false)
 
-// Дивізіон рахуємо лише за середнім MMR основи (без верхньої межі по гравцю),
-// щоб фільтр збігався з бекендом (tournament-division.util.ts, поріг 6500).
-function computeDivision (mainPlayers: { rating: number }[]): string | null {
-  if (mainPlayers.length === 0) return null
-  const ratings = mainPlayers.map((p) => p.rating)
-  const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length
-  return inferTournamentDivisionFromAvgRating(avg)
-}
-
+// Допуск — за діапазоном дивізіону + лімітом на гравця, дзеркалить бекенд
+// (tournament-division.util.ts, isTeamEligibleForDivision). Команда може грати
+// вгору, тому це НЕ порівняння з власним дивізіоном команди.
 const eligibleTeams = computed(() => {
-  const tournamentDivision = props.tournament?.division ?? null
+  const tournamentDivision = normalizeTournamentDivision(props.tournament?.division)
   return allTeams.value.filter((t) => {
     if (!t.isVerified) return false
     if (!tournamentDivision) return true
     const main = t.mainPlayers ?? []
     if (main.length === 0) return false
-    return computeDivision(main) === tournamentDivision
+    return isTeamEligibleForDivision(main, tournamentDivision)
   })
 })
 const tabs = [
