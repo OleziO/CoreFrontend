@@ -209,16 +209,9 @@ const { copy } = useClipboard({ legacy: true })
 const teamLogoSrc = computed(() => resolvePublicOrApiUrl(props.team?.logoUrl))
 const dotaTeamIdTrimmed = computed(() => props.team?.dotaTeamId?.trim() ?? '')
 
-const mainRosterAvgRatingRounded = computed(() => {
-  const mains = props.team?.mainPlayers ?? []
-  if (!mains.length) return null
-  const sum = mains.reduce((acc, p) => acc + (Number(p.rating) || 0), 0)
-  return Math.round(sum / mains.length)
-})
-
 const teamDivisionForDisplay = computed(() =>
   props.team
-    ? resolveTeamDivisionForDisplay(props.team.division, mainRosterAvgRatingRounded.value)
+    ? resolveTeamDivisionForDisplay(props.team.division, props.team.mainPlayers)
     : null
 )
 

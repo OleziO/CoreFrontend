@@ -164,6 +164,7 @@ import { ElMessage } from 'element-plus'
 import { PhChartBar, PhCopy, PhUsersThree } from '@phosphor-icons/vue'
 import { getDotabuffTeamUrl, resolvePublicOrApiUrl } from '@/core/helpers'
 import {
+  computeTeamAvgRatingRounded,
   resolveTeamDivisionForDisplay,
   type TTournamentDivisionValue
 } from '@/components/tournaments-tags/tournament.constants'
@@ -177,17 +178,15 @@ const props = withDefaults(defineProps<{
   showDivisionTag: false
 })
 
-const mainAvgRating = computed(() => {
-  const mains = props.team.mainPlayers ?? []
-  if (!mains.length) return null
-  const sum = mains.reduce((acc, p) => acc + (Number(p.rating) || 0), 0)
-  return Math.round(sum / mains.length)
-})
+const mainAvgRating = computed(() =>
+  ('avgRating' in props.team ? props.team.avgRating : null) ??
+  computeTeamAvgRatingRounded(props.team.mainPlayers)
+)
 
 const resolvedDivisionKey = computed((): TTournamentDivisionValue | null =>
   resolveTeamDivisionForDisplay(
     'division' in props.team ? props.team.division : undefined,
-    mainAvgRating.value
+    props.team.mainPlayers
   )
 )
 

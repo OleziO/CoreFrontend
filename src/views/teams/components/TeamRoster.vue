@@ -289,6 +289,7 @@
 import { ElMessageBox } from 'element-plus'
 import { PhInfo, PhX } from '@phosphor-icons/vue'
 import { ERemovePlayerPenalty } from '@/views/teams/teams.enums'
+import { computeTeamAvgRatingRounded } from '@/components/tournaments-tags/tournament.constants'
 
 const props = defineProps<{
   team: TTeam | null
@@ -321,12 +322,9 @@ const reserveSlotCounts = computed(() => {
   return Math.max(0, 3 - count)
 })
 
-const mainRosterAvgRatingRounded = computed(() => {
-  const mains = props.team?.mainPlayers ?? []
-  if (!mains.length) return null
-  const sum = mains.reduce((acc, p) => acc + (Number(p.rating) || 0), 0)
-  return Math.round(sum / mains.length)
-})
+const mainRosterAvgRatingRounded = computed(() =>
+  props.team?.avgRating ?? computeTeamAvgRatingRounded(props.team?.mainPlayers)
+)
 
 const mainRosterAvgRatingTooltip = computed(() => {
   const avg = mainRosterAvgRatingRounded.value

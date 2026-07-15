@@ -1199,6 +1199,8 @@ export interface components {
             tournaments: components["schemas"]["TeamTournamentEmbeddedDto"][];
             /** @enum {string|null} */
             division?: "DIVISION_I" | "DIVISION_II" | "DIVISION_III" | null;
+            /** @description Rounded mean rating of mainPlayers (reserves excluded). Null for an empty roster. */
+            avgRating?: number | null;
         };
         SearchTeamsDto: {
             /** @description When true, each team includes `tournaments`: array built from its linked tournament (0 or 1 item). */
