@@ -84,12 +84,13 @@
                 <span class="font-mono font-semibold text-white">{{ paymentReference }}</span>
               </p>
               <div class="flex flex-col gap-4">
-                <el-button size="small" plain @click="emit('recheck')">
+                <el-button type="primary" @click="emit('recheck')">
                   Перевірити зараз
                 </el-button>
+
                 <el-button
                   v-if="paymentJarUrl"
-                  size="small"
+                  type="primary"
                   tag="a"
                   :href="paymentJarUrl"
                   target="_blank"
@@ -104,15 +105,16 @@
               <p v-if="myTeamPaymentStatus === 'UNDERPAID'" class="text-xs font-semibold text-amber-300">
                 Сплачено {{ formatEntryFeeUah(myTeamAmountPaid) }} з {{ formatEntryFeeUah(entryFee) }}
               </p>
+
               <p class="text-xs leading-snug text-gray-400">
                 {{ paymentStatusHint }}
               </p>
+
               <el-button
                 type="primary"
                 size="large"
                 :loading="paymentIntentLoading"
-                class="!h-[48px] !w-full !text-base !font-bold !rounded-xl
-                 !bg-gradient-to-br !from-emerald-500 !to-teal-500 border-none"
+                class="!h-[48px] !w-full !text-base !font-bold !rounded-xl border-none"
                 @click="emit('pay')"
               >
                 {{ myTeamPaymentStatus === 'UNDERPAID' ? 'Доплатити внесок' : 'Оплатити внесок' }}
