@@ -56,6 +56,7 @@
               :payment-polling="paymentPolling"
               :payment-reference="paymentIntent?.reference ?? null"
               :payment-jar-url="paymentIntent?.jarUrl ?? null"
+              :division-block-reason="divisionBlockReason"
               @join="registerOnTeamTournament"
               @leave="handleLeaveTournament"
               @pay="startPayment"
@@ -143,7 +144,11 @@
 <script setup lang="ts">
 import TournamentBannerImage from '@/components/tournaments/TournamentBannerImage.vue'
 import TournamentQualificationTab from '@/views/tournaments/components/TournamentQualificationTab.vue'
-import { PROFILE_CAPTAIN_ROLE_UA } from '@/components/tournaments-tags/tournament.constants'
+import {
+  PROFILE_CAPTAIN_ROLE_UA,
+  divisionRejectionMessage,
+  normalizeTournamentDivision
+} from '@/components/tournaments-tags/tournament.constants'
 import { teamsService } from '@/views/teams/teams.service'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 
@@ -348,6 +353,28 @@ const paymentRequired = computed(() =>
     entryFee.value > 0 &&
     !myTeamPaid.value
 )
+
+/**
+ * Чому склад не допущений до дивізіону турніру, або null — якщо допущений.
+ * Рахуємо ще ДО оплати: бекенд перевіряє дивізіон лише на приєднанні, а внесок
+ * приймає без перевірки, тож без цього гейту команда може заплатити й отримати
+ * відмову. Допуск — за дивізіоном турніру, а не за власним дивізіоном команди
+ * (гра вгору дозволена), як в isTeamEligibleForDivision.
+ */
+const divisionBlockReason = computed<string | null>(() => {
+  const team = myTeam.value
+  if (!team) return null
+
+  const division = normalizeTournamentDivision(tournament.value?.division)
+  if (!division) return null
+
+  const main = team.mainPlayers ?? []
+  // Порожня основа — окрема відмова бекенду, не проблема MMR. Інакше показали б
+  // оманливий «Середній MMR команди (0)».
+  if (!main.length) return 'У складі команди немає основних гравців'
+
+  return divisionRejectionMessage(main, division)
+})
 
 const showJoinPrimary = computed(() =>
   captainJoinContextOk.value &&

@@ -171,6 +171,32 @@ export type TReclassifyResult = {
   reclassified: number
 }
 
+/** Одна банка з `GET /bank/webhook` — `id` для налаштувань, `sendId` з публічного лінка. */
+export type TJarSummary = {
+  id: string
+  sendId: string | null
+  title: string | null
+  balance: number
+  watched: boolean
+}
+
+/**
+ * Стан підписки monobank з `GET /bank/webhook`. Поки `matchesExpected` false,
+ * банк нікуди не пушить — і вступні внески не зараховуються самі.
+ */
+export type TWebhookStatus = {
+  webHookUrl: string
+  matchesExpected: boolean
+  expectedUrl: string
+  permissions: string | null
+  watchedAccountIds: string[]
+  jars: TJarSummary[]
+}
+
+export type TSetWebhookResult = {
+  registeredUrl: string
+}
+
 export type TCreateCustomCategoryPayload = {
   label: string
   iconAssetId?: string | null

@@ -106,7 +106,10 @@
                 Сплачено {{ formatEntryFeeUah(myTeamAmountPaid) }} з {{ formatEntryFeeUah(entryFee) }}
               </p>
 
-              <p class="text-xs leading-snug text-gray-400">
+              <p v-if="divisionBlockReason" class="text-xs font-semibold leading-snug text-amber-300">
+                {{ divisionBlockReason }}. Оплата недоступна, доки склад не відповідає дивізіону турніру.
+              </p>
+              <p v-else class="text-xs leading-snug text-gray-400">
                 {{ paymentStatusHint }}
               </p>
 
@@ -114,6 +117,7 @@
                 type="primary"
                 size="large"
                 :loading="paymentIntentLoading"
+                :disabled="!!divisionBlockReason"
                 class="!h-[48px] !w-full !text-base !font-bold !rounded-xl border-none"
                 @click="emit('pay')"
               >
@@ -121,19 +125,24 @@
               </el-button>
             </template>
           </div>
-          <el-button
-            v-else-if="showJoinPrimary"
-            type="primary"
-            size="large"
-            :loading="joinLoading"
-            class="!h-[52px] !w-full !text-base !font-bold !rounded-xl
-             !bg-gradient-to-br !from-cyan-500 !to-blue-500
-             shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:-translate-y-0.5
-              transition-all border-none"
-            @click="emit('join')"
-          >
-            Приєднатися до турніру
-          </el-button>
+          <div v-else-if="showJoinPrimary" class="flex flex-col gap-3">
+            <el-button
+              type="primary"
+              size="large"
+              :loading="joinLoading"
+              :disabled="!!divisionBlockReason"
+              class="!h-[52px] !w-full !text-base !font-bold !rounded-xl
+               !bg-gradient-to-br !from-cyan-500 !to-blue-500
+               shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:-translate-y-0.5
+                transition-all border-none"
+              @click="emit('join')"
+            >
+              Приєднатися до турніру
+            </el-button>
+            <p v-if="divisionBlockReason" class="text-xs font-semibold leading-snug text-center text-amber-300">
+              {{ divisionBlockReason }}
+            </p>
+          </div>
           <div
             v-else-if="isMyTeamInThisTournament"
             class="flex flex-col gap-10 rounded-xl border border-white/10 bg-black/25 px-10 py-10"
@@ -223,6 +232,8 @@ interface IProps {
   paymentPolling: boolean
   paymentReference: string | null
   paymentJarUrl: string | null
+  /** Причина недопуску складу до дивізіону турніру; null — допуск є. */
+  divisionBlockReason?: string | null
 }
 
 const props = defineProps<IProps>()

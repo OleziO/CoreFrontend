@@ -153,6 +153,37 @@ export function isTeamEligibleForDivision (
   return true
 }
 
+/**
+ * Причина, чому склад не проходить у дивізіон, або null — якщо проходить.
+ * Дзеркалить бекенд: qualification.service.ts (divisionRejectionMessage).
+ *
+ * Порядок перевірок важливий: спершу ліміт на гравця, потім АВГ. Це різні
+ * проблеми з різними рішеннями, і бекенд теж повідомляє про ліміт першим.
+ */
+export function divisionRejectionMessage (
+  players: TRatedPlayer[] | null | undefined,
+  division: TTournamentDivisionValue
+): string | null {
+  const list = players ?? []
+  if (isTeamEligibleForDivision(list, division)) return null
+
+  const rule = DIVISION_RULES[division]
+
+  // Локальна змінна, щоб TypeScript звузив тип усередині колбека.
+  const cap = rule.maxPlayerRating
+  if (cap != null) {
+    const overCap = list.map((p) => Number(p.rating) || 0).filter((rating) => rating > cap)
+    if (overCap.length) {
+      const highest = Math.round(Math.max(...overCap))
+      return `Гравець з MMR ${highest} перевищує ліміт ${cap} для дивізіону «${rule.label}»`
+    }
+  }
+
+  const avg = computeTeamAvgRating(list)
+  const avgRounded = avg == null ? 0 : Math.round(avg)
+  return `Середній MMR команди (${avgRounded}) не підходить для дивізіону «${rule.label}»`
+}
+
 /** Найнижчий дивізіон, якому склад відповідає. Лише для відображення. */
 export function resolveTeamDivision (
   players: TRatedPlayer[] | null | undefined

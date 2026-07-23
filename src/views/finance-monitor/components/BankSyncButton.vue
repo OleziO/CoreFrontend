@@ -38,6 +38,38 @@
 
     <div class="mt-8 pt-12 border-t border-white/10">
       <p class="text-xs text-gray-500 mb-8">
+        Автозарахування — monobank сам надсилає нові транзакції, і вступні внески
+        зараховуються без ручної синхронізації.
+      </p>
+
+      <p v-if="webhookLoading" class="text-xs text-gray-500">
+        Перевіряємо підписку…
+      </p>
+      <template v-else-if="webhookStatus">
+        <p
+          class="text-xs mb-8"
+          :class="webhookStatus.matchesExpected ? 'text-green-400' : 'text-amber-400'"
+        >
+          {{ webhookStatus.matchesExpected
+            ? 'Підписку активовано — внески зараховуються автоматично.'
+            : 'Підписку не активовано: внески зараховуються лише після ручної синхронізації.' }}
+        </p>
+        <el-button
+          v-if="!webhookStatus.matchesExpected"
+          type="primary"
+          :loading="registering"
+          @click="handleRegisterWebhook"
+        >
+          Підключити автозарахування
+        </el-button>
+      </template>
+      <p v-else-if="webhookError" class="text-xs text-red-400">
+        {{ webhookError }}
+      </p>
+    </div>
+
+    <div class="mt-8 pt-12 border-t border-white/10">
+      <p class="text-xs text-gray-500 mb-8">
         Перекласифікувати — повторно застосувати правила категорій та спонсорів до вже збережених транзакцій.
       </p>
       <el-button
@@ -68,6 +100,7 @@
 import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
 import { queryCache } from '@/core/query-cache-client'
+import type { TWebhookStatus } from '../finance.types'
 import { financeService } from '../finance.service'
 
 const PICKER_FORMAT = 'YYYY-MM-DD HH:mm:ss'
@@ -95,6 +128,50 @@ const loading = ref(false)
 const reclassifying = ref(false)
 const fromDate = ref<string>('')
 const toDate = ref<string | null>(null)
+
+const webhookStatus = ref<TWebhookStatus | null>(null)
+const webhookLoading = ref(false)
+const webhookError = ref('')
+const registering = ref(false)
+
+/**
+ * Стан підписки тягнемо лише при відкритті діалогу: monobank лімітує client-info
+ * одним запитом на 60 с, тож смикати його на кожен рендер сторінки не можна.
+ */
+watch(dialogVisible, (open) => {
+  if (open && !webhookStatus.value && !webhookLoading.value) loadWebhookStatus()
+})
+
+async function loadWebhookStatus () {
+  webhookLoading.value = true
+  webhookError.value = ''
+  try {
+    webhookStatus.value = await financeService.fetchWebhookStatus()
+  } catch {
+    webhookError.value = 'Не вдалося перевірити підписку monobank'
+  } finally {
+    webhookLoading.value = false
+  }
+}
+
+async function handleRegisterWebhook () {
+  registering.value = true
+  try {
+    await financeService.registerWebhook()
+    // Перечитуємо стан у банку, а не довіряємо локальному припущенню: monobank
+    // активує підписку лише після успішної перевірки адреси.
+    await loadWebhookStatus()
+    if (webhookStatus.value?.matchesExpected) {
+      ElMessage.success('Автозарахування підключено')
+    } else {
+      ElMessage.warning('Monobank ще не активував підписку — спробуйте за хвилину')
+    }
+  } catch {
+    ElMessage.error('Не вдалося підключити автозарахування')
+  } finally {
+    registering.value = false
+  }
+}
 
 async function handleSync () {
   if (!fromDate.value) return

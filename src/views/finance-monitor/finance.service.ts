@@ -12,9 +12,11 @@ import type {
   TOperationGroupView,
   TOperationsQueryParams,
   TReclassifyResult,
+  TSetWebhookResult,
   TUpdateCustomCategoryPayload,
   TUpdateOperationGroupPayload,
-  TUpdateOperationPayload
+  TUpdateOperationPayload,
+  TWebhookStatus
 } from './finance.types'
 
 class FinanceService {
@@ -92,6 +94,19 @@ class FinanceService {
 
   async reclassifyBank (): Promise<TReclassifyResult> {
     return financeClient.post<TReclassifyResult>('/bank/sync/reclassify')
+  }
+
+  /** Поточна підписка monobank + перелік банок. Банк лімітує client-info: 1 запит / 60 с. */
+  async fetchWebhookStatus (): Promise<TWebhookStatus> {
+    return financeClient.get<TWebhookStatus>('/bank/webhook')
+  }
+
+  /**
+   * Реєструє webhook на адресу, яку бекенд бере з самого запиту, тож окремий
+   * конфіг не потрібен. Без тіла — інакше бекенд візьме передану адресу.
+   */
+  async registerWebhook (): Promise<TSetWebhookResult> {
+    return financeClient.post<TSetWebhookResult>('/bank/webhook', {})
   }
 }
 
