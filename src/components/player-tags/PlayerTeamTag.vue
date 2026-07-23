@@ -16,6 +16,7 @@
         >
           <span class="player-team-tag__inner">
             <span class="player-team-tag__status" aria-hidden="true" />
+            
             <span class="player-team-tag__text">{{ badgeText }}</span>
           </span>
         </el-tag>
