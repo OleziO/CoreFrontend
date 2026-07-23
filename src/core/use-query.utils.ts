@@ -26,4 +26,5 @@ export const useQueryWrapper = <T>(
 }
 
 export type TQueryWrapper<T = any> = typeof useQueryWrapper<T>
+  
 export type TQueryWrapperReturnType<T = any> = ReturnType<TQueryWrapper<T>>
