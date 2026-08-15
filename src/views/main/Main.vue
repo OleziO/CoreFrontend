@@ -212,7 +212,7 @@
           <div class="flex justify-center">
             <!-- Лого на білому тлі — картка теж біла, щоб не було видимої «підкладки». -->
             <a
-              href="https://25660255.uatracer.link/"
+              href="https://77953937.uatracer.link/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="BETKING"
