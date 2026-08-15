@@ -210,20 +210,22 @@
         <div class="mb-48 reveal">
           <p class="text-center text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-20">Титульний спонсор</p>
           <div class="flex justify-center">
+            <!-- Лого на білому тлі — картка теж біла, щоб не було видимої «підкладки». -->
             <a
               href="https://25660255.uatracer.link/"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="betking"
-              class="h-fit w-208 max-w-full rounded-xl bg-white/[0.02] border border-[#e8b931]/35
+              aria-label="BETKING"
+              class="h-fit w-240 max-w-full rounded-xl bg-white border border-[#e8b931]/35 p-16
                      overflow-hidden flex items-center justify-center
-                     hover:border-[#e8b931]/60 transition-colors duration-300"
+                     hover:border-[#e8b931]/60 hover:shadow-[0_0_28px_rgba(232,185,49,0.25)]
+                     transition-all duration-300"
             >
               <img
-                src="/sponsors/bet_logo.png"
-                alt="betking"
+                src="/sponsors/BETKING_Logo_Compact_Secondary_Secondary_Red_On_White.png"
+                alt="BETKING"
                 loading="lazy"
-                class="h-full w-full object-contain"
+                class="w-full h-auto object-contain"
               >
             </a>
           </div>
