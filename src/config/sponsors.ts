@@ -45,14 +45,14 @@ const SPONSORS: TSponsor[] = [
     name: 'Sponsor 1',
     tier: 'title',
     bannerUrl: '/sponsors/bet_1.png',
-    websiteUrl: 'https://25660255.uatracer.link/'
+    websiteUrl: 'https://77953937.uatracer.link/'
   },
   {
     id: 'bet-2',
     name: 'Sponsor 2',
     tier: 'title',
     bannerUrl: '/sponsors/bet_2.png',
-    websiteUrl: 'https://25660255.uatracer.link/'
+    websiteUrl: 'https://77953937.uatracer.link/'
   }
 ]
 
