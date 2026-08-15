@@ -39,22 +39,13 @@ const TIER_WEIGHT: Record<TSponsorTier, number> = {
   partner: 1
 }
 
-const SPONSORS: TSponsor[] = [
-  {
-    id: 'bet-1',
-    name: 'Sponsor 1',
-    tier: 'title',
-    bannerUrl: '/sponsors/bet_1.png',
-    websiteUrl: 'https://25660255.uatracer.link/'
-  },
-  {
-    id: 'bet-2',
-    name: 'Sponsor 2',
-    tier: 'title',
-    bannerUrl: '/sponsors/bet_2.png',
-    websiteUrl: 'https://25660255.uatracer.link/'
-  }
-]
+/**
+ * Наразі активних спонсорів немає — усі слоти вільні.
+ *
+ * Поки список порожній, `SponsorShowcase` показує блок-запрошення
+ * «Стати спонсором» замість банерної каруселі.
+ */
+const SPONSORS: TSponsor[] = []
 
 export function getSponsors (): TSponsor[] {
   return SPONSORS
