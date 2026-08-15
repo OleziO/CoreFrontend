@@ -206,26 +206,17 @@
           <h2 class="text-3xl md:text-4xl font-black uppercase text-white">Партнери та спонсори</h2>
         </div>
 
-        <!-- Title sponsor -->
+        <!-- Title sponsor — слот вільний -->
         <div class="mb-48 reveal">
           <p class="text-center text-[10px] uppercase tracking-[0.3em] text-gray-500 mb-20">Титульний спонсор</p>
           <div class="flex justify-center">
-            <a
-              href="https://25660255.uatracer.link/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="betking"
-              class="h-fit w-208 max-w-full rounded-xl bg-white/[0.02] border border-[#e8b931]/35
-                     overflow-hidden flex items-center justify-center
-                     hover:border-[#e8b931]/60 transition-colors duration-300"
+            <div
+              class="h-88 w-240 max-w-full rounded-xl bg-white/[0.02] border border-dashed border-[#e8b931]/25
+                     hover:border-[#e8b931]/45 hover:bg-white/[0.03]
+                     flex items-center justify-center transition-colors duration-300 cursor-default"
             >
-              <img
-                src="/sponsors/bet_logo.png"
-                alt="betking"
-                loading="lazy"
-                class="h-full w-full object-contain"
-              >
-            </a>
+              <span class="text-gray-600 text-[10px] uppercase tracking-[0.2em]">Місце вільне</span>
+            </div>
           </div>
         </div>
 
