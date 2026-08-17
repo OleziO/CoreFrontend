@@ -155,7 +155,7 @@
                 Від кваліфікації до плей-оф: перевірте дати й послідовність етапів перед публікацією.
               </p>
               <div class="drawer-date-grid">
-                <el-form-item label="Початок кваліфікації" required class="drawer-field">
+                <el-form-item label="Початок реєстрації" required class="drawer-field">
                   <el-date-picker
                     v-model="form.registrationStartsAt"
                     type="datetime"
@@ -167,7 +167,7 @@
                     placeholder="Оберіть дату й час"
                   />
                 </el-form-item>
-                <el-form-item label="Кінець кваліфікації" required class="drawer-field">
+                <el-form-item label="Кінець реєстрації" required class="drawer-field">
                   <el-date-picker
                     v-model="form.registrationEndsAt"
                     type="datetime"

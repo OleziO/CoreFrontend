@@ -181,7 +181,7 @@ const dateInfo = computed(() => {
   switch (tournamentStatus) {
     case 'QUALIFICATIONS':
       return [
-        { label: 'Кваліфікація до:', date: fmt(registrationEndsAt) },
+        { label: 'Реєстрація до:', date: fmt(registrationEndsAt) },
         { label: 'Плей-оф з:', date: fmt(tournamentStartsAt) }
       ]
     case 'PLAYOFF':

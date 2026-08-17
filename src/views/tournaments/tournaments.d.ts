@@ -3,6 +3,8 @@
 type TTournament = TResponse<'/tournaments', 'get'>[number] & {
   entryFee?: number | null
   paymentJarUrl?: string | null
+  // ISO-дата ручного закриття реєстрації адміном; null/undefined — не закрито вручну.
+  registrationClosedAt?: string | null
   // Populated client-side by hydrating from GET /tournaments/:id/qualification
   qualification?: import('@/api/types/api.types').TQualificationPhase | null
 }

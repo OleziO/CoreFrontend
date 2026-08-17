@@ -151,6 +151,10 @@ import {
 } from '@/components/tournaments-tags/tournament.constants'
 import { teamsService } from '@/views/teams/teams.service'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
+import {
+  getRegistrationBlockReason,
+  registrationBlockBannerMap
+} from '@/core/utils/tournament-registration'
 
 const tournament = ref<TTournament | null>(null)
 const activeTab = ref('teams')
@@ -336,10 +340,22 @@ const myTeamPaymentStatus = computed(() => myTeamPaymentSummary.value?.status ??
 
 const myTeamPaid = computed(() => myTeamPaymentSummary.value?.status === 'PAID')
 
+/**
+ * Тік раз на 30с, щоб приховати кнопку приєднання, коли дедлайн реєстрації
+ * минає під час перебування на сторінці (без перезавантаження).
+ */
+const now = useNow({ interval: 30_000 })
+
+/** Чому реєстрація зачинена (вікно дат або ручне закриття адміном), або null. */
+const registrationBlockReason = computed(() =>
+  getRegistrationBlockReason(tournament.value, now.value.getTime())
+)
+
 const captainJoinContextOk = computed(() =>
   !!(authStore.token &&
     tournament.value?.tournamentStatus === 'QUALIFICATIONS' &&
     hasCaptainUserRole.value &&
+    !registrationBlockReason.value &&
     !joinHiddenQualificationsClosedByApi.value &&
     !joinHiddenCaptainByApi.value)
 )
@@ -582,6 +598,8 @@ const joinSecondaryHint = computed(() => {
 
 const mutedQualificationsHintForLoggedUser = computed(() => {
   if (!authStore.token || captainJoinContextOk.value) return ''
+  // Реєстрація закрита — банер уже пояснює причину, підказка про капітана лише збиває.
+  if (registrationBlockReason.value) return ''
   const st = tournament.value?.tournamentStatus
   if (st === 'QUALIFICATIONS' && !hasCaptainUserRole.value) {
     return 'Кваліфікаційну заявку подає капітан команди'
@@ -598,6 +616,12 @@ const inactiveTournamentBanner = computed(() => {
   if (joinHiddenCaptainByApi.value) { return 'Приєднання для цього акаунту неможливе' }
 
   if (isTournamentEndedByDate(tournament.value)) return 'Турнір завершено'
+
+  // Вікно реєстрації важливіше за статус: під час кваліфікації статус лишається
+  // QUALIFICATIONS, але реєстрація вже могла закритись за датою або вручну.
+  if (registrationBlockReason.value) {
+    return registrationBlockBannerMap[registrationBlockReason.value]
+  }
 
   switch (tournament.value?.tournamentStatus) {
     case 'PLAYOFF':

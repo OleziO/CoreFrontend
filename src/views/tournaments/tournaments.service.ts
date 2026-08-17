@@ -258,6 +258,36 @@ class TournamentsService {
   }
 
   /**
+   * POST /tournaments/:id/registration/close|open — ручне закриття/відкриття реєстрації адміном.
+   * Ендпоінти ще відсутні у згенерованій схемі, тож викликаємо через нетипізований клієнт.
+   * Повертають актуальний турнір.
+   */
+  async setRegistrationClosed (tournamentId: string, closed: boolean): Promise<TTournament> {
+    const rawPost = apiClient.post as unknown as (url: string, data?: unknown) => Promise<unknown>
+    const action = closed ? 'close' : 'open'
+    return await rawPost(`/tournaments/${tournamentId}/registration/${action}`, {}) as TTournament
+  }
+
+  /**
+   * Закриває/відкриває реєстрацію і показує тост. Повертає оновлений турнір
+   * або null при помилці, щоб вид не оновлював стан марно.
+   */
+  async setRegistrationClosedWithToast (
+    tournamentId: string,
+    closed: boolean
+  ): Promise<TTournament | null> {
+    try {
+      const updated = await this.setRegistrationClosed(tournamentId, closed)
+      ElMessage.success(closed ? 'Реєстрацію закрито' : 'Реєстрацію відкрито')
+      return updated
+    } catch (e: unknown) {
+      const fallback = closed ? 'Не вдалося закрити реєстрацію' : 'Не вдалося відкрити реєстрацію'
+      ElMessage.error(getApiErrorMessage(e, fallback))
+      return null
+    }
+  }
+
+  /**
    * Знімає команду з турніру і показує тост при успіху чи помилці.
    * Повертає true при успіху, false при помилці.
    */

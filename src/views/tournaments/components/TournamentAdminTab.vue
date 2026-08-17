@@ -23,6 +23,47 @@
         </div>
       </div>
 
+      <div
+        class="mt-20 bg-surface border border-white/10 rounded-xl p-10 md:p-20
+          flex flex-col md:flex-row md:items-center justify-between gap-12"
+      >
+        <div class="flex flex-col gap-6">
+          <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Реєстрація</span>
+          <div class="flex items-center gap-8">
+            <span
+              class="inline-flex h-8 w-8 rounded-full"
+              :class="registrationState.dotClass"
+            />
+            <span class="text-sm font-semibold" :class="registrationState.textClass">
+              {{ registrationState.label }}
+            </span>
+          </div>
+          <span class="text-xs text-gray-500">{{ registrationState.hint }}</span>
+        </div>
+
+        <el-popconfirm
+          width="320"
+          placement="bottom-end"
+          :title="isRegistrationManuallyClosed
+            ? 'Відкрити реєстрацію знову?'
+            : 'Закрити реєстрацію зараз? Команди не зможуть приєднатися й оплатити внесок.'"
+          :confirm-button-text="isRegistrationManuallyClosed ? 'Відкрити' : 'Закрити'"
+          cancel-button-text="Скасувати"
+          :confirm-button-type="isRegistrationManuallyClosed ? 'primary' : 'danger'"
+          @confirm="toggleRegistrationClosed"
+        >
+          <template #reference>
+            <el-button
+              :type="isRegistrationManuallyClosed ? 'primary' : 'danger'"
+              :loading="registrationToggleLoading"
+              plain
+            >
+              {{ isRegistrationManuallyClosed ? 'Відкрити реєстрацію' : 'Закрити реєстрацію' }}
+            </el-button>
+          </template>
+        </el-popconfirm>
+      </div>
+
       <div class="mt-20 flex items-center gap-10">
         <el-button type="primary" plain @click="showEditDrawer = true">
           Редагувати турнір
@@ -238,6 +279,7 @@ import { isTeamEligibleForDivision, normalizeTournamentDivision } from '@/compon
 import { tournamentsService } from '@/views/tournaments/tournaments.service'
 import { teamsService } from '@/views/teams/teams.service'
 import { friendlyPlayoffError } from '@/views/tournaments/utils/playoff-errors.utils'
+import { getRegistrationBlockReason } from '@/core/utils/tournament-registration'
 
 const props = defineProps<{
   tournament?: TTournament | null
@@ -280,6 +322,70 @@ const tabs = [
 const activeTab = ref('status')
 
 const teams = computed(() => props.tournament?.teams || [])
+
+const registrationToggleLoading = ref(false)
+const isRegistrationManuallyClosed = computed(() => !!props.tournament?.registrationClosedAt)
+
+/** Тік, щоб стан «Дедлайн минув» оновлювався без перезавантаження сторінки. */
+const registrationNow = useNow({ interval: 30_000 })
+
+const registrationBlockReason = computed(() =>
+  getRegistrationBlockReason(props.tournament, registrationNow.value.getTime())
+)
+
+/** Підпис, колір і пояснення поточного стану реєстрації для адміна. */
+const registrationState = computed(() => {
+  const closedAt = props.tournament?.registrationClosedAt
+  if (closedAt) {
+    return {
+      label: 'Закрита вручну',
+      dotClass: 'bg-red-400 shadow-[0_0_10px_rgba(248,113,113,0.5)]',
+      textClass: 'text-red-300',
+      hint: `Закрито адміністратором ${dayjs(closedAt).format('D MMM YYYY, HH:mm')}. ` +
+        'Планові дати турніру не змінені.'
+    }
+  }
+
+  if (registrationBlockReason.value === 'NOT_OPEN_YET') {
+    return {
+      label: 'Ще не відкрита',
+      dotClass: 'bg-gray-400',
+      textClass: 'text-gray-300',
+      hint: `Відкриється ${dayjs(props.tournament?.registrationStartsAt).format('D MMM YYYY, HH:mm')}.`
+    }
+  }
+
+  if (registrationBlockReason.value === 'DEADLINE_PASSED') {
+    return {
+      label: 'Закрита за дедлайном',
+      dotClass: 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.45)]',
+      textClass: 'text-amber-300',
+      hint: `Дедлайн минув ${dayjs(props.tournament?.registrationEndsAt).format('D MMM YYYY, HH:mm')}. ` +
+        'Щоб подовжити — змініть кінець реєстрації в налаштуваннях турніру.'
+    }
+  }
+
+  return {
+    label: 'Відкрита',
+    dotClass: 'bg-green-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]',
+    textClass: 'text-green-300',
+    hint: `Приймаємо заявки до ${dayjs(props.tournament?.registrationEndsAt).format('D MMM YYYY, HH:mm')}.`
+  }
+})
+
+async function toggleRegistrationClosed () {
+  if (!props.tournament) return
+  registrationToggleLoading.value = true
+  try {
+    const updated = await tournamentsService.setRegistrationClosedWithToast(
+      props.tournament.id,
+      !isRegistrationManuallyClosed.value
+    )
+    if (updated) emit('refresh')
+  } finally {
+    registrationToggleLoading.value = false
+  }
+}
 
 async function loadTeams () {
   teamsLoading.value = true
