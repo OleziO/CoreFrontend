@@ -461,7 +461,7 @@ const features = [
 const socials: Array<{ label: string; url: string; icon: TIconName }> = [
   { label: 'Twitch', url: 'https://www.twitch.tv/core_league', icon: 'twitch' },
   { label: 'YouTube', url: 'https://www.youtube.com/@Core_League', icon: 'youtube' },
-  { label: 'Telegram', url: 'https://t.me/s/core_league', icon: 'telegram' },
+  { label: 'Telegram', url: 'https://t.me/core_league_dota2', icon: 'telegram' },
   { label: 'Instagram', url: 'https://www.instagram.com/core__league/', icon: 'instagram' },
   { label: 'TikTok', url: 'https://www.tiktok.com/@core_league_dota2', icon: 'tiktok' }
 ]

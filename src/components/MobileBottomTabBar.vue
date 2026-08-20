@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="mobile-tabbar lg:hidden"
+    class="mobile-tabbar"
     aria-label="Основна навігація"
   >
     <RouterLink
@@ -68,6 +68,15 @@ function isTabActive (name: string): boolean {
          bg-surface/95 backdrop-blur-xl
          shadow-elevation-4;
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Ховаємо таббар на десктопі саме тут, а не класом `lg:hidden` у шаблоні:
+   scoped-селектор (.mobile-tabbar[data-v-…]) специфічніший за утиліту .lg\:hidden,
+   тож клас програвав, а зафіксований таббар перекривав футер. */
+@screen lg {
+  .mobile-tabbar {
+    display: none;
+  }
 }
 
 .mobile-tab {

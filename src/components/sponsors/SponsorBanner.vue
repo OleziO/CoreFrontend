@@ -1,6 +1,5 @@
 <template>
   <div
-    v-if="sponsorList.length"
     class="sponsor-banner"
     role="group"
     aria-roledescription="Карусель спонсорів"
@@ -12,10 +11,20 @@
   >
     <!-- Великий банер -->
     <div
-      class="relative w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40"
-      :class="dense ? 'h-[88px] sm:h-[110px]' : 'aspect-[1900/420] max-h-[280px]'"
+      class="relative w-full overflow-hidden rounded-2xl border bg-black/40"
+      :class="[
+        dense ? 'h-[88px] sm:h-[110px]' : 'aspect-[1900/420] max-h-[280px]',
+        isEmpty ? 'border-dashed border-white/12' : 'border-white/[0.08]'
+      ]"
     >
-      <Transition name="sponsor-fade">
+      <!-- Порожнє місце: спонсорів немає — показуємо плейсхолдер -->
+      <div v-if="isEmpty" class="absolute inset-0 flex items-center justify-center">
+        <slot name="empty">
+          <span class="text-[10px] uppercase tracking-[0.2em] text-gray-600">Місце вільне</span>
+        </slot>
+      </div>
+
+      <Transition v-else name="sponsor-fade">
         <component
           :is="activeSponsor?.websiteUrl ? 'a' : 'div'"
           :key="activeSponsor?.id"
@@ -72,9 +81,19 @@
       </template>
     </div>
 
+    <!-- Плейсхолдери мініатюр, поки спонсорів немає -->
+    <div
+      v-if="thumbnails && isEmpty"
+      class="mt-10 flex flex-wrap items-center justify-center gap-8"
+    >
+      <div v-for="i in EMPTY_THUMB_COUNT" :key="i" class="thumb thumb--empty">
+        <span class="text-[10px] uppercase tracking-[0.15em] text-gray-600">Вільне</span>
+      </div>
+    </div>
+
     <!-- Мініатюри-банери (повна видимість усіх спонсорів) -->
     <div
-      v-if="thumbnails && sponsorList.length > 1"
+      v-else-if="thumbnails && sponsorList.length > 1"
       class="mt-10 flex flex-wrap items-center justify-center gap-8"
     >
       <button
@@ -138,6 +157,10 @@ const props = withDefaults(defineProps<{
 })
 
 const sponsorList = computed(() => props.sponsors)
+const isEmpty = computed(() => sponsorList.value.length === 0)
+
+/** Скільки вільних місць малювати в стрічці мініатюр, поки спонсорів немає. */
+const EMPTY_THUMB_COUNT = 3
 
 const hovered = ref(false)
 const focused = ref(false)
@@ -208,6 +231,13 @@ function dotWidth (sponsor: TSponsor): number {
 }
 .thumb:hover {
   opacity: 0.9;
+}
+.thumb--empty {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+  opacity: 1;
+  cursor: default;
 }
 .thumb--active {
   opacity: 1;

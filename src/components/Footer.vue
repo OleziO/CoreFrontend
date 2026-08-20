@@ -11,7 +11,7 @@
     "
   >
     <div
-      class="w-full flex justify-center px-20 lg:px-40"
+      class="w-full flex flex-col px-20 lg:px-40"
     >
       <div
         class="flex items-center justify-between w-full"
@@ -36,14 +36,16 @@
         <!-- LOGO -->
         <RouterLink
           :to="{ name: routeNames.rootPage }"
-          class="footer-site-link hidden h-full items-center justify-center py-10 lg:flex"
+          class="footer-site-link hidden items-center justify-center py-10 lg:flex"
         >
-          <el-image
-            class="h-full w-full max-h-30 cursor-pointer"
-            fit="contain"
+          <!-- Явна висота, а не h-full: рядок футера більше не розтягується
+               на всю висоту (під ним лежить рядок з договором), тож відсотки
+               не мали від чого рахуватись і лого «різалось». -->
+          <img
             :src="logo"
             alt="Core League"
-          />
+            class="h-30 w-auto cursor-pointer select-none object-contain"
+          >
         </RouterLink>
 
         <!-- SOCIAL MEDIA -->
@@ -62,6 +64,21 @@
             <Icon :name="social.icon" :size="20" />
           </a>
         </div>
+      </div>
+
+      <!-- ДОГОВІР ПУБЛІЧНОЇ ОФЕРТИ -->
+      <div class="flex w-full justify-center border-t border-white/5 py-6">
+        <a
+          href="/dogovir.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="
+            footer-site-link text-caption text-white/50 no-underline
+            transition-colors hover:text-primary
+          "
+        >
+          Договір публічної оферти
+        </a>
       </div>
     </div>
   </footer>
@@ -84,7 +101,7 @@ const socialLinks: Array<{
   icon: TIconName
 }> = [
   { name: 'youtube', url: 'https://www.youtube.com/@Core_League', icon: 'youtube' },
-  { name: 'telegram', url: 'https://t.me/s/core_league', icon: 'telegram' },
+  { name: 'telegram', url: 'https://t.me/core_league_dota2', icon: 'telegram' },
   { name: 'discord', url: 'https://discord.gg/QeDj9TjmgM', icon: 'discord' },
   { name: 'instagram', url: 'https://www.instagram.com/core__league/', icon: 'instagram' },
   { name: 'tiktok', url: 'https://www.tiktok.com/@core_league_dota2', icon: 'tiktok' },
