@@ -42,7 +42,12 @@ import type { TQualificationMatch as QualificationMatch } from '@/api/types/api.
 const props = defineProps<{
   modelValue: boolean
   tournamentId: string
-  pastQualificationsEnd: boolean
+  /**
+   * Причина, чому подача зараз заблокована, або null. Рядок замість булевого
+   * прапорця, бо вікно кваліфікації закрите з двох боків: етап ще не почався
+   * або вже завершився — бекенд для цих випадків повертає різні повідомлення.
+   */
+  submissionBlockedReason: string | null
 }>()
 
 const emit = defineEmits<{
@@ -71,8 +76,8 @@ function onDialogVisible (v: boolean) {
 }
 
 function validate (): boolean {
-  if (props.pastQualificationsEnd) {
-    ElMessage.warning('Строк подачі результату завершено.')
+  if (props.submissionBlockedReason) {
+    ElMessage.warning(props.submissionBlockedReason)
     return false
   }
   const trimmed = matchIdInput.value.trim()

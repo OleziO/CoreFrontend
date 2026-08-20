@@ -39,22 +39,12 @@ const TIER_WEIGHT: Record<TSponsorTier, number> = {
   partner: 1
 }
 
-const SPONSORS: TSponsor[] = [
-  {
-    id: 'bet-1',
-    name: 'Sponsor 1',
-    tier: 'title',
-    bannerUrl: '/sponsors/bet_1.png',
-    websiteUrl: 'https://77953937.uatracer.link/'
-  },
-  {
-    id: 'bet-2',
-    name: 'Sponsor 2',
-    tier: 'title',
-    bannerUrl: '/sponsors/bet_2.png',
-    websiteUrl: 'https://77953937.uatracer.link/'
-  }
-]
+/**
+ * Наразі порожньо: банери BETKING приховані, карусель показує вільні місця
+ * (див. порожній стан у SponsorBanner). Щоб повернути спонсора — просто додати
+ * запис сюди, компоненти не змінюються.
+ */
+const SPONSORS: TSponsor[] = []
 
 export function getSponsors (): TSponsor[] {
   return SPONSORS

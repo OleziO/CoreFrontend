@@ -5,6 +5,10 @@ type TTournament = TResponse<'/tournaments', 'get'>[number] & {
   paymentJarUrl?: string | null
   // ISO-дата ручного закриття реєстрації адміном; null/undefined — не закрито вручну.
   registrationClosedAt?: string | null
+  // Вікно подачі кваліфікаційних матчів. Власні колонки турніру, більше не
+  // виводяться з дат реєстрації. Опційні, доки `npm run api` не підхопить схему.
+  qualificationStartsAt?: string
+  qualificationEndsAt?: string
   // Populated client-side by hydrating from GET /tournaments/:id/qualification
   qualification?: import('@/api/types/api.types').TQualificationPhase | null
 }

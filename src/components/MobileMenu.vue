@@ -89,6 +89,17 @@
           <PhSignOut :size="20" />
           <span>Вийти з аккаунту</span>
         </button>
+
+        <!-- Футер прихований на мобільних, тож договір доступний звідси -->
+        <a
+          href="/dogovir.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mobile-menu-legal no-underline"
+          @click="close"
+        >
+          Договір публічної оферти
+        </a>
       </nav>
     </div>
   </transition>
@@ -111,7 +122,7 @@ let previouslyFocused: HTMLElement | null = null
 
 const socialLinks: Array<{ name: string; url: string; icon: TIconName }> = [
   { name: 'YouTube', url: 'https://www.youtube.com/@Core_League', icon: 'youtube' },
-  { name: 'Telegram', url: 'https://t.me/s/core_league', icon: 'telegram' },
+  { name: 'Telegram', url: 'https://t.me/core_league_dota2', icon: 'telegram' },
   { name: 'Discord', url: 'https://discord.gg/QeDj9TjmgM', icon: 'discord' },
   { name: 'Instagram', url: 'https://www.instagram.com/core__league/', icon: 'instagram' },
   { name: 'TikTok', url: 'https://www.tiktok.com/@core_league_dota2', icon: 'tiktok' },
@@ -221,6 +232,13 @@ function handleLogout () {
 
 .mobile-menu-link--danger {
   @apply text-error hover:text-error hover:border-error/40;
+}
+
+.mobile-menu-legal {
+  @apply
+    text-center text-caption text-white/45
+    transition-colors duration-200
+    hover:text-primary;
 }
 
 .mobile-menu-socials {

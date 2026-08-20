@@ -152,58 +152,46 @@
             </div>
             <div class="drawer-section__body drawer-section__body--stack">
               <p class="drawer-section__hint">
-                Від кваліфікації до плей-оф: перевірте дати й послідовність етапів перед публікацією.
+                Три етапи турніру. Реєстрація може перетинатися з кваліфікацією, але кваліфікація
+                має завершитися до старту плей-оф.
               </p>
-              <div class="drawer-date-grid">
-                <el-form-item label="Початок реєстрації" required class="drawer-field">
-                  <el-date-picker
-                    v-model="form.registrationStartsAt"
-                    type="datetime"
-                    size="large"
-                    class="drawer-date-picker w-full"
-                    popper-class="core-date-picker-popper"
-                    format="DD.MM.YYYY HH:mm"
-                    value-format="YYYY-MM-DD HH:mm"
-                    placeholder="Оберіть дату й час"
-                  />
-                </el-form-item>
-                <el-form-item label="Кінець реєстрації" required class="drawer-field">
-                  <el-date-picker
-                    v-model="form.registrationEndsAt"
-                    type="datetime"
-                    size="large"
-                    class="drawer-date-picker w-full"
-                    popper-class="core-date-picker-popper"
-                    format="DD.MM.YYYY HH:mm"
-                    value-format="YYYY-MM-DD HH:mm"
-                    placeholder="Оберіть дату й час"
-                  />
-                </el-form-item>
-                <el-form-item label="Початок плей-оф" required class="drawer-field">
-                  <el-date-picker
-                    v-model="form.tournamentStartsAt"
-                    type="datetime"
-                    size="large"
-                    class="drawer-date-picker w-full"
-                    popper-class="core-date-picker-popper"
-                    format="DD.MM.YYYY HH:mm"
-                    value-format="YYYY-MM-DD HH:mm"
-                    placeholder="Оберіть дату й час"
-                  />
-                </el-form-item>
-                <el-form-item label="Кінець турніру" required class="drawer-field">
-                  <el-date-picker
-                    v-model="form.tournamentEndsAt"
-                    type="datetime"
-                    size="large"
-                    class="drawer-date-picker w-full"
-                    popper-class="core-date-picker-popper"
-                    format="DD.MM.YYYY HH:mm"
-                    value-format="YYYY-MM-DD HH:mm"
-                    placeholder="Оберіть дату й час"
-                  />
-                </el-form-item>
+
+              <div
+                v-for="(group, index) in scheduleGroups"
+                :key="group.title"
+                class="drawer-phase"
+              >
+                <div class="drawer-phase__head">
+                  <span class="drawer-phase__index">{{ index + 1 }}</span>
+                  <span class="drawer-phase__title">{{ group.title }}</span>
+                </div>
+                <p class="drawer-phase__hint">{{ group.hint }}</p>
+                <div class="drawer-date-grid">
+                  <el-form-item
+                    v-for="field in group.fields"
+                    :key="field.key"
+                    :label="field.label"
+                    required
+                    class="drawer-field"
+                  >
+                    <el-date-picker
+                      v-model="form[field.key]"
+                      type="datetime"
+                      size="large"
+                      class="drawer-date-picker w-full"
+                      popper-class="core-date-picker-popper"
+                      format="DD.MM.YYYY HH:mm"
+                      value-format="YYYY-MM-DD HH:mm"
+                      placeholder="Оберіть дату й час"
+                    />
+                  </el-form-item>
+                </div>
               </div>
+
+              <p v-if="scheduleError" class="drawer-schedule-error">
+                <PhWarningCircle :size="16" weight="fill" />
+                <span>{{ scheduleError }}</span>
+              </p>
             </div>
           </section>
 
@@ -296,7 +284,7 @@ import uk from 'element-plus/es/locale/lang/uk'
 import { ElMessage } from 'element-plus'
 import type { UploadFile } from 'element-plus'
 import { Edit, Plus } from '@element-plus/icons-vue'
-import { PhCalendar, PhImageSquare, PhSlidersHorizontal, PhTrophy } from '@phosphor-icons/vue'
+import { PhCalendar, PhImageSquare, PhSlidersHorizontal, PhTrophy, PhWarningCircle } from '@phosphor-icons/vue'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { UPLOAD_ERROR, validateImageFileForUpload } from '@/services/image-upload.service'
 import {
@@ -308,6 +296,7 @@ import {
   type TTournamentStatusValue
 } from '@/components/tournaments-tags/tournament.constants'
 import { getImageUrl } from '@/core/helpers'
+import { getScheduleViolation, type TTournamentScheduleForm } from '@/core/utils/tournament-schedule'
 import type { TCreateTournamentDto as CreateTournamentDto, TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
 
 type TUploadKey = 'header' | 'list'
@@ -357,17 +346,55 @@ const form = reactive({
   tournamentStatus: 'QUALIFICATIONS' as CreateTournamentDto['tournamentStatus'],
   registrationStartsAt: '',
   registrationEndsAt: '',
+  qualificationStartsAt: '',
+  qualificationEndsAt: '',
   tournamentStartsAt: '',
   tournamentEndsAt: ''
 })
 
+type TScheduleKey = keyof TTournamentScheduleForm
+
+/**
+ * Три вікна розкладу. Плей-оф лишається під історичними ключами
+ * `tournamentStartsAt`/`tournamentEndsAt` — так їх називає контракт API.
+ */
+const scheduleGroups: { title: string; hint: string; fields: { key: TScheduleKey; label: string }[] }[] = [
+  {
+    title: 'Реєстрація',
+    hint: 'Коли капітани можуть подати команду й сплатити внесок.',
+    fields: [
+      { key: 'registrationStartsAt', label: 'Початок реєстрації' },
+      { key: 'registrationEndsAt', label: 'Кінець реєстрації' }
+    ]
+  },
+  {
+    title: 'Кваліфікація',
+    hint: 'Вікно подачі кваліфікаційних матчів. Може перетинатися з реєстрацією.',
+    fields: [
+      { key: 'qualificationStartsAt', label: 'Початок кваліфікації' },
+      { key: 'qualificationEndsAt', label: 'Кінець кваліфікації' }
+    ]
+  },
+  {
+    title: 'Плей-оф',
+    hint: 'Сітка стартує автоматично о «Початок плей-оф».',
+    fields: [
+      { key: 'tournamentStartsAt', label: 'Початок плей-оф' },
+      { key: 'tournamentEndsAt', label: 'Кінець плей-оф' }
+    ]
+  }
+]
+
+const scheduleKeys: TScheduleKey[] = scheduleGroups.flatMap(g => g.fields.map(f => f.key))
+
+/** Порушення послідовності етапів; дзеркалить перевірку бекенду. */
+const scheduleError = computed(() => getScheduleViolation(form))
+
 const isFormValid = computed(() =>
   form.name.trim() !== '' &&
     form.division !== '' &&
-    form.registrationStartsAt !== '' &&
-    form.registrationEndsAt !== '' &&
-    form.tournamentStartsAt !== '' &&
-    form.tournamentEndsAt !== ''
+    scheduleKeys.every(key => form[key] !== '') &&
+    scheduleError.value === null
 )
 
 function syncDayjsUk () {
@@ -405,10 +432,10 @@ function populateFromTournament (t: TTournament) {
   form.tournamentStatus = editableStatuses.includes(t.tournamentStatus as TTournamentStatusValue)
     ? (t.tournamentStatus as TTournamentStatusValue)
     : 'QUALIFICATIONS'
-  form.registrationStartsAt = t.registrationStartsAt ? dayjs(t.registrationStartsAt).format('YYYY-MM-DD HH:mm') : ''
-  form.registrationEndsAt = t.registrationEndsAt ? dayjs(t.registrationEndsAt).format('YYYY-MM-DD HH:mm') : ''
-  form.tournamentStartsAt = t.tournamentStartsAt ? dayjs(t.tournamentStartsAt).format('YYYY-MM-DD HH:mm') : ''
-  form.tournamentEndsAt = t.tournamentEndsAt ? dayjs(t.tournamentEndsAt).format('YYYY-MM-DD HH:mm') : ''
+  for (const key of scheduleKeys) {
+    const iso = t[key]
+    form[key] = iso ? dayjs(iso).format('YYYY-MM-DD HH:mm') : ''
+  }
   prizePoolText.value = t.prizePool != null ? String(t.prizePool) : ''
   slotsText.value = t.tournamentSlots != null ? String(t.tournamentSlots) : ''
   entryFeeText.value = t.entryFee != null && t.entryFee > 0 ? String(Math.round(t.entryFee / 100)) : ''
@@ -421,10 +448,7 @@ function clearData () {
   form.name = ''
   form.division = ''
   form.tournamentStatus = 'QUALIFICATIONS'
-  form.registrationStartsAt = ''
-  form.registrationEndsAt = ''
-  form.tournamentStartsAt = ''
-  form.tournamentEndsAt = ''
+  for (const key of scheduleKeys) form[key] = ''
   prizePoolText.value = ''
   slotsText.value = ''
   entryFeeText.value = ''
@@ -458,6 +482,8 @@ const handleSubmit = async () => {
     tournamentStatus: form.tournamentStatus,
     registrationStartsAt: toIsoUtc(form.registrationStartsAt),
     registrationEndsAt: toIsoUtc(form.registrationEndsAt),
+    qualificationStartsAt: toIsoUtc(form.qualificationStartsAt),
+    qualificationEndsAt: toIsoUtc(form.qualificationEndsAt),
     tournamentStartsAt: toIsoUtc(form.tournamentStartsAt),
     tournamentEndsAt: toIsoUtc(form.tournamentEndsAt),
     ...(prizePoolText.value !== '' && { prizePool: Number(prizePoolText.value) }),
@@ -566,6 +592,66 @@ const handleSubmit = async () => {
   .drawer-fields-pair {
     grid-template-columns: 1fr;
   }
+}
+
+/* Один етап розкладу: реєстрація / кваліфікація / плей-оф */
+.drawer-phase {
+  padding: 12px 14px 2px;
+  border: 1px solid rgb(55 65 81 / 0.55);
+  border-radius: 12px;
+  background: rgb(17 24 39 / 0.35);
+}
+
+.drawer-phase + .drawer-phase {
+  margin-top: 12px;
+}
+
+.drawer-phase__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drawer-phase__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgb(56 189 248 / 0.14);
+  color: rgb(125 211 252);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.drawer-phase__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(229 231 235);
+}
+
+.drawer-phase__hint {
+  margin: 4px 0 10px 26px;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1.55;
+  color: rgb(107 114 128);
+}
+
+.drawer-schedule-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 9px 12px;
+  border: 1px solid rgb(248 113 113 / 0.35);
+  border-radius: 10px;
+  background: rgb(127 29 29 / 0.18);
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgb(252 165 165);
 }
 
 .drawer-date-grid {

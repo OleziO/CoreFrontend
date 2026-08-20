@@ -14,7 +14,11 @@
         <div v-else-if="qualificationSubmissionDeadlineIso" class="text-sm text-gray-300 mt-4">
           Межа для подань (кінець кваліфікації): {{ formatUk(qualificationSubmissionDeadlineIso) }}
         </div>
-        <div v-if="pastSubmissionWindow" class="text-amber-400 text-sm mt-6">
+        <div v-if="beforeSubmissionWindow" class="text-amber-400 text-sm mt-6">
+          Кваліфікаційний етап ще не розпочався — подача результатів відкриється
+          {{ formatUk(qualificationWindowStartIso) }}.
+        </div>
+        <div v-else-if="pastSubmissionWindow" class="text-amber-400 text-sm mt-6">
           Термін подачі результату завершено — сервер може відхилити нові матчі (після кінця вікна кваліфікації).
         </div>
       </div>
@@ -40,7 +44,7 @@
     <QualificationAddResultModal
       v-model="modalOpen"
       :tournament-id="tournamentId"
-      :past-qualifications-end="pastSubmissionWindow"
+      :submission-blocked-reason="submissionBlockedReason"
       @submitted="onSubmitted"
     />
   </div>
@@ -138,14 +142,44 @@ const sortedDisplayMatches = computed(() => {
   return list
 })
 
-/** UTC кінець вікна кваліфікаційних подань (`registrationEndsAt` у відповіді API). */
-const qualificationSubmissionDeadlineIso = computed(() => props.tournament?.registrationEndsAt ?? '')
+/**
+ * Тікає щосекунди разом із таймером, щоб гейти нижче перемикалися без перезавантаження
+ * сторінки, коли вікно кваліфікації відкривається або закривається.
+ */
+const nowMs = ref(Date.now())
 
-/** Клієнтська перевірка: після цього UTC бекенд відхиляє подані матчі події (згідно з ТЗ — registrationEndsAt). */
+/**
+ * Вікно подачі кваліфікаційних матчів. Пріоритет — сама сутність `Qualification`
+ * з бекенду, фолбек — власні колонки турніру. Обидва джерела дзеркалять одні й ті
+ * самі дати: раніше тут стояв `registrationEndsAt`, через що зсув дедлайну
+ * реєстрації мовчки рухав і межу подачі матчів.
+ */
+const qualificationWindowStartIso = computed(
+  () => qualificationPhase.value?.startTime ?? props.tournament?.qualificationStartsAt ?? ''
+)
+
+const qualificationSubmissionDeadlineIso = computed(
+  () => qualificationPhase.value?.endTime ?? props.tournament?.qualificationEndsAt ?? ''
+)
+
+const beforeSubmissionWindow = computed(() => {
+  const start = qualificationWindowStartIso.value
+  if (!start) return false
+  return dayjs(nowMs.value).isBefore(dayjs(start))
+})
+
+/** Клієнтська перевірка: поза цим вікном бекенд відхиляє подані матчі. */
 const pastSubmissionWindow = computed(() => {
   const end = qualificationSubmissionDeadlineIso.value
   if (!end) return false
-  return dayjs().isAfter(dayjs(end))
+  return dayjs(nowMs.value).isAfter(dayjs(end))
+})
+
+/** Причина блокування подачі або null. Дзеркалить повідомлення бекенду. */
+const submissionBlockedReason = computed<string | null>(() => {
+  if (beforeSubmissionWindow.value) return 'Кваліфікаційний етап ще не розпочався.'
+  if (pastSubmissionWindow.value) return 'Строк подачі результату завершено.'
+  return null
 })
 
 const phaseWindowText = computed(() => {
@@ -165,6 +199,7 @@ function formatUk (iso: string) {
 const countdownLabel = ref('—')
 
 function updateCountdown () {
+  nowMs.value = Date.now()
   const end = qualificationSubmissionDeadlineIso.value
   if (!end) {
     countdownLabel.value = '—'
@@ -192,9 +227,9 @@ function updateCountdown () {
 updateCountdown()
 useIntervalFn(updateCountdown, 1000)
 
-/** Кнопка «Додати результат» для авторизованого користувача, поки триває строк кваліфікації. */
+/** Кнопка «Додати результат» для авторизованого користувача, поки триває вікно кваліфікації. */
 const showAddResultButton = computed(
-  () => !!authStore.token && !pastSubmissionWindow.value
+  () => !!authStore.token && submissionBlockedReason.value === null
 )
 
 const isAdmin = computed(() => authStore.isAdmin?.isAdmin || authStore.isAdmin?.isModerator)
