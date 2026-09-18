@@ -155,7 +155,7 @@ import {
   getRegistrationBlockReason,
   registrationBlockBannerMap
 } from '@/core/utils/tournament-registration'
-import { TSponsor } from '@/config/sponsors'
+import type { TSponsor } from '@/config/sponsors'
 
 const tournament = ref<TTournament | null>(null)
 const activeTab = ref('teams')
@@ -202,7 +202,7 @@ const sponsors = ref<TSponsor[]>([
 
 // const DUELO_PROMO_LS_KEY = 'dueloPromoLastShownAt'
 // const DUELO_PROMO_INTERVAL_MS = 30 * 60 * 1000
-// let dueloPromoTimer: ReturnType<typeof setInterval> | null = null
+let dueloPromoTimer: ReturnType<typeof setInterval> | null = null
 
 /** Показуємо промо-модалку Duelo не частіше, ніж раз на 30 хв (зберігається між візитами). */
 //     priority?: number;
