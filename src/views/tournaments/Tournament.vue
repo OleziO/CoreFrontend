@@ -67,7 +67,7 @@
       </div>
     </div>
 
-    <SponsorShowcase />
+    <SponsorShowcase :sponsors="sponsors"/>
 
     <div class="w-full max-w-7xl mx-auto px-10 sm:px-15 lg:px-20 xl:px-40 py-10 pb-20">
       <div
@@ -155,6 +155,7 @@ import {
   getRegistrationBlockReason,
   registrationBlockBannerMap
 } from '@/core/utils/tournament-registration'
+import { TSponsor } from '@/config/sponsors'
 
 const tournament = ref<TTournament | null>(null)
 const activeTab = ref('teams')
@@ -178,9 +179,40 @@ const apiBaseUrl = import.meta.env.VITE_API_PUBLIC_URL
 
 const { open: openAppModal } = useAppModals()
 
+const sponsors = ref<TSponsor[]>([
+  {
+    id: 'sponsor-1',
+    name: 'BETKING',
+    bannerUrl: '/sponsors/bet_1.png',
+    logoUrl: '/sponsors/logo_1.png',
+    websiteUrl: 'https://77953937.uatracer.link/',
+    tier: 'title',
+    priority: 1
+  },
+  {
+    id: 'sponsor-2',
+    name: 'BETKING',
+    bannerUrl: '/sponsors/bet_2.png',
+    logoUrl: '/sponsors/logo_2.png',
+    websiteUrl: 'https://77953937.uatracer.link/',
+    tier: 'title',
+    priority: 2
+  }
+])
+
 // const DUELO_PROMO_LS_KEY = 'dueloPromoLastShownAt'
 // const DUELO_PROMO_INTERVAL_MS = 30 * 60 * 1000
-let dueloPromoTimer: ReturnType<typeof setInterval> | null = null
+// let dueloPromoTimer: ReturnType<typeof setInterval> | null = null
+
+/** Показуємо промо-модалку Duelo не частіше, ніж раз на 30 хв (зберігається між візитами). */
+//     priority?: number;
+// }
+//   }
+// ])
+
+// const DUELO_PROMO_LS_KEY = 'dueloPromoLastShownAt'
+// const DUELO_PROMO_INTERVAL_MS = 30 * 60 * 1000
+// let dueloPromoTimer: ReturnType<typeof setInterval> | null = null
 
 /** Показуємо промо-модалку Duelo не частіше, ніж раз на 30 хв (зберігається між візитами). */
 // function maybeShowDueloPromo () {
