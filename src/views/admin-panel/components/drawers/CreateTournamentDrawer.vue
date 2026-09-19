@@ -57,7 +57,7 @@
               <el-form-item label="Статус турніру" required class="drawer-field span-full">
                 <el-select v-model="form.tournamentStatus" size="large" class="w-full">
                   <el-option
-                    v-for="s in tournamentCreateStatusOptions"
+                    v-for="s in statusOptions"
                     :key="s.key"
                     :value="s.key"
                     :label="tournamentStatusLabelMap[s.key]"
@@ -71,6 +71,27 @@
                     </div>
                   </el-option>
                 </el-select>
+              </el-form-item>
+
+              <el-form-item class="drawer-field span-full mb-0">
+                <!-- Обгортка потрібна: .el-form-item__content — flex-рядок, інакше підказка стане збоку. -->
+                <div class="flex w-full flex-col">
+                  <el-checkbox v-model="form.hasQualification" :disabled="isEditMode" size="large">
+                    Кваліфікаційний етап
+                  </el-checkbox>
+                  <p class="drawer-field__note">
+                    <template v-if="isEditMode">
+                      Етап зафіксовано при створенні турніру й змінити його не можна.
+                    </template>
+                    <template v-else-if="form.hasQualification">
+                      Турнір проходить через кваліфікацію перед плей-оф.
+                    </template>
+                    <template v-else>
+                      Без кваліфікації: немає сторінки та дат етапу, команди з реєстрації
+                      потрапляють одразу в сітку.
+                    </template>
+                  </p>
+                </div>
               </el-form-item>
             </div>
           </section>
@@ -99,14 +120,19 @@
                 </el-input>
               </el-form-item>
 
-              <el-form-item class="drawer-field">
+              <el-form-item class="drawer-field" :error="slotsError ?? undefined">
                 <template #label>
-                  <span>Слоти команд <span class="label-optional">(опціонально)</span></span>
+                  <span v-if="form.hasQualification">
+                    Слоти команд <span class="label-optional">(опціонально)</span>
+                  </span>
+                  <span v-else>
+                    Слоти команд <span class="label-optional">(до {{ PLAYOFF_TEAM_LIMIT }})</span>
+                  </span>
                 </template>
                 <el-input
                   v-model="slotsText"
                   inputmode="numeric"
-                  placeholder="16"
+                  :placeholder="form.hasQualification ? '16' : String(PLAYOFF_TEAM_LIMIT)"
                   size="large"
                   @input="slotsText = String($event).replace(/\D+/g, '')"
                 />
@@ -152,12 +178,17 @@
             </div>
             <div class="drawer-section__body drawer-section__body--stack">
               <p class="drawer-section__hint">
-                Три етапи турніру. Реєстрація може перетинатися з кваліфікацією, але кваліфікація
-                має завершитися до старту плей-оф.
+                <template v-if="form.hasQualification">
+                  Три етапи турніру. Реєстрація може перетинатися з кваліфікацією, але кваліфікація
+                  має завершитися до старту плей-оф.
+                </template>
+                <template v-else>
+                  Два етапи турніру: реєстрація, потім плей-оф.
+                </template>
               </p>
 
               <div
-                v-for="(group, index) in scheduleGroups"
+                v-for="(group, index) in visibleScheduleGroups"
                 :key="group.title"
                 class="drawer-phase"
               >
@@ -288,6 +319,7 @@ import { PhCalendar, PhImageSquare, PhSlidersHorizontal, PhTrophy, PhWarningCirc
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { UPLOAD_ERROR, validateImageFileForUpload } from '@/services/image-upload.service'
 import {
+  PLAYOFF_TEAM_LIMIT,
   TOURNAMENT_DIVISION_CREATE_VALUES,
   tournamentCreateStatusOptions,
   tournamentDivisionLabelMap,
@@ -336,6 +368,7 @@ const uploads: { key: TUploadKey; label: string }[] = [
 ]
 
 const statusStripeClass: Record<TTournamentStatusValue, string> = {
+  REGISTRATION: 'bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]',
   QUALIFICATIONS: 'bg-green-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]',
   PLAYOFF: 'bg-fuchsia-400 shadow-[0_0_10px_rgba(217,70,239,0.45)]'
 }
@@ -343,7 +376,8 @@ const statusStripeClass: Record<TTournamentStatusValue, string> = {
 const form = reactive({
   name: '',
   division: '' as CreateTournamentDto['division'] | '',
-  tournamentStatus: 'QUALIFICATIONS' as CreateTournamentDto['tournamentStatus'],
+  tournamentStatus: 'REGISTRATION' as CreateTournamentDto['tournamentStatus'],
+  hasQualification: true,
   registrationStartsAt: '',
   registrationEndsAt: '',
   qualificationStartsAt: '',
@@ -354,11 +388,19 @@ const form = reactive({
 
 type TScheduleKey = keyof TTournamentScheduleForm
 
+type TScheduleGroup = {
+  title: string
+  hint: string
+  /** Група кваліфікації зникає, коли етап вимкнено. */
+  requiresQualification?: boolean
+  fields: { key: TScheduleKey; label: string }[]
+}
+
 /**
- * Три вікна розкладу. Плей-оф лишається під історичними ключами
+ * Вікна розкладу. Плей-оф лишається під історичними ключами
  * `tournamentStartsAt`/`tournamentEndsAt` — так їх називає контракт API.
  */
-const scheduleGroups: { title: string; hint: string; fields: { key: TScheduleKey; label: string }[] }[] = [
+const SCHEDULE_GROUPS: TScheduleGroup[] = [
   {
     title: 'Реєстрація',
     hint: 'Коли капітани можуть подати команду й сплатити внесок.',
@@ -370,6 +412,7 @@ const scheduleGroups: { title: string; hint: string; fields: { key: TScheduleKey
   {
     title: 'Кваліфікація',
     hint: 'Вікно подачі кваліфікаційних матчів. Може перетинатися з реєстрацією.',
+    requiresQualification: true,
     fields: [
       { key: 'qualificationStartsAt', label: 'Початок кваліфікації' },
       { key: 'qualificationEndsAt', label: 'Кінець кваліфікації' }
@@ -385,7 +428,38 @@ const scheduleGroups: { title: string; hint: string; fields: { key: TScheduleKey
   }
 ]
 
-const scheduleKeys: TScheduleKey[] = scheduleGroups.flatMap(g => g.fields.map(f => f.key))
+/** Усі ключі розкладу — для заповнення й очищення форми, незалежно від видимості. */
+const ALL_SCHEDULE_KEYS: TScheduleKey[] = SCHEDULE_GROUPS.flatMap(g => g.fields.map(f => f.key))
+
+const visibleScheduleGroups = computed(() =>
+  SCHEDULE_GROUPS.filter(g => form.hasQualification || !g.requiresQualification)
+)
+
+/** Обовʼязкові до заповнення дати — лише з видимих груп. */
+const requiredScheduleKeys = computed<TScheduleKey[]>(() =>
+  visibleScheduleGroups.value.flatMap(g => g.fields.map(f => f.key))
+)
+
+/** Без кваліфікації статус «Кваліфікація» недосяжний — турнір іде одразу в плей-оф. */
+const statusOptions = computed(() =>
+  tournamentCreateStatusOptions.filter(o => form.hasQualification || o.key !== 'QUALIFICATIONS')
+)
+
+/**
+ * Без кваліфікації немає турнірної таблиці, за якою обрати учасників сітки,
+ * тож поле команд має вміститися в неї цілком. Дзеркалить
+ * `validateQualificationConfig` на бекенді.
+ */
+const slotsError = computed(() => {
+  if (form.hasQualification) return null
+  if (slotsText.value === '') {
+    return `Для турніру без кваліфікації вкажіть слоти команд (не більше ${PLAYOFF_TEAM_LIMIT})`
+  }
+  if (Number(slotsText.value) > PLAYOFF_TEAM_LIMIT) {
+    return `Без кваліфікації слотів команд не може бути більше ${PLAYOFF_TEAM_LIMIT}`
+  }
+  return null
+})
 
 /** Порушення послідовності етапів; дзеркалить перевірку бекенду. */
 const scheduleError = computed(() => getScheduleViolation(form))
@@ -393,9 +467,21 @@ const scheduleError = computed(() => getScheduleViolation(form))
 const isFormValid = computed(() =>
   form.name.trim() !== '' &&
     form.division !== '' &&
-    scheduleKeys.every(key => form[key] !== '') &&
-    scheduleError.value === null
+    requiredScheduleKeys.value.every(key => form[key] !== '') &&
+    scheduleError.value === null &&
+    slotsError.value === null
 )
+
+/**
+ * Вимкнена кваліфікація не має лишати по собі ні дат, ні статусу: інакше
+ * прихована дата поїхала б у payload, а статус суперечив би конфігурації.
+ */
+watch(() => form.hasQualification, (enabled) => {
+  if (enabled) return
+  form.qualificationStartsAt = ''
+  form.qualificationEndsAt = ''
+  if (form.tournamentStatus === 'QUALIFICATIONS') form.tournamentStatus = 'REGISTRATION'
+})
 
 function syncDayjsUk () {
   dayjs.locale('uk')
@@ -428,11 +514,12 @@ function handleBannerPick (key: TUploadKey, uploadFile: UploadFile) {
 function populateFromTournament (t: TTournament) {
   form.name = t.name ?? ''
   form.division = (t.division as CreateTournamentDto['division']) ?? ''
-  const editableStatuses: TTournamentStatusValue[] = ['QUALIFICATIONS', 'PLAYOFF']
+  form.hasQualification = t.hasQualification !== false
+  const editableStatuses: TTournamentStatusValue[] = ['REGISTRATION', 'QUALIFICATIONS', 'PLAYOFF']
   form.tournamentStatus = editableStatuses.includes(t.tournamentStatus as TTournamentStatusValue)
     ? (t.tournamentStatus as TTournamentStatusValue)
-    : 'QUALIFICATIONS'
-  for (const key of scheduleKeys) {
+    : 'REGISTRATION'
+  for (const key of ALL_SCHEDULE_KEYS) {
     const iso = t[key]
     form[key] = iso ? dayjs(iso).format('YYYY-MM-DD HH:mm') : ''
   }
@@ -447,8 +534,9 @@ function populateFromTournament (t: TTournament) {
 function clearData () {
   form.name = ''
   form.division = ''
-  form.tournamentStatus = 'QUALIFICATIONS'
-  for (const key of scheduleKeys) form[key] = ''
+  form.tournamentStatus = 'REGISTRATION'
+  form.hasQualification = true
+  for (const key of ALL_SCHEDULE_KEYS) form[key] = ''
   prizePoolText.value = ''
   slotsText.value = ''
   entryFeeText.value = ''
@@ -482,8 +570,11 @@ const handleSubmit = async () => {
     tournamentStatus: form.tournamentStatus,
     registrationStartsAt: toIsoUtc(form.registrationStartsAt),
     registrationEndsAt: toIsoUtc(form.registrationEndsAt),
-    qualificationStartsAt: toIsoUtc(form.qualificationStartsAt),
-    qualificationEndsAt: toIsoUtc(form.qualificationEndsAt),
+    // Без кваліфікації дати етапу не передаються — бекенд тримає їх null.
+    ...(form.hasQualification && {
+      qualificationStartsAt: toIsoUtc(form.qualificationStartsAt),
+      qualificationEndsAt: toIsoUtc(form.qualificationEndsAt)
+    }),
     tournamentStartsAt: toIsoUtc(form.tournamentStartsAt),
     tournamentEndsAt: toIsoUtc(form.tournamentEndsAt),
     ...(prizePoolText.value !== '' && { prizePool: Number(prizePoolText.value) }),
@@ -495,9 +586,15 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
+    /**
+     * `hasQualification` існує лише в контракті створення: етап фіксується при
+     * створенні, а PATCH із цим полем бекенд відхилить (forbidNonWhitelisted).
+     */
     const saved = isEditMode.value && props.tournament
       ? await tournamentStore.updateTournament(props.tournament.id, basePayload as UpdateTournamentDto)
-      : await tournamentStore.createTournament(basePayload as CreateTournamentDto)
+      : await tournamentStore.createTournament(
+        { ...basePayload, hasQualification: form.hasQualification } as CreateTournamentDto
+      )
     const id = saved.id
 
     try {
@@ -672,6 +769,16 @@ const handleSubmit = async () => {
 
 .label-optional {
   font-weight: 400;
+  color: rgb(107 114 128);
+}
+
+/* Пояснення під чекбоксом: тон як у .drawer-section__hint, але без відступу секції. */
+.drawer-field__note {
+  margin: 6px 0 0;
+  padding: 0;
+  max-width: 44rem;
+  font-size: 12px;
+  line-height: 1.6;
   color: rgb(107 114 128);
 }
 

@@ -1027,8 +1027,9 @@ export interface components {
             tournamentStartsAt: string;
             /** Format: date-time */
             tournamentEndsAt: string;
+            hasQualification: boolean;
             /** @enum {string} */
-            tournamentStatus: "QUALIFICATIONS" | "PLAYOFF" | "COMPLETED";
+            tournamentStatus: "REGISTRATION" | "QUALIFICATIONS" | "PLAYOFF" | "COMPLETED";
             tournamentGridUrl: string;
             teams: components["schemas"]["Team"][];
             eligibleRoles: components["schemas"]["UserRoles"][];
@@ -1178,7 +1179,7 @@ export interface components {
             /** Format: date-time */
             tournamentEndsAt: string;
             /** @enum {string} */
-            tournamentStatus: "QUALIFICATIONS" | "PLAYOFF" | "COMPLETED";
+            tournamentStatus: "REGISTRATION" | "QUALIFICATIONS" | "PLAYOFF" | "COMPLETED";
             tournamentGridUrl?: string | null;
         };
         TeamResponseDto: {
@@ -1241,7 +1242,7 @@ export interface components {
          * @description COMPLETED cannot be set on creation
          * @enum {string}
          */
-        TournamentStatus: "QUALIFICATIONS" | "PLAYOFF";
+        TournamentStatus: "REGISTRATION" | "QUALIFICATIONS" | "PLAYOFF";
         CreateTournamentDto: {
             name: string;
             prizePool?: number | null;
@@ -1251,6 +1252,8 @@ export interface components {
             tournamentSlots?: number;
             registrationStartsAt: string;
             registrationEndsAt: string;
+            /** @description Defaults to true. Fixed at creation; not accepted on update. */
+            hasQualification?: boolean;
             tournamentStartsAt: string;
             tournamentEndsAt: string;
             /** @description COMPLETED cannot be set on creation */

@@ -67,7 +67,7 @@
       </div>
     </div>
 
-    <SponsorShowcase :sponsors="sponsors"/>
+    <SponsorShowcase :sponsors="sponsors" />
 
     <div class="w-full max-w-7xl mx-auto px-10 sm:px-15 lg:px-20 xl:px-40 py-10 pb-20">
       <div
@@ -147,6 +147,7 @@ import TournamentQualificationTab from '@/views/tournaments/components/Tournamen
 import {
   PROFILE_CAPTAIN_ROLE_UA,
   divisionRejectionMessage,
+  isJoinableTournamentStatus,
   normalizeTournamentDivision
 } from '@/components/tournaments-tags/tournament.constants'
 import { teamsService } from '@/views/teams/teams.service'
@@ -307,10 +308,14 @@ const canManagePlayers = computed(() => {
 
 const tabs = computed(() => {
   const items = [
-    { label: 'Команди', value: 'teams' },
-    { label: 'Кваліфікація', value: 'qualification' },
-    { label: 'Сітка', value: 'bracket' }
+    { label: 'Команди', value: 'teams' }
   ]
+
+  // Турнір без кваліфікації не має ні етапу, ні сторінки для нього.
+  if (tournament.value?.hasQualification !== false) {
+    items.push({ label: 'Кваліфікація', value: 'qualification' })
+  }
+  items.push({ label: 'Сітка', value: 'bracket' })
 
   if (canManagePlayers.value) {
     items.push({ label: 'Управління', value: 'admin' })
@@ -385,7 +390,7 @@ const registrationBlockReason = computed(() =>
 
 const captainJoinContextOk = computed(() =>
   !!(authStore.token &&
-    tournament.value?.tournamentStatus === 'QUALIFICATIONS' &&
+    isJoinableTournamentStatus(tournament.value?.tournamentStatus) &&
     hasCaptainUserRole.value &&
     !registrationBlockReason.value &&
     !joinHiddenQualificationsClosedByApi.value &&
@@ -434,8 +439,8 @@ const showJoinPrimary = computed(() =>
 
 function joinFriendlyHintFromApi (msg: string): string {
   const hints: Partial<Record<string, string>> = {
-    'Реєстрація на турнір закрита': 'Кваліфікацію на цей турнір закрито.',
-    'Кваліфікація на турнір закрита': 'Кваліфікацію на цей турнір закрито.',
+    'Реєстрація на турнір закрита': 'Реєстрацію на цей турнір закрито.',
+    'Кваліфікація на турнір закрита': 'Реєстрацію на цей турнір закрито.',
     'Тільки капітан команди може приєднатися до турніру': 'До турніру може приєднатися лише капітан команди.',
     'Команда вже бере участь у турнірі': 'Ваша команда вже записана.',
     'Команда не верифікована': 'Спочатку підтвердьте верифікацію команди.',
@@ -633,8 +638,8 @@ const mutedQualificationsHintForLoggedUser = computed(() => {
   // Реєстрація закрита — банер уже пояснює причину, підказка про капітана лише збиває.
   if (registrationBlockReason.value) return ''
   const st = tournament.value?.tournamentStatus
-  if (st === 'QUALIFICATIONS' && !hasCaptainUserRole.value) {
-    return 'Кваліфікаційну заявку подає капітан команди'
+  if (isJoinableTournamentStatus(st) && !hasCaptainUserRole.value) {
+    return 'Заявку на турнір подає капітан команди'
   }
 
   return ''
@@ -643,25 +648,25 @@ const mutedQualificationsHintForLoggedUser = computed(() => {
 const inactiveTournamentBanner = computed(() => {
   if (!authStore.token) return ''
 
-  if (joinHiddenQualificationsClosedByApi.value) { return 'Кваліфікацію на турнір закрито' }
+  if (joinHiddenQualificationsClosedByApi.value) { return 'Реєстрацію на турнір закрито' }
 
   if (joinHiddenCaptainByApi.value) { return 'Приєднання для цього акаунту неможливе' }
 
   if (isTournamentEndedByDate(tournament.value)) return 'Турнір завершено'
 
-  // Вікно реєстрації важливіше за статус: під час кваліфікації статус лишається
-  // QUALIFICATIONS, але реєстрація вже могла закритись за датою або вручну.
+  // Вікно реєстрації важливіше за статус: приєднатися можна і під час
+  // кваліфікації, але реєстрація вже могла закритись за датою або вручну.
   if (registrationBlockReason.value) {
     return registrationBlockBannerMap[registrationBlockReason.value]
   }
 
+  if (isJoinableTournamentStatus(tournament.value?.tournamentStatus)) return ''
+
   switch (tournament.value?.tournamentStatus) {
     case 'PLAYOFF':
       return 'Триває плей-оф — подача заявок недоступна'
-    case 'QUALIFICATIONS':
-      return ''
     default:
-      return 'Кваліфікація на турнір недоступна'
+      return 'Реєстрація на турнір недоступна'
   }
 })
 

@@ -164,7 +164,8 @@ const fmt = (date: string | Date, format: string = 'D MMM YYYY, HH:mm') =>
 
 const dateInfo = computed(() => {
   const {
-    tournamentStatus, registrationEndsAt, tournamentStartsAt, tournamentEndsAt
+    tournamentStatus, registrationEndsAt, tournamentStartsAt, tournamentEndsAt,
+    qualificationStartsAt, hasQualification
   } = props.tournament
 
   if (isEndedBySchedule.value) {
@@ -179,7 +180,21 @@ const dateInfo = computed(() => {
   }
 
   switch (tournamentStatus) {
+    case 'REGISTRATION':
+      // Без кваліфікації наступна віха — одразу сітка.
+      if (hasQualification === false) {
+        return [
+          { label: 'Реєстрація до:', date: fmt(registrationEndsAt) },
+          { label: 'Плей-оф з:', date: fmt(tournamentStartsAt) }
+        ]
+      }
+      return [
+        { label: 'Реєстрація до:', date: fmt(registrationEndsAt) },
+        // Дати кваліфікації опційні, доки `npm run api` не підхопить схему.
+        { label: 'Кваліфікація з:', date: fmt(qualificationStartsAt ?? tournamentStartsAt) }
+      ]
     case 'QUALIFICATIONS':
+      // Реєстрація могла лишатись відкритою — вікна свідомо перетинаються.
       return [
         { label: 'Реєстрація до:', date: fmt(registrationEndsAt) },
         { label: 'Плей-оф з:', date: fmt(tournamentStartsAt) }
