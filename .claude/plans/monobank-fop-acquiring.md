@@ -1030,10 +1030,11 @@ git commit -m "feat: add Monobank acquiring connector"
 
 **Files:**
 - Create: `src/migrations/1789800000000-TournamentAcquiringInvoice.ts`
-- Modify: `src/tournaments/tournament-team-payment.entity.ts`, `src/tournaments/tournaments.entity.ts`, `src/tournaments/dto/create-tournament.dto.ts`
+- Modify: `src/tournaments/tournament-team-payment.entity.ts`, `src/tournaments/tournament-team-payment.repository.ts`
 
 **Interfaces:**
-- Produces: `TournamentTeamPayment.invoiceId: string | null`, `TournamentTeamPayment.paymentPageUrl: string | null`. Removes `Tournament.paymentJarUrl`.
+- Produces: `TournamentTeamPayment.invoiceId: string | null`, `TournamentTeamPayment.paymentPageUrl: string | null`, `TournamentTeamPaymentRepository.findByInvoiceId(invoiceId): Promise<TournamentTeamPayment | null>`.
+- **Additive only.** Removing `Tournament.paymentJarUrl` belongs to Task 9 with the rest of the jar teardown: dropping it here would break `tournament-payments.service.ts` until Task 7, leaving this task unable to type-check on its own.
 
 - [ ] **Step 1: Add the entity columns**
 
@@ -1070,11 +1071,7 @@ The callback's primary key is `invoiceId`; `reference` is the fallback. Add to
   }
 ```
 
-- [ ] **Step 3: Remove the jar column from the tournament entity and DTO**
-
-Delete the `paymentJarUrl` column from `src/tournaments/tournaments.entity.ts` and its `@ApiPropertyOptional`/`@IsOptional`/`@IsString` field from `src/tournaments/dto/create-tournament.dto.ts` (the one described as "Monobank jar link captains are redirected to for the entry fee").
-
-- [ ] **Step 4: Write the migration**
+- [ ] **Step 3: Write the migration**
 
 `src/migrations/1789800000000-TournamentAcquiringInvoice.ts`:
 
@@ -1082,16 +1079,15 @@ Delete the `paymentJarUrl` column from `src/tournaments/tournaments.entity.ts` a
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
- * Switches entry fees to Monobank acquiring invoices.
+ * Adds the Monobank acquiring invoice columns.
  *
  * `invoiceId` is the callback's lookup key and `paymentPageUrl` lets a repeat
  * click reuse a live invoice instead of minting one per click. Existing rows get
  * nulls: a payment already PAID needs neither, and a PENDING one gets a fresh
  * invoice on the captain's next visit.
  *
- * Dropping `paymentJarUrl` is irreversible in substance — `down()` restores the
- * column but not the links it held. That is accepted: the jar rail is retired,
- * not paused.
+ * Purely additive, so it can deploy ahead of the jar teardown; dropping
+ * `tournament.paymentJarUrl` is a separate, destructive migration.
  */
 export class TournamentAcquiringInvoice1789800000000
   implements MigrationInterface
@@ -1108,15 +1104,9 @@ export class TournamentAcquiringInvoice1789800000000
     await queryRunner.query(
       `ALTER TABLE "tournament_team_payment" ADD "paymentPageUrl" character varying`,
     );
-    await queryRunner.query(
-      `ALTER TABLE "tournament" DROP COLUMN "paymentJarUrl"`,
-    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(
-      `ALTER TABLE "tournament" ADD "paymentJarUrl" character varying`,
-    );
     await queryRunner.query(
       `ALTER TABLE "tournament_team_payment" DROP COLUMN "paymentPageUrl"`,
     );
@@ -1130,17 +1120,17 @@ export class TournamentAcquiringInvoice1789800000000
 }
 ```
 
-- [ ] **Step 5: Verify the build still type-checks**
+- [ ] **Step 4: Verify**
 
-Run: `npx tsc --noEmit -p tsconfig.json`
-Expected: errors ONLY at the remaining `paymentJarUrl` readers in `tournament-payments.service.ts` (`buildJarUrl`, `toIntentDto`). Those are removed in Task 7 — note them and continue.
+Run: `npx tsc --noEmit -p tsconfig.json && npx jest`
+Expected: both clean. This task is additive, so nothing should break.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 npx eslint --fix src/migrations/1789800000000-TournamentAcquiringInvoice.ts src/tournaments/
-git add src/migrations/1789800000000-TournamentAcquiringInvoice.ts src/tournaments/tournament-team-payment.entity.ts src/tournaments/tournament-team-payment.repository.ts src/tournaments/tournaments.entity.ts src/tournaments/dto/create-tournament.dto.ts
-git commit -m "feat: add acquiring invoice columns, drop the jar url"
+git add src/migrations/1789800000000-TournamentAcquiringInvoice.ts src/tournaments/tournament-team-payment.entity.ts src/tournaments/tournament-team-payment.repository.ts
+git commit -m "feat: add acquiring invoice columns"
 ```
 
 ---
@@ -1281,7 +1271,10 @@ import { invoiceValiditySeconds } from './invoice-validity';
 import { apiOriginFrom, spaOriginFrom, type TRequestHeaders } from './request-origin.util';
 ```
 
-and the constructor parameters `private readonly acquiring: MonobankAcquiringService,` and
+and the constructor parameters, appended **in this exact order** after the two that
+already exist, so the order is
+`(paymentRepo, dataSource, acquiring, config)`:
+`private readonly acquiring: MonobankAcquiringService,` then
 `private readonly config: ConfigConnectorService,`. `CORS_ORIGINS` is already on the
 typed `EnvSchema`, so reading it through `ConfigConnectorService` keeps the service off
 `process.env` like the rest of the codebase.
@@ -1401,8 +1394,8 @@ describe('createIntentForCaptain invoice reuse', () => {
 });
 ```
 
-If the constructor parameter order differs from the one above, fix the test to
-match the real signature — do not reorder the constructor.
+The constructor order is fixed by Step 4 as `(paymentRepo, dataSource, acquiring,
+config)`; the test above matches it. If they disagree, the constructor is wrong.
 
 - [ ] **Step 7: Verify**
 
@@ -1585,10 +1578,11 @@ git commit -m "feat: receive Monobank acquiring invoice callbacks"
 
 **Files:**
 - Delete: `src/repos/tournament-payment.repository.ts`
-- Modify: `src/repos/repos.module.ts`, `src/use-cases/ingestion/ingestion.service.ts`, `src/use-cases/sync/sync.service.ts`, `src/controllers/sync-controller/sync.dto.ts`, `src/types/entities/env.ts`, `.env.example`
+- Create: `src/migrations/1789800100000-DropTournamentPaymentJarUrl.ts`
+- Modify: `src/repos/repos.module.ts`, `src/use-cases/ingestion/ingestion.service.ts`, `src/use-cases/sync/sync.service.ts`, `src/controllers/sync-controller/sync.dto.ts`, `src/types/entities/env.ts`, `.env.example`, `src/tournaments/tournaments.entity.ts`, `src/tournaments/dto/create-tournament.dto.ts`
 
 **Interfaces:**
-- Removes: `TournamentPaymentRepository`, `ReconcileTransaction`, `ReconcileResult`, `MONOBANK_JAR_URL`.
+- Removes: `TournamentPaymentRepository`, `ReconcileTransaction`, `ReconcileResult`, `MONOBANK_JAR_URL`, `Tournament.paymentJarUrl`.
 
 - [ ] **Step 1: Simplify the ingestion gate**
 
@@ -1623,7 +1617,51 @@ Remove its import and its entry from the providers/exports arrays in `src/repos/
 
 Delete the `MONOBANK_JAR_URL` block from `src/types/entities/env.ts` and the `MONOBANK_JAR_URL=` line from `.env.example`. Also update the `MONOBANK_ACCOUNT_IDS` comment above it, which explains that entry fees are matched by reference regardless of jar — no longer true.
 
-- [ ] **Step 5: Verify nothing still references the jar**
+- [ ] **Step 5: Remove the jar column from the tournament entity and DTO**
+
+Delete the `paymentJarUrl` column from `src/tournaments/tournaments.entity.ts` and its
+`@ApiPropertyOptional`/`@IsOptional`/`@IsString` field from
+`src/tournaments/dto/create-tournament.dto.ts` (the one described as "Monobank jar link
+captains are redirected to for the entry fee"). By this point Task 7 has already deleted
+`buildJarUrl`, so nothing reads it.
+
+- [ ] **Step 6: Write the drop migration**
+
+Kept separate from the additive invoice migration so the additive one can deploy on its
+own and this destructive one is reviewed and run deliberately.
+
+`src/migrations/1789800100000-DropTournamentPaymentJarUrl.ts`:
+
+```ts
+import { MigrationInterface, QueryRunner } from 'typeorm';
+
+/**
+ * Retires the Monobank jar rail's last column.
+ *
+ * Irreversible in substance: `down()` restores the column but not the links it
+ * held. Accepted deliberately — the jar rail is retired, not paused. Run it only
+ * once the acquiring rail is confirmed working in the target environment.
+ */
+export class DropTournamentPaymentJarUrl1789800100000
+  implements MigrationInterface
+{
+  name = 'DropTournamentPaymentJarUrl1789800100000';
+
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "tournament" DROP COLUMN "paymentJarUrl"`,
+    );
+  }
+
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "tournament" ADD "paymentJarUrl" character varying`,
+    );
+  }
+}
+```
+
+- [ ] **Step 7: Verify nothing still references the jar**
 
 Run:
 ```bash
@@ -1632,7 +1670,7 @@ npx tsc --noEmit -p tsconfig.json && npx jest
 ```
 Expected: `clean`, tsc clean, all tests pass
 
-- [ ] **Step 6: Lint and commit**
+- [ ] **Step 8: Lint and commit**
 
 ```bash
 npx eslint --fix src/

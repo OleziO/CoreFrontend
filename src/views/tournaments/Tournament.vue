@@ -55,7 +55,7 @@
               :payment-intent-loading="paymentIntentLoading"
               :payment-polling="paymentPolling"
               :payment-reference="paymentIntent?.reference ?? null"
-              :payment-jar-url="paymentIntent?.jarUrl ?? null"
+              :payment-page-url="paymentIntent?.pageUrl ?? null"
               :division-block-reason="divisionBlockReason"
               @join="registerOnTeamTournament"
               @leave="handleLeaveTournament"
@@ -543,10 +543,10 @@ async function startPayment () {
     const intent = await tournamentsService.createPaymentIntent(tournamentId)
     paymentIntent.value = intent
     upsertMyPayment(intent)
-    if (intent.jarUrl) {
-      window.open(intent.jarUrl, '_blank', 'noopener')
+    if (intent.pageUrl) {
+      window.open(intent.pageUrl, '_blank', 'noopener')
     } else {
-      ElMessage.warning('Посилання на банку monobank не налаштоване. Зверніться до організатора.')
+      ElMessage.warning('Сторінка оплати monobank не налаштована. Зверніться до організатора.')
     }
     startPaymentPolling()
   } catch (e: unknown) {

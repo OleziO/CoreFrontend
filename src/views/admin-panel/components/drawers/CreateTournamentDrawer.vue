@@ -154,19 +154,6 @@
                   </template>
                 </el-input>
               </el-form-item>
-
-              <el-form-item class="drawer-field span-full">
-                <template #label>
-                  <span>Посилання на банку monobank
-                    <span class="label-optional">(потрібне для платного турніру)</span></span>
-                </template>
-                <el-input
-                  v-model="jarUrlText"
-                  placeholder="https://send.monobank.ua/jar/XXXXXXXX"
-                  size="large"
-                  clearable
-                />
-              </el-form-item>
             </div>
           </section>
 
@@ -350,7 +337,6 @@ const prizePoolText = ref('')
 const slotsText = ref('')
 // Вводиться в гривнях, зберігається у копійках (×100).
 const entryFeeText = ref('')
-const jarUrlText = ref('')
 
 const files = reactive<Record<TUploadKey, File | null>>({
   header: null,
@@ -526,7 +512,6 @@ function populateFromTournament (t: TTournament) {
   prizePoolText.value = t.prizePool != null ? String(t.prizePool) : ''
   slotsText.value = t.tournamentSlots != null ? String(t.tournamentSlots) : ''
   entryFeeText.value = t.entryFee != null && t.entryFee > 0 ? String(Math.round(t.entryFee / 100)) : ''
-  jarUrlText.value = t.paymentJarUrl ?? ''
   previews.header = t.headerBannerUrl ? getImageUrl(t.headerBannerUrl) : ''
   previews.list = t.listBannerUrl ? getImageUrl(t.listBannerUrl) : ''
 }
@@ -540,7 +525,6 @@ function clearData () {
   prizePoolText.value = ''
   slotsText.value = ''
   entryFeeText.value = ''
-  jarUrlText.value = ''
   for (const k of Object.keys(files) as TUploadKey[]) {
     if (previews[k] && previews[k].startsWith('blob:')) URL.revokeObjectURL(previews[k])
     files[k] = null
@@ -580,8 +564,7 @@ const handleSubmit = async () => {
     ...(prizePoolText.value !== '' && { prizePool: Number(prizePoolText.value) }),
     ...(slotsText.value !== '' && { tournamentSlots: Number(slotsText.value) }),
     // Гривні → копійки. Порожнє поле означає безкоштовний турнір (0).
-    entryFee: entryFeeText.value !== '' ? Number(entryFeeText.value) * 100 : 0,
-    paymentJarUrl: jarUrlText.value.trim() || null
+    entryFee: entryFeeText.value !== '' ? Number(entryFeeText.value) * 100 : 0
   }
 
   loading.value = true
