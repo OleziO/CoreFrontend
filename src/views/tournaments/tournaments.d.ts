@@ -2,7 +2,6 @@
 // `npm run api` picks it up from the deployed backend.
 type TTournament = TResponse<'/tournaments', 'get'>[number] & {
   entryFee?: number | null
-  paymentJarUrl?: string | null
   // ISO-дата ручного закриття реєстрації адміном; null/undefined — не закрито вручну.
   registrationClosedAt?: string | null
   // Вікно подачі кваліфікаційних матчів. Власні колонки турніру, більше не
@@ -30,5 +29,5 @@ type TTournamentPaymentIntent = {
   status: TTournamentPaymentStatus
   amount: number
   amountPaid: number
-  jarUrl: string | null
+  pageUrl: string | null
 }

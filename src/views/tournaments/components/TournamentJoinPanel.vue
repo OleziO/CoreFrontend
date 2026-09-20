@@ -89,14 +89,14 @@
                 </el-button>
 
                 <el-button
-                  v-if="paymentJarUrl"
+                  v-if="paymentPageUrl"
                   type="primary"
                   tag="a"
-                  :href="paymentJarUrl"
+                  :href="paymentPageUrl"
                   target="_blank"
                   rel="noopener"
                 >
-                  Відкрити банку monobank
+                  Відкрити сторінку оплати monobank
                 </el-button>
               </div>
             </template>
@@ -231,7 +231,7 @@ interface IProps {
   paymentIntentLoading: boolean
   paymentPolling: boolean
   paymentReference: string | null
-  paymentJarUrl: string | null
+  paymentPageUrl: string | null
   /** Причина недопуску складу до дивізіону турніру; null — допуск є. */
   divisionBlockReason?: string | null
 }
@@ -242,7 +242,7 @@ const paymentStatusHint = computed(() => {
   if (props.myTeamPaymentStatus === 'UNDERPAID') {
     return 'Отримано неповну оплату. Доплатіть різницю, щоб приєднатися до турніру.'
   }
-  return 'Натисніть «Оплатити внесок» — відкриється банка monobank, а сторінка чекатиме підтвердження.'
+  return 'Натисніть «Оплатити внесок» — відкриється сторінка оплати monobank, а сторінка чекатиме підтвердження.'
 })
 
 const emit = defineEmits<{
