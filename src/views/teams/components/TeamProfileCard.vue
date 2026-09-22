@@ -45,19 +45,6 @@
           </div>
 
           <div
-            v-if="teamDivisionForDisplay"
-            class="flex items-center gap-10"
-          >
-            <span class="shrink-0 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500">
-              Дивізіон
-            </span>
-            <DivisionTag
-              :division="teamDivisionForDisplay"
-              variant="profile"
-            />
-          </div>
-
-          <div
             class="flex min-w-0 flex-nowrap items-center justify-between gap-10"
           >
             <div class="flex min-w-0 flex-1 items-center gap-3">
@@ -182,7 +169,6 @@ import {
 } from '@phosphor-icons/vue'
 import { useClipboard } from '@vueuse/core'
 import { resolvePublicOrApiUrl, getDotabuffTeamUrl } from '@/core/helpers'
-import { resolveTeamDivisionForDisplay } from '@/components/tournaments-tags/tournament.constants'
 
 const props = defineProps<{
   team: TTeam | null
@@ -208,12 +194,6 @@ const { copy } = useClipboard({ legacy: true })
 
 const teamLogoSrc = computed(() => resolvePublicOrApiUrl(props.team?.logoUrl))
 const dotaTeamIdTrimmed = computed(() => props.team?.dotaTeamId?.trim() ?? '')
-
-const teamDivisionForDisplay = computed(() =>
-  props.team
-    ? resolveTeamDivisionForDisplay(props.team.division, props.team.mainPlayers)
-    : null
-)
 
 // Verification is now signaled by the StatusBadge (icon + label), so the card
 // uses a neutral elevation — verified teams keep a subtle primary hover glow.

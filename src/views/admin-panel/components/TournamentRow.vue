@@ -16,10 +16,6 @@
       <span class="text-gray-400 text-xs">—</span>
     </div>
 
-    <div class="col-division flex items-center justify-center">
-      <span class="text-gray-400 text-xs">—</span>
-    </div>
-
     <div class="col-status flex items-center justify-center">
       <TournamentStatusTag :status="tournament.tournamentStatus" />
     </div>

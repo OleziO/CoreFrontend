@@ -23,7 +23,7 @@ export const createHashedObject = <
 
     if (isValueArray) {
       const existingValue = acc[key] as T[] | undefined
-      
+
       acc[key] = [...(Array.isArray(existingValue) ? existingValue : []), current] as ValueArray extends true ? T[] : T
     } else {
       acc[key] = current as ValueArray extends true ? T[] : T

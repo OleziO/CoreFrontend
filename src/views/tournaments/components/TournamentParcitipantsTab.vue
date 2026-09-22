@@ -10,7 +10,6 @@
     >
       <TeamCard
         :team="team"
-        show-division-tag
       />
     </div>
   </div>

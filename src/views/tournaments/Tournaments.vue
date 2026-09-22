@@ -173,7 +173,6 @@ const activeFiltersCount = computed(() => {
   const query = route.query
   let count = 0
   if (query.status) count += 1
-  if (query.division) count += 1
 
   return count
 })

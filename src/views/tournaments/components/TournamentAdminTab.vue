@@ -275,7 +275,6 @@ import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatEntryFeeUah } from '@/core/utils/formatters'
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
-import { isTeamEligibleForDivision, normalizeTournamentDivision } from '@/components/tournaments-tags/tournament.constants'
 import { tournamentsService } from '@/views/tournaments/tournaments.service'
 import { teamsService } from '@/views/teams/teams.service'
 import { friendlyPlayoffError } from '@/views/tournaments/utils/playoff-errors.utils'
@@ -300,19 +299,10 @@ const selectedTeamId = ref<string>('')
 const allTeams = ref<Array<TTeam | TTeam>>([])
 const teamsLoading = ref(false)
 
-// Допуск — за діапазоном дивізіону + лімітом на гравця, дзеркалить бекенд
-// (tournament-division.util.ts, isTeamEligibleForDivision). Команда може грати
-// вгору, тому це НЕ порівняння з власним дивізіоном команди.
-const eligibleTeams = computed(() => {
-  const tournamentDivision = normalizeTournamentDivision(props.tournament?.division)
-  return allTeams.value.filter((t) => {
-    if (!t.isVerified) return false
-    if (!tournamentDivision) return true
-    const main = t.mainPlayers ?? []
-    if (main.length === 0) return false
-    return isTeamEligibleForDivision(main, tournamentDivision)
-  })
-})
+// Турніри з відкритою реєстрацією — обмежень за MMR немає, допуск лише за верифікацією.
+const eligibleTeams = computed(() =>
+  allTeams.value.filter((t) => t.isVerified)
+)
 const tabs = [
   { value: 'status', label: 'Етапи турніру' },
   { value: 'participants', label: 'Управління командами' },

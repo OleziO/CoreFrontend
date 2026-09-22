@@ -112,7 +112,6 @@
             v-model="showTeamPlayers"
             :width="effectiveCardWidth"
             :team="item"
-            show-division-tag
           />
         </template>
       </VirtualList>

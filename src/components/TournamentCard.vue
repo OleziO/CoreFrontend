@@ -50,22 +50,10 @@
       </h2>
 
       <div
-        class="mx-6 mt-12 flex min-w-0 shrink-0 flex-nowrap items-center gap-10"
-        :class="tournament.division ? '' : 'justify-center'"
+        class="mx-6 mt-12 flex min-w-0 shrink-0 flex-nowrap items-center justify-center gap-10"
       >
         <div
-          v-if="tournament.division"
-          class="flex shrink-0 items-center"
-        >
-          <DivisionTag
-            :division="tournament.division"
-            variant="tournamentCard"
-          />
-        </div>
-
-        <div
-          class="min-w-0"
-          :class="tournament.division ? 'flex-1' : 'w-full'"
+          class="w-full min-w-0"
         >
           <div
             class="flex min-w-0 items-center justify-center gap-10 rounded-xl border border-gold/25

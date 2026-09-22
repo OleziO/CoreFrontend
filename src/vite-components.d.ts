@@ -17,7 +17,6 @@ declare module 'vue' {
     CategoryBreakdownCard: typeof import('./views/finance-monitor/components/CategoryBreakdownCard.vue')['default']
     CategoryManagerDrawer: typeof import('./views/finance-monitor/components/CategoryManagerDrawer.vue')['default']
     CreateTournamentDrawer: typeof import('./views/admin-panel/components/drawers/CreateTournamentDrawer.vue')['default']
-    DivisionTag: typeof import('./components/team-tags/DivisionTag.vue')['default']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElBadge: typeof import('element-plus/es')['ElBadge']
     ElButton: typeof import('element-plus/es')['ElButton']

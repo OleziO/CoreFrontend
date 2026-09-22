@@ -47,25 +47,6 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item
-          label="Дивізіон"
-        >
-          <el-select
-            v-model="tournamentData.division_id"
-            placeholder="Оберіть дивізіон"
-            size="large"
-            class="w-full"
-            clearable
-          >
-            <el-option
-              v-for="division in divisions"
-              :key="division.id"
-              :value="String(division.id)"
-              :label="division.name"
-            />
-          </el-select>
-        </el-form-item>
-
         <el-form-item label="Ліміт учасників (опціонально)">
           <el-input
             v-model.number="tournamentData.limit"
@@ -143,15 +124,11 @@ import { getApiErrorMessage } from '@/core/utils/api-errors'
 
 interface ITournamentUpdateFormData extends Partial<UpdateTournamentDto> {
   status?: string
-  division_id?: string | null
   limit?: number | null
 }
 
 const props = defineProps<{newTournamentData: TTournament | undefined | null}>()
 const { file, preview, reset } = useGetFile()
-
-// TODO: endpoint not in API yet (divisions)
-const divisions = ref<any[]>([])
 
 const defaultTournamentData = (): ITournamentUpdateFormData => ({
   name: '',
@@ -160,7 +137,6 @@ const defaultTournamentData = (): ITournamentUpdateFormData => ({
   registrationStartsAt: '',
   registrationEndsAt: '',
   status: '',
-  division_id: null,
   limit: null
 })
 
@@ -210,7 +186,7 @@ const handleSubmit = async () => {
   }
 }
 
-const fields = tournamentFields.filter(field => field.model !== 'division_id')
+const fields = tournamentFields
 
 const dateFields = ['start_time', 'end_time', 'start_registration', 'end_registration']
 

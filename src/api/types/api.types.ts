@@ -3,7 +3,6 @@ import type { components } from './schema'
 export type TPlayerRankDto = components['schemas']['PlayerRankDto']
 
 export type TCurrentPlayer = components['schemas']['CurrentPlayerDto']
-export type TTournamentDivision = components['schemas']['TournamentDivision']
 
 /** Публічний зріз гравця в рості команди (GET /teams…) — сумісний з карткою гравця. */
 export type TPlayerResponseDto = components['schemas']['PlayerResponseDto']
