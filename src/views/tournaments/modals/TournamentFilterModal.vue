@@ -29,24 +29,6 @@
           />
         </el-select>
       </el-form-item>
-
-      <!-- Division -->
-      <el-form-item label="Дивізіон">
-        <el-select
-          v-model="filters.division"
-          placeholder="Оберіть дивізіон турніру"
-          clearable
-          multiple
-          class="w-full"
-        >
-          <el-option
-            v-for="divisionOption in divisionArr"
-            :key="divisionOption.key"
-            :value="divisionOption.key"
-            :label="divisionOption.label"
-          />
-        </el-select>
-      </el-form-item>
     </el-form>
 
     <template #footer>
@@ -74,15 +56,12 @@ import { tournamentStatuses } from '@/core/utils/formatters'
 import { PhMagnifyingGlass } from '@phosphor-icons/vue'
 
 const DEFAULT_TOURNAMENT_FILTERS = {
-  status: [] as string[],
-  division: [] as string[]
+  status: [] as string[]
 }
 const modelValue = defineModel<boolean>({ default: false })
 const router = useRouter()
 const route = useRoute()
 const filters = ref({ ...DEFAULT_TOURNAMENT_FILTERS })
-
-const divisionArr = computed(() => [] as { key: string; label: string }[])
 
 function onReset (withClose = true) {
   filters.value = { ...DEFAULT_TOURNAMENT_FILTERS }
@@ -96,12 +75,11 @@ function onReset (withClose = true) {
 }
 
 function onApply () {
-  const { status, division } = filters.value
+  const { status } = filters.value
 
   const query = Object.fromEntries(
     Object.entries({
-      status: status?.length ? status.join(',') : undefined,
-      division: division?.length ? division.join(',') : undefined
+      status: status?.length ? status.join(',') : undefined
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     }).filter(([_, value]) => value != null && value !== '')
   )
@@ -114,8 +92,7 @@ function getFiltersFromQuery () {
   const query = route.query
 
   filters.value = {
-    status: parseQueryArray(query.status),
-    division: parseQueryArray(query.division)
+    status: parseQueryArray(query.status)
   }
 }
 

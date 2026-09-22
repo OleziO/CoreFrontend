@@ -67,7 +67,6 @@ function onApply () {
   const { status } = localFilters.value
 
   const query = { ...(route.query as Record<string, string | string[] | undefined>) }
-  delete query.divisions
   query.status = status?.length ? status.join(',') : undefined
 
   const cleanQuery = Object.fromEntries(
