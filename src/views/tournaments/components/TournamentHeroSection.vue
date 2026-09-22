@@ -12,11 +12,6 @@
         :status="tournament?.tournamentStatus"
         class="shadow-lg flex-1 shadow-black/20 justify-center"
       />
-      <DivisionTag
-        :division="tournament?.division"
-        variant="hero"
-        class="shrink-0 self-center shadow-lg shadow-black/25"
-      />
     </div>
 
     <!-- Meta: prize / participants / start — icon + label hierarchy -->
@@ -39,7 +34,6 @@
 
 <script setup lang="ts">
 import TournamentStatusTag from '@/components/tournaments-tags/TournamentStatusTag.vue'
-import DivisionTag from '@/components/team-tags/DivisionTag.vue'
 import { PhTrophy, PhUsersThree, PhCalendarBlank } from '@phosphor-icons/vue'
 import { formatTournamentPrizeUah } from '@/core/utils/formatters'
 

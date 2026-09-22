@@ -29,7 +29,6 @@
         <div class="flex items-center justify-center">ID</div>
         <div class="flex items-center pl-4">Назва турніру</div>
         <div class="flex items-center justify-center">Тип</div>
-        <div class="flex items-center justify-center">Дивізіон</div>
         <div class="flex items-center justify-center">Статус</div>
         <div class="flex items-center justify-center">Дії</div>
       </div>

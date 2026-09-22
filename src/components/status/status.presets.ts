@@ -6,8 +6,7 @@ import {
   PhBroadcast,
   PhClock,
   PhFlagCheckered,
-  PhTrophy,
-  PhShieldChevron
+  PhTrophy
 } from '@phosphor-icons/vue'
 
 // Shared status vocabulary for the platform. Every domain status renders as
@@ -43,7 +42,6 @@ export type TStatusPresetKey =
   | 'upcoming'
   | 'completed'
   | 'prize'
-  | 'division'
 
 export const STATUS_PRESETS: Record<TStatusPresetKey, IStatusPreset> = {
   verified: { tone: 'success', icon: PhSealCheck, label: 'Верифікований' },
@@ -53,8 +51,7 @@ export const STATUS_PRESETS: Record<TStatusPresetKey, IStatusPreset> = {
   live: { tone: 'live', icon: PhBroadcast, label: 'Live', pulse: true },
   upcoming: { tone: 'info', icon: PhClock, label: 'Незабаром' },
   completed: { tone: 'neutral', icon: PhFlagCheckered, label: 'Завершено' },
-  prize: { tone: 'gold', icon: PhTrophy, label: 'Призовий фонд' },
-  division: { tone: 'primary', icon: PhShieldChevron, label: 'Дивізіон' }
+  prize: { tone: 'gold', icon: PhTrophy, label: 'Призовий фонд' }
 }
 
 // Tailwind class triples per tone — all built on semantic tokens.

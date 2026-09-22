@@ -55,24 +55,10 @@
       </el-tooltip>
 
       <div
-        v-if="showDivisionBadge || mainAvgRating != null"
-        class="mt-8 grid w-full min-w-0 items-center gap-8 px-2"
-        :class="showDivisionBadge && mainAvgRating != null
-          ? 'grid-cols-[minmax(min-content,1fr)_auto]'
-          : 'grid-cols-1 justify-items-center'"
+        v-if="mainAvgRating != null"
+        class="mt-8 grid w-full min-w-0 grid-cols-1 items-center justify-items-center gap-8 px-2"
         @click.stop
       >
-        <div
-          v-if="showDivisionBadge"
-          :class="mainAvgRating != null ? 'min-w-0 justify-self-stretch' : 'justify-self-center'"
-        >
-          <DivisionTag
-            v-if="resolvedDivisionKey"
-            :division="resolvedDivisionKey"
-            variant="card"
-            full-width
-          />
-        </div>
         <el-tooltip
           v-if="mainAvgRating != null"
           placement="top"
@@ -163,36 +149,17 @@ import { useClipboard } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import { PhChartBar, PhCopy, PhUsersThree } from '@phosphor-icons/vue'
 import { getDotabuffTeamUrl, resolvePublicOrApiUrl } from '@/core/helpers'
-import {
-  computeTeamAvgRatingRounded,
-  resolveTeamDivisionForDisplay,
-  type TTournamentDivisionValue
-} from '@/components/tournaments-tags/tournament.constants'
+import { computeTeamAvgRatingRounded } from '@/components/tournaments-tags/tournament.constants'
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
   team: TTeam | TTournamentTeam
   width?: number
-  /** Тег дивізіону команди — лише на сторінці списку команд, не на вкладці «Команди» турніру. */
-  showDivisionTag?: boolean
-}>(), {
-  showDivisionTag: false
-})
+}>()
 
 const mainAvgRating = computed(() =>
   ('avgRating' in props.team ? props.team.avgRating : null) ??
   computeTeamAvgRatingRounded(props.team.mainPlayers)
 )
-
-const resolvedDivisionKey = computed((): TTournamentDivisionValue | null =>
-  resolveTeamDivisionForDisplay(
-    'division' in props.team ? props.team.division : undefined,
-    props.team.mainPlayers
-  )
-)
-
-const showDivisionBadge = computed(() => {
-  return props.showDivisionTag && resolvedDivisionKey.value != null
-})
 
 const { copy } = useClipboard({ legacy: true })
 
