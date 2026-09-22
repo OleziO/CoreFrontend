@@ -106,10 +106,7 @@
                 Сплачено {{ formatEntryFeeUah(myTeamAmountPaid) }} з {{ formatEntryFeeUah(entryFee) }}
               </p>
 
-              <p v-if="divisionBlockReason" class="text-xs font-semibold leading-snug text-amber-300">
-                {{ divisionBlockReason }}. Оплата недоступна, доки склад не відповідає дивізіону турніру.
-              </p>
-              <p v-else class="text-xs leading-snug text-gray-400">
+              <p class="text-xs leading-snug text-gray-400">
                 {{ paymentStatusHint }}
               </p>
 
@@ -117,7 +114,6 @@
                 type="primary"
                 size="large"
                 :loading="paymentIntentLoading"
-                :disabled="!!divisionBlockReason"
                 class="!h-[48px] !w-full !text-base !font-bold !rounded-xl border-none"
                 @click="emit('pay')"
               >
@@ -130,7 +126,6 @@
               type="primary"
               size="large"
               :loading="joinLoading"
-              :disabled="!!divisionBlockReason"
               class="!h-[52px] !w-full !text-base !font-bold !rounded-xl
                !bg-gradient-to-br !from-cyan-500 !to-blue-500
                shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:-translate-y-0.5
@@ -139,9 +134,6 @@
             >
               Приєднатися до турніру
             </el-button>
-            <p v-if="divisionBlockReason" class="text-xs font-semibold leading-snug text-center text-amber-300">
-              {{ divisionBlockReason }}
-            </p>
           </div>
           <div
             v-else-if="isMyTeamInThisTournament"
@@ -232,8 +224,6 @@ interface IProps {
   paymentPolling: boolean
   paymentReference: string | null
   paymentPageUrl: string | null
-  /** Причина недопуску складу до дивізіону турніру; null — допуск є. */
-  divisionBlockReason?: string | null
 }
 
 const props = defineProps<IProps>()
