@@ -986,7 +986,21 @@ grep -n -i "division" src/api/types/schema.d.ts
 
 Expected: no output. If `TournamentDivision` still appears, Phase 3 is not actually deployed — stop and check.
 
-- [ ] **Step 3: Verify**
+- [ ] **Step 3: Remove the temporary cast bridge**
+
+In `src/views/admin-panel/components/drawers/CreateTournamentDrawer.vue`, the create call
+carries an `as unknown as CreateTournamentDto` cast and a Ukrainian comment explaining it.
+It existed only because the generated schema still marked `division` required while the
+deployed backend already accepted payloads without it. With the schema regenerated, delete
+the comment and restore the plain assertion:
+
+```typescript
+      : await tournamentStore.createTournament(
+        { ...basePayload, hasQualification: form.hasQualification } as CreateTournamentDto
+      )
+```
+
+- [ ] **Step 4: Verify**
 
 ```bash
 cd /Users/olleyo/projects/CoreFrontend && npm run type-check && npm run lint
@@ -994,11 +1008,11 @@ cd /Users/olleyo/projects/CoreFrontend && npm run type-check && npm run lint
 
 Expected: both clean.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 cd /Users/olleyo/projects/CoreFrontend
-git add src/api/types/schema.d.ts
+git add src/api/types/schema.d.ts src/views/admin-panel/components/drawers/CreateTournamentDrawer.vue
 git commit -m "chore: regenerate API types after the division removal
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
