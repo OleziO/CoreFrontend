@@ -43,17 +43,6 @@
                 />
               </el-form-item>
 
-              <el-form-item label="Дивізіон" required class="drawer-field span-full">
-                <el-select v-model="form.division" placeholder="Оберіть дивізіон" size="large" class="w-full">
-                  <el-option
-                    v-for="d in divisionOptions"
-                    :key="d"
-                    :value="d"
-                    :label="tournamentDivisionLabelMap[d]"
-                  />
-                </el-select>
-              </el-form-item>
-
               <el-form-item label="Статус турніру" required class="drawer-field span-full">
                 <el-select v-model="form.tournamentStatus" size="large" class="w-full">
                   <el-option
@@ -307,11 +296,8 @@ import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { UPLOAD_ERROR, validateImageFileForUpload } from '@/services/image-upload.service'
 import {
   PLAYOFF_TEAM_LIMIT,
-  TOURNAMENT_DIVISION_CREATE_VALUES,
   tournamentCreateStatusOptions,
-  tournamentDivisionLabelMap,
   tournamentStatusLabelMap,
-  type TTournamentDivisionValue,
   type TTournamentStatusValue
 } from '@/components/tournaments-tags/tournament.constants'
 import { getImageUrl } from '@/core/helpers'
@@ -325,10 +311,6 @@ const showCreateTournamentDrawer = defineModel<boolean>()
 const isEditMode = computed(() => !!props.tournament)
 const loading = ref(false)
 
-// Усі три дивізіони активні, тому окремий фолбек для застарілих значень більше не потрібен.
-const divisionOptions = computed<TTournamentDivisionValue[]>(
-  () => [...TOURNAMENT_DIVISION_CREATE_VALUES]
-)
 const tournamentStore = useTournamentStore()
 
 const elementPlusUk = uk
@@ -361,7 +343,6 @@ const statusStripeClass: Record<TTournamentStatusValue, string> = {
 
 const form = reactive({
   name: '',
-  division: '' as CreateTournamentDto['division'] | '',
   tournamentStatus: 'REGISTRATION' as CreateTournamentDto['tournamentStatus'],
   hasQualification: true,
   registrationStartsAt: '',
@@ -452,7 +433,6 @@ const scheduleError = computed(() => getScheduleViolation(form))
 
 const isFormValid = computed(() =>
   form.name.trim() !== '' &&
-    form.division !== '' &&
     requiredScheduleKeys.value.every(key => form[key] !== '') &&
     scheduleError.value === null &&
     slotsError.value === null
@@ -499,7 +479,6 @@ function handleBannerPick (key: TUploadKey, uploadFile: UploadFile) {
 
 function populateFromTournament (t: TTournament) {
   form.name = t.name ?? ''
-  form.division = (t.division as CreateTournamentDto['division']) ?? ''
   form.hasQualification = t.hasQualification !== false
   const editableStatuses: TTournamentStatusValue[] = ['REGISTRATION', 'QUALIFICATIONS', 'PLAYOFF']
   form.tournamentStatus = editableStatuses.includes(t.tournamentStatus as TTournamentStatusValue)
@@ -518,7 +497,6 @@ function populateFromTournament (t: TTournament) {
 
 function clearData () {
   form.name = ''
-  form.division = ''
   form.tournamentStatus = 'REGISTRATION'
   form.hasQualification = true
   for (const key of ALL_SCHEDULE_KEYS) form[key] = ''
@@ -546,11 +524,10 @@ function toIsoUtc (pickerValue: string): string {
 }
 
 const handleSubmit = async () => {
-  if (!isFormValid.value || !form.division) return
+  if (!isFormValid.value) return
 
   const basePayload = {
     name: form.name.trim(),
-    division: form.division as CreateTournamentDto['division'],
     tournamentStatus: form.tournamentStatus,
     registrationStartsAt: toIsoUtc(form.registrationStartsAt),
     registrationEndsAt: toIsoUtc(form.registrationEndsAt),
@@ -575,8 +552,13 @@ const handleSubmit = async () => {
      */
     const saved = isEditMode.value && props.tournament
       ? await tournamentStore.updateTournament(props.tournament.id, basePayload as UpdateTournamentDto)
+      /**
+       * `as unknown` — тимчасовий місток: бекенд уже приймає створення без
+       * `division`, але згенерований `schema.d.ts` ще вважає поле обовʼязковим.
+       * Прибрати разом з `npm run api` після викочування Фази 3.
+       */
       : await tournamentStore.createTournament(
-        { ...basePayload, hasQualification: form.hasQualification } as CreateTournamentDto
+        { ...basePayload, hasQualification: form.hasQualification } as unknown as CreateTournamentDto
       )
     const id = saved.id
 
