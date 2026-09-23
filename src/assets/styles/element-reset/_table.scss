@@ -7,7 +7,7 @@
   --el-table-border: theme('colors.gray.600');
   --el-table-header-text-color: white;
   --el-table-border-color: theme('colors.dark.navy');
-  --el-table-row-hover-bg-color: #162141;
+  --el-table-row-hover-bg-color: rgba(46, 229, 255, 0.06);
 
   @apply w-full bg-dark-navy border border-white/10 rounded-2xl overflow-hidden shadow-lg shadow-black/20;
 
@@ -28,11 +28,11 @@
       }
 
       &:hover {
-        @apply bg-[#0f1425];
+        @apply bg-overlay/60;
       }
 
       &.is-hovered {
-        @apply bg-[#10152b];
+        @apply bg-overlay/70;
       }
 
       &.is-current-row {
@@ -110,7 +110,7 @@
   }
 
   .el-table th.el-table__cell {
-    background-color: rgba(17, 24, 39, 0.8) !important;
+    background-color: rgba(31, 37, 58, 0.8) !important; // gray-900 @ 80%
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
     font-weight: 600;
     text-transform: uppercase;

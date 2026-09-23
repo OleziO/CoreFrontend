@@ -1,7 +1,7 @@
 <template>
   <section class="profile">
     <div
-      class="w-full max-w-[1000px] my-40 h-max mx-auto bg-gradient-to-br from-gray-900 via-gray-850 to-gray-950
+      class="w-full max-w-[1000px] my-40 h-max mx-auto bg-gradient-to-br from-gray-900 to-gray-950
         rounded-3xl
         p-30 flex flex-col gap-30 relative
         transition-all duration-300"

@@ -6,17 +6,22 @@
    ========================= */
 .el-dropdown-menu {
   // Override EL Plus variables so its own rules don't bleed through
-  --el-bg-color-overlay: #111827;
+  --el-bg-color-overlay: var(--ds-overlay);
   --el-dropdown-menuItem-hover-fill: rgba(255, 255, 255, 0.07);
   --el-dropdown-menuItem-hover-color: #fff;
   --el-text-color-regular: rgba(255, 255, 255, 0.85);
 
-  background: rgba(15, 20, 37, 0.92) !important;
+  @include neon-top-line(var(--ds-primary), 0.6);
+
+  background: rgba(27, 31, 54, 0.92) !important; // --ds-overlay @ 92%
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  border: 1px solid var(--ds-border);
   border-radius: 12px;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(var(--ds-primary-rgb), 0.06) inset,
+    var(--ds-glow-primary-soft);
   overflow: hidden;
   padding: 4px;
   min-width: 220px;
@@ -46,9 +51,10 @@
   }
 
   &.is-active {
-    background: rgba(67, 191, 238, 0.12);
-    color: #43bfee;
+    background: rgba(var(--ds-primary-rgb), 0.12);
+    color: var(--ds-primary);
     font-weight: 500;
+    text-shadow: var(--ds-neon-text-subtle);
   }
 }
 

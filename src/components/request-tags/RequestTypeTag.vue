@@ -1,7 +1,6 @@
 <template>
   <el-tag
     v-if="isValidType"
-    class="w-full flex justify-center !h-auto"
     :class="typeClass"
     disable-transitions
   >
@@ -10,8 +9,7 @@
 
   <el-tag
     v-else
-    class="px-10 py-4 w-full max-w-40 rounded-lg text-[12px] font-medium tracking-wide !border
-      !border-white/5 !bg-white/5 !text-gray-500 !h-auto flex justify-center"
+    class="tag-tone-neutral"
     disable-transitions
   >
     {{ type || 'Тип невідомий' }}

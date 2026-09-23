@@ -171,36 +171,12 @@ function handleAction (command: 'categories' | 'sync') {
 </script>
 
 <style scoped>
-/* Normalize every control in the toolbar to one height (36px) and corner radius
-   so the search box and buttons line up — the global input reset otherwise makes
-   the input ~40px tall while small buttons stay short. */
-.finance-toolbar :deep(.el-button) {
-  height: 36px;
-  min-height: 36px;
-  padding: 0 14px;
-  border-radius: 10px;
-}
-
-.finance-search :deep(.el-input__wrapper) {
-  height: 36px;
-  border-radius: 10px;
-}
-
-.finance-search :deep(.el-input__inner) {
-  height: 34px;
-  padding-top: 0;
-  padding-bottom: 0;
-  font-size: 13px;
-}
-
-/* Square icon-only toggle for "show hidden" — replaces the bulky checkbox. */
+/* Square icon-only toggle for "show hidden" — replaces the bulky checkbox.
+   Height/radius come from the global control tokens (same as the search input);
+   the "on" look comes from the global `.el-button.is-active` state. */
 .finance-icon-btn {
-  width: 36px;
+  width: var(--ds-control-height);
   padding: 0 !important;
-}
-
-.finance-icon-btn.is-active {
-  @apply bg-blue-500/20 border-blue-400/40 text-blue-200;
 }
 </style>
 
@@ -228,7 +204,7 @@ function handleAction (command: 'categories' | 'sync') {
 }
 
 .finance-dropdown .el-dropdown-menu__item:hover {
-  background: rgba(67, 191, 238, 0.14);
+  background: rgba(46, 229, 255, 0.14);
   color: #fff;
   filter: none;
 }

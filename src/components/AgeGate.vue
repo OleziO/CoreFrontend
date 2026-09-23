@@ -6,9 +6,10 @@
     aria-modal="true"
     :aria-label="HEADING"
   >
-    <div class="age-gate__panel">
+    <div class="age-gate__panel neon-card hud-corners">
       <!-- Question state -->
       <template v-if="!denied">
+        <span class="sys-label age-gate__eyebrow" aria-hidden="true">SYS://ACCESS · 21+</span>
         <h1 class="age-gate__heading">
           {{ HEADING }}
         </h1>
@@ -85,9 +86,10 @@ function deny () {
   justify-content: center;
   padding: 24px;
   /* Opaque base — nothing behind the gate leaks through. */
-  background-color: #0a0711;
+  background-color: var(--ds-background);
 }
 
+/* Surface, hairline, top light and halo come from `.neon-card` / `.hud-corners`. */
 .age-gate__panel {
   display: flex;
   flex-direction: column;
@@ -95,19 +97,24 @@ function deny () {
   width: 100%;
   max-width: 560px;
   padding: 40px 32px;
-  border: 1px solid rgba(67, 191, 238, 0.15);
   border-radius: 16px;
-  background-color: #1e2330;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
   text-align: center;
+}
+
+.age-gate__eyebrow {
+  margin-bottom: 16px;
 }
 
 .age-gate__heading {
   margin: 0 0 32px;
-  font-size: 26px;
-  font-weight: 700;
+  font-family: var(--ds-font-display);
+  font-size: 24px;
+  font-weight: 400;
   line-height: 1.3;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: #ffffff;
+  text-shadow: var(--ds-neon-text-subtle);
 }
 
 .age-gate__actions {
@@ -158,7 +165,7 @@ function deny () {
   }
 
   .age-gate__heading {
-    font-size: 22px;
+    font-size: 19px;
     margin-bottom: 24px;
   }
 

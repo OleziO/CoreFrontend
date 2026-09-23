@@ -1,8 +1,23 @@
 <template>
-  <div class="h-full flex flex-col">
+  <div class="flex h-full flex-col gap-12">
+    <!-- Toolbar: register label + legend -->
+    <div class="flex shrink-0 flex-wrap items-center justify-between gap-x-16 gap-y-8">
+      <span class="sys-label !text-[9px]">// Календар верифікацій</span>
+
+      <div class="verif-legend" aria-label="Легенда">
+        <span class="verif-legend__item">
+          <i class="verif-legend__dot verif-legend__dot--free" aria-hidden="true" />
+          Вільні слоти
+        </span>
+        <span class="verif-legend__item">
+          <i class="verif-legend__dot verif-legend__dot--booked" aria-hidden="true" />
+          Бронювання
+        </span>
+      </div>
+    </div>
+
     <div
-      class="flex-1 min-h-0 rounded-xl border border-white/10 bg-dark-navy/50 shadow-xl
-             overflow-auto p-16 verification-calendar"
+      class="verification-calendar hud-panel min-h-0 flex-1 overflow-auto rounded-2xl p-16"
     >
       <el-config-provider :locale="elementPlusUk">
         <el-calendar v-model="selectedDate">
@@ -118,75 +133,156 @@ async function onCellClick (data: ICalendarCellData): Promise<void> {
 </script>
 
 <style scoped>
-/* Dark-surface skin for Element Plus' light calendar. */
-.verification-calendar :deep(.el-calendar) {
-  background: transparent;
-  --el-calendar-border: 1px solid rgb(255 255 255 / 0.08);
-  --el-calendar-cell-width: auto;
-  /* Hover + selected cell fills derive from these EP vars — keep them dark/translucent
-     so the (light) day number stays readable instead of going white-on-white. */
-  --el-fill-color-light: rgb(67 191 238 / 0.1);
-  --el-color-primary-light-9: rgb(67 191 238 / 0.18);
+/* ─── Legend ─────────────────────────────────────────────────────────────── */
+.verif-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
-.verification-calendar :deep(.el-calendar__header),
-.verification-calendar :deep(.el-calendar-table thead th),
-.verification-calendar :deep(.el-calendar-table td) {
-  color: rgb(255 255 255 / 0.7);
-  border-color: rgb(255 255 255 / 0.08);
+.verif-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
+}
+
+.verif-legend__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.verif-legend__dot--free {
+  background: var(--ds-success);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
+
+.verif-legend__dot--booked {
+  background: var(--ds-warning);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+/* ─── Calendar skin (Element Plus is light by default) ───────────────────── */
+.verification-calendar :deep(.el-calendar) {
+  background: transparent;
+  --el-calendar-border: 1px solid rgba(var(--ds-primary-rgb), 0.1);
+  --el-calendar-cell-width: auto;
+  /* Hover + selected fills derive from these EP vars — keep them translucent cyan
+     so the day number stays readable. */
+  --el-fill-color-light: rgba(var(--ds-primary-rgb), 0.08);
+  --el-color-primary-light-9: rgba(var(--ds-primary-rgb), 0.14);
+}
+
+.verification-calendar :deep(.el-calendar__header) {
+  padding: 4px 4px 14px;
+  border-bottom: 1px solid rgba(var(--ds-primary-rgb), 0.12);
 }
 
 .verification-calendar :deep(.el-calendar__title) {
-  color: rgb(255 255 255 / 0.9);
+  font-family: var(--ds-font-display);
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: var(--ds-neon-text-subtle);
 }
 
-/* Month-nav buttons: flatter corners (the var keeps the group's outer-corner-only
-   rounding intact), larger hit area, dark skin instead of EP's light default. */
+.verification-calendar :deep(.el-calendar__body) {
+  padding: 12px 0 0;
+}
+
+/* Weekday row in the mono system register. */
+.verification-calendar :deep(.el-calendar-table thead th) {
+  padding: 8px 0 10px;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
+  border-color: rgba(var(--ds-primary-rgb), 0.1);
+}
+
+.verification-calendar :deep(.el-calendar-table td) {
+  border-color: rgba(var(--ds-primary-rgb), 0.1);
+}
+
+/* Month-nav buttons: compact ghost group in the mono register. */
 .verification-calendar :deep(.el-calendar__button-group) {
-  --el-border-radius-base: 5px;
+  --el-border-radius-base: 6px;
 }
 
 .verification-calendar :deep(.el-calendar__button-group .el-button) {
-  height: 36px;
-  padding: 0 18px;
-  font-size: 13px;
-  background: rgb(255 255 255 / 0.04);
-  border-color: rgb(255 255 255 / 0.15);
-  color: rgb(255 255 255 / 0.85);
+  height: 32px;
+  padding: 0 14px;
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(var(--ds-primary-rgb), 0.2);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .verification-calendar :deep(.el-calendar__button-group .el-button:hover),
 .verification-calendar :deep(.el-calendar__button-group .el-button:focus-visible) {
-  background: rgb(67 191 238 / 0.15);
-  border-color: rgb(67 191 238 / 0.4);
+  background: rgba(var(--ds-primary-rgb), 0.12);
+  border-color: rgba(var(--ds-primary-rgb), 0.45);
   color: #fff;
   z-index: 1;
 }
 
 .verification-calendar :deep(.el-calendar__button-group .el-button:active) {
-  background: rgb(67 191 238 / 0.25);
+  background: rgba(var(--ds-primary-rgb), 0.2);
 }
 
-/* The day cell content lives in `.el-calendar-day`; keep it light in every state. */
+/* Day cell content lives in `.el-calendar-day`; keep it light in every state. */
 .verification-calendar :deep(.el-calendar-day) {
-  color: rgb(255 255 255 / 0.85);
-  transition: background-color 0.15s ease;
-  padding: 6px;
+  min-height: 84px;
+  padding: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  transition: background-color var(--ds-duration-fast) ease, box-shadow var(--ds-duration-fast) ease;
 }
 
 .verification-calendar :deep(.el-calendar-day:hover) {
-  background: rgb(67 191 238 / 0.1);
+  background: rgba(var(--ds-primary-rgb), 0.08);
   color: #fff;
 }
 
 .verification-calendar :deep(.el-calendar-table td.is-selected .el-calendar-day) {
-  background: rgb(67 191 238 / 0.18);
+  background: rgba(var(--ds-primary-rgb), 0.12);
+  box-shadow: inset 0 0 0 1px rgba(var(--ds-primary-rgb), 0.45), var(--ds-glow-primary-soft);
   color: #fff;
 }
 
-.verification-calendar :deep(.el-calendar-table td.is-today .el-calendar-day) {
-  color: var(--el-color-primary, #43bfee);
-  font-weight: 600;
+.verification-calendar :deep(.el-calendar-table td.is-today .cal-cell__day) {
+  color: var(--ds-primary);
+  text-shadow: var(--ds-neon-text-subtle);
+}
+
+.verification-calendar :deep(.el-calendar-table td.is-today .cal-cell__day::after) {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 6px;
+  border-radius: 9999px;
+  background: var(--ds-primary);
+  box-shadow: 0 0 6px rgba(var(--ds-primary-rgb), 0.9);
+  vertical-align: 2px;
+}
+
+/* Overflow days from the neighbouring months step back. */
+.verification-calendar :deep(.el-calendar-table td.prev .cal-cell__day),
+.verification-calendar :deep(.el-calendar-table td.next .cal-cell__day) {
+  color: rgba(255, 255, 255, 0.28);
 }
 
 .cal-cell {
@@ -202,8 +298,14 @@ async function onCellClick (data: ICalendarCellData): Promise<void> {
 }
 
 .cal-cell__day {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--ds-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Badges sit at the cell bottom and split the row evenly (1 badge = full width, 2 = 50/50). */
@@ -220,26 +322,29 @@ async function onCellClick (data: ICalendarCellData): Promise<void> {
   height: 22px;
   padding: 0 6px;
   border-radius: 4px;
-  font-size: 12px;
+  border: 1px solid transparent;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
   font-weight: 700;
+  letter-spacing: 0.04em;
   line-height: 20px;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border: 1px solid transparent;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Free slots — emerald. Bookings — amber. */
+/* Free slots — success green. Bookings — warning amber. */
 .cal-badge--free {
-  background: rgb(16 185 129 / 0.16);
-  border-color: rgb(16 185 129 / 0.35);
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.35);
   color: #6ee7b7;
 }
 
 .cal-badge--booked {
-  background: rgb(245 158 11 / 0.16);
-  border-color: rgb(245 158 11 / 0.35);
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.35);
   color: #fcd34d;
 }
 </style>

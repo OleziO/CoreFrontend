@@ -15,34 +15,9 @@ export const requestStatusLabelMap: Record<string, string> = {
 }
 
 export const requestStatusClassMap: Record<string, string> = {
-
-  [ERequestStatus.NEW]: `
-    !border !border-blue-500/40 !bg-blue-500/10 !text-blue-400
-    rounded-lg px-8 py-4 text-[11px] font-semibold tracking-wide
-    shadow-[0_0_12px_rgba(59,130,246,0.2)]
-  `,
-
-  [ERequestStatus.ASSIGNED]: `
-    !border !border-amber-500/40 !bg-amber-500/10 !text-amber-400
-    rounded-lg px-8 py-4 text-[11px] font-semibold tracking-wide
-    shadow-[0_0_12px_rgba(245,158,11,0.2)]
-  `,
-
-  [ERequestStatus.COMMITED]: `
-    !border !border-purple-500/40 !bg-purple-500/10 !text-purple-400
-    rounded-lg px-8 py-4 text-[11px] font-semibold tracking-wide
-    shadow-[0_0_12px_rgba(168,85,247,0.2)]
-  `,
-
-  [ERequestStatus.MERGED]: `
-    !border !border-emerald-500/40 !bg-emerald-500/10 !text-emerald-400
-    rounded-lg px-8 py-4 text-[11px] font-semibold tracking-wide
-    shadow-[0_0_12px_rgba(16,185,129,0.2)]
-  `,
-
-  [ERequestStatus.CLOSED]: `
-    !border !border-slate-500/40 !bg-slate-500/10 !text-slate-400
-    rounded-lg px-8 py-4 text-[11px] font-semibold tracking-wide
-    shadow-[0_0_12px_rgba(148,163,184,0.2)]
-  `
+  [ERequestStatus.NEW]: 'tag-tone-info tag-dot',
+  [ERequestStatus.ASSIGNED]: 'tag-tone-warning tag-dot',
+  [ERequestStatus.COMMITED]: 'tag-tone-violet tag-dot',
+  [ERequestStatus.MERGED]: 'tag-tone-success tag-dot',
+  [ERequestStatus.CLOSED]: 'tag-tone-neutral tag-dot'
 }

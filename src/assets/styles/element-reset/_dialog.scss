@@ -35,8 +35,9 @@
 /* Сам діалог */
 .el-dialog {
   @include glass-panel;
+  @include neon-top-line(var(--ds-primary), 0.7);
   @apply relative rounded-2xl m-auto max-h-[70vh] overflow-hidden flex flex-col px-0;
-  box-shadow: var(--ds-elevation-4);
+  box-shadow: var(--ds-elevation-4), var(--ds-glow-primary-soft);
 
   &::focus,
   &:focus-visible {
@@ -55,8 +56,9 @@
     @apply px-16 pt-16 pb-10 #{!important};
   }
 
+  // Dialog titles speak in the display register: uppercase, tracked.
   &__title {
-    @apply text-white text-xl font-semibold pr-16;
+    @apply text-white text-lg font-display font-normal uppercase tracking-wide pr-16;
   }
 
   &__body {
@@ -65,11 +67,6 @@
 
   &__footer {
     @apply px-16 pt-10 pb-16 #{!important};
-  }
-
-  /* Buttons */
-  .el-button {
-    @apply border-0 shadow-none p-0 h-auto leading-normal outline-none;
   }
 
   /* Inputs / Selects */
@@ -81,7 +78,7 @@
   }
 
   .el-select__wrapper {
-    @apply h-44;
+    min-height: var(--ds-control-height);
   }
 
   .is-near {
@@ -101,7 +98,7 @@
 
     .el-textarea__inner {
       @apply bg-white/10 text-white placeholder-white/40 rounded-xl;
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid var(--ds-border-strong);
       padding: 0.5rem 1rem;
       min-height: 80px; /* регулюється кількість рядків */
       resize: none;
@@ -111,8 +108,8 @@
       box-shadow: none;
 
       &:focus {
-        border-color: var(--ds-primary);
-        box-shadow: var(--ds-glow-primary);
+        border-color: rgba(var(--ds-primary-rgb), 0.75);
+        box-shadow: var(--ds-glow-primary-soft);
       }
 
       &::placeholder {
@@ -129,10 +126,6 @@
   /* Select tags */
   .el-select__tags-text {
     @apply text-white;
-  }
-
-  .el-tag {
-    @apply bg-white/10 border-white/10 text-white rounded-lg;
   }
 
   /* Select dropdown (popup) */
@@ -173,84 +166,11 @@
     background: transparent;
   }
 
-  /* Dialog Buttons (Glass UI) */
-  .el-button {
-    @apply
-      inline-flex
-      items-center
-      gap-8
-      px-20 
-      py-8
-      rounded-xl
-      font-medium
-      text-sm
-      transition-all
-      duration-200
-      ease-out
-      bg-white/5
-      text-white
-      border
-      border-white/10
-      backdrop-blur-md;
-
-    &:not(.is-disabled):hover {
-      @apply bg-white/10 border-white/20;
-    }
-
-    &:not(.is-disabled):active {
-      @apply scale-[0.98];
-    }
-
-    &:focus-visible {
-      @apply outline-none ring-2;
-    }
-
-    &.is-disabled {
-      @apply cursor-not-allowed scale-100 shadow-none;
-
-      background: linear-gradient(
-        180deg,
-        rgba(255,255,255,0.08),
-        rgba(255,255,255,0.04)
-      );
-
-      border-color: rgba(255,255,255,0.15);
-      color: rgba(255,255,255,0.5);
-    }
-  }
-
-  .el-button--primary.is-disabled {
-    background: linear-gradient(
-      90deg,
-      rgba(67,191,254,0.35),
-      rgba(31,150,255,0.35)
-    );
-    border-color: rgba(67,191,254,0.6);
-    color: rgba(255,255,255,0.75);
-  }
+  /* Buttons inside dialogs come from the global button system
+     (element-reset/_button.scss) — no per-dialog restyling. */
 
   .el-icon--close-tip {
     @apply hidden;
-  }
-
-  .el-button--success.is-disabled {
-    background: linear-gradient(
-      90deg,
-      rgba(22,163,74,0.35),
-      rgba(34,197,94,0.35)
-    );
-    border-color: rgba(34,197,94,0.6);
-    color: rgba(255,255,255,0.75);
-  }
-
-  .el-button--danger.is-disabled {
-    background: linear-gradient(
-      90deg,
-      rgba(220,38,38,0.35),
-      rgba(248,113,113,0.35)
-    );
-    border-color: rgba(248,113,113,0.6);
-    color: rgba(255,255,255,0.75);
   }
 
   /* =========================
@@ -289,7 +209,7 @@
     }
 
     &:active {
-      box-shadow: 0 0 12px #43bfee;
+      box-shadow: 0 0 12px #2ee5ff;
     }
 
     &:focus-visible {
@@ -298,7 +218,7 @@
 
     &.is-dragover {
       @apply bg-white/15 border-primary text-white;
-      box-shadow: 0 0 18px rgba(67, 191, 238, 0.45);
+      box-shadow: 0 0 18px rgba(46, 229, 255, 0.45);
     }
 
     &.is-success {

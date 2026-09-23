@@ -4,7 +4,8 @@
 /* Панель як у dropdown: .el-dropdown-menu */
 .el-popper.el-tooltip:has(.el-popconfirm) {
   @include glass-popper;
-  @apply rounded-xl border-white/20 shadow-[0_20px_40px_rgba(0,0,0,0.45)];
+  @include neon-top-line(var(--ds-primary), 0.6);
+  @apply rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)];
   box-sizing: border-box;
   padding: 12px 14px !important;
   min-width: 200px;
@@ -35,10 +36,5 @@
 }
 
 .el-popconfirm__action .el-button--small {
-  @apply rounded-lg px-12 py-6 min-h-0 #{!important};
-}
-
-.el-popconfirm__action .el-button.is-text,
-.el-popconfirm__action .el-button.el-button--text {
-  @apply text-white/70 hover:text-white hover:bg-white/10 #{!important};
+  @apply px-12 py-6 min-h-0 #{!important};
 }

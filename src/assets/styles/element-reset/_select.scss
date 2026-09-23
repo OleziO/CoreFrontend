@@ -19,6 +19,24 @@
   @apply -ml-2;
 }
 
+/* ---------------- Trigger ---------------- */
+/* Той самий контракт висоти/радіуса, що й у .el-input__wrapper та кнопок (`--ds-control-*`) */
+.el-select__wrapper {
+  /* Same glass surface as `.el-input__wrapper` (see _input.scss), so a select next
+     to an input reads as the same control on every surface — not only inside
+     dialogs. EP paints its edge as an inset ring; the glass border replaces it. */
+  @include glass-input;
+  min-height: var(--ds-control-height);
+  border-radius: var(--ds-control-radius);
+  box-shadow: none;
+  transition: background-color 0.2s ease-out, border-color 0.2s ease-out;
+
+  &:hover {
+    @apply bg-white/15;
+    border-color: rgba(var(--ds-primary-rgb), 0.4);
+  }
+}
+
 /* ---------------- Disabled trigger ---------------- */
 /* EP puts `is-disabled` on the WRAPPER (not the root `.el-select`) and paints it
    with a pale `fill-color-light` fill — which reads "light" on the dark theme.
@@ -125,8 +143,6 @@
 
 /* Individual tags */
 .el-popper.is-light.el-tooltip .el-tag {
-  @apply bg-white/10 border-white/10 text-white rounded-lg;
-
   &.is-hit {
     background-color: colors.$primary;
     @apply text-white;
@@ -153,76 +169,206 @@
     ease-out;
 }
 
-/* ---------------- User menu in header: як у списку el-select (опції) ---------------- */
+/* ---------------- User menu in header ----------------
+   The popper shell is transparent; the visual surface is the <ul> itself
+   (glass + top light from the generic .el-dropdown-menu reset), so there is
+   a single border and a single radius. */
 .el-dropdown__popper.header-dropdown,
 .header-dropdown.el-popper {
-  @include glass-popper;
-  @apply
-    rounded-xl
-    overflow-hidden
-    p-0
-    shadow-[0_20px_60px_rgba(0,0,0,0.55)];
+  @apply border-0 bg-transparent p-0 shadow-none;
 
+  backdrop-filter: none;
   --el-bg-color: transparent;
   --el-fill-color-light: transparent;
 }
 
-/* Контейнер списку — як .el-select-dropdown (типу «тільки внутрішні відступи») */
 .header-dropdown .el-dropdown-menu {
-  @apply m-0 min-w-[200px] border-0 bg-transparent p-8 shadow-none;
+  @apply m-0 min-w-[268px] p-6;
+
+  border-radius: 14px;
+  background: rgba(16, 19, 36, 0.9) !important;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(var(--ds-primary-rgb), 0.06) inset,
+    var(--ds-glow-primary-soft);
 }
 
-/* Пункти — як .el-select-dropdown__item (без глобального drop-shadow з _dropdown) */
-.header-dropdown .el-dropdown-menu__item {
-  @apply
-    m-0
-    flex
-    min-h-0
-    items-center
-    gap-8
-    rounded-lg
-    border-0
-    px-12
-    py-8
-    text-sm
-    font-medium
-    leading-snug
-    text-white/80
-    transition-colors
-    duration-200
-    ease-out;
+/* Identity plate — avatar tile, name, @username, live rating */
+.header-dropdown .header-menu__identity {
+  @apply mb-4 flex list-none items-center gap-10 rounded-xl px-10 py-10;
 
+  border: 1px solid rgba(var(--ds-primary-rgb), 0.14);
+  background:
+    repeating-linear-gradient(-45deg, rgba(var(--ds-primary-rgb), 0.04) 0 1px, transparent 1px 10px),
+    rgba(7, 8, 15, 0.45);
+}
+
+.header-menu__identity-avatar {
+  @apply inline-flex size-36 shrink-0 overflow-hidden rounded-lg;
+
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(var(--ds-primary-rgb), 0.4), var(--ds-glow-primary-soft);
+}
+
+.header-menu__identity-text {
+  @apply flex min-w-0 flex-1 flex-col gap-3;
+}
+
+.header-menu__identity-name {
+  @apply truncate text-sm font-semibold text-white;
+
+  line-height: 1.15;
+}
+
+.header-menu__identity-meta {
+  @apply truncate;
+
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  color: var(--ds-text-faint);
+}
+
+.header-menu__identity-mmr {
+  @apply flex shrink-0 flex-col items-end gap-2;
+
+  font-family: var(--ds-font-display);
+  font-size: 15px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+
+  small {
+    font-family: var(--ds-font-mono);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    line-height: 1;
+    color: var(--ds-primary);
+    text-shadow: var(--ds-neon-text-subtle);
+  }
+}
+
+/* Section eyebrow — replaces a bare divider between groups */
+.header-dropdown .header-menu__section {
+  @apply mb-2 mt-4 list-none px-10 pt-6;
+
+  border-top: 1px solid rgba(var(--ds-primary-rgb), 0.12);
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
+}
+
+/* Items — icon tile + label, neon bar on the active route */
+.header-dropdown .el-dropdown-menu__item {
+  @apply relative m-0 flex min-h-0 items-center gap-10 rounded-lg border-0 px-8 py-6 text-sm font-medium leading-snug;
+
+  color: rgba(255, 255, 255, 0.8);
   filter: none;
   box-shadow: none;
   outline: none;
+  transition: background-color var(--ds-duration-fast) ease, color var(--ds-duration-fast) ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 2px;
+    height: 0;
+    border-radius: 2px;
+    background: var(--ds-primary);
+    box-shadow: 0 0 8px rgba(var(--ds-primary-rgb), 0.9);
+    transform: translateY(-50%);
+    transition: height var(--ds-duration-base) var(--ds-ease-out);
+  }
 
   &:not(.is-disabled):hover,
   &:not(.is-disabled):focus {
-    @apply bg-white/10 text-white;
+    background: rgba(255, 255, 255, 0.07) !important;
+    color: #fff !important;
+
+    .header-menu__icon {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+    }
   }
 
   &.header-user-menu__item--active {
     @apply font-semibold;
-    color: colors.$primary;
+
+    color: var(--ds-primary);
+
+    &::before {
+      height: 16px;
+    }
+
+    .header-menu__icon {
+      color: var(--ds-primary);
+      background: rgba(var(--ds-primary-rgb), 0.12);
+      box-shadow: inset 0 0 0 1px rgba(var(--ds-primary-rgb), 0.35);
+    }
   }
 
   &.header-user-menu__item--danger {
-    @apply text-red-400/95;
+    color: rgba(248, 113, 113, 0.95);
+
+    .header-menu__icon {
+      color: #f87171;
+      background: rgba(239, 68, 68, 0.1);
+      box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.22);
+    }
 
     &:not(.is-disabled):hover,
     &:not(.is-disabled):focus {
-      @apply bg-white/10 text-red-300;
+      background: rgba(239, 68, 68, 0.1) !important;
+      color: #fca5a5 !important;
+
+      .header-menu__icon {
+        color: #fff;
+        background: rgba(239, 68, 68, 0.6);
+      }
     }
   }
 }
 
-/* Розділювач: EP додає `&--divided`, тільки підлаштовуємо колір під селект */
-.header-dropdown .el-dropdown-menu__item--divided {
-  @apply border-t border-solid border-t-white/10;
+.header-menu__icon {
+  @apply inline-flex size-28 shrink-0 items-center justify-center rounded-md;
+
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition:
+    background-color var(--ds-duration-fast) ease,
+    color var(--ds-duration-fast) ease,
+    box-shadow var(--ds-duration-fast) ease;
 }
 
-/* Стрілка popper, як у селекта — не показувати */
+/* Hairline separator row (used before sign-out) */
+.header-dropdown .header-menu__divider {
+  @apply mx-4 my-4 list-none;
+
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* No popper arrow — the menu reads as a detached HUD panel */
 .header-dropdown .el-popper__arrow,
 .header-dropdown .el-popper__arrow::before {
   @apply hidden;
+}
+
+/* ---------------- Neon focus on the trigger ---------------- */
+/* EP paints focus as a 1px inset primary ring; add the soft halo so a select
+   lights up exactly like an input (`_input.scss` focus-within). */
+.el-select__wrapper.is-focused:not(.is-disabled) {
+  box-shadow:
+    0 0 0 1px rgba(var(--ds-primary-rgb), 0.7) inset,
+    var(--ds-glow-primary-soft) !important;
 }

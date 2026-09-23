@@ -1,26 +1,32 @@
 <template>
   <div v-loading.fullscreen="tournamentStore.loading" class="h-full w-full overflow-y-auto custom-scroll">
-    <div class="relative w-full min-h-[550px] lg:h-[600px] flex items-end shrink-0">
+    <div class="relative w-full min-h-[550px] lg:min-h-[600px] flex items-end shrink-0">
       <AppBackButton class="top-24 left-20 lg:left-40" />
 
-      <div class="absolute inset-0 z-0 select-none">
+      <!-- Банер розчиняється маскою, а не заливкою: крізь нижній край проступає
+           текстура й атмосфера сторінки, тож шва між героєм і фоном немає -->
+      <div
+        class="absolute inset-0 z-0 select-none
+         [mask-image:linear-gradient(to_bottom,#000_45%,transparent_100%)]
+         [-webkit-mask-image:linear-gradient(to_bottom,#000_45%,transparent_100%)]"
+      >
         <TournamentBannerImage
           :url="tournament?.headerBannerUrl"
           variant="hero"
           :lazy="false"
         />
         <div
-          class="absolute inset-0 bg-gradient-to-t from-dark-navy
-           via-dark-navy/80 to-transparent pointer-events-none"
+          class="absolute inset-0 bg-gradient-to-t from-background
+           via-background/70 to-transparent pointer-events-none"
         />
         <div
-          class="absolute inset-0 bg-gradient-to-r from-dark-navy/80
+          class="absolute inset-0 bg-gradient-to-r from-background/80
            via-transparent to-transparent pointer-events-none"
         />
         <!-- Акцентні відблиски в стилі головної (cyan/gold) -->
         <div
           class="absolute inset-0 pointer-events-none
-           bg-[radial-gradient(ellipse_55%_50%_at_12%_88%,rgba(67,191,238,0.12),transparent_70%)]"
+           bg-[radial-gradient(ellipse_55%_50%_at_12%_88%,rgba(46,229,255,0.12),transparent_70%)]"
         />
         <div
           class="absolute inset-0 pointer-events-none
@@ -28,8 +34,8 @@
         />
       </div>
 
-      <div class="relative z-10 pt-24 w-full max-w-7xl mx-auto px-20 sm:px-15 lg:px-20 xl:px-40 pb-14 lg:pb-16">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-14 xl:gap-16 items-end">
+      <div class="relative z-10 pt-24 w-full max-w-7xl mx-auto px-10 sm:px-15 lg:px-20 xl:px-40 pb-14 lg:pb-16">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-14 xl:gap-16 items-end lg:items-center">
           <TournamentHeroSection
             :tournament="tournament"
             class="lg:col-span-7"
@@ -76,20 +82,11 @@
         <el-tabs v-model="activeTab" class="tournament-detail-tabs w-full" tab-position="top" stretch>
           <el-tab-pane v-for="tab in tabs" :key="tab.value" :name="tab.value">
             <template #label>
-              <div class="relative flex gap-4 sm:gap-6 items-center py-2">
-                <span class="text-[13px] sm:text-sm font-semibold uppercase tracking-wide text-white/85">
-                  {{ tab.label }}
-                </span>
-                <el-tag
-                  v-if="tab.value === 'teams'"
-                  type="info"
-                  round
-                  class="border border-primary/40 bg-primary/15 text-primary
-                rounded-full size-20 flex justify-center items-center text-xs
-                tracking-wide font-semibold transition-all duration-300"
-                >
+              <div class="tab-label">
+                <span>{{ tab.label }}</span>
+                <span v-if="tab.value === 'teams'" class="tab-count">
                   {{ tournament?.teams?.length || 0 }}
-                </el-tag>
+                </span>
               </div>
             </template>
           </el-tab-pane>
@@ -697,27 +694,46 @@ onUnmounted(() => {
 }
 
 .tournament-detail-tabs :deep(.el-tabs__nav) {
-  gap: 0.25rem;
+  gap: 0;
 }
 
-/** Акцентна лінія активної вкладки — cyan у стилі головної сторінки. */
-.tournament-detail-tabs :deep(.el-tabs__active-bar) {
-  height: 2px;
-  border-radius: 9999px;
-  background-color: var(--ds-primary);
-  box-shadow: var(--ds-glow-primary);
-}
-
+/** Розтягнуті вкладки: підпис по центру комірки; неонову лінію малює глобальний reset (`.is-active::after`). */
 .tournament-detail-tabs :deep(.el-tabs__item) {
-  padding: 0 0.75rem 0.75rem;
-  color: rgb(156 163 175);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 12px 14px;
 }
 
-.tournament-detail-tabs :deep(.el-tabs__item:hover) {
-  color: rgb(229 231 235);
+.tournament-detail-tabs :deep(.el-tabs__active-bar) {
+  display: none;
 }
 
-.tournament-detail-tabs :deep(.el-tabs__item.is-active) {
-  color: rgb(255 255 255);
+.tab-label {
+  @apply inline-flex items-center justify-center gap-8;
+}
+
+/** Лічильник команд: моно-чип у реєстрі HUD, підсвічується разом з активною вкладкою. */
+.tab-count {
+  @apply inline-flex h-18 min-w-18 items-center justify-center rounded-full border px-5;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  text-shadow: none;
+  transition: color var(--ds-duration-base) ease, border-color var(--ds-duration-base) ease,
+    background-color var(--ds-duration-base) ease;
+}
+
+.tournament-detail-tabs :deep(.el-tabs__item.is-active) .tab-count {
+  color: var(--ds-primary);
+  border-color: rgba(var(--ds-primary-rgb), 0.5);
+  background: rgba(var(--ds-primary-rgb), 0.12);
+  box-shadow: 0 0 8px rgba(var(--ds-primary-rgb), 0.3);
 }
 </style>

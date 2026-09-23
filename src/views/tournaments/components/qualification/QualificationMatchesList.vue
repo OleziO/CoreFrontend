@@ -1,34 +1,37 @@
 <template>
-  <div
-    class="qual-shell rounded-2xl border border-white/[0.09] bg-gradient-to-br from-[#121a2c] via-[#0f1524] to-[#0c101c]
-      shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.05)] overflow-hidden"
-  >
-    <div
-      class="relative flex flex-col gap-14 lg:flex-row lg:items-stretch lg:justify-between px-16 py-16 md:px-22
-        md:py-18 border-b border-white/[0.06] bg-[#0a0f18]/40"
-    >
-      <div
-        class="pointer-events-none absolute inset-0 opacity-[0.35]
-          bg-[radial-gradient(ellipse_80%_60%_at_20%_-20%,rgba(6,182,212,0.12),transparent_55%)]"
-      />
-      <div class="relative min-w-0 flex-1">
-        <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-500/80 mb-6">
-          Кваліфікація
+  <section class="qual-shell hud-panel rounded-2xl overflow-hidden" aria-label="Матриця кваліфікаційних матчів">
+    <header class="qual-shell__head">
+      <div class="flex min-w-0 flex-1 flex-col gap-8">
+        <p class="sys-label sys-label--muted m-0">Перехресна таблиця</p>
+        <h3 class="qual-shell__title">Матриця матчів</h3>
+        <p class="qual-shell__hint">
+          Рядок — ваша команда, стовпець — суперник. Результат показано з точки зору рядка;
+          подається через «Додати результат».
         </p>
-        <h3 class="text-lg md:text-xl font-bold text-white tracking-tight leading-tight">
-          Матриця матчів
-        </h3>
-        <p class="text-xs text-gray-500 mt-8 max-w-xl leading-relaxed">
-          Рядок — ваша команда, стовпець — суперник.
-          <span class="text-green-400/90 font-semibold">W</span> /
-          <span class="text-red-400/90 font-semibold">L</span> з точки зору рядка;
-          <span class="text-amber-300 font-semibold">X</span> — та сама команда.
-          Результат подається через «Додати результат».
-        </p>
+
+        <ul class="qual-legend" aria-label="Позначення в матриці">
+          <li class="qual-legend__item">
+            <span class="qual-legend__swatch qual-legend__swatch--win" aria-hidden="true">W</span>
+            <span>перемога</span>
+          </li>
+          <li class="qual-legend__item">
+            <span class="qual-legend__swatch qual-legend__swatch--loss" aria-hidden="true">L</span>
+            <span>поразка</span>
+          </li>
+          <li class="qual-legend__item">
+            <span class="qual-legend__swatch qual-legend__swatch--empty" aria-hidden="true" />
+            <span>ще не зіграно</span>
+          </li>
+          <li class="qual-legend__item">
+            <span class="qual-legend__swatch qual-legend__swatch--diag" aria-hidden="true" />
+            <span>та сама команда</span>
+          </li>
+        </ul>
       </div>
+
       <div
         v-if="showAddResultButton || showTestMatchButton || showTechLossButton"
-        class="relative shrink-0 w-full sm:w-auto sm:self-start lg:self-center flex flex-wrap gap-10"
+        class="qual-shell__actions"
       >
         <el-button
           v-if="showTestMatchButton"
@@ -41,7 +44,7 @@
           v-if="showTechLossButton"
           type="danger"
           plain
-          class="!rounded-xl !h-12 !min-h-[48px] !px-22 !text-sm !font-semibold"
+          class="btn-cta"
           @click="$emit('tech-loss')"
         >
           Технічна поразка
@@ -52,70 +55,71 @@
           :class="addResultButtonClass"
           @click="$emit('add-result')"
         >
-          <el-icon class="mr-8 shrink-0" :size="18"><Plus /></el-icon>
+          <PhPlus :size="18" weight="bold" class="shrink-0" />
           <span class="whitespace-nowrap">Додати результат</span>
         </el-button>
       </div>
-    </div>
+    </header>
 
-    <div
-      v-loading="loading"
-      element-loading-background="rgba(12,17,28,0.72)"
-      class="relative min-h-[140px]"
-    >
+    <div class="relative min-h-[160px]">
+      <!-- Скелет замість «немає команд», поки перший GET ще в дорозі -->
       <div
-        v-if="!hasMatrix"
-        class="py-40 px-18 flex flex-col items-center gap-16 text-center"
+        v-if="loading && !hasMatrix"
+        class="qual-skeleton"
+        aria-busy="true"
+        aria-label="Завантаження матриці"
       >
-        <div
-          class="w-56 h-56 rounded-2xl border border-dashed border-white/12 flex items-center justify-center
-            bg-white/[0.02]"
-        >
-          <el-icon :size="32" class="text-gray-600 opacity-70"><Trophy /></el-icon>
+        <div class="qual-skeleton__grid">
+          <span
+            v-for="i in SKELETON_CELLS"
+            :key="i"
+            class="qual-skeleton__cell"
+            :style="{ '--i': i }"
+          />
         </div>
-        <div class="max-w-md flex flex-col items-center">
-          <p class="text-white font-semibold text-sm">Поки немає команд для матриці</p>
-          <p class="text-gray-500 text-sm mt-8 leading-relaxed">
+      </div>
+
+      <div v-else-if="!hasMatrix" class="qual-empty">
+        <div class="qual-empty__icon hud-corners" aria-hidden="true">
+          <PhTrophy :size="30" weight="duotone" />
+        </div>
+        <div class="flex max-w-md flex-col items-center">
+          <p class="qual-empty__title">Поки немає команд для матриці</p>
+          <p class="qual-empty__text">
             Після появи учасників тут з’явиться матриця пар і лідерборд. Щоб зафіксувати гру, натисніть
             «Додати результат» і введіть ID матчу Dota 2.
           </p>
           <el-button
             v-if="showAddResultButton"
             type="primary"
-            :class="[addResultButtonClass, '!mt-22 !max-w-[320px]']"
+            :class="[addResultButtonClass, 'mt-22 max-w-[320px]']"
             @click="$emit('add-result')"
           >
-            <el-icon class="mr-8 shrink-0" :size="18"><Plus /></el-icon>
+            <PhPlus :size="18" weight="bold" class="shrink-0" />
             <span class="whitespace-nowrap">Додати результат</span>
           </el-button>
         </div>
       </div>
 
-      <div v-else class="qual-split p-14 sm:p-16 md:p-20 gap-16 lg:gap-20">
-        <div
-          class="qual-matrix-card min-w-0 rounded-xl border border-white/[0.07] bg-[#0b101c]/90
-            shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] overflow-hidden"
-        >
-          <div
-            class="flex items-center justify-between gap-10 px-14 py-10 sm:px-16 border-b border-white/[0.06]
-              bg-black/20"
-          >
-            <span class="text-[11px] font-semibold text-gray-400 tracking-wide">
-              Перехресна таблиця
+      <div
+        v-else
+        v-loading="loading"
+        element-loading-background="rgba(7, 8, 15, 0.72)"
+        class="qual-split p-14 sm:p-16 md:p-20 gap-16 lg:gap-20"
+      >
+        <div class="qual-matrix-card">
+          <div class="qual-matrix-card__head">
+            <span class="qual-matrix-card__label">
+              <PhGridFour :size="13" weight="bold" aria-hidden="true" />
+              Сітка пар
             </span>
-            <span class="text-[10px] text-gray-600 tabular-nums">
+            <span class="qual-matrix-card__count">
               {{ matrixTeams.length }} {{ pluralTeams(matrixTeams.length) }}
             </span>
           </div>
-          <div class="px-10 py-12 sm:px-14 sm:py-14 ">
+          <div class="px-10 py-12 sm:px-14 sm:py-14">
             <QualificationMatrix :matches="matches" :tournament-teams="tournamentTeams" />
           </div>
-          <p
-            class="px-14 py-10 sm:px-16 text-[11px] text-gray-500 leading-relaxed border-t border-white/[0.05]
-              bg-black/15"
-          >
-            Порожня клітинка — немає зіграного матчу або ще не визначено переможця.
-          </p>
         </div>
 
         <QualificationLeaderboard
@@ -125,11 +129,11 @@
         />
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { Plus, Trophy } from '@element-plus/icons-vue'
+import { PhGridFour, PhPlus, PhTrophy } from '@phosphor-icons/vue'
 import type { TQualificationMatch as QualificationMatch, TPlayerPointsEntry } from '@/api/types/api.types'
 import QualificationMatrix from './QualificationMatrix.vue'
 import QualificationLeaderboard from './QualificationLeaderboard.vue'
@@ -152,11 +156,10 @@ defineEmits<{
 }>()
 
 /** Єдині розміри для всіх кнопок «Додати результат» (шапка + порожній стан). */
-const addResultButtonClass =
-  '!rounded-xl !box-border !inline-flex !items-center !justify-center !gap-0 ' +
-  '!h-12 !min-h-[48px] !min-w-[200px] sm:!min-w-[220px] !px-22 sm:!px-28 !text-sm !font-semibold !leading-none ' +
-  '!border !border-cyan-500/40 !shadow-md !shadow-cyan-950/30 ' +
-  'w-full sm:!w-auto'
+const addResultButtonClass = 'btn-cta w-full sm:w-auto sm:min-w-[220px]'
+
+/** 5×5 плиток скелета — приблизно стільки видно в матриці на першому екрані. */
+const SKELETON_CELLS = 25
 
 const matrixTeams = computed(() => buildQualificationMatrixTeams(props.tournamentTeams, props.matches))
 
@@ -169,11 +172,191 @@ function pluralTeams (n: number): string {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+// ─── Шапка ──────────────────────────────────────────────────────────────────
+.qual-shell__head {
+  @apply relative flex flex-col gap-14 px-16 py-16 md:px-22 md:py-18 lg:flex-row lg:items-start lg:justify-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    radial-gradient(ellipse 60% 80% at 0% 0%, rgba(var(--ds-primary-rgb), 0.08), transparent 60%),
+    rgba(0, 0, 0, 0.18);
+}
+
+.qual-shell__title {
+  @apply m-0 font-display uppercase text-white;
+  font-size: 1.125rem;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+
+  @screen md {
+    font-size: 1.25rem;
+  }
+}
+
+.qual-shell__hint {
+  @apply m-0 max-w-xl;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ds-text-muted);
+}
+
+.qual-shell__actions {
+  @apply flex w-full shrink-0 flex-wrap gap-10 sm:w-auto lg:pt-4;
+}
+
+// ─── Легенда ────────────────────────────────────────────────────────────────
+// Ті самі лунки, що й клітинки матриці, у мініатюрі — легенда показує, а не описує.
+.qual-legend {
+  @apply m-0 flex list-none flex-wrap items-center gap-x-14 gap-y-6 p-0 pt-2;
+}
+
+.qual-legend__item {
+  @apply inline-flex items-center gap-6;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
+}
+
+.qual-legend__swatch {
+  @apply inline-flex size-18 items-center justify-center rounded;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  border: 1px solid rgba(var(--ds-primary-rgb), 0.14);
+  background: rgba(255, 255, 255, 0.03);
+
+  &--win {
+    color: #4ade80;
+    background: rgba(34, 197, 94, 0.16);
+    border-color: rgba(34, 197, 94, 0.4);
+  }
+
+  &--loss {
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.14);
+    border-color: rgba(239, 68, 68, 0.4);
+  }
+
+  &--diag {
+    background:
+      repeating-linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.12) 0 2px,
+        transparent 2px 5px
+      ),
+      rgba(255, 255, 255, 0.03);
+  }
+}
+
+// ─── Скелет ─────────────────────────────────────────────────────────────────
+.qual-skeleton {
+  @apply flex justify-center p-16 sm:p-20;
+}
+
+.qual-skeleton__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 3rem);
+  gap: 4px;
+
+  @screen sm {
+    grid-template-columns: repeat(5, 3.35rem);
+  }
+}
+
+@keyframes qual-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.qual-skeleton__cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  border: 1px solid rgba(var(--ds-primary-rgb), 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  animation: qual-skeleton-pulse 1.4s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+// ─── Порожній стан ──────────────────────────────────────────────────────────
+.qual-empty {
+  @apply flex flex-col items-center gap-16 px-18 py-40 text-center;
+}
+
+.qual-empty__icon {
+  @apply flex size-64 items-center justify-center rounded-xl;
+  --hud-corner-size: 10px;
+  --hud-corner-inset: -5px;
+  --hud-corner-radius: 3px;
+  --hud-corner-color: rgba(var(--ds-primary-rgb), 0.45);
+  color: rgba(var(--ds-primary-rgb), 0.55);
+  border: 1px dashed rgba(var(--ds-primary-rgb), 0.25);
+  background: rgba(var(--ds-primary-rgb), 0.04);
+}
+
+.qual-empty__title {
+  @apply m-0 font-display uppercase text-white;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+}
+
+.qual-empty__text {
+  @apply m-0 mt-8;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ds-text-muted);
+}
+
+// ─── Матриця + лідерборд ────────────────────────────────────────────────────
 .qual-split {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+}
+
+.qual-matrix-card {
+  @apply min-w-0 overflow-hidden rounded-xl border;
+  border-color: rgba(var(--ds-primary-rgb), 0.12);
+  background: rgba(7, 8, 15, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.qual-matrix-card__head {
+  @apply flex items-center justify-between gap-10 px-14 py-10 sm:px-16;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.qual-matrix-card__label {
+  @apply inline-flex items-center gap-6;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
+
+  svg {
+    flex: none;
+    color: rgba(var(--ds-primary-rgb), 0.75);
+  }
+}
+
+.qual-matrix-card__count {
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ds-text-faint);
 }
 
 @media (min-width: 1024px) {

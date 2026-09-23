@@ -205,13 +205,16 @@ function dotWidth (sponsor: TSponsor): number {
   cursor: pointer;
   transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
+.nav-arrow:not(:disabled):active {
+  transform: translateY(-50%) scale(0.96);
+}
 .nav-arrow:hover {
   color: #fff;
   background: rgba(0, 0, 0, 0.6);
   border-color: rgba(232, 185, 49, 0.5);
 }
 .nav-arrow:focus-visible {
-  outline: 2px solid #43bfee;
+  outline: 2px solid #2ee5ff;
   outline-offset: 2px;
 }
 
@@ -245,7 +248,7 @@ function dotWidth (sponsor: TSponsor): number {
   box-shadow: 0 0 0 1px rgba(232, 185, 49, 0.45);
 }
 .thumb:focus-visible {
-  outline: 2px solid #43bfee;
+  outline: 2px solid #2ee5ff;
   outline-offset: 2px;
 }
 

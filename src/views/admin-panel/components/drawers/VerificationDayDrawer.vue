@@ -8,17 +8,14 @@
     :close-on-click-modal="true"
   >
     <template #header>
-      <div class="flex flex-col gap-12 pb-4 pr-8">
-        <div
-          class="h-[3px] w-48 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500
-                 shadow-[0_0_20px_rgba(34,211,238,0.35)]"
-        />
-        <div>
-          <h2 class="text-xl font-bold tracking-tight text-white">Верифікація</h2>
-          <p class="mt-6 text-[13px] leading-snug text-gray-500">
-            {{ headerDate }} · час показано у вашому часовому поясі (24 год)
-          </p>
-        </div>
+      <div class="vd-head">
+        <span class="sys-label !text-[9px]">// День верифікації</span>
+        <h2 class="vd-head__title">{{ headerDate }}</h2>
+        <p class="vd-head__meta">
+          <span class="vd-head__weekday">{{ weekdayLabel }}</span>
+          <span class="vd-head__sep" aria-hidden="true" />
+          час у вашому часовому поясі · 24 год
+        </p>
       </div>
     </template>
 
@@ -27,35 +24,42 @@
         <!-- Заявки -->
         <el-tab-pane name="requests">
           <template #label>
-            <span class="vd-tab-label">Заявки <span class="vd-tab-count">{{ requests.length }}</span></span>
+            <span class="vd-tab-label">
+              Заявки
+              <span class="vd-tab-count" :class="{ 'is-lit': requests.length }">{{ requests.length }}</span>
+            </span>
           </template>
 
           <div v-if="loading" class="vd-empty">Завантаження…</div>
           <div v-else-if="!requests.length" class="vd-empty">Немає заявок на цей день</div>
           <div v-else class="flex flex-col gap-12">
-            <article v-for="r in requests" :key="r.id" class="vd-card">
-              <header class="flex items-start justify-between gap-8">
+            <article
+              v-for="r in requests"
+              :key="r.id"
+              class="vd-card hud-panel"
+              :style="{ '--vd-accent': statusAccent[r.status] }"
+            >
+              <header class="flex items-start justify-between gap-10">
                 <div class="flex min-w-0 items-center gap-10">
-                  <el-avatar
-                    :size="34"
-                    shape="square"
-                    :src="resolvePublicOrApiUrl(r.team?.logoUrl)"
-                    class="shrink-0 rounded-lg border border-white/10 bg-gray-800"
-                  >
-                    <template #default>
-                      <PhUsersThree :size="16" weight="bold" class="text-white/70" />
-                    </template>
-                  </el-avatar>
+                  <span class="vd-team-logo">
+                    <el-image
+                      v-if="r.team?.logoUrl"
+                      class="size-full"
+                      :src="resolvePublicOrApiUrl(r.team.logoUrl)"
+                      fit="cover"
+                    />
+                    <PhUsersThree v-else :size="16" weight="bold" />
+                  </span>
                   <div class="min-w-0">
-                    <h3 class="truncate text-[15px] font-semibold text-white">
-                      {{ r.team?.name || 'Без назви' }}
-                    </h3>
-                    <p class="mt-2 text-[12px] text-gray-500">
-                      {{ r.slot ? formatTimeRange(r.slot.startsAt, r.slot.endsAt) : 'слот не призначено' }}
+                    <h3 class="vd-team-name">{{ r.team?.name || 'Без назви' }}</h3>
+                    <p class="vd-time">
+                      <PhClock :size="11" weight="bold" class="shrink-0" />
+                      <span v-if="r.slot">{{ formatTimeRange(r.slot.startsAt, r.slot.endsAt) }}</span>
+                      <span v-else class="vd-time--none">слот не призначено</span>
                     </p>
                   </div>
                 </div>
-                <div class="flex shrink-0 flex-col items-end gap-6">
+                <div class="flex shrink-0 flex-wrap items-center justify-end gap-4">
                   <span class="vd-pill" :class="requestStatusMeta[r.status].class">
                     {{ requestStatusMeta[r.status].label }}
                   </span>
@@ -63,8 +67,10 @@
                 </div>
               </header>
 
-              <div class="mt-10 border-t border-white/8 pt-10">
-                <p class="vd-section-label">Гравці · {{ r.players.length }}</p>
+              <div class="vd-card__section">
+                <p class="vd-section-label">
+                  Гравці <span class="vd-section-label__count">{{ String(r.players.length).padStart(2, '0') }}</span>
+                </p>
 
                 <div class="mt-8 flex flex-col gap-6">
                   <div v-for="p in r.players" :key="p.id" class="vd-player-row">
@@ -72,18 +78,24 @@
                     <RouterLink
                       :to="{ name: routeNames.player, params: { id: p.player.id } }"
                       target="_blank"
-                      class="group flex min-w-0 flex-1 items-center gap-10"
+                      class="vd-player group"
                     >
                       <div class="relative shrink-0">
-                        <el-avatar
-                          :size="36"
-                          :src="resolvePublicOrApiUrl(p.player.avatarUrl)"
-                          class="border border-white/10 bg-gray-800"
-                        >
-                          <template #default>
-                            <PhUser :size="16" weight="bold" class="text-white/70" />
-                          </template>
-                        </el-avatar>
+                        <!-- Own tile instead of el-avatar: an explicit fallback icon for a
+                             missing or dead avatar URL, and the same ring as the other tiles. -->
+                        <span class="vd-player__avatar">
+                          <el-image
+                            v-if="resolvePublicOrApiUrl(p.player.avatarUrl)"
+                            class="size-full"
+                            :src="resolvePublicOrApiUrl(p.player.avatarUrl)"
+                            fit="cover"
+                          >
+                            <template #error>
+                              <PhUser :size="16" weight="bold" />
+                            </template>
+                          </el-image>
+                          <PhUser v-else :size="16" weight="bold" />
+                        </span>
                         <el-tooltip
                           :content="isPlayerVerified(p.player) ? 'Верифікований' : 'Не верифікований'"
                           placement="top"
@@ -93,22 +105,19 @@
                             :preset="isPlayerVerified(p.player) ? 'verified' : 'unverified'"
                             size="xs"
                             icon-only
-                            class="absolute -bottom-2 -right-2 ring-2 ring-gray-900"
+                            class="absolute -bottom-2 -right-2"
                           />
                         </el-tooltip>
                       </div>
-                      <div class="flex min-w-0 flex-col">
-                        <span
-                          class="truncate text-[13px] font-semibold text-white
-                                 transition-colors group-hover:text-primary"
-                        >
+                      <div class="flex min-w-0 flex-col gap-3">
+                        <span class="vd-player__name">
                           {{ p.player.discordName || p.player.discordUsername || 'Без імені' }}
                         </span>
-                        <span class="flex items-center gap-4 text-[11px] text-gray-500">
+                        <span class="vd-player__meta">
                           <span class="truncate">
                             {{ p.player.discordUsername ? `@${p.player.discordUsername}` : '—' }}
                           </span>
-                          <span class="shrink-0 text-gray-400">· {{ formatPlayerRatingMmr(p.player.rating) }}</span>
+                          <span class="vd-player__mmr">{{ formatPlayerRatingMmr(p.player.rating) }}</span>
                           <span v-if="playerPositionsLabel(p.player)" class="shrink-0">
                             · {{ playerPositionsLabel(p.player) }}
                           </span>
@@ -117,18 +126,26 @@
                     </RouterLink>
 
                     <!-- processing: new-MMR entry (placeholder = current rating); otherwise result chip -->
-                    <div class="shrink-0">
-                      <el-input-number
-                        v-if="r.status === 'processing'"
-                        v-model="mmrDrafts[r.id][p.player.id]"
-                        :min="0"
-                        :max="20000"
-                        :step="100"
-                        :controls="false"
-                        size="small"
-                        :placeholder="String(p.player.rating)"
-                        class="vd-mmr-input"
-                      />
+                    <div class="vd-player__side">
+                      <template v-if="r.status === 'processing'">
+                        <el-input-number
+                          v-model="mmrDrafts[r.id][p.player.id]"
+                          :min="0"
+                          :max="20000"
+                          :step="100"
+                          :controls="false"
+                          size="small"
+                          :placeholder="String(p.player.rating)"
+                          class="vd-mmr-input"
+                        />
+                        <span
+                          v-if="draftDelta(r, p) !== null"
+                          class="vd-delta"
+                          :class="(draftDelta(r, p) as number) > 0 ? 'is-up' : 'is-down'"
+                        >
+                          {{ formatDelta(draftDelta(r, p) as number) }}
+                        </span>
+                      </template>
                       <span v-else-if="p.resultMmr != null" class="vd-mmr-chip vd-mmr-chip--result">
                         {{ p.resultMmr }} MMR
                       </span>
@@ -140,15 +157,16 @@
               <!-- lifecycle actions (read-only once completed/cancelled) -->
               <footer
                 v-if="r.status !== 'completed' && r.status !== 'cancelled'"
-                class="mt-10 flex items-center justify-between gap-8 border-t border-white/8 pt-10"
+                class="vd-card__foot"
               >
                 <p
-                  v-if="r.status === 'processing' && !canComplete(r)"
-                  class="min-w-0 text-[11px] leading-snug text-gray-500"
+                  class="vd-foot-hint"
+                  :class="{ 'is-ready': r.status === 'processing' && canComplete(r) }"
                 >
-                  Вкажіть новий MMR кожному гравцю, щоб завершити
+                  <template v-if="r.status === 'pending'">Заявка чекає на обробку</template>
+                  <template v-else-if="canComplete(r)">Готово до завершення</template>
+                  <template v-else>Вкажіть новий MMR кожному гравцю</template>
                 </p>
-                <span v-else />
                 <div class="flex shrink-0 items-center gap-8">
                   <el-button
                     v-if="r.status === 'pending'"
@@ -187,19 +205,22 @@
         <!-- Слоти -->
         <el-tab-pane name="slots">
           <template #label>
-            <span class="vd-tab-label">Слоти <span class="vd-tab-count">{{ slotRows.length }}</span></span>
+            <span class="vd-tab-label">
+              Слоти
+              <span class="vd-tab-count" :class="{ 'is-lit': slotRows.length }">{{ slotRows.length }}</span>
+            </span>
           </template>
 
           <!-- Генерація слотів -->
-          <section class="vd-gen">
+          <section class="vd-gen hud-panel">
             <div class="vd-gen__head">
-              <PhClock :size="16" weight="duotone" class="text-primary" />
-              <span class="vd-gen__title">Згенерувати слоти</span>
+              <PhClock :size="14" weight="bold" class="text-primary" />
+              <span class="vd-gen__title">// Згенерувати слоти</span>
             </div>
             <div class="vd-gen__body">
               <div class="flex items-end gap-8">
                 <div class="min-w-0 flex-1">
-                  <label class="vd-gen__label">Часові вікна (по 30 хв)</label>
+                  <label class="vd-gen__label">Часові вікна · по 30 хв</label>
                   <el-select
                     v-model="selectedWindows"
                     multiple
@@ -224,6 +245,7 @@
                   :disabled="!canGenerate"
                   @click="handleGenerate"
                 >
+                  <PhPlus v-if="!generating" :size="14" weight="bold" class="mr-6 shrink-0" />
                   Створити
                 </el-button>
               </div>
@@ -235,25 +257,33 @@
 
           <div v-if="loading" class="vd-empty">Завантаження…</div>
           <div v-else-if="!slotRows.length" class="vd-empty">Немає слотів на цей день</div>
-          <div v-else class="flex flex-col gap-8">
-            <div v-for="s in slotRows" :key="s.id" class="vd-slot-row">
+          <div v-else class="flex flex-col gap-6">
+            <div
+              v-for="s in slotRows"
+              :key="s.id"
+              class="vd-slot-row"
+              :class="s.booked ? 'vd-slot-row--booked' : 'vd-slot-row--free'"
+            >
               <div class="flex min-w-0 items-center gap-10">
-                <span class="font-mono text-[14px] text-white/90">{{ formatTimeRange(s.startsAt, s.endsAt) }}</span>
-                <span v-if="s.booked && s.teamName" class="truncate text-[12px] text-gray-400">{{ s.teamName }}</span>
+                <i class="vd-slot-dot" aria-hidden="true" />
+                <span class="vd-slot-time">{{ formatTimeRange(s.startsAt, s.endsAt) }}</span>
+                <span v-if="s.booked && s.teamName" class="vd-slot-team">{{ s.teamName }}</span>
               </div>
               <div class="flex shrink-0 items-center gap-8">
                 <span class="vd-pill" :class="s.booked ? 'vd-pill--booked' : 'vd-pill--free'">
                   {{ s.booked ? 'Заброньовано' : 'Вільно' }}
                 </span>
-                <button
-                  type="button"
-                  class="vd-del"
+                <el-button
+                  type="danger"
+                  size="small"
+                  class="btn-icon"
                   :disabled="deletingId === s.id"
                   :title="s.booked ? 'Скасувати бронювання' : 'Видалити слот'"
+                  :aria-label="s.booked ? 'Скасувати бронювання' : 'Видалити слот'"
                   @click="handleDeleteSlot(s)"
                 >
                   <PhTrash :size="15" weight="bold" />
-                </button>
+                </el-button>
               </div>
             </div>
           </div>
@@ -266,7 +296,7 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { PhClock, PhTrash, PhUser, PhUsersThree } from '@phosphor-icons/vue'
+import { PhClock, PhPlus, PhTrash, PhUser, PhUsersThree } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import {
@@ -296,6 +326,9 @@ const verificationStore = useVerificationStore()
 const activeTab = ref<'requests' | 'slots'>('requests')
 
 const headerDate = computed(() => (props.date ? dayjs(props.date).format('DD.MM.YYYY') : ''))
+
+const weekdayFormat = new Intl.DateTimeFormat('uk-UA', { weekday: 'long' })
+const weekdayLabel = computed(() => (props.date ? weekdayFormat.format(dayjs(props.date).toDate()) : ''))
 
 const requests = computed(() => props.data?.requests ?? [])
 
@@ -348,6 +381,14 @@ const requestStatusMeta: Record<TVerificationRequestStatus, { label: string; cla
   cancelled: { label: 'Скасовано', class: 'vd-pill--cancelled' }
 }
 
+// Left accent bar of a request card — same hue family as its status pill.
+const statusAccent: Record<TVerificationRequestStatus, string> = {
+  pending: '245, 158, 11',
+  processing: 'var(--ds-primary-rgb)',
+  completed: '34, 197, 94',
+  cancelled: '239, 68, 68'
+}
+
 const typeMeta: Record<TVerificationType, { label: string; class: string }> = {
   FIRST: { label: 'Перша', class: 'vd-pill--type-first' },
   MMR_UPDATE: { label: 'Оновлення MMR', class: 'vd-pill--type-mmr' }
@@ -379,9 +420,22 @@ watch(requests, (list) => {
   for (const id of Object.keys(mmrDrafts)) {
     if (!activeIds.has(id)) delete mmrDrafts[id]
   }
-
-  console.log(mmrDrafts)
 }, { immediate: true })
+
+// Signed difference between the drafted MMR and the player's current rating; null while
+// the field is empty or equals the current value (nothing worth highlighting).
+function draftDelta (r: TVerificationRequest, p: TVerificationRequestPlayer): number | null {
+  const v = mmrDrafts[r.id]?.[p.player.id]
+  if (typeof v !== 'number' || !Number.isFinite(v)) return null
+  const delta = v - p.player.rating
+  return delta === 0 ? null : delta
+}
+
+const mmrFormat = new Intl.NumberFormat('uk-UA')
+
+function formatDelta (delta: number): string {
+  return `${delta > 0 ? '+' : '−'}${mmrFormat.format(Math.abs(delta))}`
+}
 
 // Complete is blocked until every player of the request has a valid (finite, ≥ 0) MMR.
 function canComplete (r: TVerificationRequest): boolean {
@@ -527,62 +581,371 @@ watch(open, (isOpen) => {
 </script>
 
 <style scoped>
-.vd-card {
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.045) 0%, rgba(0, 0, 0, 0.22) 100%);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-  padding: 14px 16px;
+/* ─── Head ───────────────────────────────────────────────────────────────── */
+.vd-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 8px;
 }
 
-.vd-slot-row {
+.vd-head__title {
+  margin: 0;
+  font-family: var(--ds-font-display);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-shadow: var(--ds-neon-text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.vd-head__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 0;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  line-height: 1.3;
+  color: var(--ds-text-faint);
+}
+
+.vd-head__weekday {
+  text-transform: capitalize;
+  color: var(--ds-text-muted);
+}
+
+.vd-head__sep {
+  width: 1px;
+  height: 10px;
+  background: rgba(var(--ds-primary-rgb), 0.35);
+}
+
+/* ─── Tabs ───────────────────────────────────────────────────────────────── */
+.vd-tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vd-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--ds-text-faint);
+  background: rgba(255, 255, 255, 0.05);
+  text-shadow: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.vd-tab-count.is-lit {
+  color: var(--ds-primary);
+  border-color: rgba(var(--ds-primary-rgb), 0.35);
+  background: rgba(var(--ds-primary-rgb), 0.1);
+}
+
+:deep(.vd-tabs .el-tabs__content) {
+  padding-top: 14px;
+}
+
+/* ─── Request card ───────────────────────────────────────────────────────── */
+.vd-card {
+  --vd-accent: var(--ds-primary-rgb);
+
+  border-radius: 12px;
+  padding: 14px 16px;
+  overflow: hidden;
+}
+
+/* Status accent: a 2px neon bar on the left edge. */
+.vd-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: rgba(var(--vd-accent), 0.9);
+  box-shadow: 0 0 10px rgba(var(--vd-accent), 0.6);
+  pointer-events: none;
+}
+
+.vd-card__section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(var(--ds-primary-rgb), 0.1);
+}
+
+.vd-card__foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(var(--ds-primary-rgb), 0.1);
 }
 
+.vd-team-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(var(--ds-primary-rgb), 0.3);
+}
+
+.vd-team-name {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.vd-time {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 4px 0 0;
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ds-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.vd-time--none {
+  color: var(--ds-text-faint);
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.vd-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
+}
+
+.vd-section-label__count {
+  color: var(--ds-primary);
+}
+
+/* ─── Player rows ────────────────────────────────────────────────────────── */
 .vd-player-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   padding: 8px 10px;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.03);
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  background: rgba(7, 8, 15, 0.35);
+  transition: border-color var(--ds-duration-fast) ease, background-color var(--ds-duration-fast) ease;
 }
 
-.vd-player-row:hover {
-  border-color: rgba(34, 211, 238, 0.25);
-  background: rgba(255, 255, 255, 0.05);
+.vd-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
 }
 
-.vd-section-label {
+.vd-player:focus-visible {
+  outline: 2px solid rgba(var(--ds-primary-rgb), 0.6);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.vd-player__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border-radius: 9999px;
+  color: var(--ds-text-faint);
+  background: var(--ds-elevated-surface);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.vd-player__avatar :deep(.el-image__error),
+.vd-player__avatar :deep(.el-image__placeholder) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--ds-text-faint);
+}
+
+.vd-player__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: #fff;
+  transition: color var(--ds-duration-fast) ease;
+}
+
+.vd-player__meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgb(107 114 128);
+  line-height: 1.1;
+  color: var(--ds-text-faint);
 }
 
+.vd-player__mmr {
+  flex-shrink: 0;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ds-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.vd-player__mmr::before {
+  content: '·';
+  margin-right: 5px;
+  color: var(--ds-text-faint);
+}
+
+.vd-player__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+/* Drafted change vs the current rating. */
+.vd-delta {
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.vd-delta.is-up {
+  color: var(--ds-primary);
+  text-shadow: var(--ds-neon-text-subtle);
+}
+
+.vd-delta.is-down {
+  color: var(--ds-pink);
+}
+
+.vd-mmr-input {
+  width: 104px;
+}
+
+.vd-mmr-input :deep(.el-input__inner) {
+  text-align: left;
+  font-family: var(--ds-font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.vd-mmr-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ds-text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  font-variant-numeric: tabular-nums;
+}
+
+.vd-mmr-chip--result {
+  color: #6ee7b7;
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+/* Footer hint — says what the card is waiting for; lights up when complete is possible. */
+.vd-foot-hint {
+  margin: 0;
+  min-width: 0;
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
+  transition: color var(--ds-duration-base) ease;
+}
+
+.vd-foot-hint.is-ready {
+  color: var(--ds-primary);
+  text-shadow: var(--ds-neon-text-subtle);
+}
+
+/* ─── Empty ──────────────────────────────────────────────────────────────── */
 .vd-empty {
   padding: 32px 16px;
   text-align: center;
-  font-size: 13px;
-  color: rgb(107 114 128);
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
 }
 
+/* ─── Slot generator ─────────────────────────────────────────────────────── */
 .vd-gen {
-  margin-bottom: 16px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.045) 0%, rgba(0, 0, 0, 0.22) 100%);
+  margin-bottom: 14px;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .vd-gen__head {
@@ -590,15 +953,17 @@ watch(open, (isOpen) => {
   align-items: center;
   gap: 8px;
   padding: 12px 14px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(var(--ds-primary-rgb), 0.1);
 }
 
 .vd-gen__title {
-  font-size: 11px;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgb(209 213 219);
+  color: var(--ds-primary);
+  text-shadow: var(--ds-neon-text-subtle);
 }
 
 .vd-gen__body {
@@ -608,221 +973,169 @@ watch(open, (isOpen) => {
 .vd-gen__label {
   display: block;
   margin-bottom: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: rgb(156 163 175);
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
 }
 
 .vd-gen__hint {
   margin: 12px 0 0;
   font-size: 12px;
   line-height: 1.5;
-  color: rgb(107 114 128);
+  color: var(--ds-text-faint);
 }
 
-.vd-del {
-  display: inline-flex;
+/* ─── Slot rows ──────────────────────────────────────────────────────────── */
+.vd-slot-row {
+  --vd-slot-rgb: 34, 197, 94;
+
+  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  color: rgb(248 113 113 / 0.85);
-  border: 1px solid rgba(248, 113, 113, 0.25);
-  background: rgba(248, 113, 113, 0.08);
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.vd-del:hover:not(:disabled) {
-  background: rgba(248, 113, 113, 0.18);
-  color: #fca5a5;
-}
-
-.vd-del:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Dark theming for the el-time-select inputs (the popper is teleported and keeps EP defaults). */
-:deep(.el-input__wrapper) {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: none !important;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
   border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(7, 8, 15, 0.35);
+  transition: border-color var(--ds-duration-fast) ease, background-color var(--ds-duration-fast) ease;
 }
 
-:deep(.el-input__wrapper:hover) {
-  border-color: rgba(34, 211, 238, 0.25);
+.vd-slot-row--booked {
+  --vd-slot-rgb: 245, 158, 11;
 }
 
-:deep(.el-input__wrapper.is-focus) {
-  border-color: rgba(34, 211, 238, 0.55) !important;
-  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2) !important;
+.vd-slot-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: rgb(var(--vd-slot-rgb));
+  box-shadow: 0 0 8px rgba(var(--vd-slot-rgb), 0.6);
 }
 
-:deep(.el-input__inner) {
-  color: white;
-}
-
-:deep(.el-input__inner::placeholder) {
-  color: theme('colors.gray.500');
-}
-
-:deep(.el-select__wrapper) {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: none !important;
-  border-radius: 10px;
-  min-height: 40px;
-}
-
-:deep(.el-select__wrapper:hover) {
-  border-color: rgba(34, 211, 238, 0.25);
-}
-
-:deep(.el-select__wrapper.is-focused) {
-  border-color: rgba(34, 211, 238, 0.55) !important;
-  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2) !important;
-}
-
-:deep(.el-select__placeholder) {
-  color: theme('colors.gray.500');
-}
-
-:deep(.el-select__selected-item) {
-  color: white;
-}
-
-.vd-mmr-input {
-  width: 104px;
-}
-
-.vd-mmr-input :deep(.el-input__inner) {
-  text-align: left;
-}
-
-.vd-mmr-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-size: 11px;
+.vd-slot-time {
+  font-family: var(--ds-font-mono);
+  font-size: 13px;
   font-weight: 600;
-  color: rgb(209 213 219);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.9);
+  font-variant-numeric: tabular-nums;
 }
 
-.vd-mmr-chip--result {
-  color: #6ee7b7;
-  background: rgb(16 185 129 / 0.12);
-  border-color: rgb(16 185 129 / 0.3);
+.vd-slot-team {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--ds-text-muted);
 }
 
+/* ─── Pills — mono status chips, tokenized ───────────────────────────────── */
 .vd-pill {
   display: inline-flex;
   align-items: center;
-  white-space: nowrap;
-  padding: 2px 9px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.4;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 5px;
   border: 1px solid transparent;
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .vd-pill--pending {
-  background: rgb(245 158 11 / 0.14);
-  border-color: rgb(245 158 11 / 0.35);
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.35);
   color: #fcd34d;
 }
 
 .vd-pill--processing {
-  background: rgb(67 191 238 / 0.14);
-  border-color: rgb(67 191 238 / 0.35);
-  color: #7dd3fc;
+  background: rgba(var(--ds-primary-rgb), 0.12);
+  border-color: rgba(var(--ds-primary-rgb), 0.4);
+  color: var(--ds-primary);
+  text-shadow: var(--ds-neon-text-subtle);
 }
 
-.vd-pill--completed,
-.vd-pill--booked {
-  background: rgb(16 185 129 / 0.14);
-  border-color: rgb(16 185 129 / 0.35);
+.vd-pill--completed {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.35);
   color: #6ee7b7;
 }
 
 .vd-pill--cancelled {
-  background: rgb(248 113 113 / 0.14);
-  border-color: rgb(248 113 113 / 0.35);
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.35);
   color: #fca5a5;
 }
 
+/* Slots follow the calendar legend: free = green, booked = amber. */
 .vd-pill--free {
-  background: rgb(67 191 238 / 0.14);
-  border-color: rgb(67 191 238 / 0.35);
-  color: #7dd3fc;
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.35);
+  color: #6ee7b7;
+}
+
+.vd-pill--booked {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fcd34d;
 }
 
 .vd-pill--type-first {
-  background: rgb(139 92 246 / 0.14);
-  border-color: rgb(139 92 246 / 0.35);
+  background: rgba(var(--ds-secondary-rgb), 0.14);
+  border-color: rgba(var(--ds-secondary-rgb), 0.35);
   color: #c4b5fd;
 }
 
 .vd-pill--type-mmr {
-  background: rgb(59 130 246 / 0.14);
-  border-color: rgb(59 130 246 / 0.35);
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.35);
   color: #93c5fd;
 }
 
-.vd-tab-label {
-  font-size: 14px;
-}
-
-.vd-tab-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  margin-left: 4px;
-  padding: 0 5px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 700;
-  color: rgb(209 213 219);
-  background: rgba(255, 255, 255, 0.08);
-}
-
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
 .vd-scroll::-webkit-scrollbar {
   width: 6px;
 }
+
 .vd-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .vd-scroll::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(var(--ds-primary-rgb), 0.22);
   border-radius: 3px;
 }
+
 .vd-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.22);
+  background-color: rgba(var(--ds-primary-rgb), 0.4);
 }
 
+/* ─── Drawer shell ───────────────────────────────────────────────────────── */
 :deep(.verification-day-drawer.el-drawer) {
-  --el-drawer-bg-color: theme('colors.dark.navy');
-  background: linear-gradient(180deg, #0f172a 0%, theme('colors.dark.navy') 40%, #080c16 100%) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: -16px 0 48px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(
+    180deg,
+    var(--ds-elevated-surface) 0%,
+    var(--ds-surface) 40%,
+    var(--ds-background) 100%
+  ) !important;
 }
 
 :deep(.verification-day-drawer .el-drawer__header) {
   margin-bottom: 0;
-  padding: 20px 20px 8px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 20px 20px 14px 24px;
+  border-bottom: 1px solid rgba(var(--ds-primary-rgb), 0.12);
 }
 
 :deep(.verification-day-drawer .el-drawer__body) {
-  padding: 16px 20px 24px 24px;
+  padding: 4px 20px 24px 24px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -830,27 +1143,25 @@ watch(open, (isOpen) => {
 }
 
 :deep(.verification-day-drawer .el-drawer__close-btn) {
-  color: theme('colors.gray.400');
+  color: var(--ds-text-faint);
   font-size: 18px;
+  transition: color var(--ds-duration-fast) ease;
 }
 
-:deep(.verification-day-drawer .el-drawer__close-btn:hover) {
-  color: white;
-}
+/* ─── Pointer-only hover ─────────────────────────────────────────────────── */
+@media (hover: hover) and (pointer: fine) {
+  .vd-player-row:hover,
+  .vd-slot-row:hover {
+    border-color: rgba(var(--ds-primary-rgb), 0.25);
+    background: rgba(var(--ds-primary-rgb), 0.04);
+  }
 
-:deep(.vd-tabs .el-tabs__item) {
-  color: rgb(255 255 255 / 0.6);
-}
+  .vd-player:hover .vd-player__name {
+    color: var(--ds-primary);
+  }
 
-:deep(.vd-tabs .el-tabs__item.is-active) {
-  color: var(--el-color-primary, #43bfee);
-}
-
-:deep(.vd-tabs .el-tabs__nav-wrap::after) {
-  background-color: rgba(255, 255, 255, 0.08);
-}
-
-:deep(.vd-tabs .el-tabs__active-bar) {
-  background-color: var(--el-color-primary, #43bfee);
+  :deep(.verification-day-drawer .el-drawer__close-btn:hover) {
+    color: #fff;
+  }
 }
 </style>

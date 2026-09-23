@@ -1,8 +1,6 @@
 <template>
   <el-tag
     v-if="statusLabel"
-    class="px-10 py-0 h-auto w-full flex items-center justify-center flex-1 rounded-lg
-     md:text-[12px] text-xs font-medium"
     :class="statusClass"
     disable-transitions
   >

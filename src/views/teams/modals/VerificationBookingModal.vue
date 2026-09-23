@@ -1,21 +1,52 @@
 <template>
   <el-dialog
     v-model="open"
-    width="500"
-    title="Верифікація гравців"
+    class="vb-dialog"
+    :width="dialogWidth"
+    align-center
     destroy-on-close
+    :show-close="false"
     :close-on-click-modal="!submitting"
     @closed="reset"
   >
-    <el-form
-      label-position="top"
-      class="flex flex-col"
-    >
-      <!-- Players -->
-      <el-form-item label="Гравці">
-        <div v-if="!rosterPlayers.length" class="vb-empty">У команді немає гравців</div>
+    <!-- Header -->
+    <template #header="{ close }">
+      <div class="vb-dialog__head">
+        <div class="flex min-w-0 flex-col gap-4">
+          <span class="sys-label">// Верифікація</span>
+          <h2 class="vb-dialog__title">Подати заявку на верифікацію</h2>
+        </div>
+        <button
+          type="button"
+          class="vb-dialog__close"
+          aria-label="Закрити"
+          :disabled="submitting"
+          @click="close"
+        >
+          <PhX :size="16" weight="bold" />
+        </button>
+      </div>
+    </template>
+
+    <div class="flex flex-col gap-22">
+      <!-- 01 · Players -->
+      <section class="vb-step">
+        <div class="vb-step__head">
+          <span class="vb-step__num" :class="{ 'is-on': selectedPlayerIds.length > 0 }">01</span>
+          <label for="vb-players" class="sys-label !text-[10px]">Гравці</label>
+          <span class="hud-line h-px min-w-12 flex-1" aria-hidden="true" />
+          <span class="vb-step__count" :class="{ 'is-on': meetsMinPlayers }">
+            {{ pad(selectedPlayerIds.length) }}<span class="vb-step__of">/{{ pad(minPlayers) }}</span>
+          </span>
+        </div>
+
+        <div v-if="!rosterPlayers.length" class="vb-empty">
+          <PhUsersThree :size="22" weight="duotone" class="text-primary/50" />
+          <span>У команді немає гравців</span>
+        </div>
         <el-select
           v-else
+          id="vb-players"
           v-model="selectedPlayerIds"
           multiple
           filterable
@@ -26,6 +57,9 @@
           collapse-tags-tooltip
           :max-collapse-tags="2"
         >
+          <template #prefix>
+            <PhUsersThree :size="16" weight="bold" class="text-primary" />
+          </template>
           <el-option
             v-for="p in rosterPlayers"
             :key="p.id"
@@ -48,13 +82,22 @@
             </div>
           </el-option>
         </el-select>
-        <p class="vb-hint">
-          {{ guidanceText }}
-        </p>
-      </el-form-item>
 
-      <!-- Date -->
-      <el-form-item label="Дата" class="vb-date-item">
+        <p class="vb-note" :class="{ 'is-ok': meetsMinPlayers }">
+          <component :is="meetsMinPlayers ? PhCheckCircle : PhInfo" :size="13" weight="bold" class="shrink-0" />
+          <span>{{ guidanceText }}</span>
+        </p>
+      </section>
+
+      <!-- 02 · Date -->
+      <section class="vb-step">
+        <div class="vb-step__head">
+          <span class="vb-step__num" :class="{ 'is-on': !!selectedDate }">02</span>
+          <span class="sys-label !text-[10px]">Дата</span>
+          <span class="hud-line h-px min-w-12 flex-1" aria-hidden="true" />
+          <span class="vb-step__count" :class="{ 'is-on': !!selectedDate }">{{ dateLabel }}</span>
+        </div>
+
         <el-date-picker
           v-model="selectedDate"
           type="date"
@@ -62,21 +105,36 @@
           format="DD.MM.YYYY"
           placeholder="Оберіть дату"
           :disabled-date="disabledDate"
-          class="w-full"
+          class="vb-date"
         />
-      </el-form-item>
+      </section>
 
-      <!-- Slots -->
-      <el-form-item label="Вільні слоти">
+      <!-- 03 · Slot: locked until a date is picked -->
+      <section class="vb-step" :class="{ 'is-locked': !selectedDate }">
+        <div class="vb-step__head">
+          <span class="vb-step__num" :class="{ 'is-on': !!selectedSlotId }">03</span>
+          <span class="sys-label !text-[10px]">Вільні слоти</span>
+          <span class="hud-line h-px min-w-12 flex-1" aria-hidden="true" />
+          <span class="vb-step__count" :class="{ 'is-on': slotOptions.length > 0 }">
+            <template v-if="loadingSlots">…</template>
+            <template v-else-if="selectedDate">{{ pad(slotOptions.length) }}</template>
+            <template v-else>—</template>
+          </span>
+        </div>
+
         <el-select
           v-model="selectedSlotId"
           filterable
           :disabled="!selectedDate || loadingSlots"
+          :loading="loadingSlots"
           :placeholder="slotPlaceholder"
           no-data-text="Немає вільних слотів на цю дату"
           popper-class="vb-slots-popper"
           class="w-full"
         >
+          <template #prefix>
+            <PhClock :size="16" weight="bold" class="text-primary" />
+          </template>
           <el-option
             v-for="o in slotOptions"
             :key="o.value"
@@ -84,21 +142,20 @@
             :label="o.label"
           />
         </el-select>
-      </el-form-item>
-    </el-form>
+      </section>
+    </div>
 
     <template #footer>
-      <div class="flex justify-end gap-12 pt-12">
-        <el-button :disabled="submitting" @click="open = false">
-          <span class="text-sm font-medium">Скасувати</span>
-        </el-button>
+      <div class="vb-dialog__foot">
+        <el-button :disabled="submitting" @click="open = false">Скасувати</el-button>
         <el-button
           type="primary"
           :loading="submitting"
           :disabled="!canSubmit"
           @click="submit"
         >
-          <span class="text-sm font-medium">Забронювати</span>
+          <PhCalendarCheck :size="16" weight="fill" />
+          <span>Забронювати</span>
         </el-button>
       </div>
     </template>
@@ -108,7 +165,15 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
-import { PhUser } from '@phosphor-icons/vue'
+import {
+  PhCalendarCheck,
+  PhCheckCircle,
+  PhClock,
+  PhInfo,
+  PhUser,
+  PhUsersThree,
+  PhX
+} from '@phosphor-icons/vue'
 import { resolvePublicOrApiUrl, isPlayerVerified } from '@/core/helpers'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import type { TCreateRequestPayload, TVerificationSlot } from '@/services/verification.types'
@@ -141,6 +206,11 @@ const guidanceText = computed(() =>
     : `Перша верифікація: потрібно подати щонайменше ${minPlayers.value} гравців.`
 )
 
+const { width } = useWindowSize()
+const dialogWidth = computed(() => (width.value < 640 ? 'calc(100vw - 24px)' : 520))
+
+const pad = (n: number) => String(Math.min(n, 99)).padStart(2, '0')
+
 const selectedPlayerIds = ref<string[]>([])
 const selectedDate = ref<string>('')
 const slots = ref<TVerificationSlot[]>([])
@@ -155,6 +225,11 @@ const slotOptions = computed(() =>
     .sort((a, b) => dayjs(a.startsAt).valueOf() - dayjs(b.startsAt).valueOf())
     .map((s) => ({ value: s.id, label: formatSlotRange(s) }))
 )
+
+const meetsMinPlayers = computed(() => selectedPlayerIds.value.length >= minPlayers.value)
+
+/** Обрана дата у лічильнику кроку: DD.MM або «—» */
+const dateLabel = computed(() => (selectedDate.value ? dayjs(selectedDate.value).format('DD.MM') : '—'))
 
 const slotPlaceholder = computed(() => {
   if (!selectedDate.value) return 'Спочатку оберіть дату'
@@ -229,39 +304,132 @@ function reset (): void {
 }
 </script>
 
-<style scoped>
-.vb-hint {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: rgb(107 114 128);
+<style scoped lang="scss">
+.vb-dialog__head {
+  @apply flex items-start justify-between gap-12;
+}
+
+.vb-dialog__title {
+  @apply m-0 font-display text-xl uppercase leading-none tracking-wide text-white;
+  overflow-wrap: anywhere;
+}
+
+.vb-dialog__close {
+  @apply inline-flex size-28 shrink-0 items-center justify-center rounded-md border-0 bg-transparent p-0 text-white/55;
+  transition: color var(--ds-duration-fast) ease, background-color var(--ds-duration-fast) ease;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.vb-dialog__foot {
+  @apply flex items-center justify-end gap-10;
+
+  :deep(.el-button) {
+    margin-left: 0 !important;
+  }
+
+  :deep(.el-button > span) {
+    @apply inline-flex items-center gap-8;
+  }
+}
+
+// ─── Steps ──────────────────────────────────────────────────────────────────
+.vb-step {
+  @apply flex flex-col gap-10;
+  transition: opacity var(--ds-duration-base) ease;
+
+  &.is-locked {
+    opacity: 0.55;
+  }
+}
+
+.vb-step__head {
+  @apply flex items-center gap-10;
+}
+
+// Step index: a small mono seal that lights up once the step has a value.
+.vb-step__num {
+  @apply inline-flex h-20 min-w-24 items-center justify-center rounded-md border px-6;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: var(--ds-text-faint);
+  border-color: var(--ds-border);
+  background: rgba(0, 0, 0, 0.3);
+  font-variant-numeric: tabular-nums;
+  transition:
+    color var(--ds-duration-base) ease,
+    border-color var(--ds-duration-base) ease,
+    box-shadow var(--ds-duration-base) ease;
+
+  &.is-on {
+    color: var(--ds-primary);
+    border-color: rgba(var(--ds-primary-rgb), 0.5);
+    box-shadow: var(--ds-glow-primary-soft);
+  }
+}
+
+.vb-step__count {
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ds-text-faint);
+  font-variant-numeric: tabular-nums;
+  transition: color var(--ds-duration-base) ease;
+
+  &.is-on {
+    color: var(--ds-primary);
+    text-shadow: var(--ds-neon-text-subtle);
+  }
+}
+
+.vb-step__of {
+  color: var(--ds-text-faint);
+  text-shadow: none;
+}
+
+.vb-note {
+  @apply m-0 flex items-start gap-6 text-xs leading-relaxed;
+  color: var(--ds-text-faint);
+  transition: color var(--ds-duration-base) ease;
+
+  svg {
+    margin-top: 2px;
+  }
+
+  &.is-ok {
+    color: #86efac;
+  }
 }
 
 .vb-empty {
-  padding: 20px 16px;
-  text-align: center;
-  font-size: 13px;
-  color: rgb(107 114 128);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  @apply flex flex-col items-center gap-6 rounded-xl border border-dashed px-16 py-16 text-center text-[13px];
+  color: var(--ds-text-faint);
+  border-color: rgba(var(--ds-primary-rgb), 0.2);
+  background: rgba(0, 0, 0, 0.2);
 }
 
-/* EP fixes the date editor to --el-date-editor-width (220px), overriding Tailwind w-full. */
-.vb-date-item :deep(.el-date-editor.el-input) {
+// EP pins the date editor to --el-date-editor-width (220px) and renders it
+// inline-flex, which leaks line-height below the field; stretch it to the step
+// and make it a block so the gap to the next step is the real 22px.
+:deep(.vb-date.el-date-editor),
+:deep(.vb-date.el-date-editor.el-input) {
+  display: flex;
   width: 100%;
-  margin-bottom: 18px;
 }
 
 .vb-pill {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  padding: 1px 7px;
-  border-radius: 9999px;
+  @apply inline-flex items-center whitespace-nowrap rounded-full border px-7 py-1;
   font-size: 10px;
   font-weight: 700;
   line-height: 1.4;
-  border: 1px solid transparent;
+  border-color: transparent;
 }
 
 .vb-pill--verified {
@@ -274,6 +442,36 @@ function reset (): void {
   background: rgb(255 255 255 / 0.06);
   border-color: rgb(255 255 255 / 0.12);
   color: rgb(156 163 175);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .vb-dialog__close:not(:disabled):hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+</style>
+
+<style lang="scss">
+// Not scoped: `.el-dialog` renders outside this component's root.
+.el-dialog.vb-dialog {
+  background: rgba(16, 19, 36, 0.62);
+  backdrop-filter: blur(24px) saturate(130%);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  max-height: calc(100vh - 32px);
+
+  .el-dialog__header {
+    border-bottom: 1px solid rgba(var(--ds-primary-rgb), 0.12);
+  }
+
+  .el-dialog__footer {
+    border-top: 1px solid rgba(var(--ds-primary-rgb), 0.12);
+  }
+
+  .vb-dialog__close:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.6) !important;
+    outline-offset: 2px;
+  }
 }
 </style>
 

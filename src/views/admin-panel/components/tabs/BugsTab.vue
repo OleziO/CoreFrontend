@@ -92,7 +92,7 @@
                 link
                 type="primary"
                 size="small"
-                class="!p-0 !h-auto text-cyan-400 hover:text-cyan-300 font-mono text-xs"
+                class="font-mono text-xs"
                 @click="openUserProfile(bug.requestor_id)"
               >
                 {{ bug.requestor.steam_name }}
@@ -106,7 +106,7 @@
                 link
                 type="primary"
                 size="small"
-                class="!p-0 !h-auto text-cyan-400 hover:text-cyan-300 font-mono text-xs"
+                class="font-mono text-xs"
                 @click="openUserProfile(bug.assign_id)"
               >
                 {{ bug.assign.steam_name }}

@@ -1,0 +1,160 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Tags — labels, not controls. They must never be confused with buttons:
+//
+//                 Button (pill)                Tag (label)
+//   shape         10px                          4px corners
+//   type          14px, sentence case           11px, UPPERCASE, +0.06em tracking
+//   surface       white hairline + faint fill   stronger tinted fill + tone hairline
+//   motion        hover + press                 none — a tag is not pressable
+//
+// Colour comes from Element Plus's own `--el-tag-*` variables so `type="…"`,
+// `effect="plain|dark"`, closable chips and select values all keep working.
+// Custom status maps use the `.tag-tone-*` modifiers below, plus `.tag-dot`
+// for a leading status dot.
+// ─────────────────────────────────────────────────────────────────────────────
+
+$primary: #2ee5ff;
+$success: #22c55e;
+$warning: #f59e0b;
+$danger: #ef4444;
+$info: #38bdf8;
+$violet: #a855f7;
+$gold: #e8b931;
+$neutral: #a3abb9;
+
+// Contrast against the near-black surfaces: a 22% fill and a 35% hairline in
+// the tone colour. The hairline is in the tone, not white, so tags still read
+// differently from the white-outlined secondary button.
+@mixin tag-tone($color, $text) {
+  --el-tag-bg-color: #{rgba($color, 0.2)};
+  --el-tag-border-color: #{rgba($color, 0.42)};
+  --el-tag-text-color: #{$text};
+  --el-tag-hover-color: #{rgba($color, 0.4)};
+  --tag-dot-color: #{$color};
+}
+
+// EP type → tone. The selectors cover `effect="plain"` and `effect="dark"`
+// too, whose EP rules would otherwise out-rank a bare `.el-tag--type`.
+$tones: (
+  'primary': ($primary, #66ecff),
+  'success': ($success, #86efac),
+  'warning': ($warning, #fcd34d),
+  'danger': ($danger, #fca5a5),
+  'info': ($info, #7dd3fc)
+);
+
+.el-tag {
+  --el-tag-font-size: 11px;
+  --el-tag-border-radius: 4px;
+  @include tag-tone(#ffffff, var(--ds-text));
+  --el-tag-bg-color: rgba(255, 255, 255, 0.1);
+  --el-tag-border-color: rgba(255, 255, 255, 0.16);
+
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--el-tag-border-color);
+  box-shadow: none;
+  justify-content: center;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  transition: none;
+
+  .el-tag__content {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    // Optical centring. Letter-spacing also trails the last glyph, so the text
+    // reads left-shifted: pull it back by one spacing unit. Poppins' ascender
+    // is much taller than its descender, which leaves uppercase caps ~1px high
+    // at line-height 1: nudge them down.
+    margin-right: -0.06em;
+    padding-top: 1px;
+  }
+
+  &--small {
+    height: 20px;
+    padding: 0 8px;
+    --el-tag-font-size: 10px;
+  }
+
+  &--large {
+    height: 28px;
+    padding: 0 12px;
+    --el-tag-font-size: 12px;
+  }
+
+  // Neutralise EP's effect variants — one look, driven by tone.
+  // EP writes its colours on `.el-tag.el-tag--<x>` (two classes), so every
+  // override here is compounded with `.el-tag` as well; a bare `.el-tag--<x>`
+  // would lose and the light-9 pastel pill would leak through (it did, on
+  // multi-select values).
+  &.el-tag--plain,
+  &.el-tag--dark {
+    @include tag-tone(#ffffff, var(--ds-text));
+    --el-tag-bg-color: rgba(255, 255, 255, 0.1);
+    --el-tag-border-color: rgba(255, 255, 255, 0.16);
+  }
+
+  @each $name, $pair in $tones {
+    &.el-tag--#{$name},
+    &.el-tag--plain.el-tag--#{$name},
+    &.el-tag--dark.el-tag--#{$name} {
+      @include tag-tone(nth($pair, 1), nth($pair, 2));
+    }
+  }
+
+  // Closable chips: the × is the only thing that reacts.
+  .el-tag__close {
+    color: var(--el-tag-text-color);
+    transition: background-color var(--ds-duration-fast) ease, color var(--ds-duration-fast) ease;
+  }
+}
+
+// ─── Tones for custom status/type maps ──────────────────────────────────────
+.el-tag.tag-tone-primary { @include tag-tone($primary, #6fd4f6); }
+.el-tag.tag-tone-success { @include tag-tone($success, #86efac); }
+.el-tag.tag-tone-warning { @include tag-tone($warning, #fcd34d); }
+.el-tag.tag-tone-danger { @include tag-tone($danger, #fca5a5); }
+.el-tag.tag-tone-info { @include tag-tone($info, #7dd3fc); }
+.el-tag.tag-tone-violet { @include tag-tone($violet, #c4b5fd); }
+.el-tag.tag-tone-gold { @include tag-tone($gold, #f4df95); }
+.el-tag.tag-tone-neutral {
+  @include tag-tone($neutral, var(--ds-text));
+  --el-tag-bg-color: rgba(255, 255, 255, 0.1);
+  --el-tag-border-color: rgba(255, 255, 255, 0.16);
+}
+
+// Leading status dot in the tone colour.
+.el-tag.tag-dot .el-tag__content::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--tag-dot-color);
+}
+
+// ─── Select values are data, not labels: keep their natural case ────────────
+// Chosen values sit on the glass input, so they take a dark well with a cyan
+// hairline (the HUD register) rather than a tinted status tone; the × is the
+// only reactive part.
+.el-select__selection .el-tag,
+.el-select__tags .el-tag,
+.el-select-tags-wrapper .el-tag {
+  --el-tag-font-size: 12px;
+  --el-tag-bg-color: rgba(7, 8, 15, 0.55);
+  --el-tag-border-color: rgba(var(--ds-primary-rgb), 0.3);
+  --el-tag-text-color: rgba(255, 255, 255, 0.88);
+  --el-tag-hover-color: rgba(var(--ds-primary-rgb), 0.35);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: inset 0 1px 0 rgba(var(--ds-primary-rgb), 0.1);
+
+  .el-tag__close {
+    color: var(--ds-text-faint);
+  }
+}

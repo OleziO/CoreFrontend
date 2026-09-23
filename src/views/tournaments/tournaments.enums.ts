@@ -12,7 +12,7 @@ export const tournamentFields = [
  * Розміри видимої картки турніру (розміри списку = картка + gap, див. `VirtualList.vue` pb-20 pr-20 і `useVirtualGridLayout`).
  */
 export const TOURNAMENT_CARD_WIDTH = 360
-export const TOURNAMENT_CARD_HEIGHT = 400
+export const TOURNAMENT_CARD_HEIGHT = 448
 
 export const tournamentByStatus = {
   'pre-registration': 'До кваліфікації',
@@ -36,3 +36,6 @@ export const DEFAULT_TOURNAMENT_FILTERS = {
   status: [],
   type: []
 }
+
+/** Склад команди в Dota 2. `entryFee` з бекенду — квиток за команду в копійках, внесок з гравця = entryFee / TEAM_SIZE. */
+export const TEAM_SIZE = 5

@@ -8,33 +8,35 @@
     :close-on-click-modal="true"
   >
     <template #header>
-      <div class="flex flex-col gap-12 pb-4 pr-8">
-        <div
-          class="h-[3px] w-48 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500
-                 shadow-[0_0_20px_rgba(34,211,238,0.35)]"
-        />
-        <div>
-          <h2 id="drawer-title" class="text-xl font-bold tracking-tight text-white">
-            {{ isEditMode ? 'Редагувати турнір' : 'Додати турнір' }}
-          </h2>
-          <p class="mt-6 max-w-[22rem] text-[13px] leading-snug text-gray-500">
-            Обовʼязкові поля маркуються зірочкою. Зображення можна додати зараз або пізніше в картці турніру.
-          </p>
-        </div>
+      <div class="td-head">
+        <span class="sys-label !text-[9px]">// {{ isEditMode ? 'Редагування' : 'Новий турнір' }}</span>
+        <h2 id="drawer-title" class="td-head__title">
+          {{ isEditMode ? 'Редагувати турнір' : 'Додати турнір' }}
+        </h2>
+        <p class="td-head__meta">
+          Обовʼязкові поля позначено зірочкою. Зображення можна додати зараз або пізніше в картці турніру.
+        </p>
       </div>
     </template>
 
     <el-config-provider :locale="elementPlusUk">
-      <div class="custom-scroll drawer-body-scroll h-full overflow-y-auto pb-28">
-        <el-form :model="form" label-position="top" require-asterisk-position="right" @submit.prevent="handleSubmit">
-          <!-- Основне -->
-          <section class="drawer-section">
-            <div class="drawer-section__head">
-              <PhSlidersHorizontal :size="18" weight="duotone" class="text-primary" />
-              <span class="drawer-section__title">Основне</span>
-            </div>
-            <div class="drawer-section__body drawer-section__grid">
-              <el-form-item label="Назва" required class="drawer-field span-full">
+      <div class="custom-scroll td-scroll h-full overflow-y-auto">
+        <el-form
+          :model="form"
+          label-position="top"
+          require-asterisk-position="right"
+          class="td-form"
+          @submit.prevent="handleSubmit"
+        >
+          <!-- 01 · Основне -->
+          <section class="td-section hud-panel">
+            <header class="td-section__head">
+              <span class="td-section__index">01</span>
+              <span class="td-section__icon"><PhSlidersHorizontal :size="14" weight="bold" /></span>
+              <span class="td-section__title">Основне</span>
+            </header>
+            <div class="td-section__body">
+              <el-form-item label="Назва" required class="td-field">
                 <el-input
                   v-model="form.name"
                   placeholder="Напр., Core League Cup #12"
@@ -43,7 +45,7 @@
                 />
               </el-form-item>
 
-              <el-form-item label="Статус турніру" required class="drawer-field span-full">
+              <el-form-item label="Статус турніру" required class="td-field">
                 <el-select v-model="form.tournamentStatus" size="large" class="w-full">
                   <el-option
                     v-for="s in statusOptions"
@@ -52,23 +54,19 @@
                     :label="tournamentStatusLabelMap[s.key]"
                   >
                     <div class="flex items-center gap-8 py-1">
-                      <span
-                        class="inline-flex h-8 min-w-[8px] rounded-full shadow-sm"
-                        :class="statusStripeClass[s.key]"
-                      />
+                      <span class="td-status-dot" :class="statusDotClass[s.key]" />
                       <span>{{ tournamentStatusLabelMap[s.key] }}</span>
                     </div>
                   </el-option>
                 </el-select>
               </el-form-item>
 
-              <el-form-item class="drawer-field span-full mb-0">
-                <!-- Обгортка потрібна: .el-form-item__content — flex-рядок, інакше підказка стане збоку. -->
-                <div class="flex w-full flex-col">
-                  <el-checkbox v-model="form.hasQualification" :disabled="isEditMode" size="large">
-                    Кваліфікаційний етап
-                  </el-checkbox>
-                  <p class="drawer-field__note">
+              <!-- Кваліфікація — опція-рядок -->
+              <label class="td-option" :class="{ 'is-on': form.hasQualification, 'is-locked': isEditMode }">
+                <span class="td-option__icon"><PhFlagCheckered :size="16" weight="bold" /></span>
+                <span class="td-option__text">
+                  <span class="td-option__title">Кваліфікаційний етап</span>
+                  <span class="td-option__desc">
                     <template v-if="isEditMode">
                       Етап зафіксовано при створенні турніру й змінити його не можна.
                     </template>
@@ -76,211 +74,288 @@
                       Турнір проходить через кваліфікацію перед плей-оф.
                     </template>
                     <template v-else>
-                      Без кваліфікації: немає сторінки та дат етапу, команди з реєстрації
-                      потрапляють одразу в сітку.
+                      Без кваліфікації: команди з реєстрації потрапляють одразу в сітку.
                     </template>
-                  </p>
-                </div>
-              </el-form-item>
-            </div>
-          </section>
-
-          <!-- Параметри -->
-          <section class="drawer-section">
-            <div class="drawer-section__head">
-              <PhTrophy :size="18" weight="duotone" class="text-amber-400/90" />
-              <span class="drawer-section__title">Параметри</span>
-            </div>
-            <div class="drawer-section__body drawer-fields-pair">
-              <el-form-item label="Призовий фонд" class="drawer-field">
-                <template #label>
-                  <span>Призовий фонд <span class="label-optional">(опціонально)</span></span>
-                </template>
-                <el-input
-                  v-model="prizePoolText"
-                  inputmode="numeric"
-                  placeholder="5000"
-                  size="large"
-                  @input="prizePoolText = String($event).replace(/\D+/g, '')"
-                >
-                  <template #prefix>
-                    <span class="input-prefix-muted">₴</span>
-                  </template>
-                </el-input>
-              </el-form-item>
-
-              <el-form-item class="drawer-field" :error="slotsError ?? undefined">
-                <template #label>
-                  <span v-if="form.hasQualification">
-                    Слоти команд <span class="label-optional">(опціонально)</span>
                   </span>
-                  <span v-else>
-                    Слоти команд <span class="label-optional">(до {{ PLAYOFF_TEAM_LIMIT }})</span>
-                  </span>
-                </template>
-                <el-input
-                  v-model="slotsText"
-                  inputmode="numeric"
-                  :placeholder="form.hasQualification ? '16' : String(PLAYOFF_TEAM_LIMIT)"
-                  size="large"
-                  @input="slotsText = String($event).replace(/\D+/g, '')"
+                </span>
+                <el-switch
+                  v-model="form.hasQualification"
+                  :disabled="isEditMode"
+                  class="td-option__switch"
+                  aria-label="Кваліфікаційний етап"
                 />
-              </el-form-item>
-
-              <el-form-item class="drawer-field span-full">
-                <template #label>
-                  <span>Вступний внесок <span class="label-optional">(0 або порожньо — безкоштовно)</span></span>
-                </template>
-                <el-input
-                  v-model="entryFeeText"
-                  inputmode="numeric"
-                  placeholder="200"
-                  size="large"
-                  @input="entryFeeText = String($event).replace(/\D+/g, '')"
-                >
-                  <template #prefix>
-                    <span class="input-prefix-muted">₴</span>
-                  </template>
-                </el-input>
-              </el-form-item>
+              </label>
             </div>
           </section>
 
-          <!-- Графік -->
-          <section class="drawer-section">
-            <div class="drawer-section__head">
-              <PhCalendar :size="18" weight="duotone" class="text-sky-400/90" />
-              <span class="drawer-section__title">Графік</span>
-            </div>
-            <div class="drawer-section__body drawer-section__body--stack">
-              <p class="drawer-section__hint">
-                <template v-if="form.hasQualification">
-                  Три етапи турніру. Реєстрація може перетинатися з кваліфікацією, але кваліфікація
-                  має завершитися до старту плей-оф.
-                </template>
-                <template v-else>
-                  Два етапи турніру: реєстрація, потім плей-оф.
-                </template>
-              </p>
-
-              <div
-                v-for="(group, index) in visibleScheduleGroups"
-                :key="group.title"
-                class="drawer-phase"
-              >
-                <div class="drawer-phase__head">
-                  <span class="drawer-phase__index">{{ index + 1 }}</span>
-                  <span class="drawer-phase__title">{{ group.title }}</span>
-                </div>
-                <p class="drawer-phase__hint">{{ group.hint }}</p>
-                <div class="drawer-date-grid">
-                  <el-form-item
-                    v-for="field in group.fields"
-                    :key="field.key"
-                    :label="field.label"
-                    required
-                    class="drawer-field"
+          <!-- 02 · Формат -->
+          <section class="td-section hud-panel">
+            <header class="td-section__head">
+              <span class="td-section__index">02</span>
+              <span class="td-section__icon td-section__icon--pink"><PhTreeStructure :size="14" weight="bold" /></span>
+              <span class="td-section__title">Формат сітки</span>
+              <span class="td-soon" title="Бекенд у розробці — значення поки не зберігаються">
+                <PhWrench :size="9" weight="bold" /> BE · скоро
+              </span>
+            </header>
+            <div class="td-section__body">
+              <!-- Single / Double elimination -->
+              <div class="td-field td-field--plain">
+                <span class="td-label">Тип вибування</span>
+                <div class="td-seg" role="radiogroup" aria-label="Тип вибування">
+                  <button
+                    v-for="opt in bracketOptions"
+                    :key="opt.value"
+                    type="button"
+                    role="radio"
+                    class="td-seg__opt"
+                    :class="{ 'is-active': form.bracketFormat === opt.value }"
+                    :aria-checked="form.bracketFormat === opt.value"
+                    @click="form.bracketFormat = opt.value"
                   >
-                    <el-date-picker
-                      v-model="form[field.key]"
-                      type="datetime"
-                      size="large"
-                      class="drawer-date-picker w-full"
-                      popper-class="core-date-picker-popper"
-                      format="DD.MM.YYYY HH:mm"
-                      value-format="YYYY-MM-DD HH:mm"
-                      placeholder="Оберіть дату й час"
-                    />
-                  </el-form-item>
+                    <span class="td-seg__icon"><component :is="opt.icon" :size="16" weight="bold" /></span>
+                    <span class="td-seg__text">
+                      <span class="td-seg__title">{{ opt.label }}</span>
+                      <span class="td-seg__desc">{{ opt.desc }}</span>
+                    </span>
+                  </button>
                 </div>
               </div>
 
-              <p v-if="scheduleError" class="drawer-schedule-error">
-                <PhWarningCircle :size="16" weight="fill" />
+              <!-- Матч за третє місце -->
+              <label class="td-option td-option--gold" :class="{ 'is-on': form.thirdPlaceMatch }">
+                <span class="td-option__icon"><PhMedal :size="16" weight="bold" /></span>
+                <span class="td-option__text">
+                  <span class="td-option__title">Матч за третє місце</span>
+                  <span class="td-option__desc">
+                    Переможені у півфіналах зіграють додатковий матч за бронзу.
+                  </span>
+                </span>
+                <el-switch v-model="form.thirdPlaceMatch" class="td-option__switch" aria-label="Матч за третє місце" />
+              </label>
+
+              <p class="td-note td-note--warn">
+                <PhWrench :size="12" weight="bold" class="shrink-0" />
+                Формат сітки та матч за третє місце поки не зберігаються — бекенд у розробці.
+              </p>
+            </div>
+          </section>
+
+          <!-- 03 · Параметри -->
+          <section class="td-section hud-panel">
+            <header class="td-section__head">
+              <span class="td-section__index">03</span>
+              <span class="td-section__icon td-section__icon--gold"><PhTrophy :size="14" weight="bold" /></span>
+              <span class="td-section__title">Параметри</span>
+            </header>
+            <div class="td-section__body">
+              <div class="td-pair">
+                <el-form-item class="td-field">
+                  <template #label>
+                    <span>Призовий фонд <span class="td-label__opt">опціонально</span></span>
+                  </template>
+                  <el-input
+                    v-model="prizePoolText"
+                    inputmode="numeric"
+                    placeholder="5000"
+                    size="large"
+                    class="td-num"
+                    @input="prizePoolText = String($event).replace(/\D+/g, '')"
+                  >
+                    <template #prefix>
+                      <span class="td-affix">₴</span>
+                    </template>
+                  </el-input>
+                </el-form-item>
+
+                <el-form-item class="td-field">
+                  <template #label>
+                    <span>Слоти команд <span class="td-label__opt">порожньо — без ліміту</span></span>
+                  </template>
+                  <el-input
+                    v-model="slotsText"
+                    inputmode="numeric"
+                    placeholder="16"
+                    size="large"
+                    class="td-num"
+                    @input="slotsText = String($event).replace(/\D+/g, '')"
+                  >
+                    <template #suffix>
+                      <span class="td-affix"><PhUsersThree :size="13" weight="bold" /></span>
+                    </template>
+                  </el-input>
+                </el-form-item>
+              </div>
+
+              <!-- Внесок: вводиться З ГРАВЦЯ, квиток команди рахується автоматично -->
+              <div class="td-fee">
+                <el-form-item class="td-field td-fee__input">
+                  <template #label>
+                    <span>Внесок з гравця <span class="td-label__opt">0 або порожньо — безкоштовно</span></span>
+                  </template>
+                  <el-input
+                    v-model="feePerPlayerText"
+                    inputmode="numeric"
+                    placeholder="200"
+                    size="large"
+                    class="td-num"
+                    @input="feePerPlayerText = String($event).replace(/\D+/g, '')"
+                  >
+                    <template #prefix>
+                      <span class="td-affix">₴</span>
+                    </template>
+                    <template #suffix>
+                      <span class="td-affix">/ гравець</span>
+                    </template>
+                  </el-input>
+                </el-form-item>
+
+                <div class="td-ticket" :class="{ 'is-free': teamTicketUah === 0 }" aria-live="polite">
+                  <span class="td-ticket__label">
+                    <span class="td-ticket__icon"><PhTicket :size="13" weight="bold" /></span>
+                    <span class="flex flex-col gap-3">
+                      <span>Квиток команди</span>
+                      <span class="td-ticket__sub">сплачує капітан</span>
+                    </span>
+                  </span>
+                  <span class="td-ticket__amount">
+                    <template v-if="teamTicketUah > 0">
+                      <span class="td-ticket__value">{{ formatUah(teamTicketUah) }} ₴</span>
+                      <span class="td-ticket__formula">
+                        {{ TEAM_SIZE }} × {{ formatUah(Number(feePerPlayerText)) }} ₴
+                      </span>
+                    </template>
+                    <template v-else>
+                      <span class="td-ticket__value">Безкоштовно</span>
+                      <span class="td-ticket__formula">внесок не стягується</span>
+                    </template>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 04 · Графік -->
+          <section class="td-section hud-panel">
+            <header class="td-section__head">
+              <span class="td-section__index">04</span>
+              <span class="td-section__icon td-section__icon--sky"><PhCalendar :size="14" weight="bold" /></span>
+              <span class="td-section__title">Графік</span>
+            </header>
+            <div class="td-section__body">
+              <p class="td-note mt-0">
+                <template v-if="form.hasQualification">
+                  Три етапи. Реєстрація може перетинатися з кваліфікацією, але кваліфікація має
+                  завершитися до старту плей-оф.
+                </template>
+                <template v-else>
+                  Два етапи: реєстрація, потім плей-оф.
+                </template>
+              </p>
+
+              <div class="td-phases">
+                <div
+                  v-for="(group, index) in visibleScheduleGroups"
+                  :key="group.title"
+                  class="td-phase"
+                >
+                  <div class="td-phase__head">
+                    <span class="td-phase__index">{{ String(index + 1).padStart(2, '0') }}</span>
+                    <span class="td-phase__title">{{ group.title }}</span>
+                    <span class="td-phase__line" aria-hidden="true" />
+                  </div>
+                  <p class="td-phase__hint">{{ group.hint }}</p>
+                  <div class="td-pair">
+                    <el-form-item
+                      v-for="field in group.fields"
+                      :key="field.key"
+                      :label="field.label"
+                      required
+                      class="td-field"
+                    >
+                      <el-date-picker
+                        v-model="form[field.key]"
+                        type="datetime"
+                        size="large"
+                        class="td-date w-full"
+                        popper-class="core-date-picker-popper"
+                        format="DD.MM.YYYY HH:mm"
+                        value-format="YYYY-MM-DD HH:mm"
+                        placeholder="Оберіть дату й час"
+                      />
+                    </el-form-item>
+                  </div>
+                </div>
+              </div>
+
+              <p v-if="scheduleError" class="td-error">
+                <PhWarningCircle :size="14" weight="fill" class="shrink-0" />
                 <span>{{ scheduleError }}</span>
               </p>
             </div>
           </section>
 
-          <!-- Зображення -->
-          <section class="drawer-section drawer-section--media">
-            <div class="drawer-section__head">
-              <PhImageSquare :size="18" weight="duotone" class="text-violet-400/90" />
-              <span class="drawer-section__title">Зображення</span>
-            </div>
-            <div class="drawer-section__body drawer-section__body--stack">
-              <p class="drawer-section__hint">
-                Завантажуються окремими запитами одразу після створення. JPEG або PNG, до 10&nbsp;МБ.
+          <!-- 05 · Зображення -->
+          <section class="td-section hud-panel">
+            <header class="td-section__head">
+              <span class="td-section__index">05</span>
+              <span class="td-section__icon td-section__icon--violet"><PhImageSquare :size="14" weight="bold" /></span>
+              <span class="td-section__title">Зображення</span>
+            </header>
+            <div class="td-section__body">
+              <p class="td-note mt-0">
+                Завантажуються окремими запитами одразу після збереження. JPEG, PNG або WebP, до 10&nbsp;МБ.
+                Розміри нижче — рекомендовані для чіткого вигляду без розмиття.
               </p>
-              <div class="flex flex-col gap-16">
-                <el-form-item v-for="u in uploads" :key="u.key" class="upload-form-item drawer-field mb-0">
-                  <template #label>
-                    <span class="text-[13px] font-medium text-gray-300">{{ u.label }}</span>
-                  </template>
-                  <div class="flex w-full flex-col gap-6">
-                    <!-- Як у TeamCreateModal: el-upload без нативної кнопки; превʼю — прямокутник на всю ширину -->
-                    <el-upload
-                      class="tournament-banner-upload block w-full"
-                      action="#"
-                      :auto-upload="false"
-                      :show-file-list="false"
-                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                      :on-change="(file: UploadFile) => handleBannerPick(u.key, file)"
-                    >
-                      <div class="w-full">
-                        <div
-                          v-if="!previews[u.key]"
-                          class="relative flex min-h-[88px] w-full cursor-pointer flex-col items-center justify-center
-                        gap-10 rounded-xl border border-solid border-white/25 bg-white/[0.04]
-                        px-16 py-20 transition hover:border-white/35 hover:bg-white/[0.06]"
-                        >
-                          <el-icon class="text-2xl text-white/70"><Plus /></el-icon>
-                          <span class="text-center text-sm text-white/50">
-                            Обрати зображення
-                          </span>
-                        </div>
-                        <div v-else class="w-full cursor-pointer py-14">
-                          <div
-                            class="relative aspect-video w-full overflow-hidden rounded-xl border border-solid
-                          border-white/20 bg-white/[0.04] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
-                          >
-                            <img
-                              :src="previews[u.key]"
-                              alt=""
-                              class="pointer-events-none absolute inset-0 h-full w-full object-cover"
-                            >
-                            <div
-                              class="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0
-                            transition-opacity hover:opacity-100"
-                            >
-                              <el-icon class="text-lg text-white"><Edit /></el-icon>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </el-upload>
-                  </div>
-                </el-form-item>
+              <div class="td-uploads">
+                <div v-for="u in uploads" :key="u.key" class="td-field td-field--plain">
+                  <span class="td-label">{{ u.label }} <span class="td-label__opt">{{ u.size }}</span></span>
+                  <!-- Як у TeamCreateModal: el-upload без нативної кнопки; превʼю — прямокутник на всю ширину -->
+                  <el-upload
+                    class="td-upload block w-full"
+                    action="#"
+                    :auto-upload="false"
+                    :show-file-list="false"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    :on-change="(file: UploadFile) => handleBannerPick(u.key, file)"
+                  >
+                    <div v-if="!previews[u.key]" class="td-drop">
+                      <span class="td-drop__plus"><PhPlus :size="16" weight="bold" /></span>
+                      <span class="flex flex-col items-start gap-4">
+                        <span class="td-drop__text">Обрати зображення</span>
+                        <span class="td-drop__hint">{{ u.size }} · {{ u.hint }}</span>
+                      </span>
+                    </div>
+                    <div v-else class="td-drop td-drop--filled">
+                      <img :src="previews[u.key]" alt="" class="td-drop__img">
+                      <span class="td-drop__edit" aria-hidden="true">
+                        <PhPencilSimple :size="14" weight="bold" /> Замінити
+                      </span>
+                    </div>
+                  </el-upload>
+                </div>
               </div>
             </div>
           </section>
-
-          <div class="drawer-submit-wrap">
-            <el-button
-              :disabled="!isFormValid"
-              :loading="loading"
-              native-type="submit"
-              type="primary"
-              size="large"
-              class="drawer-submit-btn w-full !h-[52px] !rounded-xl !border-0 !text-[15px] !font-semibold"
-              @click="handleSubmit"
-            >
-              {{ isEditMode ? 'Зберегти зміни' : 'Створити турнір' }}
-            </el-button>
-          </div>
         </el-form>
       </div>
     </el-config-provider>
+
+    <!-- Footer slot (outside the scroll area) — the same hairline foot as dialogs. -->
+    <template #footer>
+      <div class="td-foot">
+        <el-button
+          :disabled="!isFormValid"
+          :loading="loading"
+          type="primary"
+          class="shrink-0"
+          @click="handleSubmit"
+        >
+          <PhCheck v-if="!loading" :size="16" weight="bold" class="mr-8 shrink-0" />
+          {{ isEditMode ? 'Зберегти зміни' : 'Створити турнір' }}
+        </el-button>
+      </div>
+    </template>
   </el-drawer>
 </template>
 
@@ -290,12 +365,13 @@ import 'dayjs/locale/uk'
 import uk from 'element-plus/es/locale/lang/uk'
 import { ElMessage } from 'element-plus'
 import type { UploadFile } from 'element-plus'
-import { Edit, Plus } from '@element-plus/icons-vue'
-import { PhCalendar, PhImageSquare, PhSlidersHorizontal, PhTrophy, PhWarningCircle } from '@phosphor-icons/vue'
+import {
+  PhCalendar, PhCheck, PhFlagCheckered, PhImageSquare, PhMedal, PhPencilSimple, PhPlus, PhSlidersHorizontal, PhTicket,
+  PhTreeStructure, PhGitFork, PhTrophy, PhUsersThree, PhWarningCircle, PhWrench
+} from '@phosphor-icons/vue'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { UPLOAD_ERROR, validateImageFileForUpload } from '@/services/image-upload.service'
 import {
-  PLAYOFF_TEAM_LIMIT,
   tournamentCreateStatusOptions,
   tournamentStatusLabelMap,
   type TTournamentStatusValue
@@ -305,6 +381,10 @@ import { getScheduleViolation, type TTournamentScheduleForm } from '@/core/utils
 import type { TCreateTournamentDto as CreateTournamentDto, TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
 
 type TUploadKey = 'header' | 'list'
+type TBracketFormat = 'SINGLE' | 'DOUBLE'
+
+/** Склад команди в Dota 2 — квиток команди = внесок з гравця × TEAM_SIZE. */
+const TEAM_SIZE = 5
 
 const props = defineProps<{ tournament?: TTournament | null }>()
 const showCreateTournamentDrawer = defineModel<boolean>()
@@ -317,8 +397,23 @@ const elementPlusUk = uk
 
 const prizePoolText = ref('')
 const slotsText = ref('')
-// Вводиться в гривнях, зберігається у копійках (×100).
-const entryFeeText = ref('')
+/**
+ * Внесок вводиться З ГРАВЦЯ в гривнях. У контракті `entryFee` — квиток за
+ * команду в копійках, тож у payload іде `× TEAM_SIZE × 100`.
+ */
+const feePerPlayerText = ref('')
+
+const uahFormat = new Intl.NumberFormat('uk-UA')
+
+function formatUah (value: number): string {
+  return uahFormat.format(value)
+}
+
+/** Квиток команди в гривнях — те, що реально сплачує капітан. */
+const teamTicketUah = computed(() => {
+  if (feePerPlayerText.value === '') return 0
+  return Number(feePerPlayerText.value) * TEAM_SIZE
+})
 
 const files = reactive<Record<TUploadKey, File | null>>({
   header: null,
@@ -330,21 +425,36 @@ const previews = reactive<Record<TUploadKey, string>>({
   list: ''
 })
 
-const uploads: { key: TUploadKey; label: string }[] = [
-  { key: 'header', label: 'Банер у шапці' },
-  { key: 'list', label: 'Банер у списку' }
+/**
+ * Рекомендовані розміри (px) — під реальні контейнери: шапка турніру розтягується
+ * на всю ширину сторінки при висоті 600px (≈3:1), картка в списку — 16:9.
+ */
+const uploads: { key: TUploadKey; label: string; size: string; hint: string }[] = [
+  { key: 'header', label: 'Банер у шапці', size: '1920 × 640 px', hint: 'на всю ширину, важливе — по центру' },
+  { key: 'list', label: 'Банер у списку', size: '1280 × 720 px', hint: '16:9, картка в списку турнірів' }
 ]
 
-const statusStripeClass: Record<TTournamentStatusValue, string> = {
-  REGISTRATION: 'bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]',
-  QUALIFICATIONS: 'bg-green-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]',
-  PLAYOFF: 'bg-fuchsia-400 shadow-[0_0_10px_rgba(217,70,239,0.45)]'
+const statusDotClass: Record<TTournamentStatusValue, string> = {
+  REGISTRATION: 'td-status-dot--registration',
+  QUALIFICATIONS: 'td-status-dot--qualifications',
+  PLAYOFF: 'td-status-dot--playoff'
 }
+
+const bracketOptions: { value: TBracketFormat; label: string; desc: string; icon: Component }[] = [
+  { value: 'SINGLE', label: 'Single elimination', desc: 'Одна поразка — виліт', icon: PhTreeStructure },
+  { value: 'DOUBLE', label: 'Double elimination', desc: 'Верхня та нижня сітки', icon: PhGitFork }
+]
 
 const form = reactive({
   name: '',
   tournamentStatus: 'REGISTRATION' as CreateTournamentDto['tournamentStatus'],
   hasQualification: true,
+  /**
+   * TODO(BE): формат сітки та матч за третє місце ще не мають полів у
+   * CreateTournamentDto — тримаються лише у формі й у payload не йдуть.
+   */
+  bracketFormat: 'SINGLE' as TBracketFormat,
+  thirdPlaceMatch: false,
   registrationStartsAt: '',
   registrationEndsAt: '',
   qualificationStartsAt: '',
@@ -412,30 +522,15 @@ const statusOptions = computed(() =>
   tournamentCreateStatusOptions.filter(o => form.hasQualification || o.key !== 'QUALIFICATIONS')
 )
 
-/**
- * Без кваліфікації немає турнірної таблиці, за якою обрати учасників сітки,
- * тож поле команд має вміститися в неї цілком. Дзеркалить
- * `validateQualificationConfig` на бекенді.
- */
-const slotsError = computed(() => {
-  if (form.hasQualification) return null
-  if (slotsText.value === '') {
-    return `Для турніру без кваліфікації вкажіть слоти команд (не більше ${PLAYOFF_TEAM_LIMIT})`
-  }
-  if (Number(slotsText.value) > PLAYOFF_TEAM_LIMIT) {
-    return `Без кваліфікації слотів команд не може бути більше ${PLAYOFF_TEAM_LIMIT}`
-  }
-  return null
-})
-
 /** Порушення послідовності етапів; дзеркалить перевірку бекенду. */
 const scheduleError = computed(() => getScheduleViolation(form))
 
+const missingDates = computed(() => requiredScheduleKeys.value.some(key => form[key] === ''))
+
 const isFormValid = computed(() =>
   form.name.trim() !== '' &&
-    requiredScheduleKeys.value.every(key => form[key] !== '') &&
-    scheduleError.value === null &&
-    slotsError.value === null
+    !missingDates.value &&
+    scheduleError.value === null
 )
 
 /**
@@ -490,7 +585,10 @@ function populateFromTournament (t: TTournament) {
   }
   prizePoolText.value = t.prizePool != null ? String(t.prizePool) : ''
   slotsText.value = t.tournamentSlots != null ? String(t.tournamentSlots) : ''
-  entryFeeText.value = t.entryFee != null && t.entryFee > 0 ? String(Math.round(t.entryFee / 100)) : ''
+  // Копійки за команду → гривні з гравця.
+  feePerPlayerText.value = t.entryFee != null && t.entryFee > 0
+    ? String(Math.round(t.entryFee / 100 / TEAM_SIZE))
+    : ''
   previews.header = t.headerBannerUrl ? getImageUrl(t.headerBannerUrl) : ''
   previews.list = t.listBannerUrl ? getImageUrl(t.listBannerUrl) : ''
 }
@@ -499,10 +597,12 @@ function clearData () {
   form.name = ''
   form.tournamentStatus = 'REGISTRATION'
   form.hasQualification = true
+  form.bracketFormat = 'SINGLE'
+  form.thirdPlaceMatch = false
   for (const key of ALL_SCHEDULE_KEYS) form[key] = ''
   prizePoolText.value = ''
   slotsText.value = ''
-  entryFeeText.value = ''
+  feePerPlayerText.value = ''
   for (const k of Object.keys(files) as TUploadKey[]) {
     if (previews[k] && previews[k].startsWith('blob:')) URL.revokeObjectURL(previews[k])
     files[k] = null
@@ -524,7 +624,7 @@ function toIsoUtc (pickerValue: string): string {
 }
 
 const handleSubmit = async () => {
-  if (!isFormValid.value) return
+  if (!isFormValid.value || loading.value) return
 
   const basePayload = {
     name: form.name.trim(),
@@ -540,8 +640,9 @@ const handleSubmit = async () => {
     tournamentEndsAt: toIsoUtc(form.tournamentEndsAt),
     ...(prizePoolText.value !== '' && { prizePool: Number(prizePoolText.value) }),
     ...(slotsText.value !== '' && { tournamentSlots: Number(slotsText.value) }),
-    // Гривні → копійки. Порожнє поле означає безкоштовний турнір (0).
-    entryFee: entryFeeText.value !== '' ? Number(entryFeeText.value) * 100 : 0
+    // Гривні з гравця → квиток команди в копійках. Порожнє поле — безкоштовний турнір (0).
+    entryFee: teamTicketUah.value * 100
+    // TODO(BE): bracketFormat / thirdPlaceMatch — додати, коли з'являться в DTO.
   }
 
   loading.value = true
@@ -585,346 +686,825 @@ const handleSubmit = async () => {
 }
 </script>
 
-<style scoped>
-.drawer-section {
-  margin-bottom: 20px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.045) 0%, rgba(0, 0, 0, 0.22) 100%);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+<style scoped lang="scss">
+// ─── Head ───────────────────────────────────────────────────────────────────
+.td-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 8px;
 }
 
-.drawer-section--media {
-  background: linear-gradient(
-    165deg,
-    rgba(139, 92, 246, 0.06) 0%,
-    rgba(0, 0, 0, 0.2) 45%,
-    rgba(0, 0, 0, 0.28) 100%
-  );
+.td-head__title {
+  margin: 0;
+  font-family: var(--ds-font-display);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: var(--ds-neon-text-subtle);
 }
 
-.drawer-section__head {
+.td-head__meta {
+  margin: 2px 0 0;
+  max-width: 26rem;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ds-text-faint);
+}
+
+// ─── Scroll + form ──────────────────────────────────────────────────────────
+.td-scroll {
+  padding: 4px 6px 0 0;
+}
+
+.td-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+// ─── Section ────────────────────────────────────────────────────────────────
+.td-section {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.td-section__head {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(var(--ds-primary-rgb), 0.1);
 }
 
-.drawer-section__title {
-  font-size: 11px;
+.td-section__index {
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgb(209 213 219);
+  color: var(--ds-primary);
+  font-variant-numeric: tabular-nums;
 }
 
-.drawer-section__body {
-  padding: 16px;
-}
+.td-section__icon {
+  --td-icon-rgb: var(--ds-primary-rgb);
 
-.drawer-section__body--stack {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.drawer-section__hint {
-  margin: 0 0 14px;
-  padding: 0;
-  max-width: 44rem;
-  font-size: 12px;
-  line-height: 1.65;
-  color: rgb(107 114 128);
-}
-
-.drawer-section__grid {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.drawer-fields-pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 16px;
-}
-
-@media (max-width: 520px) {
-  .drawer-fields-pair {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Один етап розкладу: реєстрація / кваліфікація / плей-оф */
-.drawer-phase {
-  padding: 12px 14px 2px;
-  border: 1px solid rgb(55 65 81 / 0.55);
-  border-radius: 12px;
-  background: rgb(17 24 39 / 0.35);
-}
-
-.drawer-phase + .drawer-phase {
-  margin-top: 12px;
-}
-
-.drawer-phase__head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.drawer-phase__index {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: rgb(56 189 248 / 0.14);
-  color: rgb(125 211 252);
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: rgb(var(--td-icon-rgb));
+  background: rgba(var(--td-icon-rgb), 0.1);
+  box-shadow: inset 0 0 0 1px rgba(var(--td-icon-rgb), 0.3);
+
+  &--pink { --td-icon-rgb: var(--ds-pink-rgb); }
+  &--gold { --td-icon-rgb: var(--ds-gold-rgb); }
+  &--sky { --td-icon-rgb: 56, 189, 248; }
+  &--violet { --td-icon-rgb: var(--ds-secondary-rgb); }
 }
 
-.drawer-phase__title {
+.td-section__title {
+  font-family: var(--ds-font-display);
   font-size: 12px;
-  font-weight: 600;
-  color: rgb(229 231 235);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
 }
 
-.drawer-phase__hint {
-  margin: 4px 0 10px 26px;
-  padding: 0;
-  font-size: 11px;
-  line-height: 1.55;
-  color: rgb(107 114 128);
+.td-soon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(var(--ds-gold-rgb), 0.35);
+  background: rgba(var(--ds-gold-rgb), 0.1);
+  font-family: var(--ds-font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ds-gold);
+  cursor: help;
 }
 
-.drawer-schedule-error {
+.td-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+}
+
+// ─── Fields ─────────────────────────────────────────────────────────────────
+.td-field {
+  margin-bottom: 0 !important;
+
+  :deep(.el-form-item__label) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    padding: 0;
+    line-height: 1.25;
+    font-family: var(--ds-font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ds-text-faint);
+  }
+
+  :deep(.el-form-item__content) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    line-height: normal;
+  }
+
+  :deep(.el-form-item__error) {
+    position: static;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+}
+
+// Plain field (no el-form-item): the same label register.
+.td-field--plain {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.td-label {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin: 12px 0 0;
-  padding: 9px 12px;
-  border: 1px solid rgb(248 113 113 / 0.35);
-  border-radius: 10px;
-  background: rgb(127 29 29 / 0.18);
-  font-size: 12px;
-  line-height: 1.5;
-  color: rgb(252 165 165);
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
 }
 
-.drawer-date-grid {
+.td-label__opt {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.td-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px 14px;
 }
 
 @media (max-width: 520px) {
-  .drawer-date-grid {
+  .td-pair {
     grid-template-columns: 1fr;
   }
 }
 
-.span-full {
-  grid-column: 1 / -1;
+// Numeric inputs: mono tabular digits.
+.td-num :deep(.el-input__inner) {
+  font-family: var(--ds-font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
 }
 
-.label-optional {
-  font-weight: 400;
-  color: rgb(107 114 128);
+.td-affix {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
 }
 
-/* Пояснення під чекбоксом: тон як у .drawer-section__hint, але без відступу секції. */
-.drawer-field__note {
-  margin: 6px 0 0;
-  padding: 0;
-  max-width: 44rem;
+.td-note {
+  margin: 0;
   font-size: 12px;
-  line-height: 1.6;
-  color: rgb(107 114 128);
+  line-height: 1.55;
+  color: var(--ds-text-faint);
+
+  &--warn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(var(--ds-gold-rgb), 0.25);
+    background: rgba(var(--ds-gold-rgb), 0.06);
+    color: rgba(255, 255, 255, 0.7);
+
+    svg { color: var(--ds-gold); }
+  }
 }
 
-.input-prefix-muted {
+.td-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #fca5a5;
+}
+
+// Status dot in the select options.
+.td-status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+
+  &--registration { background: var(--ds-primary); box-shadow: 0 0 8px rgba(var(--ds-primary-rgb), 0.7); }
+  &--qualifications { background: var(--ds-success); box-shadow: 0 0 8px rgba(34, 197, 94, 0.6); }
+  &--playoff { background: var(--ds-pink); box-shadow: 0 0 8px rgba(var(--ds-pink-rgb), 0.6); }
+}
+
+// ─── Option row (icon tile + title + description + switch) ─────────────────
+.td-option {
+  --td-opt-rgb: var(--ds-primary-rgb);
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(7, 8, 15, 0.35);
+  cursor: pointer;
+  transition: border-color var(--ds-duration-fast) ease, background-color var(--ds-duration-fast) ease,
+    box-shadow var(--ds-duration-fast) ease;
+
+  &--gold {
+    --td-opt-rgb: var(--ds-gold-rgb);
+  }
+
+  &.is-on {
+    border-color: rgba(var(--td-opt-rgb), 0.38);
+    background: rgba(var(--td-opt-rgb), 0.05);
+
+    .td-option__icon {
+      color: var(--ds-background);
+      background: rgb(var(--td-opt-rgb));
+      box-shadow: 0 0 12px rgba(var(--td-opt-rgb), 0.35);
+    }
+
+    .td-option__title {
+      color: #fff;
+    }
+  }
+
+  &.is-locked {
+    cursor: default;
+    opacity: 0.75;
+  }
+}
+
+.td-option__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  color: var(--ds-text-faint);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition: background-color var(--ds-duration-fast) ease, color var(--ds-duration-fast) ease,
+    box-shadow var(--ds-duration-fast) ease;
+}
+
+.td-option__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.td-option__title {
   font-size: 13px;
-  color: rgb(156 163 175);
+  font-weight: 600;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.88);
+  transition: color var(--ds-duration-fast) ease;
 }
 
-.drawer-submit-wrap {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+.td-option__desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ds-text-faint);
 }
 
-.drawer-submit-btn {
-  box-shadow:
-    0 4px 24px rgba(6, 182, 212, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 55%, #6366f1 100%) !important;
+.td-option__switch {
+  flex-shrink: 0;
+  --el-switch-on-color: rgb(var(--td-opt-rgb));
+  --el-switch-off-color: rgba(255, 255, 255, 0.14);
+  --el-switch-border-color: transparent;
 }
 
-.drawer-submit-btn:hover:not(:disabled) {
-  filter: brightness(1.06);
-  box-shadow:
-    0 6px 28px rgba(6, 182, 212, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+// ─── Segmented bracket picker ───────────────────────────────────────────────
+.td-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
-.drawer-submit-btn:disabled {
-  opacity: 0.45;
-  filter: grayscale(0.2);
+@media (max-width: 520px) {
+  .td-seg {
+    grid-template-columns: 1fr;
+  }
 }
 
-.upload-form-item :deep(.el-form-item__content) {
-  line-height: normal;
+.td-seg__opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(7, 8, 15, 0.35);
+  text-align: left;
+  color: var(--ds-text-muted);
+  cursor: pointer;
+  transition: border-color var(--ds-duration-fast) ease, background-color var(--ds-duration-fast) ease,
+    box-shadow var(--ds-duration-fast) ease;
+
+  &.is-active {
+    border-color: rgba(var(--ds-primary-rgb), 0.45);
+    background: rgba(var(--ds-primary-rgb), 0.07);
+    box-shadow: var(--ds-glow-primary-soft);
+    color: #fff;
+
+    .td-seg__icon {
+      color: var(--ds-background);
+      background: var(--ds-primary);
+      box-shadow: var(--ds-glow-primary-soft);
+    }
+
+    .td-seg__title {
+      color: var(--ds-primary);
+      text-shadow: var(--ds-neon-text-subtle);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.6);
+    outline-offset: 2px;
+  }
 }
 
-.tournament-banner-upload {
+.td-seg__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  color: var(--ds-text-faint);
+  background: rgba(255, 255, 255, 0.05);
+  transition: background-color var(--ds-duration-fast) ease, color var(--ds-duration-fast) ease;
+}
+
+.td-seg__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.td-seg__title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: color var(--ds-duration-fast) ease;
+}
+
+.td-seg__desc {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ds-text-faint);
+}
+
+// ─── Fee: input, then the computed team ticket as a full-width strip ────────
+.td-fee {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.td-ticket {
+  --td-ticket-rgb: var(--ds-gold-rgb);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--td-ticket-rgb), 0.3);
+  background:
+    repeating-linear-gradient(-45deg, rgba(var(--td-ticket-rgb), 0.05) 0 1px, transparent 1px 10px),
+    rgba(7, 8, 15, 0.45);
+  transition: border-color var(--ds-duration-base) ease;
+
+  &.is-free {
+    --td-ticket-rgb: 255, 255, 255;
+
+    border-color: rgba(255, 255, 255, 0.1);
+
+    .td-ticket__icon {
+      color: var(--ds-text-faint);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .td-ticket__value {
+      font-size: 14px;
+      color: var(--ds-text-muted);
+      text-shadow: none;
+    }
+  }
+}
+
+.td-ticket__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--ds-text-muted);
+}
+
+.td-ticket__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  color: var(--ds-gold);
+  background: rgba(var(--ds-gold-rgb), 0.1);
+  box-shadow: inset 0 0 0 1px rgba(var(--ds-gold-rgb), 0.35);
+  transition: background-color var(--ds-duration-base) ease, color var(--ds-duration-base) ease;
+}
+
+.td-ticket__sub {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  color: var(--ds-text-faint);
+}
+
+.td-ticket__amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.td-ticket__value {
+  font-family: var(--ds-font-display);
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--ds-gold);
+  text-shadow: var(--ds-neon-text-gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.td-ticket__formula {
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--ds-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+// ─── Schedule phases ────────────────────────────────────────────────────────
+.td-phases {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.td-phase {
+  padding: 12px 12px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(7, 8, 15, 0.35);
+}
+
+.td-phase__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.td-phase__index {
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--ds-primary);
+}
+
+.td-phase__title {
+  font-family: var(--ds-font-display);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.td-phase__line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(var(--ds-primary-rgb), 0.35), transparent);
+}
+
+.td-phase__hint {
+  margin: 6px 0 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ds-text-faint);
+}
+
+// Date pickers: same control contract, mono digits.
+:deep(.td-date.el-date-editor) {
   width: 100%;
+  max-width: 100%;
+
+  .el-input__wrapper {
+    min-height: var(--ds-control-height);
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Global reset adds its own prefix/suffix padding + margins on top of the
+     wrapper padding above — collapse them so icon and date sit 8px apart. */
+  .el-input__prefix {
+    padding-left: 0;
+    margin-inline-end: 8px;
+  }
+
+  .el-input__suffix {
+    padding-right: 0;
+    margin-inline-start: 6px;
+  }
+
+  .el-input__inner {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    font-family: var(--ds-font-mono);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .el-input__prefix-inner > :first-child {
+    margin: 0;
+    font-size: 16px;
+    color: var(--ds-text-faint);
+  }
 }
 
-.tournament-banner-upload :deep(.el-upload) {
-  display: block;
+// ─── Uploads ────────────────────────────────────────────────────────────────
+.td-uploads {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.td-upload {
   width: 100%;
-  border: none;
+
+  :deep(.el-upload) {
+    display: block;
+    width: 100%;
+    border: none;
+  }
+
+  :deep(.el-upload__input) {
+    display: none !important;
+  }
 }
 
-.tournament-banner-upload :deep(.el-upload__input) {
-  display: none !important;
+.td-drop {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  min-height: 84px;
+  width: 100%;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px dashed rgba(var(--ds-primary-rgb), 0.28);
+  background:
+    repeating-linear-gradient(-45deg, rgba(var(--ds-primary-rgb), 0.04) 0 1px, transparent 1px 10px),
+    rgba(7, 8, 15, 0.45);
+  cursor: pointer;
+  transition: border-color var(--ds-duration-base) ease, background-color var(--ds-duration-base) ease;
+
+  &--filled {
+    display: block;
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+    overflow: hidden;
+    border-style: solid;
+    border-color: rgba(var(--ds-primary-rgb), 0.22);
+    box-shadow: var(--ds-glow-primary-soft);
+  }
 }
 
-.drawer-body-scroll::-webkit-scrollbar {
+.td-drop__plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--ds-primary);
+  background: rgba(var(--ds-primary-rgb), 0.08);
+  box-shadow: inset 0 0 0 1px rgba(var(--ds-primary-rgb), 0.35);
+  transition: background-color var(--ds-duration-base) ease, color var(--ds-duration-base) ease;
+}
+
+.td-drop__text {
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
+}
+
+.td-drop__hint {
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.32);
+  font-variant-numeric: tabular-nums;
+}
+
+.td-drop__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.td-drop__edit {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(7, 8, 15, 0.55);
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0;
+  transition: opacity var(--ds-duration-fast) ease;
+}
+
+// ─── Foot (drawer footer slot) ──────────────────────────────────────────────
+.td-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+// ─── Scrollbar ──────────────────────────────────────────────────────────────
+.td-scroll::-webkit-scrollbar {
   width: 6px;
 }
-.drawer-body-scroll::-webkit-scrollbar-track {
+
+.td-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
-.drawer-body-scroll::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.12);
+
+.td-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(var(--ds-primary-rgb), 0.22);
   border-radius: 3px;
 }
-.drawer-body-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.22);
+
+.td-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(var(--ds-primary-rgb), 0.4);
 }
 
+// ─── Drawer shell ───────────────────────────────────────────────────────────
 :deep(.create-tournament-drawer.el-drawer) {
-  --el-drawer-bg-color: theme('colors.dark.navy');
-  background: linear-gradient(180deg, #0f172a 0%, theme('colors.dark.navy') 40%, #080c16 100%) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: -16px 0 48px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(
+    180deg,
+    var(--ds-elevated-surface) 0%,
+    var(--ds-surface) 40%,
+    var(--ds-background) 100%
+  ) !important;
 }
 
 :deep(.create-tournament-drawer .el-drawer__header) {
   margin-bottom: 0;
-  padding: 20px 20px 8px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 20px 20px 14px 24px;
+  border-bottom: 1px solid rgba(var(--ds-primary-rgb), 0.12);
 }
 
 :deep(.create-tournament-drawer .el-drawer__body) {
-  padding: 16px 20px 24px 24px;
+  padding: 12px 18px 12px 24px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 
+:deep(.create-tournament-drawer .el-drawer__footer) {
+  padding: 12px 24px 20px;
+  border-top: 1px solid rgba(var(--ds-primary-rgb), 0.12);
+}
+
 :deep(.create-tournament-drawer .el-drawer__close-btn) {
-  color: theme('colors.gray.400');
+  color: var(--ds-text-faint);
   font-size: 18px;
+  transition: color var(--ds-duration-fast) ease;
 }
 
-:deep(.create-tournament-drawer .el-drawer__close-btn:hover) {
-  color: white;
+// ─── Pointer-only hover ─────────────────────────────────────────────────────
+@media (hover: hover) and (pointer: fine) {
+  .td-option:not(.is-locked):hover,
+  .td-seg__opt:not(.is-active):hover {
+    border-color: rgba(var(--ds-primary-rgb), 0.28);
+    background: rgba(var(--ds-primary-rgb), 0.04);
+  }
+
+  .td-drop:hover {
+    border-color: rgba(var(--ds-primary-rgb), 0.55);
+
+    .td-drop__plus {
+      color: var(--ds-background);
+      background: var(--ds-primary);
+    }
+
+    .td-drop__edit {
+      opacity: 1;
+    }
+  }
+
+  :deep(.create-tournament-drawer .el-drawer__close-btn:hover) {
+    color: #fff;
+  }
 }
 
-:deep(.drawer-field .el-form-item__label) {
-  color: theme('colors.gray.300');
-  font-weight: 500;
-  font-size: 13px;
-}
-
-:deep(.el-form-item) {
-  margin-bottom: 14px;
-}
-
-:deep(.el-form-item:last-child) {
-  margin-bottom: 0;
-}
-
-:deep(.el-input__wrapper) {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: none !important;
-  border-radius: 10px;
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease;
-}
-
-:deep(.el-input__wrapper:hover) {
-  border-color: rgba(34, 211, 238, 0.25);
-}
-
-:deep(.el-input__wrapper.is-focus) {
-  border-color: rgba(34, 211, 238, 0.55) !important;
-  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2) !important;
-}
-
-:deep(.el-input__inner) {
-  color: white;
-}
-
-:deep(.el-input__inner::placeholder) {
-  color: theme('colors.gray.500');
-}
-
-:deep(.el-select__wrapper) {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: none !important;
-  border-radius: 10px;
-  min-height: 40px;
-}
-
-:deep(.el-select__wrapper:hover) {
-  border-color: rgba(34, 211, 238, 0.25);
-}
-
-:deep(.el-select__wrapper.is-focused) {
-  border-color: rgba(34, 211, 238, 0.55) !important;
-  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2) !important;
-}
-
-:deep(.el-select__placeholder) {
-  color: theme('colors.gray.500');
-}
-
-:deep(.el-select__selected-item) {
-  color: white;
-}
-
-/* Дата й час у полі: відступ для іконки, вища зона натиску */
-:deep(.drawer-date-picker.el-date-editor) {
-  width: 100%;
-  max-width: 100%;
-}
-
-:deep(.drawer-date-picker.el-date-editor .el-input__wrapper) {
-  min-height: 44px;
-  padding-left: 14px !important;
-  padding-right: 14px !important;
-}
-
-:deep(.drawer-date-picker .el-input__prefix) {
-  margin-inline-end: 8px;
-}
-
-:deep(.drawer-date-picker .el-input__prefix-inner > :first-child) {
-  margin-right: 0;
-  margin-left: 2px;
-  font-size: 17px;
-  color: rgb(148 163 184 / 0.95);
+@media (prefers-reduced-motion: reduce) {
+  .td-option,
+  .td-seg__opt,
+  .td-seg__icon,
+  .td-drop,
+  .td-drop__plus,
+  .td-drop__edit,
+  .td-ticket {
+    transition: none;
+  }
 }
 </style>

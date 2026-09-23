@@ -1,28 +1,66 @@
 @use "element-plus/theme-chalk/src/empty";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Empty state — the EP cardboard-box illustration re-lit for the neon system.
+// The SVG facets are painted through `--el-empty-fill-color-0…9`: the lit
+// faces take the brand cyan at low alpha, the shaded faces sink into the indigo
+// surface ladder, and a drop-shadow halo lifts the whole box off the page. The
+// description speaks in the display register with a mono "NO DATA" system tag
+// above it, so a list with nothing in it still looks like part of the HUD.
+// ─────────────────────────────────────────────────────────────────────────────
+
 .el-empty {
-  --el-empty-fill-color-0: #ffffffe6;
-  --el-empty-fill-color-1: #ffffffcc;
-  --el-empty-fill-color-2: #ffffff99;
-  --el-empty-fill-color-3: #ffffff80;
-  --el-empty-fill-color-4: #ffffff66;
-  --el-empty-fill-color-5: #ffffff4d;
-  --el-empty-fill-color-6: #ffffff33;
-  --el-empty-fill-color-7: #ffffff26;
-  --el-empty-fill-color-8: #ffffff1a;
-  --el-empty-fill-color-9: #ffffff0d;
+  // Lit facets (0–4): cyan tints. Shaded facets (5–9): indigo.
+  --el-empty-fill-color-0: rgba(46, 229, 255, 0.55);
+  --el-empty-fill-color-1: rgba(46, 229, 255, 0.42);
+  --el-empty-fill-color-2: rgba(46, 229, 255, 0.3);
+  --el-empty-fill-color-3: rgba(46, 229, 255, 0.22);
+  --el-empty-fill-color-4: rgba(46, 229, 255, 0.16);
+  --el-empty-fill-color-5: rgba(27, 31, 54, 0.95);
+  --el-empty-fill-color-6: rgba(34, 39, 65, 0.95);
+  --el-empty-fill-color-7: rgba(20, 23, 41, 0.95);
+  --el-empty-fill-color-8: rgba(13, 15, 28, 0.95);
+  --el-empty-fill-color-9: rgba(46, 229, 255, 0.08);
 
-  @apply flex flex-col items-center justify-center w-full text-center text-white py-40;
+  @apply flex flex-col items-center justify-center w-full text-center text-white py-24;
 
+  // Callers pass `image-size` per screen (120–250); cap it so the box never
+  // dominates — an empty state is a quiet notice, not a hero illustration.
   &__image {
-    @apply mb-8 opacity-20;
+    @apply mb-10;
+    max-width: 150px;
+    opacity: 0.85;
+    filter: drop-shadow(0 0 14px rgba(46, 229, 255, 0.18)) drop-shadow(0 10px 20px rgba(0, 0, 0, 0.55));
   }
 
   &__description {
-    @apply text-3xl font-bold text-white mt-4;
+    @apply mt-4 flex flex-col items-center gap-8;
+    font-family: var(--ds-font-display);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.3;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: var(--ds-neon-text-subtle);
+
+    // HUD system tag above the copy.
+    &::before {
+      content: 'SYS://NO_DATA';
+      font-family: var(--ds-font-mono);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      color: rgba(46, 229, 255, 0.6);
+      text-shadow: none;
+    }
+
+    p {
+      margin: 0;
+    }
   }
 
   &__footer {
-    @apply mt-6 text-sm text-white/40;
+    @apply mt-12 text-sm text-white/45;
   }
 }

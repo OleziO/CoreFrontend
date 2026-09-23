@@ -85,19 +85,19 @@ const rowClass = computed(() => {
     ? 'flex flex-nowrap items-center gap-6 min-w-0 overflow-x-auto'
     : 'flex flex-nowrap items-center gap-6 min-w-0'
   if (!props.stretchInGrid) return flow
-  return `${flow} w-full items-stretch justify-start`
+  return `${flow} w-full justify-start`
 })
 
+// У картці (stretchInGrid) роль займає всю ширину своєї половини, «+N» стоїть
+// поруч і не стискається.
 function visibleRoleCellClass (index: number): string {
   if (!props.stretchInGrid) return 'contents'
-  if (!overflowRoles.value.length) {
-    return 'flex min-w-0 flex-1'
-  }
+  if (!overflowRoles.value.length) return 'flex min-w-0 flex-1'
   return index === 0 ? 'flex min-w-0 flex-1' : 'contents'
 }
 
 const moreChipCellClass = computed(() =>
-  props.stretchInGrid ? 'flex shrink-0 basis-auto justify-center self-stretch' : 'contents'
+  props.stretchInGrid ? 'flex shrink-0' : 'contents'
 )
 
 function tooltipTriggerStretchClass (kind: 'primary' | 'more'): string {
@@ -105,9 +105,9 @@ function tooltipTriggerStretchClass (kind: 'primary' | 'more'): string {
     return 'inline-flex max-w-full'
   }
   if (kind === 'more') {
-    return 'inline-flex shrink-0 max-w-full'
+    return 'inline-flex shrink-0'
   }
-  return 'block w-full min-w-0'
+  return 'flex w-full min-w-0'
 }
 
 function rolePillStretchFill (index: number): boolean {
@@ -159,69 +159,57 @@ const overflowRoles = computed(() => {
 </script>
 
 <style scoped>
+/* Мова тегів — element-reset/_tag.scss. Тут лише колір ролі (RGB-змінні з
+   getRoleTagCssVars) і поведінка в сітці. Тег — ярлик, він обіймає текст і
+   ніколи не розтягується на ширину клітинки, інакше читається як кнопка. */
 .role-tag-pill {
-  @apply m-0 shrink-0 w-max max-w-full min-w-0 !box-border !inline-flex !h-28 !min-h-28 !max-h-28;
-  @apply !items-center !justify-center !rounded-lg !border !px-10 !py-0;
-  @apply !text-[12px] !font-semibold !leading-tight !shadow-none;
-
-  --rt-bo: 0.38;
-  --rt-bg: 0.12;
-
-  border-color: rgb(var(--rt-r) var(--rt-g) var(--rt-b) / var(--rt-bo)) !important;
-  background-color: rgb(var(--rt-r) var(--rt-g) var(--rt-b) / var(--rt-bg)) !important;
-  color: color-mix(
-    in srgb,
-    #f8fafc 90%,
-    rgb(var(--rt-r) var(--rt-g) var(--rt-b)) 10%
-  ) !important;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
+  @apply m-0 shrink-0 max-w-full min-w-0;
+  --rt: rgb(var(--rt-r) var(--rt-g) var(--rt-b));
+  --el-tag-bg-color: rgb(var(--rt-r) var(--rt-g) var(--rt-b) / 0.2);
+  --el-tag-border-color: rgb(var(--rt-r) var(--rt-g) var(--rt-b) / 0.4);
+  --el-tag-text-color: color-mix(in srgb, #f8fafc 70%, var(--rt) 30%);
 }
 
+/* Колір ролі задає адмін і він буває будь-яким (темно-бордовий, navy…). Щоб
+   тег читався незалежно від відтінку, нормалізуємо його в OKLCH: беремо лише
+   hue, а світлоту й насиченість фіксуємо — фон і рамка помітні, текст світлий. */
+@supports (color: oklch(from red l c h)) {
+  .role-tag-pill {
+    --el-tag-bg-color: oklch(from var(--rt) 0.62 min(c, 0.16) h / 0.26);
+    --el-tag-border-color: oklch(from var(--rt) 0.7 min(c, 0.16) h / 0.5);
+    --el-tag-text-color: oklch(from var(--rt) 0.9 min(c, 0.1) h);
+  }
+}
+
+/* У картці: пілюля на всю половину, довга назва — з трикрапкою */
 .role-tag-pill--fill {
-  width: 100% !important;
-  max-width: none !important;
-  @apply min-w-0 !shrink justify-center;
-}
-
-.role-tag-pill :deep(.el-tag__content) {
-  @apply inline-flex min-h-0 max-w-full min-w-0 items-center justify-center !p-0 !leading-tight;
+  @apply w-full;
 }
 
 .role-tag-pill--fill :deep(.el-tag__content) {
-  @apply w-full justify-center;
+  @apply block min-w-0 flex-1 truncate text-center;
 }
 
-.role-tag-pill:hover {
-  --rt-bo: 0.52;
-  --rt-bg: 0.2;
-  box-shadow: 0 0 20px rgb(var(--rt-r) var(--rt-g) var(--rt-b) / 0.22) !important;
-}
-
+/* «+N» відкриває тултіп — єдиний інтерактивний тег, тож має курсор і hover */
 .role-tag-pill--more {
-  width: fit-content !important;
-  max-width: none !important;
-  @apply shrink-0 !px-8 !tabular-nums;
-  --rt-r: 99;
-  --rt-g: 102;
-  --rt-b: 241;
-  --rt-bo: 0.4;
-  --rt-bg: 0.1;
+  @apply shrink-0 tabular-nums;
+  --el-tag-bg-color: rgba(255, 255, 255, 0.08);
+  --el-tag-border-color: rgba(255, 255, 255, 0.16);
+  --el-tag-text-color: var(--ds-text-muted);
   cursor: pointer;
+  transition: background-color var(--ds-duration-fast) ease, color var(--ds-duration-fast) ease;
 }
 
-.role-tag-pill--more:hover {
-  --rt-bo: 0.55;
-  --rt-bg: 0.16;
-  box-shadow: 0 0 18px rgb(var(--rt-r) var(--rt-g) var(--rt-b) / 0.25) !important;
+@media (hover: hover) and (pointer: fine) {
+  .role-tag-pill--more:hover {
+    --el-tag-bg-color: rgba(255, 255, 255, 0.14);
+    --el-tag-text-color: var(--ds-text-strong);
+  }
 }
 </style>
 
 <style>
+/* Popper-обгортка прозора — поверхню малює .role-tag-tooltip__inner */
 .role-tag-tooltip-popper {
   min-width: 0 !important;
   border: none !important;
@@ -233,18 +221,12 @@ const overflowRoles = computed(() => {
 .role-tag-tooltip__inner {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 6px;
   max-width: min(100vw, 280px);
-  padding: 0.6rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(
-    135deg,
-    rgb(17 24 39 / 0.96),
-    rgb(31 41 55 / 0.92) 50%,
-    rgb(3 7 18 / 0.96)
-  );
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(12px);
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--ds-border);
+  background: var(--ds-overlay);
+  box-shadow: var(--ds-elevation-3);
 }
 </style>

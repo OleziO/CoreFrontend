@@ -1,12 +1,13 @@
 <template>
+  <!-- Сітка команд: 4 у ряд на широких екранах, краї збігаються з контейнером сторінки -->
   <div
     v-if="tournament?.teams?.length"
-    class="flex flex-wrap justify-center gap-x-12 gap-y-16 px-10 py-20"
+    class="grid grid-cols-1 gap-12 py-20 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
   >
     <div
       v-for="team in tournament?.teams"
       :key="team.id"
-      class="w-[300px] max-w-full shrink-0"
+      class="min-w-0 w-full"
     >
       <TeamCard
         :team="team"

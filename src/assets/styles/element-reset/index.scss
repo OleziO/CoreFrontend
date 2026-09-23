@@ -39,6 +39,7 @@
 @use './table';
 @use './tabs';
 @use './button';
+@use './tag' as app-tag;
 @use './input';
 @use './dialog';
 @use './message-box';
@@ -51,3 +52,8 @@
 @use './loader';
 @use './tooltip';
 @use './date-picker';
+@use './message' as app-message;
+
+// LAST on purpose: the `--el-*` → `--ds-*` mapping and `color-scheme: dark`
+// must be emitted after EP's own `:root` block (pulled in by `base`) to win.
+@use './theme';

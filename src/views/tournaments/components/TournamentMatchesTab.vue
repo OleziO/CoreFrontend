@@ -5,7 +5,8 @@
       <el-tooltip placement="top" content="Оновити матчі">
         <el-button
           type="primary"
-          class="rounded-sm px-10"
+          class="btn-icon"
+          aria-label="Оновити матчі"
           @click="updateMatches()"
         >
           <PhArrowsClockwise :size="20" />

@@ -8,7 +8,7 @@ html,
 body,
 #app {
   @apply h-full;
-  font-family: "Poppins", sans-serif;
+  font-family: "Exo 2", system-ui, sans-serif;
 }
 
 html {
@@ -21,6 +21,9 @@ html,
 body {
   height: 100%;
   overflow: hidden; /* ❗ один скрол */
+  // Base page colour lives on the root too, so overscroll / not-yet-mounted
+  // frames never flash the browser's (possibly light) default canvas.
+  background-color: var(--ds-background);
 }
 
 .app-root {
@@ -63,6 +66,20 @@ label {
   @apply block text-sm font-semibold text-gray-600;
 }
 
+// Native <button> baseline — every pressable element that isn't an <el-button>
+// (tabs, icon buttons, thumbs) gets the same quiet press feedback. Colour and
+// hover stay per-component; only the press is global. Tailwind preflight
+// already provides `cursor: pointer`.
+button {
+  touch-action: manipulation;
+  user-select: none;
+  transition: transform var(--ds-duration-press) var(--ds-ease-out);
+
+  &:not(:disabled):active {
+    transform: scale(0.97);
+  }
+}
+
 // Custom scrollbar styling
 * {
   // Webkit browsers (Chrome, Safari, Edge)
@@ -77,12 +94,12 @@ label {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(46, 229, 255, 0.22);
     border-radius: 4px;
     transition: background 0.2s ease;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(46, 229, 255, 0.4);
     }
   }
 }
@@ -90,5 +107,11 @@ label {
 // Firefox
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) theme('colors.dark.900');
+  scrollbar-color: rgba(46, 229, 255, 0.22) theme('colors.dark.900');
+}
+
+// Text selection glows in brand cyan instead of the OS blue.
+::selection {
+  background: rgba(46, 229, 255, 0.28);
+  color: #ffffff;
 }

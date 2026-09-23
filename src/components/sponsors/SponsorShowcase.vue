@@ -1,5 +1,5 @@
 <template>
-  <section class="sponsor-showcase w-full border-y border-white/[0.06] bg-white/[0.012]">
+  <section class="sponsor-showcase w-full">
     <div
       class="mx-auto max-w-7xl px-10 sm:px-15 lg:px-20 xl:px-40"
       :class="variant === 'compact' ? 'py-16' : 'py-24'"

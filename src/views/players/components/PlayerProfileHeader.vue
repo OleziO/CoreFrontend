@@ -1,20 +1,13 @@
 <template>
   <div
-    class="
-      relative w-full
-      rounded-2xl flex flex-col justify-between
-      border border-gray-800/80
-      bg-gradient-to-br from-gray-900 via-gray-850 to-gray-950
-      p-20
-      shadow-[0_15px_40px_rgba(0,0,0,0.45)]
-    "
+    class="neon-card hud-corners flex w-full flex-col rounded-2xl p-20"
   >
-    <!-- HEADER -->
-    <div class="flex mt-10 items-center justify-between gap-20 px-10">
+    <!-- HEADER: аватар + імена ліворуч, ранг праворуч на одній осі -->
+    <div class="flex items-center justify-between gap-16">
       <!-- LEFT -->
-      <div class="flex items-center gap-16 min-w-0">
+      <div class="flex min-w-0 items-center gap-14">
         <!-- Avatar -->
-        <div class="relative">
+        <div class="relative shrink-0">
           <el-avatar
             size="large"
             :src="player.avatarUrl ?? ''"
@@ -32,15 +25,15 @@
               :preset="isVerified ? 'verified' : 'unverified'"
               size="sm"
               icon-only
-              class="absolute -bottom-4 -right-4 ring-2 ring-gray-900"
+              class="absolute -bottom-2 -right-2"
             />
           </el-tooltip>
         </div>
 
         <!-- Names -->
-        <div class="min-w-0">
-          <div class="flex items-center gap-8 min-w-0">
-            <h2 class="truncate text-lg font-semibold text-white">
+        <div class="flex min-w-0 flex-col gap-4">
+          <div class="flex min-w-0 items-center gap-8">
+            <h2 class="truncate font-display text-lg uppercase tracking-wide leading-tight text-white">
               {{ player.discordName || '-' }}
             </h2>
 
@@ -49,9 +42,9 @@
 
           <span
             v-if="player.discordUsername"
-            class="mt-4 flex w-fit items-center gap-6 text-xs text-gray-400
+            class="flex w-fit items-center gap-6 text-xs leading-none text-gray-400
                  hover:text-primary transition cursor-pointer"
-            @click.stop="getCopy(player.discordUsername, 'Discord скопійовано')"
+            @click.stop="getCopy(player.discordUsername, 'Discord')"
           >
             @{{ player.discordUsername }}
             <PhCopy size="13" />
@@ -59,43 +52,34 @@
         </div>
       </div>
 
-      <!-- Ранг (картинка); рейтинг MMR — у tooltip -->
+      <!-- Ранг (картинка); рейтинг MMR — у tooltip. Плитка трохи вища за аватар,
+           щоб правий край мав таку ж вагу, як лівий -->
       <el-tooltip
-        v-if="rankImageSrc"
         :content="ratingMmrLabel"
         placement="top"
       >
-        <div class="flex flex-col items-center shrink-0 cursor-default">
+        <div
+          class="flex h-64 min-w-[84px] shrink-0 flex-col items-center justify-center gap-4
+                 rounded-xl border border-primary/15 bg-black/30 px-14 cursor-default"
+        >
           <img
+            v-if="rankImageSrc"
             :src="rankImageSrc"
             alt=""
-            class="h-36 w-auto object-contain select-none"
-            width="64"
+            class="h-36 w-auto max-w-[72px] object-contain select-none"
+            width="72"
             height="36"
             loading="lazy"
             draggable="false"
           >
-          <div class="mt-2 flex items-center gap-4">
-            <span class="text-[10px] uppercase tracking-widest text-gray-400">Рейтинг</span>
-            <el-tooltip
-              v-if="pendingMmrRequest?.status === 'pending'"
-              content="Запит на оновлення MMR обробляється"
-              placement="top"
-            >
-              <PhInfo size="12" class="text-primary cursor-help shrink-0" />
-            </el-tooltip>
-          </div>
-        </div>
-      </el-tooltip>
-      <el-tooltip
-        v-else
-        :content="ratingMmrLabel"
-        placement="top"
-      >
-        <div class="flex flex-col items-center shrink-0">
-          <span class="text-lg font-semibold text-white tabular-nums">{{ player.rating }}</span>
-          <div class="mt-2 flex items-center gap-4">
-            <span class="text-[10px] uppercase tracking-widest text-gray-400">Рейтинг</span>
+          <span
+            v-else
+            class="text-lg font-semibold leading-none text-white tabular-nums"
+          >
+            {{ player.rating }}
+          </span>
+          <div class="flex items-center gap-4">
+            <span class="text-[11px] uppercase leading-none tracking-[0.14em] text-gray-400">Ранг</span>
             <el-tooltip
               v-if="pendingMmrRequest?.status === 'pending'"
               content="Запит на оновлення MMR обробляється"
@@ -108,124 +92,121 @@
       </el-tooltip>
     </div>
 
-    <div class="flex w-full flex-col gap-10 mt-20 p-8">
-      <div class="flex w-full gap-10">
+    <!-- ACTIONS: усі кнопки в одному рядку, ділять ширину картки порівну -->
+    <div
+      v-if="showAdminVerificationActions || showAdditionalInfo || (isProfilePage && !player.steamId)"
+      class="mt-24 flex w-full flex-wrap items-center gap-10"
+    >
+      <el-button
+        v-if="showAdminVerificationActions"
+        :loading="verifyLoading"
+        :type="isVerified ? 'warning' : 'success'"
+        plain
+        class="min-w-0 flex-1 max-sm:!px-8"
+        @click="emit('toggleVerification')"
+      >
+        <component
+          :is="isVerified ? PhSealWarning : PhSealCheck"
+          class="mr-10 shrink-0"
+          weight="bold"
+          size="16"
+        />
+
+        {{ isVerified ? 'Зняти верифікацію' : 'Верифікувати' }}
+      </el-button>
+
+      <el-dropdown
+        v-if="showAdditionalInfo && canRequestMmr"
+        trigger="click"
+        class="min-w-0 flex-1"
+      >
         <el-button
-          v-if="showAdminVerificationActions"
-          :loading="verifyLoading"
-          :type="isVerified ? 'warning' : 'success'"
-          class="h-30 flex-1 shrink-0 max-sm:text-xs max-sm:!px-8"
-          @click="emit('toggleVerification')"
-        >
-          <component
-            :is="isVerified ? PhSealWarning : PhSealCheck"
-            class="mr-8 shrink-0"
-            weight="bold"
-            size="16"
-          />
-
-          {{ isVerified ? 'Зняти верифікацію' : 'Верифікувати' }}
-        </el-button>
-
-        <el-dropdown
-          v-if="showAdditionalInfo && canRequestMmr"
-          trigger="click"
-          class="flex-1 shrink-0"
-          :class="{ 'w-full': !showAdminVerificationActions }"
-        >
-          <el-button
-            type="primary"
-            class="h-30 w-full max-sm:text-xs max-sm:!px-8"
-          >
-            <PhPencil />
-            <span class="ml-8">Редагувати {{ showFullLabel ? ' профіль' : '' }}</span>
-            <PhCaretDown class="ml-6" size="12" />
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item @click="emit('editProfile')">
-                Редагування основної інформації
-              </el-dropdown-item>
-              <el-dropdown-item @click="emit('requestMmr')">
-                Змінити MMR
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-
-        <el-button
-          v-else-if="showAdditionalInfo"
           type="primary"
-          class="h-30 flex-1 shrink-0 max-sm:text-xs max-sm:!px-8"
-          :class="{ 'w-full': !showAdminVerificationActions }"
-          @click="emit('editProfile')"
+          class="w-full max-sm:!px-8"
         >
-          <PhPencil />
-          <span class="ml-8">Редагувати {{ showFullLabel ? ' профіль' : '' }}</span>
+          <PhPencil :size="16" class="mr-10 shrink-0" />
+          <span>Редагувати{{ showFullLabel ? ' профіль' : '' }}</span>
+          <PhCaretDown class="ml-8 shrink-0 opacity-70" size="12" />
         </el-button>
-      </div>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item @click="emit('editProfile')">
+              Редагування основної інформації
+            </el-dropdown-item>
+            <el-dropdown-item @click="emit('requestMmr')">
+              Змінити MMR
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+
+      <el-button
+        v-else-if="showAdditionalInfo"
+        type="primary"
+        class="min-w-0 flex-1 max-sm:!px-8"
+        @click="emit('editProfile')"
+      >
+        <PhPencil :size="16" class="mr-10 shrink-0" />
+        <span>Редагувати{{ showFullLabel ? ' профіль' : '' }}</span>
+      </el-button>
 
       <el-button
         v-if="isProfilePage && !player.steamId"
         :loading="linkingSteam"
-        class="h-30 w-full"
+        plain
+        class="btn-steam min-w-0 flex-1 max-sm:!px-8"
         @click="emit('linkSteam')"
       >
-        <Icon :size="16" name="steam" />
-
-        <span class="ml-8">
-          Прив'язати Steam
-        </span>
+        <Icon :size="20" name="steam" class="shrink-0" />
+        <span class="ml-8">{{ linkingSteam ? 'Переходимо у Steam…' : "Прив'язати Steam" }}</span>
       </el-button>
     </div>
 
-    <!-- Ролі + посилання (висота тегів як на картці; кнопки трохи вищі — по центру рядка) -->
+    <!-- Розпірка: притискає рядок ролей до низу, коли картку розтягує сусідня статистика -->
+    <div class="min-h-[16px] flex-1" aria-hidden="true" />
+
+    <!-- Ролі + посилання. Тег — ярлик і обіймає текст; іконки-посилання беруть
+         компактний 32px розмір, щоб рядок мав одну висоту -->
     <div
       class="-mx-20 flex w-[calc(100%+40px)] flex-wrap items-center justify-between
-        gap-x-88 gap-y-32 border-t border-gray-800/60 px-20 pt-16 md:flex-nowrap"
+        gap-x-16 gap-y-12 border-t border-primary/[0.12] px-20 pt-16"
     >
-      <div
-        class="flex min-w-0 flex-1 items-center overflow-x-auto px-12 [scrollbar-width:thin]"
-      >
+      <div class="flex min-w-0 flex-1 items-center overflow-x-auto [scrollbar-width:thin]">
         <PlayerRoleTag
-          stretch-in-grid
+          :max="2"
           :user="player"
         />
       </div>
 
+      <!-- Зовнішні профілі: HUD-плитки з фірмовими іконками, eyebrow і підказками -->
       <div
-        class="flex shrink-0 items-center justify-end gap-10
-          max-sm:w-full max-sm:justify-end max-sm:flex-wrap"
+        v-if="profileLinks.length"
+        class="flex shrink-0 items-center gap-10"
       >
-        <el-button
-          v-if="player.steamId"
-          class="!size-36 shrink-0 hover:bg-white/10"
-          tag="a"
-          target="_blank"
-          :href="links.steam"
-        >
-          <Icon :size="16" name="steam" />
-        </el-button>
-
-        <el-button
-          v-if="player.steamId"
-          class="!size-36 shrink-0 hover:bg-white/10"
-          tag="a"
-          target="_blank"
-          :href="links.dotabuff"
-        >
-          <Icon :size="16" name="dotabuff" />
-        </el-button>
-
-        <el-button
-          v-if="player.discordId"
-          class="!size-36 shrink-0 hover:bg-white/10"
-          tag="a"
-          target="_blank"
-          :href="links.discord"
-        >
-          <Icon :size="16" name="discord" />
-        </el-button>
+        <span class="sys-label sys-label--muted hidden !text-[9px] xs:inline">Профілі</span>
+        <ul class="profile-links">
+          <li
+            v-for="link in profileLinks"
+            :key="link.name"
+          >
+            <el-tooltip
+              :content="link.name"
+              placement="top"
+              effect="dark"
+              :show-after="180"
+            >
+              <a
+                :href="link.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="profile-link"
+                :aria-label="`Профіль гравця в ${link.name}`"
+              >
+                <Icon :size="16" :name="link.icon" />
+              </a>
+            </el-tooltip>
+          </li>
+        </ul>
       </div>
     </div>
   </div>
@@ -242,6 +223,7 @@ import {
   PhInfo
 } from '@phosphor-icons/vue'
 import { getCopy } from '@/core/helpers'
+import type { TIconName } from '@/components/Icon.vue'
 import type { TTag } from '@/services/tags.types'
 
 interface IProps {
@@ -260,7 +242,7 @@ interface IProps {
   pendingMmrRequest?: import('@/views/players/mmr-requests.service').TMmrUpdateRequest | null
 }
 
-defineProps<IProps>()
+const props = defineProps<IProps>()
 
 const emit = defineEmits<{
   toggleVerification: []
@@ -271,4 +253,63 @@ const emit = defineEmits<{
 
 const windowSize = useWindowSize()
 const showFullLabel = computed(() => windowSize.width.value > 650)
+
+interface IProfileLink {
+  name: string
+  url: string
+  icon: TIconName
+}
+
+/** Зовнішні профілі гравця — лише ті, для яких є прив'язаний акаунт і URL. */
+const profileLinks = computed<IProfileLink[]>(() => {
+  const items: IProfileLink[] = []
+  const { steamId, discordId } = props.player
+  const { steam, dotabuff, discord } = props.links
+
+  if (steamId && steam) items.push({ name: 'Steam', url: steam, icon: 'steam' })
+  if (steamId && dotabuff) items.push({ name: 'Dotabuff', url: dotabuff, icon: 'dotabuff' })
+  if (discordId && discord) items.push({ name: 'Discord', url: discord, icon: 'discord' })
+
+  return items
+})
 </script>
+
+<style scoped lang="scss">
+// External-profile tiles: 32px dark wells with a cyan hairline, so the row of
+// brand marks reads as HUD chips rather than loose icons. Brand SVGs keep their
+// own fills; the Discord mark (currentColor) inherits the white/primary text.
+.profile-links {
+  @apply m-0 flex list-none items-center gap-6 p-0;
+}
+
+.profile-link {
+  @apply inline-flex size-32 items-center justify-center rounded-lg border no-underline;
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(var(--ds-primary-rgb), 0.16);
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 1px 0 rgba(var(--ds-primary-rgb), 0.12);
+  transition:
+    color var(--ds-duration-fast) ease,
+    border-color var(--ds-duration-base) ease,
+    box-shadow var(--ds-duration-base) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+
+  &:active {
+    transform: scale(0.94);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.55);
+    outline-offset: 2px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .profile-link:hover {
+    color: var(--ds-primary);
+    border-color: rgba(var(--ds-primary-rgb), 0.5);
+    box-shadow: inset 0 1px 0 rgba(var(--ds-primary-rgb), 0.2), var(--ds-glow-primary-soft);
+    transform: translateY(-1px);
+  }
+}
+</style>

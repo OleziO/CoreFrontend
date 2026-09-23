@@ -1,17 +1,38 @@
 // Glass-morphism mixins — shared across element-reset overrides.
-// Three strength variants mirror the design system's layering:
+// Three strength variants mirror the design system's layering. Hairlines are
+// the cyan-tinted `--ds-border*` tokens, not white: a neon panel's edge should
+// carry a trace of the brand light even at rest.
 //   glass-panel  → modals, message-boxes (strong blur + medium opacity)
 //   glass-popper → select/dropdown poppers (strong blur + low opacity)
 //   glass-input  → form inputs, group prepend/append (medium blur + medium opacity)
 
 @mixin glass-panel {
-  @apply bg-white/10 backdrop-blur-xl border border-white/20;
+  @apply bg-white/10 backdrop-blur-xl border;
+  border-color: var(--ds-border-strong);
 }
 
 @mixin glass-popper {
-  @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  @apply bg-white/5 backdrop-blur-xl border;
+  border-color: var(--ds-border);
 }
 
 @mixin glass-input {
-  @apply bg-white/10 backdrop-blur-md border border-white/20;
+  @apply bg-white/10 backdrop-blur-md border;
+  border-color: var(--ds-border-strong);
+}
+
+// Neon top light: a 1px gradient line along the top edge of a panel, the
+// signature detail of every glass surface in the system.
+@mixin neon-top-line($color: var(--ds-primary), $opacity: 0.55) {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent 0%, #{$color} 50%, transparent 100%);
+    opacity: #{$opacity};
+  }
 }

@@ -39,7 +39,6 @@
             :key="tag"
             type="info"
             size="small"
-            class="bg-white/10 border-white/10 text-white rounded-lg"
           >
             {{ tag }}
           </el-tag>

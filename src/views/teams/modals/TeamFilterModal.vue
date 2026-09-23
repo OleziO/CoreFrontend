@@ -1,85 +1,124 @@
 <template>
-  <el-dialog
-    :model-value="modelValue"
-
-    destroy-on-close
-    width="600"
-    title="Фільтри команд"
-    @open="initFilters"
-    @close="onReset"
+  <FilterDialog
+    v-model="modelValue"
+    title="Команди"
+    :active-count="activeCount"
+    :match-count="matchCount"
+    @open="onOpen"
+    @reset="onReset"
+    @apply="onApply"
   >
-    <el-form label-position="top" class="flex flex-col" @submit.prevent>
-      <el-form-item label="Статус команди">
-        <el-select
-          v-model="localFilters.status"
-          placeholder="Всі статуси"
-          class="w-full"
-          multiple
-          clearable
-        >
-          <el-option
-            v-for="item in teamStatus"
-            :key="item.key"
-            :label="item.label"
-            :value="item.key"
-          />
-        </el-select>
-      </el-form-item>
-    </el-form>
+    <FilterSection
+      label="Верифікація"
+      :icon="PhSealCheck"
+      :active="filters.status.length > 0"
+      @clear="filters.status = []"
+    >
+      <FilterChips v-model="filters.status" :options="statusChipOptions" />
+    </FilterSection>
 
-    <template #footer>
-      <div class="flex justify-end gap-12 pt-12">
-        <el-button @click.stop="() => onReset(false)">
-          <span class="text-sm font-medium">Очистити</span>
-        </el-button>
-        <el-button type="primary" @click.stop="onApply">
-          <PhMagnifyingGlass size="14" weight="bold" />
-          <span class="ml-5 text-sm font-medium">Застосувати</span>
-        </el-button>
-      </div>
-    </template>
-  </el-dialog>
+    <FilterSection
+      label="Середній рейтинг"
+      hint="MMR основи"
+      :icon="PhChartBar"
+      :active="filters.ratingFrom != null || filters.ratingTo != null"
+      @clear="clearRating"
+    >
+      <FilterRange
+        v-model:from="filters.ratingFrom"
+        v-model:to="filters.ratingTo"
+        :max="MAX_RATING"
+        unit="MMR"
+        aria-label="Середній рейтинг"
+      />
+    </FilterSection>
+
+    <FilterSection
+      label="Склад"
+      :icon="PhUsersThree"
+      :active="filters.roster.length > 0"
+      @clear="filters.roster = []"
+    >
+      <FilterChips v-model="filters.roster" :options="TEAM_ROSTER_OPTIONS" />
+    </FilterSection>
+
+    <FilterSection
+      label="Тренер"
+      :icon="PhStrategy"
+      :active="filters.coach.length > 0"
+      @clear="filters.coach = []"
+    >
+      <FilterChips v-model="filters.coach" :options="TEAM_COACH_OPTIONS" />
+    </FilterSection>
+
+    <FilterSection
+      label="Активність"
+      :icon="PhTrophy"
+      :active="filters.playing.length > 0"
+      @clear="filters.playing = []"
+    >
+      <FilterChips v-model="filters.playing" :options="TEAM_ACTIVITY_OPTIONS" />
+    </FilterSection>
+  </FilterDialog>
 </template>
 
 <script setup lang="ts">
-import { PhMagnifyingGlass } from '@phosphor-icons/vue'
+import { PhChartBar, PhSealCheck, PhSealWarning, PhStrategy, PhTrophy, PhUsersThree } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
-import { parseQueryArray } from '@/core/helpers'
+import { replaceQueryKeys } from '@/core/helpers'
+import { MAX_RATING } from '@/components/player-tags/player.enums'
 import { teamStatus } from '@/views/teams/teams.enums'
+import type { IFilterChipOption } from '@/components/filters/filters.d'
+import {
+  type ITeamsFilters,
+  TEAM_ACTIVITY_OPTIONS,
+  TEAM_COACH_OPTIONS,
+  TEAM_ROSTER_OPTIONS,
+  TEAMS_FILTER_QUERY_KEYS,
+  buildTeamsFilterQuery,
+  countActiveTeamsFilters,
+  createEmptyTeamsFilters,
+  parseTeamsFilters,
+  teamMatchesFilters
+} from '@/views/teams/teams-filters.utils'
 
 const modelValue = defineModel<boolean>({ default: false })
+
 const router = useRouter()
 const route = useRoute()
+const teamsStore = useTeamsStore()
 
-const localFilters = ref<{
-  status: string[]
-}>({
-  status: []
-})
+const filters = ref<ITeamsFilters>(createEmptyTeamsFilters())
 
-function onReset (withClose = true) {
-  localFilters.value.status = []
+const statusChipOptions: IFilterChipOption<string>[] = teamStatus.map(item => ({
+  value: item.key,
+  label: item.label,
+  icon: item.key === 'approved' ? PhSealCheck : PhSealWarning
+}))
 
-  if (withClose) modelValue.value = false
+const activeCount = computed(() => countActiveTeamsFilters(filters.value))
+
+/** Live-лічильник: скільки команд пройде поточний стан форми. */
+const matchCount = computed(() => teamsStore.teams.filter(team => teamMatchesFilters(team, filters.value)).length)
+
+function onOpen () {
+  filters.value = parseTeamsFilters(route.query)
+}
+
+function clearRating () {
+  filters.value.ratingFrom = null
+  filters.value.ratingTo = null
+}
+
+function onReset () {
+  filters.value = createEmptyTeamsFilters()
 }
 
 function onApply () {
-  const { status } = localFilters.value
-
-  const query = { ...(route.query as Record<string, string | string[] | undefined>) }
-  query.status = status?.length ? status.join(',') : undefined
-
-  const cleanQuery = Object.fromEntries(
-    Object.entries(query).filter(([, v]) => v != null && v !== '')
-  ) as Record<string, string>
-
-  router.push({ name: routeNames.teams, query: cleanQuery })
+  router.push({
+    name: routeNames.teams,
+    query: replaceQueryKeys(route.query, TEAMS_FILTER_QUERY_KEYS, buildTeamsFilterQuery(filters.value))
+  })
   modelValue.value = false
 }
-
-function initFilters () {
-  localFilters.value.status = parseQueryArray(route.query.status)
-}
-
-onMounted(initFilters)
 </script>

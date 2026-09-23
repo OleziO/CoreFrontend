@@ -1,56 +1,94 @@
 <template>
   <el-dialog
-    :model-value="modelValue"
-
+    v-model="modelValue"
+    class="profile-dialog"
+    :width="dialogWidth"
+    align-center
     destroy-on-close
-    width="520"
-    title="Редагування профілю"
-    @close="onClose"
+    :show-close="false"
   >
-    <el-form
-      :model="form"
-      label-position="top"
-      class="flex flex-col gap-16"
-    >
-      <el-form-item v-if="showMmrField" label="MMR">
+    <!-- Header -->
+    <template #header="{ close }">
+      <div class="profile-dialog__head">
+        <div class="flex min-w-0 flex-col gap-4">
+          <span class="sys-label">// Профіль</span>
+          <h2 class="profile-dialog__title">Редагування профілю</h2>
+        </div>
+        <button type="button" class="profile-dialog__close" aria-label="Закрити" @click="close">
+          <PhX :size="16" weight="bold" />
+        </button>
+      </div>
+    </template>
+
+    <div class="flex flex-col gap-16">
+      <!-- MMR -->
+      <section v-if="showMmrField" class="flex flex-col gap-10">
+        <div class="profile-section__head">
+          <label for="profile-mmr" class="sys-label !text-[10px]">// MMR</label>
+          <span class="hud-line h-px min-w-12 flex-1" aria-hidden="true" />
+          <span class="profile-section__count" :class="{ 'is-on': form.mmr != null }">
+            {{ form.mmr ?? 0 }}<span class="profile-section__of">/{{ MAX_RATING }}</span>
+          </span>
+        </div>
+
         <el-input
+          id="profile-mmr"
           v-model="form.mmr"
+          class="profile-mmr"
           type="text"
           inputmode="numeric"
           placeholder="0 – 22000"
           :disabled="mmrInputDisabled"
           @input="onMmrInput"
-        />
-      </el-form-item>
+        >
+          <template #prefix>
+            <PhChartLineUp :size="16" weight="bold" class="text-primary" />
+          </template>
+        </el-input>
+
+        <span class="profile-mmr__bar" aria-hidden="true">
+          <span class="profile-mmr__fill" :style="{ transform: `scaleX(${mmrFill})` }" />
+        </span>
+
+        <p v-if="mmrInputDisabled" class="profile-note">
+          Ваш MMR підтверджено — змінити його може лише адміністрація.
+        </p>
+      </section>
 
       <!-- Positions -->
-      <el-form-item label="Позиції">
-        <el-select
-          v-model="form.positions"
-          multiple
-          collapse-tags
-          :show-arrow="false"
-          collapse-tags-tooltip
-          :max-collapse-tags="2"
-          placeholder="Оберіть позиції"
-          class="w-full"
-        >
-          <el-option
+      <section class="flex flex-col gap-10">
+        <div class="profile-section__head">
+          <span class="sys-label !text-[10px]">// Позиції</span>
+          <span class="hud-line h-px min-w-12 flex-1" aria-hidden="true" />
+          <span class="profile-section__count" :class="{ 'is-on': form.positions.length }">
+            {{ pad(form.positions.length) }}<span class="profile-section__of">/{{ pad(positionOptions.length) }}</span>
+          </span>
+        </div>
+
+        <div role="group" aria-label="Позиції" class="pos-grid">
+          <button
             v-for="pos in positionOptions"
             :key="pos.value"
-            :label="pos.label"
-            :value="pos.value"
+            type="button"
+            class="pos-pick"
+            :class="{ 'is-on': form.positions.includes(pos.value) }"
+            :aria-pressed="form.positions.includes(pos.value)"
+            @click="togglePosition(pos.value)"
           >
-            <div class="flex gap-10 items-center">
-              <component :is="pos.icon" :size="15" />
-              <span>{{ pos.label }}</span>
-            </div>
-          </el-option>
-        </el-select>
-      </el-form-item>
+            <span class="pos-pick__num">{{ pos.value }}</span>
+            <component :is="pos.icon" :size="18" weight="fill" class="pos-pick__icon" />
+            <span class="pos-pick__label">{{ pos.label }}</span>
+          </button>
+        </div>
+      </section>
 
       <!-- Roles (admin only) -->
-      <el-form-item v-if="canManageRoles" label="Ролі">
+      <section v-if="canManageRoles" class="flex flex-col gap-10">
+        <div class="profile-section__head">
+          <span class="sys-label sys-label--gold !text-[10px]">// Ролі</span>
+          <span class="hud-line h-px min-w-12 flex-1" aria-hidden="true" />
+          <span class="profile-section__tag">Staff</span>
+        </div>
         <el-select
           v-model="selectedRoleNames"
           :loading="rolesLoading"
@@ -69,10 +107,15 @@
             :value="role.name"
           />
         </el-select>
-      </el-form-item>
+      </section>
 
       <!-- Tags (admin / moderator only) -->
-      <el-form-item v-if="canManageTags" label="Теги">
+      <section v-if="canManageTags" class="flex flex-col gap-10">
+        <div class="profile-section__head">
+          <span class="sys-label sys-label--gold !text-[10px]">// Теги</span>
+          <span class="hud-line h-px min-w-12 flex-1" aria-hidden="true" />
+          <span class="profile-section__tag">Staff</span>
+        </div>
         <el-select
           v-model="selectedTagIds"
           :loading="tagsLoading"
@@ -91,73 +134,92 @@
             :value="tag.id"
           />
         </el-select>
-      </el-form-item>
+      </section>
 
       <!-- Steam -->
-      <el-form-item label="Steam">
-        <div
-          class="flex items-center justify-between w-full
-                 rounded-12 border border-white/10
-                 bg-white/5 px-16 py-12"
-        >
-          <div class="flex items-center gap-8 min-w-0">
-            <Icon :size="20" name="steam" />
+      <section class="flex flex-col gap-10">
+        <div class="profile-section__head">
+          <span class="sys-label !text-[10px]">// Steam</span>
+          <span class="hud-line h-px min-w-12 flex-1" aria-hidden="true" />
+        </div>
 
-            <span
-              v-if="hasSteam"
-              class="text-sm text-green-500 font-medium"
-            >
-              Steam приєднано
+        <div class="steam-card" :class="{ 'is-linked': hasSteam }">
+          <div class="steam-card__row">
+            <span class="steam-card__well">
+              <Icon :size="22" name="steam" />
             </span>
 
-            <span
-              v-else
-              class="text-sm text-gray-400"
-            >
-              Steam не приєднано
-            </span>
-          </div>
+            <span class="flex min-w-0 flex-1 flex-col gap-3">
+              <span class="steam-card__status">
+                <span class="steam-card__dot" aria-hidden="true" />
+                {{ hasSteam ? 'Steam приєднано' : 'Steam не приєднано' }}
+              </span>
 
-          <div class="flex shrink-0 items-center gap-8">
+              <!-- Linked: the id itself, copyable, plus a jump to the Steam profile -->
+              <span v-if="hasSteam" class="steam-card__id">
+                <button
+                  type="button"
+                  class="steam-card__copy"
+                  title="Скопіювати Steam ID"
+                  @click="getCopy(steamId, 'Steam ID')"
+                >
+                  <span class="truncate">{{ steamId }}</span>
+                  <PhCopy :size="12" />
+                </button>
+                <a
+                  :href="steamProfileUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="steam-card__open"
+                  title="Відкрити профіль у Steam"
+                  aria-label="Відкрити профіль у Steam"
+                >
+                  <PhArrowSquareOut :size="14" weight="bold" />
+                </a>
+              </span>
+              <span v-else class="steam-card__hint">
+                Потрібен для верифікації та статистики матчів.
+              </span>
+            </span>
+
             <el-button
               v-if="hasSteam && canStaffDisconnectSteam"
               type="danger"
               plain
-              size="small"
+              class="steam-card__btn"
               :loading="disconnectingSteam"
               @click="onDisconnectSteam"
             >
-              Від'єднати
+              <PhLinkBreak :size="16" weight="bold" />
+              <span>Від'єднати</span>
             </el-button>
+          </div>
 
+          <!-- Unlinked: one clear action and what will happen -->
+          <template v-if="!hasSteam">
             <el-button
-              v-if="!hasSteam"
-              type="primary"
-              size="small"
+              class="btn-steam steam-card__btn w-full"
               :loading="linkingSteam"
               @click="onConnectSteam"
             >
-              Приєднати Steam
+              <Icon :size="16" name="steam" />
+              <span>{{ linkingSteam ? 'Переходимо у Steam…' : 'Приєднати Steam' }}</span>
             </el-button>
-          </div>
+            <p class="steam-card__hint m-0 text-center">
+              Ви перейдете на сайт Steam для входу й повернетесь сюди автоматично.
+            </p>
+          </template>
         </div>
-      </el-form-item>
-    </el-form>
+      </section>
+    </div>
 
     <!-- FOOTER -->
     <template #footer>
-      <div class="flex justify-end gap-12 pt-12">
-        <el-button @click="onClose">
-          Скасувати
-        </el-button>
-
-        <el-button
-          type="primary"
-          :disabled="!isValid"
-          :loading="saving"
-          @click="onSubmit"
-        >
-          Зберегти
+      <div class="profile-dialog__foot">
+        <el-button @click="onClose">Скасувати</el-button>
+        <el-button type="primary" :disabled="!isValid" :loading="saving" @click="onSubmit">
+          <PhFloppyDisk :size="16" weight="fill" />
+          <span>Зберегти</span>
         </el-button>
       </div>
     </template>
@@ -166,9 +228,10 @@
 
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { positionOptions } from '@/components/player-tags/player.enums'
+import { PhArrowSquareOut, PhChartLineUp, PhCopy, PhFloppyDisk, PhLinkBreak, PhX } from '@phosphor-icons/vue'
+import { MAX_RATING, positionOptions } from '@/components/player-tags/player.enums'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
-import { isPlayerVerified } from '@/core/helpers'
+import { getCopy, isPlayerVerified } from '@/core/helpers'
 import { useAuthStore } from '@/store/modules/auth'
 import type { TTag } from '@/services/tags.types'
 import type {
@@ -319,6 +382,21 @@ async function loadTags () {
   }
 }
 
+const { width } = useWindowSize()
+const dialogWidth = computed(() => (width.value < 640 ? 'calc(100vw - 24px)' : 520))
+
+const pad = (n: number) => String(Math.min(n, 99)).padStart(2, '0')
+
+/** Заповнення шкали MMR: 0..1 від MAX_RATING. */
+const mmrFill = computed(() => Math.min(Math.max((form.value.mmr ?? 0) / MAX_RATING, 0), 1))
+
+function togglePosition (slot: number) {
+  const list = form.value.positions
+  form.value.positions = list.includes(slot)
+    ? list.filter((n) => n !== slot)
+    : [...list, slot].sort((a, b) => a - b)
+}
+
 const form = ref<IEditProfileForm>({
   mmr: props.player.rating ?? null,
   positions: pickPositions(props.player as TPlayerWithOptionalLegacy),
@@ -361,10 +439,9 @@ watch(modelValue, (open) => {
 
 const effectivePlayer = computed(() => playerAfterSteamMutation.value ?? props.player)
 
-const hasSteam = computed(() => {
-  const id = effectivePlayer.value.steamId
-  return id != null && String(id).trim() !== ''
-})
+const steamId = computed(() => String(effectivePlayer.value.steamId ?? '').trim())
+const hasSteam = computed(() => steamId.value !== '')
+const steamProfileUrl = computed(() => `https://steamcommunity.com/profiles/${steamId.value}`)
 
 /** Адміністрація може відв'язати Steam у гравця (PATCH профілю). */
 const canStaffDisconnectSteam = computed(
@@ -525,3 +602,332 @@ function onClose () {
   modelValue.value = false
 }
 </script>
+
+<style scoped lang="scss">
+.profile-section__head {
+  @apply flex items-center gap-12;
+}
+
+.profile-section__count {
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ds-text-faint);
+  font-variant-numeric: tabular-nums;
+  transition: color var(--ds-duration-base) ease;
+
+  &.is-on {
+    color: var(--ds-primary);
+    text-shadow: var(--ds-neon-text-subtle);
+  }
+}
+
+.profile-section__of {
+  color: var(--ds-text-faint);
+  text-shadow: none;
+}
+
+.profile-section__tag {
+  @apply inline-flex items-center rounded-md border px-8 py-2;
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ds-gold);
+  border-color: rgba(var(--ds-gold-rgb), 0.35);
+  background: rgba(var(--ds-gold-rgb), 0.08);
+}
+
+.profile-note {
+  @apply m-0 text-xs leading-relaxed;
+  color: var(--ds-text-faint);
+}
+
+// ─── MMR ────────────────────────────────────────────────────────────────────
+.profile-mmr {
+  :deep(.el-input__inner) {
+    font-family: var(--ds-font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.profile-mmr__bar {
+  @apply block h-2 w-full overflow-hidden rounded-full;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.profile-mmr__fill {
+  @apply block h-full w-full origin-left rounded-full;
+  background: linear-gradient(90deg, rgba(var(--ds-primary-rgb), 0.6), var(--ds-primary));
+  box-shadow: 0 0 8px rgba(var(--ds-primary-rgb), 0.6);
+  transition: transform 360ms var(--ds-ease-out);
+}
+
+// ─── Positions ──────────────────────────────────────────────────────────────
+.pos-grid {
+  @apply grid gap-8;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.pos-pick {
+  @apply relative flex flex-col items-center gap-6 overflow-hidden rounded-xl border px-4 py-10 text-center;
+  color: var(--ds-text-muted);
+  border-color: var(--ds-border);
+  background: rgba(7, 8, 15, 0.45);
+  cursor: pointer;
+  transition:
+    color var(--ds-duration-base) ease,
+    border-color var(--ds-duration-base) ease,
+    background-color var(--ds-duration-base) ease,
+    box-shadow var(--ds-duration-base) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+
+  // Top rail lights when the position is on.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: var(--ds-primary);
+    box-shadow: 0 0 8px rgba(var(--ds-primary-rgb), 0.9);
+    opacity: 0;
+    transition: opacity var(--ds-duration-base) ease;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.7) !important;
+    outline-offset: 2px;
+  }
+
+  &.is-on {
+    color: #fff;
+    border-color: rgba(var(--ds-primary-rgb), 0.6);
+    background: rgba(var(--ds-primary-rgb), 0.08);
+    box-shadow: 0 0 18px rgba(var(--ds-primary-rgb), 0.14);
+
+    &::before {
+      opacity: 1;
+    }
+
+    .pos-pick__num {
+      color: var(--ds-primary);
+    }
+
+    .pos-pick__icon {
+      color: var(--ds-primary);
+      filter: drop-shadow(0 0 6px rgba(var(--ds-primary-rgb), 0.55));
+    }
+  }
+}
+
+.pos-pick__num {
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ds-text-faint);
+  transition: color var(--ds-duration-base) ease;
+}
+
+.pos-pick__icon {
+  transition: color var(--ds-duration-base) ease, filter var(--ds-duration-base) ease;
+}
+
+.pos-pick__label {
+  @apply font-display text-[11px] uppercase leading-tight tracking-wide;
+}
+
+// ─── Steam ──────────────────────────────────────────────────────────────────
+.steam-card {
+  --steam-rgb: 102, 192, 244;
+
+  @apply flex flex-col gap-10 rounded-xl border p-12;
+  border-color: var(--ds-border-neutral);
+  background: rgba(7, 8, 15, 0.45);
+  transition: border-color var(--ds-duration-base) ease, background-color var(--ds-duration-base) ease;
+
+  &.is-linked {
+    --steam-rgb: 34, 197, 94;
+
+    border-color: rgba(var(--steam-rgb), 0.35);
+    background: linear-gradient(135deg, rgba(var(--steam-rgb), 0.08), transparent 70%), rgba(7, 8, 15, 0.45);
+  }
+}
+
+.steam-card__row {
+  @apply flex items-center gap-12;
+}
+
+.steam-card__well {
+  @apply inline-flex size-40 shrink-0 items-center justify-center rounded-lg border;
+  color: #fff;
+  border-color: rgba(var(--steam-rgb), 0.3);
+  background: rgba(var(--steam-rgb), 0.08);
+}
+
+.steam-card__btn {
+  @apply shrink-0;
+  margin-left: 0 !important;
+
+  :deep(> span) {
+    @apply inline-flex items-center gap-8;
+  }
+}
+
+.steam-card__id {
+  @apply flex min-w-0 items-center gap-6;
+}
+
+.steam-card__copy {
+  @apply inline-flex min-w-0 items-center gap-6 rounded border-0 bg-transparent p-0 text-left;
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--ds-text-faint);
+  cursor: pointer;
+  transition: color var(--ds-duration-base) ease;
+
+  svg {
+    @apply shrink-0;
+    opacity: 0.5;
+    transition: opacity var(--ds-duration-base) ease;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.6);
+    outline-offset: 2px;
+  }
+}
+
+.steam-card__open {
+  @apply inline-flex size-22 shrink-0 items-center justify-center rounded-md border no-underline;
+  color: var(--ds-text-muted);
+  border-color: var(--ds-border-neutral);
+  background: rgba(255, 255, 255, 0.04);
+  transition: color var(--ds-duration-base) ease, border-color var(--ds-duration-base) ease;
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.6);
+    outline-offset: 2px;
+  }
+}
+
+.steam-card__status {
+  @apply flex items-center gap-8 font-display text-[13px] uppercase leading-tight tracking-wide text-white;
+}
+
+.steam-card__dot {
+  @apply inline-block size-6 shrink-0 rounded-full;
+  background: rgba(255, 255, 255, 0.3);
+
+  .is-linked & {
+    background: var(--ds-success);
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+  }
+}
+
+.steam-card__hint {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ds-text-faint);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .steam-card__copy:hover {
+    color: #fff;
+
+    svg {
+      opacity: 1;
+    }
+  }
+
+  .steam-card__open:hover {
+    color: #fff;
+    border-color: rgba(var(--steam-rgb), 0.6);
+  }
+
+  .pos-pick:not(.is-on):hover {
+    color: var(--ds-text);
+    border-color: rgba(var(--ds-primary-rgb), 0.4);
+    background: rgba(255, 255, 255, 0.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pos-pick,
+  .pos-pick__icon,
+  .profile-mmr__fill {
+    transition: none;
+  }
+}
+</style>
+
+<style lang="scss">
+// Not scoped: `.el-dialog` renders outside this component's root.
+.el-dialog.profile-dialog {
+  background: rgba(16, 19, 36, 0.62);
+  backdrop-filter: blur(24px) saturate(130%);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  // Форма має вміщатися без прокрутки: замість глобальних 70vh даємо діалогу
+  // майже всю висоту вікна; тіло прокручується лише на дуже низьких екранах.
+  max-height: calc(100vh - 32px);
+
+  .el-dialog__header {
+    border-bottom: 1px solid rgba(var(--ds-primary-rgb), 0.12);
+  }
+
+  .el-dialog__footer {
+    border-top: 1px solid rgba(var(--ds-primary-rgb), 0.12);
+  }
+
+  .profile-dialog__close:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.6) !important;
+    outline-offset: 2px;
+  }
+}
+
+.profile-dialog__head {
+  @apply flex items-start justify-between gap-12;
+}
+
+.profile-dialog__title {
+  @apply m-0 truncate font-display text-xl uppercase leading-none tracking-wide text-white;
+}
+
+.profile-dialog__close {
+  @apply inline-flex size-28 items-center justify-center rounded-md border-0 bg-transparent p-0 text-white/55;
+  transition: color var(--ds-duration-fast) ease, background-color var(--ds-duration-fast) ease;
+}
+
+.profile-dialog__foot {
+  @apply flex items-center justify-end gap-10;
+
+  .el-button {
+    margin-left: 0 !important;
+  }
+
+  .el-button > span {
+    @apply inline-flex items-center gap-8;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .profile-dialog__close:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+</style>

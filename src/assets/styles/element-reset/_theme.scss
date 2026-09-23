@@ -1,0 +1,103 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Element Plus dark theme — the single central mapping of `--el-*` onto the
+// `--ds-*` tokens from `_tokens.scss`.
+//
+// WHY A SEPARATE FILE: EP's `theme-chalk/src/var.scss` declares every `--el-*`
+// (and `color-scheme: light`) on `:root` when `base` is used. Anything declared
+// on `:root` BEFORE it loses the cascade, so this partial is `@use`d at the very
+// end of `element-reset/index.scss`. Never re-theme EP per component.
+// ─────────────────────────────────────────────────────────────────────────────
+
+:root {
+  // Single dark theme: native widgets (scrollbars, selects, autofill, date
+  // inputs) render dark regardless of the OS / browser preference. Mirrors
+  // `<meta name="color-scheme">` in index.html.
+  color-scheme: dark;
+
+  // ─── Brand & status palettes ──────────────────────────────────────────────
+  --el-color-primary: #2ee5ff;
+  --el-color-primary-light-3: #66ecff;
+  --el-color-primary-light-5: #98f2ff;
+  --el-color-primary-light-7: #c9f9ff;
+  --el-color-primary-light-8: #dcfbff;
+  --el-color-primary-light-9: #e9fdff;
+  --el-color-primary-dark-2: #0aa3c2;
+
+  --el-color-success: #22c55e;
+  --el-color-success-light-3: #4ade80;
+  --el-color-success-light-5: #86efac;
+  --el-color-success-light-7: #bbf7d0;
+  --el-color-success-light-8: #dcfce7;
+  --el-color-success-light-9: #f0fdf4;
+  --el-color-success-dark-2: #16a34a;
+
+  --el-color-warning: #f59e0b;
+  --el-color-warning-light-3: #fbbf24;
+  --el-color-warning-light-5: #fcd34d;
+  --el-color-warning-light-7: #fde68a;
+  --el-color-warning-light-8: #fef3c7;
+  --el-color-warning-light-9: #fffbeb;
+  --el-color-warning-dark-2: #d97706;
+
+  --el-color-danger: #ef4444;
+  --el-color-danger-light-3: #f87171;
+  --el-color-danger-light-5: #fca5a5;
+  --el-color-danger-light-7: #fecaca;
+  --el-color-danger-light-8: #fee2e2;
+  --el-color-danger-light-9: #fef2f2;
+  --el-color-danger-dark-2: #dc2626;
+  --el-color-error: #ef4444;
+
+  --el-color-info: #38bdf8;
+  --el-color-info-light-3: #7dd3fc;
+  --el-color-info-light-5: #bae6fd;
+  --el-color-info-light-7: #e0f2fe;
+  --el-color-info-light-8: #f0f9ff;
+  --el-color-info-light-9: #f0f9ff;
+  --el-color-info-dark-2: #0ea5e9;
+
+  // Surfaces
+  --el-bg-color: var(--ds-elevated-surface);
+  --el-bg-color-page: var(--ds-background);
+  --el-bg-color-overlay: var(--ds-overlay);
+
+  // Text
+  --el-text-color-primary: var(--ds-text-strong);
+  --el-text-color-regular: var(--ds-text);
+  --el-text-color-secondary: var(--ds-text-muted);
+  --el-text-color-placeholder: var(--ds-text-faint);
+  --el-text-color-disabled: rgba(255, 255, 255, 0.34);
+
+  // Borders — cyan-tinted like `--ds-border`
+  --el-border-color: rgba(46, 229, 255, 0.18);
+  --el-border-color-light: rgba(46, 229, 255, 0.14);
+  --el-border-color-lighter: rgba(46, 229, 255, 0.11);
+  --el-border-color-extra-light: rgba(46, 229, 255, 0.08);
+  --el-border-color-dark: rgba(46, 229, 255, 0.24);
+  --el-border-color-darker: rgba(46, 229, 255, 0.3);
+
+  // Fills
+  --el-fill-color: rgba(255, 255, 255, 0.1);
+  --el-fill-color-light: rgba(255, 255, 255, 0.06);
+  --el-fill-color-lighter: rgba(255, 255, 255, 0.04);
+  --el-fill-color-extra-light: rgba(255, 255, 255, 0.02);
+  --el-fill-color-dark: rgba(255, 255, 255, 0.14);
+  --el-fill-color-darker: rgba(255, 255, 255, 0.18);
+  --el-fill-color-blank: transparent;
+
+  // Mask / overlay — tinted with the page base (#07080f) so dimmed content stays
+  // in the same indigo family instead of going neutral black.
+  --el-mask-color: rgba(7, 8, 15, 0.76);
+  --el-mask-color-extra-light: rgba(7, 8, 15, 0.3);
+
+  // Radius / shape
+  --el-border-radius-base: 10px;
+  --el-border-radius-small: 6px;
+  --el-border-radius-round: 9999px;
+
+  // Elevation
+  --el-box-shadow: var(--ds-elevation-3);
+  --el-box-shadow-light: var(--ds-elevation-1);
+  --el-box-shadow-lighter: var(--ds-elevation-1);
+  --el-box-shadow-dark: var(--ds-elevation-4);
+}

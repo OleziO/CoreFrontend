@@ -18,15 +18,18 @@
           v-if="!isMobile"
           class="flex justify-between items-center w-full pt-40 pb-20"
         >
-          <h1 class="text-4xl font-semibold text-white">
-            Гравці {{ window.width.value > 1000 ? 'платформи' : '' }}
-          </h1>
+          <div class="flex flex-col gap-6">
+            <span class="sys-label">Реєстр</span>
+            <h1 class="font-display text-3xl xl:text-4xl uppercase tracking-wide text-white neon-text-subtle">
+              Гравці {{ window.width.value > 1000 ? 'платформи' : '' }}
+            </h1>
+          </div>
 
-          <div class="flex items-center gap-25 w-full ml-80 2lg:ml-0 lg:w-1/2">
+          <div class="flex items-center gap-12 shrink-0">
             <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
               <el-button
                 type="primary"
-                class="h-full w-fit"
+                class="shrink-0"
                 @click="openPlayersFilterModal"
               >
                 <PhSlidersHorizontal size="20" weight="bold" />
@@ -36,7 +39,7 @@
 
             <el-input
               v-model="search"
-              class="flex-1"
+              class="w-[400px]"
               placeholder="Пошук по ніку..."
             >
               <template #prepend>
@@ -48,7 +51,17 @@
 
         <!-- MOBILE — persistent search + filter (no carousel) -->
         <div v-else class="w-full py-12">
-          <div class="flex items-center gap-10">
+          <div class="flex items-center gap-8">
+            <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
+              <el-button
+                type="primary"
+                class="btn-icon"
+                aria-label="Фільтрувати"
+                @click="openPlayersFilterModal"
+              >
+                <PhSlidersHorizontal size="20" weight="bold" />
+              </el-button>
+            </el-badge>
             <el-input
               v-model="search"
               class="flex-1"
@@ -59,16 +72,6 @@
                 <PhMagnifyingGlass size="16" />
               </template>
             </el-input>
-            <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
-              <el-button
-                type="primary"
-                class="!h-40 !w-40 shrink-0"
-                aria-label="Фільтрувати"
-                @click="openPlayersFilterModal"
-              >
-                <PhSlidersHorizontal size="20" weight="bold" />
-              </el-button>
-            </el-badge>
           </div>
         </div>
       </div>
@@ -110,25 +113,16 @@
 
 <script setup lang="ts">
 import { PhSlidersHorizontal, PhMagnifyingGlass } from '@phosphor-icons/vue'
-import type { LocationQuery } from 'vue-router'
-import { ERole } from '@/types/general.enums'
-
 import {
-  getPlayerDotaPositions,
-  isPlayerVerified,
-  parseQueryArray,
-  playerMatchesRoleFilterToken
-} from '@/core/helpers'
+  countActivePlayersFilters,
+  parsePlayersFilters,
+  playerMatchesFilters
+} from '@/views/players/players-filters.utils'
 
-function parseTeamStatusQuery (query: LocationQuery): boolean[] {
-  const raw = query.teamStatus
-  if (raw == null) return []
-  if (Array.isArray(raw)) return raw.map(v => Boolean(Number(v)))
-  return String(raw).split(',').filter(Boolean).map(v => Boolean(Number(v)))
-}
-
-const USER_CARD_WIDTH = 270
-const USER_CARD_HEIGHT = 360
+/** Ширша картка: 4 в ряд замість 5, щоб імена та теги мали місце. */
+const USER_CARD_WIDTH = 340
+/** Крок сітки ≈ висота картки (~244px) + вертикальний відступ. */
+const USER_CARD_HEIGHT = 268
 
 const { cardsPerRow, effectiveCardWidth } = useVirtualGridLayout({ cardWidth: USER_CARD_WIDTH })
 
@@ -140,70 +134,20 @@ const { open } = useAppModals()
 const route = useRoute()
 const search = ref('')
 
-const filteredPlayers = computed(() => {
-  const query = route.query
+/** Фільтри живуть у query — одна логіка збігу з модалкою (players-filters.utils). */
+const filters = computed(() => parsePlayersFilters(route.query))
 
-  const mappedPlayers = playersStore.players?.filter(player => checkQueryFilter(player, query)) || []
+const filteredPlayers = computed(() => {
+  const mappedPlayers = (playersStore.players ?? []).filter(
+    player => playerMatchesFilters(player, filters.value, playersStore.userRolesCatalog)
+  )
 
   return search.value
-    ? mappedPlayers?.filter(player => searchPlayer(player)) || []
+    ? mappedPlayers.filter(player => searchPlayer(player))
     : mappedPlayers
 })
 
-function checkQueryFilter (player: TPlayer, query: LocationQuery) {
-  const ratingFrom = query.ratingFrom != null ? Number(query.ratingFrom) : 0
-  const ratingTo = query.ratingTo != null ? Number(query.ratingTo) : 9999
-  const rating = player.rating ?? 0
-  if (rating < ratingFrom || rating > ratingTo) return false
-
-  if (query.roles) {
-    const tokens = String(query.roles).split(',').map(s => s.trim()).filter(Boolean)
-    const catalog = playersStore.userRolesCatalog
-    if (tokens.length && !tokens.some(t => playerMatchesRoleFilterToken(player, t, catalog))) return false
-  }
-
-  if (query.positions) {
-    const wanted = parseQueryArray(query.positions, Number).filter(n => n >= 1 && n <= 5)
-    if (wanted.length) {
-      const have = new Set(getPlayerDotaPositions(player))
-      if (!wanted.some(w => have.has(w))) return false
-    }
-  }
-
-  if (query.teamStatus) {
-    const flags = parseTeamStatusQuery(query)
-    if (flags.length) {
-      const hasTeam = Boolean((player as { teamId?: string | null }).teamId)
-      if (!flags.includes(hasTeam)) return false
-    }
-  }
-
-  if (query.verificationStatus) {
-    const statuses = parseQueryArray(query.verificationStatus)
-    if (statuses.length) {
-      const verified = isPlayerVerified(player)
-      const ok = statuses.some((s) => {
-        if (s === ERole.PLAYER) return verified
-        if (s === ERole.GUEST) return !verified
-        return false
-      })
-      if (!ok) return false
-    }
-  }
-
-  return true
-}
-
-const activeFiltersCount = computed(() => {
-  const query = route.query
-  let count = 0
-  if (query.ratingFrom != null || query.ratingTo != null) count += 1
-  if (query.roles) count += 1
-  if (query.positions) count += 1
-  if (query.teamStatus) count += 1
-  if (query.verificationStatus) count += 1
-  return count
-})
+const activeFiltersCount = computed(() => countActivePlayersFilters(filters.value))
 
 function searchPlayer (player: TPlayer) {
   if (!search.value) return true

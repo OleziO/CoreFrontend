@@ -1,173 +1,421 @@
+@use "sass:color";
 @use "element-plus/theme-chalk/src/button";
 
-/* Відступ між кнопками */
-.el-button + .el-button {
-  @apply ml-0;
+// ─────────────────────────────────────────────────────────────────────────────
+// Buttons — the single source of truth for every <el-button> in the app.
+//
+// Minimal by design: flat fills, cyan-tinted hairlines, one accent. The only
+// glow in the system belongs to the primary button (a neon halo on hover /
+// focus, and at rest on `.btn-cta`); every other button reads as a quiet
+// surface until the user touches it. All visual state is driven through EP's own
+// `--el-button-*` variables so its hover / active / disabled / loading /
+// plain / text / link machinery keeps working without `!important` fights.
+//
+// Motion: colour transitions use plain `ease` (150ms); the press uses a strong
+// ease-out (160ms) on `transform` only — the two properties the GPU composites.
+// Hover is real-pointer only; touch devices get no sticky hover state.
+//
+// The type set. Pick one per button; avoid `!important` utility overrides.
+//
+//   Type       Markup                         Use for
+//   ─────────  ─────────────────────────────  ───────────────────────────────────
+//   primary    type="primary"                 the ONE main action on a screen/dialog
+//   secondary  (no type)                      cancel, neutral, everything else
+//   outline    plain  (+ optional type)       secondary action that needs a status tint
+//   danger     type="danger"                  destructive actions (delete, leave, tech loss)
+//   ghost      text   (+ optional type)       toolbars, inline actions, icon buttons
+//   link       link   (+ optional type)       inline text actions inside copy
+//
+//   Modifier   Class                          Use for
+//   ─────────  ─────────────────────────────  ───────────────────────────────────
+//   icon       .btn-icon                      square icon-only button (pair with `text`)
+//   cta        .btn-cta                       48px hero action (join / pay / submit form)
+//   dashed     .btn-dashed                    "add something" placeholder slot
+//
+// Sizes: size="small" (32px) | default (42px) | size="large" (48px). Default
+// equals the input height (`--ds-control-height`) so a button on a form row
+// lines up with the field next to it without per-view height hacks.
+// ─────────────────────────────────────────────────────────────────────────────
+
+$primary: #2ee5ff;
+$primary-hover: #66ecff; // primary-300
+$primary-active: #0fc8e8; // primary-500
+$success: #22c55e;
+$warning: #f59e0b;
+$danger: #ef4444;
+$info: #38bdf8;
+
+// Tinted variants (success / warning / danger / info) — translucent fill of the
+// status colour with a light text tint. Reads clearly on the dark base without
+// shouting; the primary action stays the only solid button on screen.
+@mixin button-tinted($name, $color, $text) {
+  .el-button--#{$name} {
+    --el-button-text-color: #{$text};
+    --el-button-bg-color: #{rgba($color, 0.12)};
+    --el-button-border-color: #{rgba($color, 0.35)};
+    --el-button-hover-text-color: #{$text};
+    --el-button-hover-bg-color: #{rgba($color, 0.2)};
+    --el-button-hover-border-color: #{rgba($color, 0.55)};
+    --el-button-active-text-color: #{$text};
+    --el-button-active-bg-color: #{rgba($color, 0.26)};
+    --el-button-active-border-color: #{rgba($color, 0.6)};
+    --el-button-disabled-text-color: #{$text};
+    --el-button-disabled-bg-color: #{rgba($color, 0.12)};
+    --el-button-disabled-border-color: #{rgba($color, 0.35)};
+    --el-button-outline-color: #{rgba($color, 0.6)};
+    --el-button-hover-link-text-color: #{color.scale($text, $lightness: 40%)};
+    --el-button-active-color: #{$text};
+    --btn-text-hover-bg: #{rgba($color, 0.1)};
+    --btn-text-active-bg: #{rgba($color, 0.16)};
+  }
+
+  // Outlined ghost: transparent until hovered.
+  .el-button--#{$name}.is-plain {
+    --el-button-text-color: #{$text};
+    --el-button-bg-color: transparent;
+    --el-button-border-color: #{rgba($color, 0.4)};
+    --el-button-hover-text-color: #{$text};
+    --el-button-hover-bg-color: #{rgba($color, 0.1)};
+    --el-button-hover-border-color: #{rgba($color, 0.6)};
+    --el-button-active-text-color: #{$text};
+    --el-button-active-bg-color: #{rgba($color, 0.16)};
+    --el-button-active-border-color: #{rgba($color, 0.6)};
+    --el-button-disabled-text-color: #{$text};
+    --el-button-disabled-bg-color: transparent;
+    --el-button-disabled-border-color: #{rgba($color, 0.4)};
+  }
+
+  .el-button--#{$name}.is-text,
+  .el-button--#{$name}.is-link {
+    --el-button-text-color: #{$text};
+    --el-button-disabled-text-color: #{$text};
+  }
 }
 
-/* =========================
-   Базові стилі для всіх кнопок
-   ========================= */
+// ─── Base ───────────────────────────────────────────────────────────────────
 .el-button {
-  @apply
-    relative            /* для drop-shadow */
-    flex
-    justify-center
-    items-center
-    gap-8
-    rounded-xl
-    font-medium
-    text-sm
-    text-white
-    border
-    border-white/10
-    bg-white/5
-    backdrop-blur-md
-    shadow-none
-    outline-none
-    transition-all
-    duration-200
-    ease-out
-    cursor-pointer
-    overflow-hidden;    /* обмежує тінь псевдоелемента */
+  // Default (no type): quiet ghost surface.
+  --el-button-font-weight: 500;
+  --el-button-text-color: var(--ds-text);
+  --el-button-bg-color: rgba(255, 255, 255, 0.04);
+  --el-button-border-color: var(--ds-border);
+  --el-button-hover-text-color: var(--ds-text-strong);
+  --el-button-hover-bg-color: rgba(255, 255, 255, 0.08);
+  --el-button-hover-border-color: var(--ds-border-strong);
+  --el-button-active-text-color: var(--ds-text-strong);
+  --el-button-active-bg-color: rgba(255, 255, 255, 0.1);
+  --el-button-active-border-color: var(--ds-border-strong);
+  --el-button-disabled-text-color: var(--ds-text);
+  --el-button-disabled-bg-color: rgba(255, 255, 255, 0.04);
+  --el-button-disabled-border-color: var(--ds-border);
+  --el-button-outline-color: #{rgba($primary, 0.55)};
+  --el-button-hover-link-text-color: var(--ds-text-strong);
+  --el-button-active-color: var(--ds-text-strong);
+  --btn-text-hover-bg: rgba(255, 255, 255, 0.06);
+  --btn-text-active-bg: rgba(255, 255, 255, 0.1);
 
-  &:active {
-    @apply scale-[0.98];
+  gap: 8px;
+  height: var(--ds-control-height);
+  padding: 0 16px;
+  font-size: 14px;
+  letter-spacing: 0;
+  box-shadow: none;
+  // Same radius as inputs / selects — controls on one row share one shape.
+  border-radius: var(--ds-control-radius);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition:
+    color var(--ds-duration-fast) ease,
+    background-color var(--ds-duration-fast) ease,
+    border-color var(--ds-duration-fast) ease,
+    box-shadow var(--ds-duration-base) ease,
+    opacity var(--ds-duration-fast) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+
+  // Layout is done with flex `gap` in the app, not EP's sibling margin.
+  & + & {
+    margin-left: 0;
+  }
+
+  // `gap` already separates icon and label.
+  [class*='el-icon'] + span {
+    margin-left: 0;
+  }
+
+  // Press feedback — the interface confirms it heard the click. Links are
+  // inline text and don't shrink.
+  &:not(.is-disabled):not(.is-loading):not(.is-link):active {
+    transform: scale(0.97);
   }
 
   &:focus-visible {
-    @apply outline-none;
+    outline: 2px solid var(--el-button-outline-color);
+    outline-offset: 2px;
   }
 
-  &.is-disabled {
-    @apply opacity-40 cursor-not-allowed scale-100 shadow-none;
-  }
-}
-
-/* =========================
-   Primary кнопка (синя)
-   ========================= */
-.el-button--primary {
-  --el-color-primary: #43bfee;
-  border: 1px solid #43bfee;
-  background: linear-gradient(90deg, rgba(67,191,254,0.6) 0%, rgba(31,150,255,0.6) 100%);
-  backdrop-filter: blur(8px);
-  transition: filter 0.2s ease, transform 0.2s ease, background 0.2s ease;
-
-  &.el-button:not(.is-disabled, .is-link):hover {
-    filter: drop-shadow(var(--ds-glow-primary));
+  &.is-disabled,
+  &.is-disabled:hover {
+    opacity: 0.45;
+    transform: none;
   }
 
-  &:active {
-    filter: drop-shadow(0 0 12px rgba(67, 191, 238, 0.6));
+  // ─── Sizes ────────────────────────────────────────────────────────────────
+  // EP sets `--el-button-size` + padding per size; re-pin them to the control
+  // tokens so the scale is 32 / 42 / 48 instead of EP's 24 / 32 / 40.
+  &--small {
+    --el-button-size: var(--ds-control-height-sm);
+    height: var(--ds-control-height-sm);
+    padding: 0 12px;
+    border-radius: var(--ds-control-radius-sm);
+    font-size: 13px;
   }
 
-  &.is-disabled {
-    @apply text-white cursor-not-allowed shadow-none;
-  }
-}
-
-/* =========================
-   Success кнопка (зелена)
-   ========================= */
-
-.el-button--success {
-  --el-color-success: #22c55e;
-  color: #86efac;
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  background: rgba(34, 197, 94, 0.12);
-  backdrop-filter: blur(8px);
-  transition: filter 0.2s ease, transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-
-  &.el-button:not(.is-disabled, .is-link):hover {
-    background: rgba(34, 197, 94, 0.22);
-    border-color: rgba(34, 197, 94, 0.55);
-    filter: drop-shadow(0 0 16px rgba(34, 197, 94, 0.35));
+  &--large {
+    --el-button-size: var(--ds-control-height-lg);
+    height: var(--ds-control-height-lg);
+    padding: 0 20px;
+    border-radius: var(--ds-control-radius);
+    font-size: 15px;
   }
 
-  &:active {
-    filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.5));
-  }
+  // Loading keeps the button's own colours; the spinner is the signal.
+  &.is-loading {
+    opacity: 0.8;
 
-  &.is-disabled {
-    @apply cursor-not-allowed shadow-none;
-  }
-}
-
-/* =========================
-   Danger кнопка (червона)
-   ========================= */
-.el-button--danger {
-  --el-color-danger: #ef4444;
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  background: rgba(239, 68, 68, 0.12);
-  backdrop-filter: blur(8px);
-  transition: filter 0.2s ease, transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-
-  &.el-button:not(.is-disabled, .is-link):hover {
-    background: rgba(239, 68, 68, 0.22);
-    border-color: rgba(239, 68, 68, 0.55);
-    filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.35));
-  }
-
-  &:active {
-    filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.5));
-  }
-
-  &.is-disabled {
-    @apply cursor-not-allowed shadow-none;
-  }
-}
-
-/* =========================
-   Warning кнопка (жовта)
-   ========================= */
-   .el-button--warning {
-    --el-color-warning: #eab308; /* Yellow-500 */
-    border: 1px solid #eab308;
-    background: linear-gradient(90deg, #eab308 0%, #facc15 100%); /* Yellow-500 -> Yellow-400 */
-    backdrop-filter: blur(8px);
-    transition: filter 0.2s ease, transform 0.2s ease, background 0.2s ease;
-    color: #fff; /* Для жовтого іноді краще чорний текст, але тут залишив білий для стилю */
-  
-    &:hover {
-      background: linear-gradient(90deg, #facc15 0%, #eab308 100%);
+    &::before {
+      background-color: transparent;
     }
-  
+  }
+
+  // ─── Text / link: no surface until hovered ────────────────────────────────
+  &.is-text,
+  &--text {
+    border-color: transparent;
+    background-color: transparent;
+  }
+
+  &.is-text:not(.is-disabled):hover {
+    background-color: var(--btn-text-hover-bg);
+  }
+
+  &.is-text:not(.is-disabled):active {
+    background-color: var(--btn-text-active-bg);
+  }
+
+  &--text:not(.is-disabled) {
+    &:hover,
+    &:focus {
+      color: var(--el-button-hover-text-color);
+    }
+
     &:active {
-      filter: drop-shadow(0 0 12px #eab308);
-    }
-  
-    &.is-disabled {
-      @apply text-white cursor-not-allowed shadow-none;
+      color: var(--el-button-active-text-color);
     }
   }
 
-/* =========================
-   Plain / Text кнопка
-   ========================= */
-.el-button.is-plain,
-.el-button--text {
-  @apply text-white/80 border-none;
-
-  &:hover {
-    @apply bg-white/5 text-white;
+  // ─── Default plain: hairline outline, fill on hover ───────────────────────
+  &.is-plain {
+    --el-button-bg-color: transparent;
+    --el-button-hover-text-color: var(--ds-text-strong);
+    --el-button-hover-bg-color: rgba(255, 255, 255, 0.06);
+    --el-button-hover-border-color: var(--ds-border-strong);
+    --el-button-disabled-bg-color: transparent;
   }
 
-  &:active {
-    @apply scale-[0.98] outline-none;
-  }
-
-  &:focus-visible {
-    @apply outline-none;
-  }
-
-  &.is-disabled {
-    @apply opacity-40 cursor-not-allowed scale-100;
+  // ─── Toggle "on" state (`:class="{ 'is-active': flag }"`) ─────────────────
+  // A selected toggle borrows the primary tint so it is unmistakably "on"
+  // without becoming a second solid button.
+  &.is-active:not(.el-button--primary),
+  &.is-active:not(.el-button--primary):hover {
+    color: $primary-hover;
+    background-color: rgba($primary, 0.12);
+    border-color: rgba($primary, 0.4);
   }
 }
 
-.el-custom-button {
-  @apply bg-gray-800 text-white
+// ─── Primary: the one solid button ──────────────────────────────────────────
+.el-button--primary {
+  --el-button-text-color: var(--ds-primary-contrast);
+  --el-button-bg-color: #{$primary};
+  --el-button-border-color: #{$primary};
+  --el-button-hover-text-color: var(--ds-primary-contrast);
+  --el-button-hover-bg-color: #{$primary-hover};
+  --el-button-hover-border-color: #{$primary-hover};
+  --el-button-active-text-color: var(--ds-primary-contrast);
+  --el-button-active-bg-color: #{$primary-active};
+  --el-button-active-border-color: #{$primary-active};
+  --el-button-disabled-text-color: var(--ds-primary-contrast);
+  --el-button-disabled-bg-color: #{$primary};
+  --el-button-disabled-border-color: #{$primary};
+  --el-button-outline-color: #{rgba($primary, 0.6)};
+  --el-button-hover-link-text-color: #{$primary-hover};
+  --el-button-active-color: #{$primary-active};
+  --btn-text-hover-bg: #{rgba($primary, 0.1)};
+  --btn-text-active-bg: #{rgba($primary, 0.16)};
+  font-weight: 600;
+
+  // Neon halo — the solid primary lights up when touched. Pointer-only so a
+  // tap on touch never leaves a stuck glow.
+  @media (hover: hover) and (pointer: fine) {
+    &:not(.is-plain):not(.is-text):not(.is-link):not(.is-disabled):hover {
+      box-shadow: var(--ds-glow-primary);
+    }
+  }
+
+  &:not(.is-plain):not(.is-text):not(.is-link):focus-visible {
+    box-shadow: var(--ds-glow-primary);
+  }
+
+  &.is-plain {
+    --el-button-text-color: #{$primary-hover};
+    --el-button-bg-color: transparent;
+    --el-button-border-color: #{rgba($primary, 0.4)};
+    --el-button-hover-text-color: #{$primary-hover};
+    --el-button-hover-bg-color: #{rgba($primary, 0.1)};
+    --el-button-hover-border-color: #{rgba($primary, 0.6)};
+    --el-button-active-text-color: #{$primary-hover};
+    --el-button-active-bg-color: #{rgba($primary, 0.16)};
+    --el-button-active-border-color: #{rgba($primary, 0.6)};
+    --el-button-disabled-text-color: #{$primary-hover};
+    --el-button-disabled-bg-color: transparent;
+    --el-button-disabled-border-color: #{rgba($primary, 0.4)};
+    font-weight: 500;
+  }
+
+  &.is-text,
+  &.is-link {
+    --el-button-text-color: #{$primary};
+    --el-button-disabled-text-color: #{$primary};
+    --el-button-hover-text-color: #{$primary-hover};
+    --el-button-active-text-color: #{$primary-active};
+    font-weight: 500;
+  }
+}
+
+@include button-tinted('success', $success, #86efac);
+@include button-tinted('warning', $warning, #fcd34d);
+@include button-tinted('danger', $danger, #fca5a5);
+@include button-tinted('info', $info, #7dd3fc);
+
+// ─── Modifiers ──────────────────────────────────────────────────────────────
+.el-button.btn-icon {
+  // Square: width follows the size's height (32 / 42 / 48), same radius as
+  // the input it usually sits next to.
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.el-button.btn-cta {
+  height: var(--ds-control-height-lg);
+  min-height: var(--ds-control-height-lg);
+  padding: 0 22px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.el-button.btn-dashed {
+  --el-button-text-color: var(--ds-text-muted);
+  --el-button-bg-color: transparent;
+  --el-button-border-color: var(--ds-border-strong);
+  --el-button-hover-text-color: #{$primary-hover};
+  --el-button-hover-bg-color: #{rgba($primary, 0.06)};
+  --el-button-hover-border-color: #{rgba($primary, 0.5)};
+  --el-button-active-text-color: #{$primary-hover};
+  --el-button-active-bg-color: #{rgba($primary, 0.1)};
+  --el-button-active-border-color: #{rgba($primary, 0.5)};
+  --el-button-disabled-text-color: var(--ds-text-faint);
+  --el-button-disabled-bg-color: transparent;
+  --el-button-disabled-border-color: var(--ds-border);
+  border-style: dashed;
+}
+
+// Steam brand tint: the one third-party action in the profile flow. Solid
+// Steam blue on dark text so it reads as "leave for Steam", not as our primary.
+$steam: #66c0f4;
+$steam-hover: #8ad0f7;
+$steam-active: #4fb3ef;
+
+.el-button.btn-steam {
+  --el-button-text-color: #07080f;
+  --el-button-bg-color: #{$steam};
+  --el-button-border-color: #{$steam};
+  --el-button-hover-text-color: #07080f;
+  --el-button-hover-bg-color: #{$steam-hover};
+  --el-button-hover-border-color: #{$steam-hover};
+  --el-button-active-text-color: #07080f;
+  --el-button-active-bg-color: #{$steam-active};
+  --el-button-active-border-color: #{$steam-active};
+  --el-button-disabled-text-color: #07080f;
+  --el-button-disabled-bg-color: #{$steam};
+  --el-button-disabled-border-color: #{$steam};
+  --el-button-outline-color: #{rgba($steam, 0.6)};
+  font-weight: 600;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:not(.is-plain):not(.is-disabled):hover {
+      box-shadow: 0 0 18px rgba($steam, 0.45), 0 0 48px rgba($steam, 0.18);
+    }
+  }
+
+  &.is-plain {
+    --el-button-text-color: #{$steam-hover};
+    --el-button-bg-color: transparent;
+    --el-button-border-color: #{rgba($steam, 0.4)};
+    --el-button-hover-text-color: #{$steam-hover};
+    --el-button-hover-bg-color: #{rgba($steam, 0.1)};
+    --el-button-hover-border-color: #{rgba($steam, 0.6)};
+    --el-button-active-text-color: #{$steam-hover};
+    --el-button-active-bg-color: #{rgba($steam, 0.16)};
+    --el-button-active-border-color: #{rgba($steam, 0.6)};
+    --el-button-disabled-text-color: #{$steam-hover};
+    --el-button-disabled-bg-color: transparent;
+    --el-button-disabled-border-color: #{rgba($steam, 0.4)};
+    font-weight: 500;
+    // A 1px hairline reads too thin next to the solid primary; the outline
+    // gets a 2px stroke so both buttons carry the same visual weight.
+    border-width: 2px;
+
+    // Outlined Steam lights up on hover: the fill deepens, the hairline goes
+    // solid and a soft brand halo appears — same "lit" cue as the primary.
+    @media (hover: hover) and (pointer: fine) {
+      &:not(.is-disabled):not(.is-loading):hover {
+        --el-button-hover-text-color: #{color.scale($steam-hover, $lightness: 30%)};
+        --el-button-hover-bg-color: #{rgba($steam, 0.16)};
+        --el-button-hover-border-color: #{rgba($steam, 0.85)};
+        box-shadow: 0 0 14px rgba($steam, 0.35), 0 0 36px rgba($steam, 0.14);
+      }
+    }
+
+    &:not(.is-disabled):focus-visible {
+      box-shadow: 0 0 14px rgba($steam, 0.35);
+    }
+  }
+}
+
+// Hero CTA in the esports register: uppercase, tracked, and a resting halo on
+// the primary variant so the one main action on the screen is unmistakable.
+.el-button.btn-cta {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  &.el-button--primary:not(.is-plain):not(.is-text):not(.is-link) {
+    box-shadow: var(--ds-glow-primary-soft);
+  }
+}
+
+// ─── Touch devices: no sticky hover ─────────────────────────────────────────
+// A tap fires `:hover` and leaves it stuck until the next tap elsewhere. Pin
+// the resting colours so only the press animation communicates the tap.
+@media (hover: none) {
+  .el-button:not(.is-disabled):hover {
+    color: var(--el-button-text-color);
+    background-color: var(--el-button-bg-color);
+    border-color: var(--el-button-border-color);
+  }
+
+  .el-button.is-text:not(.is-disabled):hover,
+  .el-button.is-link:not(.is-disabled):hover {
+    background-color: transparent;
+  }
 }

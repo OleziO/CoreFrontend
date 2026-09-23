@@ -7,7 +7,9 @@
     <div class="app-atmosphere" aria-hidden="true">
       <div class="atm-glow-cyan" />
       <div class="atm-glow-purple" />
+      <div class="atm-glow-pink" />
       <div class="atm-grid" />
+      <div class="scanlines" />
       <div class="atm-vignette" />
     </div>
 
@@ -22,7 +24,9 @@
       </router-view>
     </main>
 
-    <Footer class="hidden lg:flex" />
+    <!-- lg+: липка смуга внизу екрана. На мобільному й планшеті футера немає:
+         навігація — у таббарі, соцмережі та оферта — у MobileMenu -->
+    <Footer />
     <MobileBottomTabBar />
   </div>
 </template>
@@ -45,14 +49,16 @@
   pointer-events: none;
 }
 
-/* ─── Atmospheric layers (ported from the landing hero) ────────────────── */
+/* ─── Atmospheric layers (ported from the landing hero) ──────────────────
+   Three neon lamps (cyan / violet / pink) breathing over a cyan-tinted grid,
+   faint scanlines, and a vignette that pulls the edges back into the base. */
 .atm-glow-cyan {
   position: absolute;
   top: -20%;
   left: -15%;
   width: 65%;
   height: 75%;
-  background: radial-gradient(ellipse at center, rgba(67, 191, 238, 0.13) 0%, transparent 68%);
+  background: radial-gradient(ellipse at center, rgba(46, 229, 255, 0.16) 0%, transparent 68%);
   animation: glow-breathe 9s ease-in-out infinite;
 }
 
@@ -62,16 +68,26 @@
   right: -12%;
   width: 55%;
   height: 65%;
-  background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.1) 0%, transparent 65%);
+  background: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.12) 0%, transparent 65%);
   animation: glow-breathe 11s ease-in-out infinite reverse;
+}
+
+.atm-glow-pink {
+  position: absolute;
+  bottom: -25%;
+  right: 10%;
+  width: 50%;
+  height: 55%;
+  background: radial-gradient(ellipse at center, rgba(255, 47, 210, 0.07) 0%, transparent 65%);
+  animation: glow-breathe 13s ease-in-out infinite;
 }
 
 .atm-grid {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    linear-gradient(rgba(46, 229, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(46, 229, 255, 0.05) 1px, transparent 1px);
   background-size: 64px 64px;
   mask-image: radial-gradient(ellipse 80% 60% at 50% 15%, black, transparent);
   -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 15%, black, transparent);
@@ -81,7 +97,7 @@
 .atm-vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, transparent 55%, rgba(10, 7, 17, 0.85) 100%);
+  background: radial-gradient(ellipse at 50% 0%, transparent 55%, rgba(7, 8, 15, 0.85) 100%);
 }
 
 @keyframes glow-breathe {
@@ -91,7 +107,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .atm-glow-cyan,
-  .atm-glow-purple {
+  .atm-glow-purple,
+  .atm-glow-pink {
     animation: none;
   }
 }

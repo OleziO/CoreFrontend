@@ -3,7 +3,7 @@
     <!-- Атмосферний відблиск у стилі головної сторінки -->
     <div
       class="pointer-events-none absolute inset-x-0 top-0 z-0 h-[260px]
-             bg-[radial-gradient(ellipse_60%_100%_at_50%_0%,rgba(67,191,238,0.07),transparent_70%)]"
+             bg-[radial-gradient(ellipse_60%_100%_at_50%_0%,rgba(46,229,255,0.1),transparent_70%)]"
     />
 
     <div
@@ -22,18 +22,16 @@
           class="flex justify-between items-end w-full pt-32 pb-20"
         >
           <div class="flex flex-col gap-6">
-            <span class="text-[11px] uppercase tracking-[0.35em] text-[#43bfee] font-semibold">
-              Змагання
-            </span>
-            <h1 class="text-3xl xl:text-4xl font-black uppercase tracking-tight text-white">
+            <span class="sys-label">Змагання</span>
+            <h1 class="font-display text-3xl xl:text-4xl uppercase tracking-wide text-white neon-text-subtle">
               Командні турніри
             </h1>
           </div>
-          <div class="flex items-center gap-16">
+          <div class="flex items-center gap-12 shrink-0">
             <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
               <el-button
                 type="primary"
-                class="h-full w-fit px-25"
+                class="shrink-0"
                 @click="openTournamentFilterModal"
               >
                 <PhSlidersHorizontal size="20" weight="bold" />
@@ -42,7 +40,7 @@
             </el-badge>
             <el-input
               v-model="search"
-              class="flex-1 w-[400px]"
+              class="w-[400px]"
               placeholder="Введіть назву турніру"
             >
               <template #prepend>
@@ -54,7 +52,17 @@
 
         <!-- MOBILE — persistent search + filter (no carousel) -->
         <div v-else class="w-full py-12">
-          <div class="flex items-center gap-10">
+          <div class="flex items-center gap-8">
+            <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
+              <el-button
+                type="primary"
+                class="btn-icon"
+                aria-label="Фільтрувати"
+                @click="openTournamentFilterModal"
+              >
+                <PhSlidersHorizontal size="20" weight="bold" />
+              </el-button>
+            </el-badge>
             <el-input
               v-model="search"
               class="flex-1"
@@ -65,16 +73,6 @@
                 <el-icon><Search /></el-icon>
               </template>
             </el-input>
-            <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
-              <el-button
-                type="primary"
-                class="!h-40 !w-40 shrink-0"
-                aria-label="Фільтрувати"
-                @click="openTournamentFilterModal"
-              >
-                <PhSlidersHorizontal size="20" weight="bold" />
-              </el-button>
-            </el-badge>
           </div>
         </div>
       </div>
@@ -123,7 +121,12 @@ import { PhSlidersHorizontal } from '@phosphor-icons/vue'
 import { TOURNAMENT_CARD_HEIGHT, TOURNAMENT_CARD_WIDTH } from '@/views/tournaments/tournaments.enums'
 import { VIRTUAL_GRID_CARD_GAP_PX } from '@/composables/use-virtual-grid'
 import { useTournamentStore } from './tournaments.store'
-import type { LocationQuery } from 'vue-router'
+import {
+  countActiveTournamentsFilters,
+  parseTournamentsFilters,
+  tournamentMatchesFilters
+} from '@/views/tournaments/tournaments-filters.utils'
+import { sortTournamentsForList } from '@/views/tournaments/tournaments.utils'
 
 /** Як Teams/Players: `VirtualList` додає `pb-20 pr-20`, тому розмір кроку сітки = картка + gap (px те саме число у `useVirtualGridLayout`). */
 const TOURNAMENT_LIST_ITEM_HEIGHT = TOURNAMENT_CARD_HEIGHT + VIRTUAL_GRID_CARD_GAP_PX
@@ -145,37 +148,24 @@ const tournamentItemWidth = computed(() =>
     : effectiveCardWidth.value)
 const tournamentStore = useTournamentStore()
 
-const filteredTournaments = computed(() => {
-  const query = route.query
+/** Фільтри живуть у query — одна логіка збігу з модалкою (tournaments-filters.utils). */
+const filters = computed(() => parseTournamentsFilters(route.query))
 
-  return tournamentStore.tournamentsData.filter(tournament => {
-    if (!checkQueryFilter(tournament, query)) return false
-    if (!searchTournament(tournament)) return false
-    return true
-  })
-})
-
-function checkQueryFilter (tournament: TTournament, query: LocationQuery) {
-  if (query.status) {
-    const status = query.status.toString().split(',')
-    if (!status.includes(tournament.tournamentStatus as string)) return false
-  }
-
-  return true
-}
+/** Порядок: поточні → найближчі → минулі (див. tournaments.utils). */
+const filteredTournaments = computed(() =>
+  sortTournamentsForList(
+    tournamentStore.tournamentsData.filter(
+      tournament => tournamentMatchesFilters(tournament, filters.value) && searchTournament(tournament)
+    )
+  )
+)
 
 function searchTournament (tournament: TTournament) {
   if (!search.value) return true
   return tournament.name?.toLowerCase().includes(search.value.toLowerCase())
 }
 
-const activeFiltersCount = computed(() => {
-  const query = route.query
-  let count = 0
-  if (query.status) count += 1
-
-  return count
-})
+const activeFiltersCount = computed(() => countActiveTournamentsFilters(filters.value))
 
 function openTournamentFilterModal () {
   open('TournamentFilterModal')

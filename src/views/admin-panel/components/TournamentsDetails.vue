@@ -13,7 +13,6 @@
       <el-button
         type="primary"
         size="large"
-        class="!bg-cyan-600 !border-cyan-600 hover:!bg-cyan-500 shadow-lg shadow-cyan-900/20 transition-all !rounded-xl"
         @click="showCreateTournamentDrawer = true"
       >
         <el-icon class="mr-2"><Plus /></el-icon>

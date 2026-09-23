@@ -2,11 +2,18 @@
 @use "element-plus/theme-chalk/src/drawer";
 
 .el-drawer {
-  background: var(--ds-surface);
-  box-shadow: var(--ds-elevation-4);
+  background: linear-gradient(180deg, var(--ds-elevated-surface) 0%, var(--ds-surface) 100%);
+  // Works for any opening side: a cyan hairline on the edge plus the deep shadow.
+  outline: 1px solid var(--ds-border);
+  outline-offset: -1px;
+  box-shadow: var(--ds-elevation-4), var(--ds-glow-primary-soft);
 
   .el-drawer__header {
     @apply mb-0 text-white;
+  }
+
+  .el-drawer__title {
+    @apply font-display uppercase tracking-wide text-white;
   }
 
   .el-drawer__body {

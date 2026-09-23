@@ -13,7 +13,6 @@
           placement="top"
         >
           <el-button
-            class="finance-forecast-toggle"
             :class="{ 'is-active': includeForecast }"
             @click="includeForecast = !includeForecast"
           >
@@ -231,18 +230,3 @@ async function handleSaveForecast (config: TForecastConfig) {
   await forecastQuery.saveForecast(config)
 }
 </script>
-
-<style scoped>
-/* Match the "show hidden" toggle in the Транзакції block: same height, radius
-   and blue active treatment (see TransactionFeed.vue .finance-icon-btn). */
-.finance-forecast-toggle {
-  height: 36px;
-  min-height: 36px;
-  padding: 0 14px;
-  border-radius: 10px;
-}
-
-.finance-forecast-toggle.is-active {
-  @apply bg-blue-500/20 border-blue-400/40 text-blue-200;
-}
-</style>

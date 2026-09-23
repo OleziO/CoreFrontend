@@ -1,20 +1,10 @@
 <template>
   <el-tag
     v-if="isValidStatus"
-    class="flex justify-center items-center !h-auto
-           relative overflow-hidden rounded-lg border border-white/10"
     :class="statusClass"
+    disable-transitions
   >
-    <div
-      class="absolute inset-0
-             bg-gradient-to-b from-black/15 to-black/35
-             backdrop-blur-sm
-             pointer-events-none rounded-lg transition-all duration-300"
-    />
-
-    <span class="relative z-10 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] text-xs font-medium">
-      {{ statusLabel }}
-    </span>
+    {{ statusLabel }}
   </el-tag>
 </template>
 

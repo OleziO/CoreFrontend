@@ -24,8 +24,8 @@
       <el-tooltip content="Редагувати" placement="top" :enterable="false">
         <el-button
           type="primary"
-          link
-          class="!p-2 hover:bg-white/10 rounded-lg transition-colors text-cyan-400 hover:text-cyan-300"
+          text
+          class="btn-icon"
           @click="$emit('edit', tournament)"
         >
           <el-icon size="20"><EditPen /></el-icon>

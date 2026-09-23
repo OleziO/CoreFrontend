@@ -1,104 +1,129 @@
 <template>
   <el-dialog
     v-model="modelValue"
-    :title="isCoach ? 'Додати тренера' : 'Додати гравців до команди'"
-    width="440"
+    class="add-dialog"
+    :width="dialogWidth"
+    align-center
     destroy-on-close
+    :show-close="false"
     @close="close"
   >
-    <div v-loading.fullscreen="playerStore.loading || submitLoading" class="flex flex-col gap-4 my-20 w-full">
-      <div class="flex flex-col gap-6 text-sm text-gray-400 px-2">
-        <span>
-          {{ slotTitle }}: можна обрати до
-          <span class="text-gray-200 font-medium">{{ maxSelectable }}</span>
-          {{ slotLabel }}.
-          Лише <span class="text-gray-200">верифіковані</span> гравці.
-        </span>
-        <span v-if="maxSelectable > 0" class="text-gray-300">
-          Обрано: <span class="font-medium text-white">{{ selectedIds.length }}</span>
-          / {{ maxSelectable }}
-        </span>
-        <span v-else class="text-amber-500/90">
-          У цьому слоті немає вільних місць.
-        </span>
+    <!-- Header -->
+    <template #header>
+      <div class="add-dialog__head">
+        <div class="flex min-w-0 flex-col gap-4">
+          <span class="sys-label">// Склад · {{ slotTitle }}</span>
+          <h2 class="add-dialog__title">{{ isCoach ? 'Додати тренера' : 'Додати гравців до команди' }}</h2>
+        </div>
+        <div class="flex shrink-0 items-center gap-10">
+          <span
+            class="add-dialog__counter"
+            :class="{ 'is-on': selectedIds.length > 0, 'is-full': isFull }"
+            :aria-label="`Обрано ${selectedIds.length} з ${maxSelectable}`"
+          >
+            {{ pad(selectedIds.length) }}<span class="add-dialog__counter-of">/{{ pad(maxSelectable) }}</span>
+          </span>
+          <button type="button" class="add-dialog__close" aria-label="Закрити" @click="close">
+            <PhX :size="16" weight="bold" />
+          </button>
+        </div>
       </div>
+    </template>
+
+    <div v-loading="playerStore.loading || submitLoading" class="flex flex-col gap-12">
+      <!-- Rules line -->
+      <p v-if="maxSelectable > 0" class="add-dialog__rule">
+        <PhSealCheck :size="14" weight="fill" class="text-primary" />
+        <span>
+          Вільних місць: <b>{{ maxSelectable }}</b> {{ slotLabel }}. Лише <b>верифіковані</b> гравці без іншої команди.
+        </span>
+      </p>
+      <p v-else class="add-dialog__rule is-warn">
+        <PhWarning :size="14" weight="fill" />
+        <span>У цьому слоті немає вільних місць.</span>
+      </p>
 
       <el-input
         v-model="search"
-        placeholder="Пошук по ніку"
+        placeholder="Пошук за ніком або Discord"
         clearable
         size="large"
-        class="flex-1"
         :disabled="maxSelectable === 0"
       >
         <template #prefix>
-          <PhMagnifyingGlass />
+          <PhMagnifyingGlass :size="16" />
         </template>
       </el-input>
 
-      <div class="py-20 w-full !h-[300px] overflow-hidden">
+      <!-- List -->
+      <div class="add-list" role="listbox" :aria-multiselectable="!isCoach">
         <RecycleScroller
+          v-if="eligiblePlayers.length"
           :items="eligiblePlayers"
           key-field="id"
-          :buffer="1000"
-          class="w-full !max-h-[300px] rounded-xl overflow-auto"
-          :item-size="85"
+          :buffer="600"
+          :item-size="ROW_SIZE"
+          class="add-list__scroller"
         >
           <template #default="{ item: row }">
-            <div
-              class="flex justify-between items-center cursor-pointer rounded-lg
-                border-b !h-80 border-white/5 hover:bg-white/5 transition p-10 gap-10"
-              :class="{
-                'bg-gray-700/90 hover:!bg-gray-700/90 ring-1 ring-primary/60': isRowSelected(row.id),
-                'opacity-50 pointer-events-none': maxSelectable === 0
-              }"
-              @click="togglePlayer(row.id)"
-            >
-              <div class="flex items-center gap-10 min-w-0 flex-1">
-                <div
-                  class="shrink-0 size-6 rounded border flex items-center justify-center transition"
-                  :class="isRowSelected(row.id)
-                    ? 'border-primary bg-primary/20 text-primary'
-                    : 'border-white/20 text-transparent'"
-                >
-                  <PhCheck v-if="isRowSelected(row.id)" :size="14" weight="bold" />
-                </div>
-                <el-avatar :src="getAvatarUrl(row.avatarUrl)" class="size-50 shrink-0" />
-                <div class="flex flex-col leading-tight min-w-0">
-                  <span class="font-bold text-gray-200 truncate">
-                    {{ row.discordName }}
+            <div class="add-list__cell" :style="{ height: `${ROW_SIZE}px` }">
+              <button
+                type="button"
+                role="option"
+                class="add-row"
+                :class="{ 'is-selected': isRowSelected(row.id) }"
+                :aria-selected="isRowSelected(row.id)"
+                :disabled="maxSelectable === 0"
+                @click="togglePlayer(row.id)"
+              >
+                <span class="add-row__check" aria-hidden="true">
+                  <PhCheck :size="12" weight="bold" />
+                </span>
+                <el-avatar :src="getAvatarUrl(row.avatarUrl)" :size="40" class="add-row__avatar">
+                  <template #default><PhUser :size="16" weight="bold" class="text-white/70" /></template>
+                </el-avatar>
+                <span class="flex min-w-0 flex-col gap-2 text-left">
+                  <span class="add-row__name truncate">{{ row.discordName || '—' }}</span>
+                  <span class="add-row__handle truncate">
+                    {{ row.discordUsername ? `@${row.discordUsername}` : '—' }}
                   </span>
-                  <span v-if="row.discordUsername" class="text-xs text-gray-500 truncate">
-                    @{{ row.discordUsername }}
-                  </span>
-                </div>
-              </div>
+                </span>
+                <span class="add-row__rank">
+                  <img
+                    v-if="rankOf(row)"
+                    :src="rankOf(row)"
+                    alt=""
+                    class="h-28 w-auto object-contain"
+                    draggable="false"
+                  >
+                  <span class="add-row__mmr">{{ row.rating ?? '—' }}</span>
+                </span>
+              </button>
             </div>
           </template>
         </RecycleScroller>
 
-        <div
-          v-if="!eligiblePlayers.length && maxSelectable > 0"
-          class="text-center py-10 text-gray-500 text-sm"
-        >
-          Гравців не знайдено
+        <div v-else class="add-list__empty">
+          <PhUsersThree :size="22" weight="duotone" class="text-white/40" />
+          <span>{{ maxSelectable > 0 ? 'Гравців не знайдено' : 'Звільніть місце у складі, щоб додати гравця' }}</span>
         </div>
       </div>
     </div>
 
     <template #footer>
-      <div class="flex gap-10">
+      <div class="add-dialog__foot">
+        <el-button @click="close">Скасувати</el-button>
         <el-button
-          :disabled="!selectedIds.length || submitLoading || maxSelectable === 0"
-          :loading="submitLoading"
           type="primary"
           class="flex-1"
+          :disabled="!selectedIds.length || submitLoading || maxSelectable === 0"
+          :loading="submitLoading"
           @click="submitAdd"
         >
-          <PhPlus />
-          <span class="ml-10">
-            Додати обраних
-            <template v-if="selectedIds.length">({{ selectedIds.length }})</template>
+          <PhPlus :size="16" weight="bold" />
+          <span>
+            {{ isCoach ? 'Призначити тренера' : 'Додати обраних' }}
+            <template v-if="selectedIds.length && !isCoach">({{ selectedIds.length }})</template>
           </span>
         </el-button>
       </div>
@@ -107,9 +132,11 @@
 </template>
 
 <script setup lang="ts">
-import { isPlayerVerified, searchPlayer } from '@/core/helpers'
+import { getPlayerRankImageSrcFromPlayerRank, isPlayerVerified, searchPlayer } from '@/core/helpers'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
-import { PhCheck, PhMagnifyingGlass, PhPlus } from '@phosphor-icons/vue'
+import {
+  PhCheck, PhMagnifyingGlass, PhPlus, PhSealCheck, PhUser, PhUsersThree, PhWarning, PhX
+} from '@phosphor-icons/vue'
 
 const props = defineProps<{
   team: TTeam | undefined
@@ -119,6 +146,13 @@ const props = defineProps<{
 }>()
 
 const modelValue = defineModel<boolean>({ default: false })
+
+const ROW_SIZE = 64
+
+const { width } = useWindowSize()
+const dialogWidth = computed(() => (width.value < 640 ? 'calc(100vw - 24px)' : 480))
+
+const pad = (n: number) => String(Math.min(Math.max(n, 0), 99)).padStart(2, '0')
 
 const selectedIds = ref<string[]>([])
 const search = ref('')
@@ -134,8 +168,8 @@ const slotTitle = computed(() => {
 })
 
 const slotLabel = computed(() => {
-  if (props.isCoach) return 'тренера'
-  return props.isMain ? 'гравців у основі' : 'гравців у запасі'
+  if (props.isCoach) return 'для тренера'
+  return props.isMain ? 'в основі' : 'у запасі'
 })
 
 /** Скільки ще можна додати в цей слот (ліміт бекенду / UI). Тренер — один. */
@@ -148,6 +182,8 @@ const maxSelectable = computed(() => {
   }
   return Math.max(0, 3 - (t.reservedPlayers?.length ?? 0))
 })
+
+const isFull = computed(() => maxSelectable.value > 0 && selectedIds.value.length >= maxSelectable.value)
 
 const rosterPlayerIds = computed(() => {
   const t = props.team
@@ -172,6 +208,10 @@ const eligiblePlayers = computed(() => {
     return searchPlayer(player, search.value.trim())
   })
 })
+
+type TEligiblePlayer = (typeof eligiblePlayers.value)[number]
+
+const rankOf = (p: TEligiblePlayer) => getPlayerRankImageSrcFromPlayerRank(p.rank)
 
 const getAvatarUrl = (path: string | null | undefined) => {
   if (!path) return ''
@@ -280,3 +320,253 @@ onMounted(() => {
   playerStore.getPlayers()
 })
 </script>
+
+<style scoped lang="scss">
+.add-dialog__rule {
+  @apply m-0 flex items-start gap-8 rounded-lg border px-12 py-8 text-[13px] leading-relaxed;
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(var(--ds-primary-rgb), 0.18);
+  background: rgba(7, 8, 15, 0.4);
+
+  b {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  svg {
+    @apply mt-2 shrink-0;
+  }
+
+  &.is-warn {
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.35);
+    background: rgba(245, 158, 11, 0.08);
+  }
+}
+
+// ─── List ───────────────────────────────────────────────────────────────────
+.add-list {
+  @apply overflow-hidden rounded-xl border;
+  // Only the list scrolls: keep it inside the dialog's 70vh cap on short screens.
+  height: clamp(160px, calc(70vh - 300px), 320px);
+  border-color: var(--ds-border);
+  background: rgba(7, 8, 15, 0.35);
+}
+
+.add-list__scroller {
+  @apply h-full overflow-auto p-8;
+}
+
+.add-list__cell {
+  @apply flex items-center;
+}
+
+.add-list__empty {
+  @apply flex h-full flex-col items-center justify-center gap-8 px-16 text-center text-sm;
+  color: var(--ds-text-faint);
+}
+
+.add-row {
+  @apply relative grid w-full items-center gap-12 overflow-hidden rounded-lg border py-6 pl-12 pr-10;
+  grid-template-columns: 18px 40px minmax(0, 1fr) auto;
+  height: 56px;
+  color: inherit;
+  border-color: transparent;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--ds-duration-base) ease,
+    background-color var(--ds-duration-base) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 2px;
+    background: var(--ds-primary);
+    box-shadow: 0 0 8px rgba(var(--ds-primary-rgb), 0.9);
+    opacity: 0;
+    transition: opacity var(--ds-duration-base) ease;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.99);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.7) !important;
+    outline-offset: -2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.is-selected {
+    border-color: rgba(var(--ds-primary-rgb), 0.5);
+    background: rgba(var(--ds-primary-rgb), 0.08);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+}
+
+.add-row__check {
+  @apply inline-flex size-18 items-center justify-center rounded-[5px] border;
+  color: transparent;
+  border-color: rgba(255, 255, 255, 0.25);
+  transition:
+    color var(--ds-duration-base) ease,
+    border-color var(--ds-duration-base) ease,
+    background-color var(--ds-duration-base) ease;
+}
+
+.is-selected .add-row__check {
+  color: var(--ds-background);
+  border-color: var(--ds-primary);
+  background: var(--ds-primary);
+  box-shadow: 0 0 10px rgba(var(--ds-primary-rgb), 0.55);
+}
+
+// The avatar reset hard-codes 56px; pin the row size explicitly.
+.add-row__avatar {
+  @apply shrink-0;
+  width: 40px !important;
+  height: 40px !important;
+  box-shadow: 0 0 0 1px rgba(var(--ds-primary-rgb), 0.25);
+}
+
+.add-row__name {
+  @apply font-display text-[13px] uppercase leading-tight tracking-wide text-white;
+}
+
+.add-row__handle {
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  color: var(--ds-text-faint);
+}
+
+.add-row__rank {
+  @apply flex shrink-0 flex-col items-center gap-1;
+  min-width: 44px;
+}
+
+.add-row__mmr {
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ds-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .add-row:not(.is-selected):not(:disabled):hover {
+    border-color: rgba(var(--ds-primary-rgb), 0.3);
+    background: rgba(255, 255, 255, 0.03);
+
+    .add-row__check {
+      border-color: rgba(var(--ds-primary-rgb), 0.6);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .add-row,
+  .add-row__check {
+    transition: none;
+  }
+}
+</style>
+
+<style lang="scss">
+// Not scoped: `.el-dialog` renders outside this component's root.
+.el-dialog.add-dialog {
+  background: rgba(16, 19, 36, 0.62);
+  backdrop-filter: blur(24px) saturate(130%);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+
+  .el-dialog__header {
+    border-bottom: 1px solid rgba(var(--ds-primary-rgb), 0.12);
+  }
+
+  // No second scrollbar: the body fits, the player list scrolls on its own.
+  .el-dialog__body {
+    overflow: visible !important;
+  }
+
+  .el-dialog__footer {
+    border-top: 1px solid rgba(var(--ds-primary-rgb), 0.12);
+  }
+
+  .add-dialog__close:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.6) !important;
+    outline-offset: 2px;
+  }
+}
+
+.add-dialog__head {
+  @apply flex items-start justify-between gap-12;
+}
+
+.add-dialog__title {
+  @apply m-0 truncate font-display text-xl uppercase leading-none tracking-wide text-white;
+}
+
+// Two-digit «обрано / ліміт» readout.
+.add-dialog__counter {
+  @apply inline-flex h-28 items-center justify-center rounded-md border px-8;
+  font-family: var(--ds-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(var(--ds-primary-rgb), 0.14);
+  background: rgba(0, 0, 0, 0.3);
+  transition: color var(--ds-duration-base) ease, border-color var(--ds-duration-base) ease,
+    box-shadow var(--ds-duration-base) ease;
+
+  &.is-on {
+    color: var(--ds-primary);
+    border-color: rgba(var(--ds-primary-rgb), 0.5);
+    box-shadow: var(--ds-glow-primary-soft);
+    text-shadow: var(--ds-neon-text-subtle);
+  }
+
+  &.is-full {
+    color: var(--ds-gold);
+    border-color: rgba(var(--ds-gold-rgb), 0.5);
+    box-shadow: var(--ds-glow-gold);
+    text-shadow: none;
+  }
+}
+
+.add-dialog__counter-of {
+  color: rgba(255, 255, 255, 0.35);
+  text-shadow: none;
+}
+
+.add-dialog__close {
+  @apply inline-flex size-28 items-center justify-center rounded-md border-0 bg-transparent p-0 text-white/55;
+  transition: color var(--ds-duration-fast) ease, background-color var(--ds-duration-fast) ease;
+}
+
+.add-dialog__foot {
+  @apply flex items-center gap-10;
+
+  .el-button > span {
+    @apply inline-flex items-center gap-8;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .add-dialog__close:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+</style>

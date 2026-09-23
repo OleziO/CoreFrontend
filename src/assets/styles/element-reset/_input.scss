@@ -17,19 +17,24 @@
       flex
       items-center
       w-full
-      rounded-xl
       px-0
       shadow-none;
+    /* Висота/радіус — спільний контракт з кнопками (`--ds-control-*` у _tokens.scss):
+       inner дає 42px сам (20px line-height + 2×10px padding + рамка), min-height лише фіксує це */
+    min-height: var(--ds-control-height);
+    border-radius: var(--ds-control-radius);
     /* transition-all + backdrop-blur дає «блік» при blur — анімуємо лише фон і рамку */
     transition: background-color 0.2s ease-out, border-color 0.2s ease-out;
 
     &:hover {
-      @apply bg-white/15 border-white/30;
+      @apply bg-white/15;
+      border-color: rgba(var(--ds-primary-rgb), 0.4);
     }
 
+    /* Neon focus: brighter cyan edge + a soft halo (no 2px ring — the halo is the ring). */
     &:focus-within {
-      @apply border-white/40 shadow-none;
-      box-shadow: none;
+      border-color: rgba(var(--ds-primary-rgb), 0.75);
+      box-shadow: var(--ds-glow-primary-soft);
     }
   }
 
@@ -126,14 +131,15 @@
   &:has(.el-input__wrapper:hover) {
     .el-input-group__prepend,
     .el-input-group__append {
-      @apply bg-white/15 border-white/30;
+      @apply bg-white/15;
+      border-color: rgba(var(--ds-primary-rgb), 0.4);
     }
   }
 
   &:has(.el-input__wrapper:focus-within) {
     .el-input-group__prepend,
     .el-input-group__append {
-      @apply border-white/40;
+      border-color: rgba(var(--ds-primary-rgb), 0.75);
     }
   }
 
@@ -212,18 +218,37 @@
       @apply min-h-[80px] resize-none;
 
       background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid var(--ds-border-strong);
       backdrop-filter: blur(6px);
       padding: 0.5rem 1rem;
 
       &:focus {
-        border-color: var(--ds-primary);
-        box-shadow: none;
+        border-color: rgba(var(--ds-primary-rgb), 0.75);
+        box-shadow: var(--ds-glow-primary-soft);
       }
 
       &::placeholder {
         color: rgba(255, 255, 255, 0.4);
       }
     }
+  }
+}
+
+// Word-limit readout («17 / 40»): a quiet mono counter, no pill.
+.el-input .el-input__count,
+.el-textarea .el-input__count {
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ds-text-faint);
+  background: transparent;
+
+  .el-input__count-inner {
+    padding: 0;
+    line-height: 1;
+    background: transparent;
+    color: inherit;
   }
 }

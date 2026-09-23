@@ -1,0 +1,387 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Neon utility layer — the esports "HUD" vocabulary shared by chrome, cards and
+// hero surfaces. Everything is built on the `--ds-*` tokens so retuning the
+// brand in `_tokens.scss` re-lights the whole app.
+//
+//   Text       .neon-text | .neon-text-subtle | .neon-text-pink | .neon-text-gold
+//   Surfaces   .glass-neon (chrome / poppers)   .neon-card (list & profile cards)
+//   Shape      .clip-cyber (8 chamfers)   .clip-slant (2 opposite chamfers)
+//   HUD        .hud-corners (bracket corners)   .hud-line (gradient hairline)
+//              .sys-label (mono uppercase "SYS://" register)   .scanlines
+//
+// Hover glows are pointer-only (`hover: hover`) so touch never gets a stuck lit
+// state; every animation dies under `prefers-reduced-motion` via `_tokens.scss`.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─── Neon text ──────────────────────────────────────────────────────────────
+.neon-text {
+  text-shadow: var(--ds-neon-text);
+}
+
+.neon-text-subtle {
+  text-shadow: var(--ds-neon-text-subtle);
+}
+
+.neon-text-pink {
+  text-shadow: var(--ds-neon-text-pink);
+}
+
+.neon-text-gold {
+  text-shadow: var(--ds-neon-text-gold);
+}
+
+// Gradient-filled display word (hero, section titles). Cyan → pink is the
+// signature ramp; `.neon-gradient-text--gold` keeps prize copy on brand.
+.neon-gradient-text {
+  background: linear-gradient(95deg, var(--ds-primary) 0%, #8ef3ff 45%, var(--ds-pink) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  // A glow on transparent-filled text must come from a filter, not text-shadow.
+  filter: drop-shadow(0 0 14px rgba(var(--ds-primary-rgb), 0.35));
+
+  &--gold {
+    background: linear-gradient(95deg, var(--ds-primary) 0%, var(--ds-gold) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0 14px rgba(var(--ds-gold-rgb), 0.3));
+  }
+}
+
+// ─── Glass chrome ───────────────────────────────────────────────────────────
+// Header / footer / poppers: dark translucent glass, cyan hairline, top light.
+.glass-neon {
+  position: relative;
+  background: linear-gradient(135deg, rgba(7, 8, 15, 0.88) 0%, rgba(20, 23, 41, 0.82) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--ds-border);
+}
+
+// Gradient hairline — a standalone 1px rule (dividers, section edges).
+.hud-line {
+  height: 1px;
+  width: 100%;
+  border: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(var(--ds-primary-rgb), 0.6) 50%, transparent 100%);
+
+  &--pink {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(var(--ds-primary-rgb), 0.7) 30%,
+      rgba(var(--ds-pink-rgb), 0.7) 70%,
+      transparent 100%
+    );
+  }
+}
+
+// ─── Neon card ──────────────────────────────────────────────────────────────
+// The standard card recipe: gradient indigo fill, cyan hairline, a 1px top
+// light line (a background layer, so both pseudo-elements stay free for
+// `.hud-corners`), deep drop shadow with a faint resting halo; lit halo +
+// brighter edge on hover / focus. Pair with `rounded-2xl` and your own padding.
+.neon-card {
+  --neon-card-line: 0.55;
+  --neon-card-line-color: var(--ds-primary-rgb);
+  --neon-card-fill: linear-gradient(160deg, var(--ds-elevated-surface) 0%, var(--ds-surface) 100%);
+
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(var(--neon-card-line-color), var(--neon-card-line)) 50%,
+        transparent 100%
+      )
+      top / 100% 1px no-repeat,
+    var(--neon-card-fill);
+  border: 1px solid var(--ds-border);
+  box-shadow: var(--ds-elevation-3), var(--ds-glow-primary-soft);
+  transition:
+    border-color var(--ds-duration-base) ease,
+    box-shadow var(--ds-duration-base) ease,
+    transform var(--ds-duration-base) var(--ds-ease-out);
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.6);
+    outline-offset: 2px;
+  }
+
+  // Lit state — shared by hover (pointer only) and the `.is-lit` modifier so a
+  // selected / active card can hold the glow.
+  &.is-lit {
+    --neon-card-line: 1;
+    border-color: rgba(var(--ds-primary-rgb), 0.55);
+    box-shadow: var(--ds-elevation-3), var(--ds-glow-primary);
+  }
+
+  // Gold variant for prize / elite surfaces.
+  &--gold {
+    --neon-card-line-color: var(--ds-gold-rgb);
+    border-color: rgba(var(--ds-gold-rgb), 0.28);
+    box-shadow: var(--ds-elevation-3), 0 0 12px rgba(var(--ds-gold-rgb), 0.16);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .neon-card:hover {
+    --neon-card-line: 1;
+    border-color: rgba(var(--ds-primary-rgb), 0.55);
+    box-shadow: var(--ds-elevation-4), var(--ds-glow-primary);
+  }
+
+  .neon-card--gold:hover {
+    border-color: rgba(var(--ds-gold-rgb), 0.6);
+    box-shadow: var(--ds-elevation-4), var(--ds-glow-gold);
+  }
+}
+
+// ─── Chamfered shapes ───────────────────────────────────────────────────────
+// Reference-site cuts. `clip-path` removes the border radius visually, so use
+// these on flat fills (CTAs, banners, hero frames), not on bordered cards.
+.clip-cyber {
+  clip-path: polygon(
+    0 10px,
+    10px 0,
+    calc(100% - 10px) 0,
+    100% 10px,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    10px 100%,
+    0 calc(100% - 10px)
+  );
+}
+
+.clip-slant {
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+}
+
+// ─── HUD corner brackets ────────────────────────────────────────────────────
+// Two L-shaped ticks in opposite corners (top-left / bottom-right). Needs
+// `position: relative` on the host (set here) and sits above positioned
+// children so it works on image frames too.
+.hud-corners {
+  position: relative;
+  --hud-corner-size: 14px;
+  // Inset clears the `rounded-2xl` curve so the bracket floats inside the frame.
+  // `--hud-corner-inset-x` / `-y` override it per axis (e.g. to line the
+  // brackets up with a page gutter while keeping them tight to the top edge).
+  --hud-corner-inset: 10px;
+  // Outer radius of each bracket; set it to the hugged frame's radius plus the
+  // (negative) inset so the bracket follows a rounded edge instead of cutting it.
+  --hud-corner-radius: 0px;
+  --hud-corner-weight: 2px;
+  --hud-corner-color: rgba(var(--ds-primary-rgb), 0.7);
+  // Optional neon halo; a `drop-shadow()` filter so the glow hugs the L shape
+  // (a box-shadow would outline the whole square box).
+  --hud-corner-glow: none;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: var(--hud-corner-size);
+    height: var(--hud-corner-size);
+    z-index: 2;
+    pointer-events: none;
+    border-color: var(--hud-corner-color);
+    border-style: solid;
+    border-width: 0;
+    filter: var(--hud-corner-glow);
+    transition: border-color var(--ds-duration-base) ease, filter var(--ds-duration-base) ease;
+  }
+
+  &::before {
+    top: var(--hud-corner-inset-y, var(--hud-corner-inset));
+    left: var(--hud-corner-inset-x, var(--hud-corner-inset));
+    border-top-width: var(--hud-corner-weight);
+    border-left-width: var(--hud-corner-weight);
+    border-top-left-radius: var(--hud-corner-radius);
+  }
+
+  &::after {
+    right: var(--hud-corner-inset-x, var(--hud-corner-inset));
+    bottom: var(--hud-corner-inset-y, var(--hud-corner-inset));
+    border-right-width: var(--hud-corner-weight);
+    border-bottom-width: var(--hud-corner-weight);
+    border-bottom-right-radius: var(--hud-corner-radius);
+  }
+
+  // Tapered arms: each L is hottest at its corner and fades out along both
+  // arms (the glow fades with it, since the mask is applied after the filter).
+  // Add the class to the host and, for a four-corner frame, to the mirror span.
+  &--fade::before {
+    mask-image: linear-gradient(135deg, #000 25%, transparent 80%);
+  }
+
+  &--fade::after {
+    mask-image: linear-gradient(315deg, #000 25%, transparent 80%);
+  }
+
+  &--fade#{&}--mirror::before {
+    mask-image: linear-gradient(225deg, #000 25%, transparent 80%);
+  }
+
+  &--fade#{&}--mirror::after {
+    mask-image: linear-gradient(45deg, #000 25%, transparent 80%);
+  }
+
+  // Mirrored pair (top-right + bottom-left). For a four-corner frame nest an
+  // empty `<span class="hud-corners hud-corners--mirror absolute inset-0">`
+  // inside a `.hud-corners` host; the custom properties inherit, so both pairs
+  // share size, inset, radius and colour.
+  &--mirror {
+    // `.hud-corners` sets defaults on every host, so the nested span would
+    // reset them; pull the host's values back in instead.
+    --hud-corner-size: inherit;
+    --hud-corner-inset: inherit;
+    --hud-corner-radius: inherit;
+    --hud-corner-color: inherit;
+    --hud-corner-glow: inherit;
+    --hud-corner-weight: inherit;
+    pointer-events: none;
+
+    &::before {
+      top: var(--hud-corner-inset-y, var(--hud-corner-inset));
+      right: var(--hud-corner-inset-x, var(--hud-corner-inset));
+      left: auto;
+      border-left-width: 0;
+      border-top-left-radius: 0;
+      border-top-width: var(--hud-corner-weight);
+      border-right-width: var(--hud-corner-weight);
+      border-top-right-radius: var(--hud-corner-radius);
+    }
+
+    &::after {
+      bottom: var(--hud-corner-inset-y, var(--hud-corner-inset));
+      left: var(--hud-corner-inset-x, var(--hud-corner-inset));
+      right: auto;
+      border-right-width: 0;
+      border-bottom-right-radius: 0;
+      border-bottom-width: var(--hud-corner-weight);
+      border-left-width: var(--hud-corner-weight);
+      border-bottom-left-radius: var(--hud-corner-radius);
+    }
+  }
+}
+
+// ─── System label ───────────────────────────────────────────────────────────
+// "SYS://CORE" register — mono, uppercase, wide tracking, cyan. Used for
+// eyebrows above headings, ids, counters and timestamps.
+.sys-label {
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ds-primary);
+  text-shadow: var(--ds-neon-text-subtle);
+
+  &--muted {
+    color: var(--ds-text-faint);
+    text-shadow: none;
+  }
+
+  &--pink {
+    color: var(--ds-pink);
+    text-shadow: var(--ds-neon-text-pink);
+  }
+
+  &--gold {
+    color: var(--ds-gold);
+    text-shadow: var(--ds-neon-text-gold);
+  }
+}
+
+// ─── Scanlines ──────────────────────────────────────────────────────────────
+// Faint CRT scanline overlay. Absolute-position inside a `relative` host and
+// let it cover; it never captures pointer events.
+.scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.025) 0px,
+    rgba(255, 255, 255, 0.025) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: overlay;
+  opacity: 0.6;
+}
+
+// ─── Live pulse ─────────────────────────────────────────────────────────────
+// A breathing halo for "live" indicators (dots, badges).
+@keyframes neon-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--ds-pink-rgb), 0.55);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(var(--ds-pink-rgb), 0);
+  }
+}
+
+.neon-pulse {
+  animation: neon-pulse 1.8s ease-out infinite;
+}
+
+// ─── Section title ──────────────────────────────────────────────────────────
+// Card section heading: display face, uppercase, centred, with a short neon
+// rule underneath. Used by every profile block (stats, heroes, team, positions).
+.section-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--ds-font-display);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.85);
+
+  &::after {
+    content: '';
+    width: 36px;
+    height: 2px;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, var(--ds-primary), var(--ds-pink));
+    box-shadow: 0 0 10px rgba(var(--ds-primary-rgb), 0.6);
+  }
+
+  // Left-aligned variant for list / drawer headers: the title shrinks to its
+  // text and the rule runs the full width of that text.
+  &--left {
+    align-items: flex-start;
+    width: fit-content;
+    text-align: left;
+
+    &::after {
+      width: 100%;
+    }
+  }
+}
+
+// ─── HUD panel ──────────────────────────────────────────────────────────────
+// A large static surface (admin tables, calendars, feeds): the neon-card fill,
+// cyan hairline and top light WITHOUT the hover lift — a panel is not a card
+// you click. Pair with `rounded-2xl` / `overflow-hidden` and your own padding.
+.hud-panel {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid var(--ds-border);
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(var(--ds-primary-rgb), 0.55) 50%, transparent 100%)
+      top / 100% 1px no-repeat,
+    linear-gradient(160deg, rgba(20, 23, 41, 0.86) 0%, rgba(13, 15, 28, 0.92) 100%);
+  box-shadow: var(--ds-elevation-3);
+}

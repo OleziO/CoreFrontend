@@ -17,17 +17,30 @@
           v-if="!isMobile"
           class="flex justify-between items-center w-full pt-40 pb-20"
         >
-          <div class="flex items-baseline gap-12">
-            <h1 class="text-4xl font-semibold text-white">
-              Команди {{ window.width.value > 1024 ? 'платформи' : '' }}
-            </h1>
-            <span class="text-2xl font-semibold text-white/40">({{ filteredTeams.length }})</span>
+          <div class="flex flex-col gap-6">
+            <span class="sys-label">Реєстр</span>
+            <div class="flex items-baseline gap-12">
+              <h1 class="font-display text-3xl xl:text-4xl uppercase tracking-wide text-white neon-text-subtle">
+                Команди {{ window.width.value > 1024 ? 'платформи' : '' }}
+              </h1>
+              <span class="font-mono text-xl text-primary/60">[{{ filteredTeams.length }}]</span>
+            </div>
           </div>
 
-          <div class="flex items-center gap-16 w-1/2">
+          <div class="flex items-center gap-12 shrink-0">
+            <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
+              <el-button
+                type="primary"
+                class="shrink-0"
+                @click="openTeamFiltersModal"
+              >
+                <PhSlidersHorizontal size="20" weight="bold" />
+                <span v-if="window.width.value > 1400" class="ml-10 text-sm font-medium">Фільтрувати</span>
+              </el-button>
+            </el-badge>
             <el-input
               v-model="search"
-              class="flex-1"
+              class="w-[400px]"
               v-bind="$attrs"
               placeholder="Введіть назву команди"
               clearable
@@ -38,22 +51,22 @@
                 </el-icon>
               </template>
             </el-input>
-            <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
-              <el-button
-                type="primary"
-                class="h-40 px-16 shrink-0"
-                @click="openTeamFiltersModal"
-              >
-                <PhSlidersHorizontal size="20" weight="bold" />
-                <span v-if="window.width.value > 1400" class="ml-10 text-sm font-medium">Фільтрувати</span>
-              </el-button>
-            </el-badge>
           </div>
         </div>
 
         <!-- MOBILE — persistent search + filter (no carousel) -->
         <div v-else class="w-full py-12">
-          <div class="flex items-center gap-10">
+          <div class="flex items-center gap-8">
+            <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
+              <el-button
+                type="primary"
+                class="btn-icon"
+                aria-label="Фільтрувати"
+                @click="openTeamFiltersModal"
+              >
+                <PhSlidersHorizontal size="20" weight="bold" />
+              </el-button>
+            </el-badge>
             <el-input
               v-model="search"
               class="flex-1"
@@ -66,16 +79,6 @@
                 </el-icon>
               </template>
             </el-input>
-            <el-badge :value="activeFiltersCount" :hidden="!activeFiltersCount">
-              <el-button
-                type="primary"
-                class="!h-40 !w-40 shrink-0"
-                aria-label="Фільтрувати"
-                @click="openTeamFiltersModal"
-              >
-                <PhSlidersHorizontal size="20" weight="bold" />
-              </el-button>
-            </el-badge>
           </div>
         </div>
       </div>
@@ -91,7 +94,7 @@
           v-for="i in 8"
           :key="i"
           class="w-full max-w-[300px] rounded-2xl border border-white/10 bg-dark-card animate-pulse"
-          :style="{ height: `${TEAM_CARD_HEIGHT}px` }"
+          :style="{ height: `${teamCardHeight}px` }"
         />
       </div>
 
@@ -101,7 +104,7 @@
         :grid-items="cardsPerRow"
         :grid-width="window.height.value"
         withTopMargin
-        :item-height="TEAM_CARD_HEIGHT"
+        :item-height="teamCardHeight"
         :item-width="effectiveCardWidth"
         grid-cell-class="pb-10 pr-12"
         empty-text="Команди не знайдені"
@@ -122,11 +125,15 @@
 <script lang="ts" setup>
 import { PhSlidersHorizontal } from '@phosphor-icons/vue'
 import { useWindowSize } from '@vueuse/core'
-import { parseQueryArray } from '@/core/helpers'
+import { countActiveTeamsFilters, parseTeamsFilters, teamMatchesFilters } from '@/views/teams/teams-filters.utils'
 
 const TEAM_CARD_WIDTH = 300
-/** Висота кроку сітки ≈ картка + вертикальний відступ (`grid-cell-class` на VirtualList). */
-const TEAM_CARD_HEIGHT = 472
+/** Висота картки без логотипа (назва, рейтинг, Dota ID, кнопка, відступи, рамка), px. */
+const TEAM_CARD_CHROME_HEIGHT = 206
+/** Вертикальний відступ між рядами — `pb-10` у `grid-cell-class`. */
+const TEAM_CARD_ROW_GAP = 10
+/** Логотип у TeamCard має aspect 8/7 і ширину картки мінус `px-12` та рамку. */
+const TEAM_CARD_LOGO_INSET = 26
 
 const teamsStore = useTeamsStore()
 const window = useWindowSize()
@@ -134,31 +141,22 @@ const { open } = useAppModals()
 const route = useRoute()
 const { cardsPerRow, effectiveCardWidth } = useVirtualGridLayout({ cardWidth: TEAM_CARD_WIDTH })
 
+/** Крок сітки залежить від ширини картки: логотип росте разом з нею в одноколонковому режимі. */
+const teamCardHeight = computed(() =>
+  Math.ceil(((effectiveCardWidth.value - TEAM_CARD_LOGO_INSET) * 7) / 8) + TEAM_CARD_CHROME_HEIGHT + TEAM_CARD_ROW_GAP
+)
+
 const showTeamPlayers = ref(false)
 
 const search = ref('')
 
-const filters = ref<{ status: string[] }>({
-  status: []
-})
-
-watch(
-  () => route.query,
-  () => syncFiltersWithUrl(),
-  { deep: true }
-)
+/** Фільтри живуть у query — одна логіка збігу з модалкою (teams-filters.utils). */
+const filters = computed(() => parseTeamsFilters(route.query))
 
 const filteredTeams = computed(() => {
   const searchValue = search.value.toLowerCase().trim()
 
-  const mappedTeams = teamsStore.teams.filter(team => {
-    if (filters.value.status.length) {
-      const statusKey = team.isVerified ? 'approved' : 'applied'
-      if (!filters.value.status.includes(statusKey)) return false
-    }
-
-    return true
-  })
+  const mappedTeams = teamsStore.teams.filter(team => teamMatchesFilters(team, filters.value))
 
   return searchValue
     ? mappedTeams.filter(team => team.name?.toLowerCase().includes(searchValue))
@@ -167,20 +165,14 @@ const filteredTeams = computed(() => {
 
 const isMobile = computed(() => window.width.value < 850)
 
-const activeFiltersCount = computed(() => (filters.value.status.length ? 1 : 0))
+const activeFiltersCount = computed(() => countActiveTeamsFilters(filters.value))
 
 function openTeamFiltersModal () {
   open('TeamsFilterModal')
 }
 
-function syncFiltersWithUrl () {
-  filters.value.status = parseQueryArray(route.query.status)
-}
-
-onMounted(async () => {
-  await teamsStore.getTeams()
-
-  syncFiltersWithUrl()
+onMounted(() => {
+  teamsStore.getTeams()
 })
 
 </script>

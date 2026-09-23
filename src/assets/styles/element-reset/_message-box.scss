@@ -19,8 +19,9 @@
 /* Панель у стилі dropdown / dialog */
 .el-message-box {
   @include glass-panel;
+  @include neon-top-line(var(--ds-primary), 0.7);
   @apply relative overflow-visible rounded-2xl text-left
-    shadow-[0_20px_40px_rgba(0,0,0,0.45)]
+    shadow-[0_20px_40px_rgba(0,0,0,0.5)]
     max-w-[min(420px,calc(100vw-32px))]
     p-16 sm:p-20 #{!important};
 
@@ -33,7 +34,7 @@
 }
 
 .el-message-box__title {
-  @apply text-white text-lg font-semibold leading-snug pr-8 #{!important};
+  @apply text-white text-base font-display font-normal uppercase tracking-wide leading-snug pr-8 #{!important};
 }
 
 .el-message-box__content {
@@ -61,16 +62,7 @@
     border-t border-white/10 pt-16 mt-16 #{!important};
 }
 
+/* Colours, hover and press come from the global button system. */
 .el-message-box__btns .el-button {
-  @apply rounded-xl px-16 py-8 min-h-0 font-medium text-sm
-    transition-colors duration-200 #{!important};
-}
-
-.el-message-box__btns .el-button--default {
-  @apply border border-white/15 bg-white/5 text-white
-    hover:bg-white/10 hover:border-white/25 #{!important};
-}
-
-.el-message-box__btns .el-button--primary {
-  @apply border-0 #{!important};
+  @apply px-16 min-h-0 #{!important};
 }

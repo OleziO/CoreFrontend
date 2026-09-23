@@ -46,16 +46,12 @@
 
     <template #footer>
       <div class="flex justify-end gap-3">
-        <el-button
-          class="!bg-transparent !border-white/10 !text-gray-300 hover:!text-white"
-          @click="closeModal"
-        >
+        <el-button @click="closeModal">
           Скасувати
         </el-button>
         <el-button
           type="primary"
           :loading="isLoading"
-          class="!bg-cyan-600 !border-cyan-600 hover:!bg-cyan-500"
           @click="submit"
         >
           Зберегти результат

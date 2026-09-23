@@ -45,16 +45,6 @@
           <span>Адмінка</span>
         </RouterLink>
 
-        <RouterLink
-          v-if="hasAdminUaRole"
-          class="mobile-menu-link no-underline"
-          :to="{ name: routeNames.financeMonitor }"
-          @click="close"
-        >
-          <PhCurrencyCircleDollar :size="20" />
-          <span>Фінанси</span>
-        </RouterLink>
-
         <div class="mobile-menu-socials">
           <a
             v-for="social in socialLinks"
@@ -108,7 +98,7 @@
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
 import Icon, { type TIconName } from '@/components/Icon.vue'
-import { PhDiscordLogo, PhUser, PhGauge, PhCurrencyCircleDollar, PhSignOut, PhX } from '@phosphor-icons/vue'
+import { PhDiscordLogo, PhUser, PhGauge, PhSignOut, PhX } from '@phosphor-icons/vue'
 import { hasAdminRole } from '@/core/helpers'
 
 const togglerStore = useTogglerStore()
@@ -125,7 +115,7 @@ const socialLinks: Array<{ name: string; url: string; icon: TIconName }> = [
   { name: 'Telegram', url: 'https://t.me/core_league_dota2', icon: 'telegram' },
   { name: 'Discord', url: 'https://discord.gg/QeDj9TjmgM', icon: 'discord' },
   { name: 'Instagram', url: 'https://www.instagram.com/core__league/', icon: 'instagram' },
-  { name: 'TikTok', url: 'https://www.tiktok.com/@core_league_dota2', icon: 'tiktok' },
+  { name: 'TikTok', url: 'https://www.tiktok.com/@core_league_lviv', icon: 'tiktok' },
   { name: 'Twitch', url: 'https://www.twitch.tv/core_league', icon: 'twitch' }
 ]
 
@@ -200,15 +190,27 @@ function handleLogout () {
 
 .mobile-menu-panel {
   @apply
+    relative
     w-full max-w-[340px]
     mx-20
     rounded-3xl
-    border border-white/15
-    bg-surface/80
+    border
+    bg-surface/85
     backdrop-blur-2xl
-    shadow-elevation-4
     flex flex-col items-stretch gap-12
     py-24 px-20;
+  border-color: var(--ds-border-strong);
+  box-shadow: var(--ds-elevation-4), var(--ds-glow-primary-soft);
+}
+
+/* Neon top light on the panel. */
+.mobile-menu-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0 16px auto 16px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, rgba(46, 229, 255, 0.7) 50%, transparent 100%);
 }
 
 .mobile-menu-close {
@@ -223,11 +225,12 @@ function handleLogout () {
 .mobile-menu-link {
   @apply
     box-border flex w-full items-center gap-12 cursor-pointer
-    rounded-xl border border-white/10 bg-white/5
+    rounded-xl border bg-white/5
     px-16 py-12 no-underline
     text-base font-medium text-white
     transition-colors duration-200 ease-out
     hover:text-primary hover:border-primary/40;
+  border-color: var(--ds-border);
 }
 
 .mobile-menu-link--danger {

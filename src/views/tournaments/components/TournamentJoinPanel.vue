@@ -1,68 +1,92 @@
 <template>
   <div
-    class="w-full bg-gray-900/70 backdrop-blur-xl border border-white/[0.08]
-    rounded-2xl p-7 sm:p-8 shadow-xl shadow-black/30 ring-1 ring-white/[0.04]
-    flex flex-col gap-6 sm:gap-7 transition-[box-shadow,border-color] duration-300"
+    class="join-panel hud-corners hud-corners--fade w-full rounded-2xl p-20 sm:p-24
+    flex flex-col gap-16 sm:gap-20"
   >
-    <div class="lg:grid lg:grid-cols-2 h-full flex flex-col gap-5 sm:gap-8">
-      <div
-        class="bg-black/25 rounded-xl p-8 sm:p-10 border border-white/[0.06]
-         flex flex-col items-center gap-1.5"
-      >
-        <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Призовий фонд</span>
-        <div class="flex items-center gap-2 text-yellow-400 font-bold text-lg">
-          <el-icon><Trophy /></el-icon>
-          <span class="truncate">{{ formatTournamentPrizeUah(tournament?.prizePool) }}</span>
-        </div>
-      </div>
+    <span class="hud-corners hud-corners--mirror hud-corners--fade absolute inset-0" aria-hidden="true" />
 
-      <div
-        class="bg-black/25 rounded-xl p-8 sm:p-10 border border-white/[0.06]
-         flex flex-col items-center gap-1.5"
-      >
-        <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Дата початку</span>
-        <div class="flex items-center gap-5 text-cyan-400 font-bold text-lg">
-          <el-icon><Calendar /></el-icon>
-          <span class="whitespace-nowrap truncate">
-            {{ formatDate(new Date(tournament?.tournamentStartsAt as string)) }}
+    <!-- Показники: приз — головне число панелі, рейка дата/учасники, квиток внеску -->
+    <div class="join-stats">
+      <div class="join-stats__prize join-stats__cell" :class="{ 'is-empty': !hasPrize }">
+        <span class="join-stats__prize-icon" aria-hidden="true">
+          <PhTrophy :size="22" weight="duotone" />
+        </span>
+        <div class="flex min-w-0 flex-1 flex-col gap-5">
+          <span class="join-stats__label" :class="hasPrize ? 'join-stats__label--gold' : ''">
+            Призовий фонд
           </span>
+          <span class="join-stats__prize-value truncate">{{ prizeLabel }}</span>
         </div>
       </div>
 
-      <div
-        class="col-span-2 bg-black/25 rounded-xl p-8 sm:p-10 border border-white/[0.06]
-         flex flex-col items-center gap-1.5"
-      >
-        <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Учасники</span>
-        <div class="flex items-center gap-2 text-purple-400 font-bold text-lg">
-          <el-icon><User /></el-icon>
-          <span>
-            <template v-if="!tournament?.tournamentSlots">
-              Необмежено
-            </template>
+      <div class="join-stats__row">
+        <div class="join-stats__cell">
+          <span class="join-stats__label">
+            <PhCalendarBlank :size="12" weight="bold" />
+            Дата початку
+          </span>
+          <span class="join-stats__value">{{ startLabel }}</span>
+          <span class="join-stats__sub">{{ startRelativeLabel }}</span>
+        </div>
+
+        <div class="join-stats__cell">
+          <span class="join-stats__label">
+            <PhUsersThree :size="12" weight="bold" />
+            Учасники
+          </span>
+          <span class="join-stats__value">
+            <template v-if="!slots">Необмежено</template>
             <template v-else>
-              <span>{{ tournament.teams?.length || 0 }}</span>
-              <span class="text-gray-500 mx-2">/</span>
-              <span>{{ tournament.tournamentSlots }}</span>
+              {{ teamsCount }}<span class="join-stats__value-dim">/{{ slots }}</span>
             </template>
           </span>
+          <!-- Заповненість слотів: до 16 — окремі поділки, більше — суцільна смуга -->
+          <div
+            v-if="slots"
+            class="join-stats__sub join-stats__slots"
+            :class="{ 'is-full': isFull }"
+            role="progressbar"
+            :aria-valuenow="teamsCount"
+            :aria-valuemin="0"
+            :aria-valuemax="slots"
+            aria-label="Зайняті слоти"
+          >
+            <template v-if="slots <= SEGMENTED_SLOTS_MAX">
+              <span
+                v-for="index in slots"
+                :key="index"
+                class="join-stats__tick"
+                :class="{ 'is-filled': index <= teamsCount }"
+                :style="{ '--tick-index': index }"
+              />
+            </template>
+            <span v-else class="join-stats__bar">
+              <span class="join-stats__bar-fill" :style="{ transform: `scaleX(${fillRatio})` }" />
+            </span>
+          </div>
+          <span v-else class="join-stats__sub">без обмеження слотів</span>
         </div>
       </div>
 
-      <div
-        v-if="entryFee && entryFee > 0"
-        class="col-span-2 bg-black/25 rounded-xl p-8 sm:p-10 border border-white/[0.06]
-         flex flex-col items-center gap-1.5"
-      >
-        <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Вступний внесок</span>
-        <div class="flex items-center gap-2 text-emerald-400 font-bold text-lg">
-          <el-icon><Wallet /></el-icon>
-          <span class="truncate">{{ formatEntryFeeUah(entryFee) }}</span>
+      <!-- Внесок як квиток: корінець з іконкою, перфорація, сума з гравця та з команди -->
+      <div v-if="hasEntryFee" class="join-ticket join-stats__cell">
+        <span class="join-ticket__stub" aria-hidden="true">
+          <PhTicket :size="20" weight="duotone" />
+        </span>
+        <div class="join-ticket__body">
+          <span class="join-stats__label join-stats__label--primary">Вступний внесок</span>
+          <span class="join-ticket__value">
+            {{ feePerPlayerLabel }}
+            <span class="join-ticket__unit">з гравця</span>
+          </span>
+          <span class="join-ticket__note">
+            ({{ feePerTeamLabel }} з команди. Капітан оплачує повну суму за команду)
+          </span>
         </div>
       </div>
     </div>
 
-    <div class="flex flex-col gap-3">
+    <div class="flex flex-col gap-10">
       <template v-if="token">
         <template v-if="captainJoinContextOk">
           <div
@@ -114,7 +138,7 @@
                 type="primary"
                 size="large"
                 :loading="paymentIntentLoading"
-                class="!h-[48px] !w-full !text-base !font-bold !rounded-xl border-none"
+                class="btn-cta w-full"
                 @click="emit('pay')"
               >
                 {{ myTeamPaymentStatus === 'UNDERPAID' ? 'Доплатити внесок' : 'Оплатити внесок' }}
@@ -126,10 +150,7 @@
               type="primary"
               size="large"
               :loading="joinLoading"
-              class="!h-[52px] !w-full !text-base !font-bold !rounded-xl
-               !bg-gradient-to-br !from-cyan-500 !to-blue-500
-               shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:-translate-y-0.5
-                transition-all border-none"
+              class="btn-cta w-full"
               @click="emit('join')"
             >
               Приєднатися до турніру
@@ -147,7 +168,7 @@
               plain
               size="large"
               :loading="leaveTournamentLoading"
-              class="!h-[48px] !w-full !text-base !font-semibold !rounded-xl"
+              class="btn-cta w-full"
               @click="emit('leave')"
             >
               Покинути турнір
@@ -167,15 +188,13 @@
             :disabled="true"
             type="info"
             size="large"
-            class="!h-[52px] !w-full !text-base !font-bold !rounded-xl !opacity-85"
+            class="btn-cta w-full"
           >
             {{ inactiveTournamentBanner }}
           </el-button>
-          <p
-            v-if="mutedQualificationsHintForLoggedUser"
-            class="text-xs text-center text-gray-500 leading-snug px-14"
-          >
-            {{ mutedQualificationsHintForLoggedUser }}
+          <p v-if="mutedQualificationsHintForLoggedUser" class="join-panel__hint">
+            <PhInfo :size="14" weight="bold" aria-hidden="true" />
+            <span>{{ mutedQualificationsHintForLoggedUser }}</span>
           </p>
         </template>
       </template>
@@ -183,9 +202,7 @@
       <el-button
         v-else
         size="large"
-        class="!h-[52px] !w-full !text-base !font-bold !rounded-xl !bg-white/10
-         !border-white/10 !text-white hover:!bg-white/20 hover:!border-white/20
-         backdrop-blur-md transition-all"
+        class="btn-cta w-full"
         tag="a"
         :href="`${apiBaseUrl}/api/v1/steam/login`"
       >
@@ -199,10 +216,11 @@
 </template>
 
 <script setup lang="ts">
-import { Trophy, Calendar, User, Wallet, Loading } from '@element-plus/icons-vue'
-import { PhSteamLogo } from '@phosphor-icons/vue'
+import { Loading } from '@element-plus/icons-vue'
+import { PhSteamLogo, PhTrophy, PhCalendarBlank, PhUsersThree, PhTicket, PhInfo } from '@phosphor-icons/vue'
 import { formatDate } from '@/core/helpers'
-import { formatTournamentPrizeUah, formatEntryFeeUah } from '@/core/utils/formatters'
+import { formatEntryFeeUah } from '@/core/utils/formatters'
+import { TEAM_SIZE } from '@/views/tournaments/tournaments.enums'
 
 interface IProps {
   tournament: TTournament | null
@@ -228,6 +246,43 @@ interface IProps {
 
 const props = defineProps<IProps>()
 
+// Понад стільки слотів окремі поділки стають тоншими за 1px — переходимо на суцільну смугу.
+const SEGMENTED_SLOTS_MAX = 16
+const DAY_MS = 86_400_000
+
+const hasPrize = computed(() => Number(props.tournament?.prizePool) > 0)
+// Розряди через пробіл («12 000 грн») — як у картці списку: велике число читається з відстані.
+const prizeLabel = computed(() =>
+  hasPrize.value ? `${Number(props.tournament?.prizePool).toLocaleString('uk-UA')} грн` : 'Без призового'
+)
+
+const startDate = computed(() => {
+  const starts = props.tournament?.tournamentStartsAt
+  if (!starts) return null
+  const date = new Date(starts)
+  return Number.isNaN(date.getTime()) ? null : date
+})
+const startLabel = computed(() => (startDate.value ? formatDate(startDate.value) : '—'))
+
+// «сьогодні» / «завтра» / «через 4 дні» — Intl сам відмінює; минуле — турнір уже йде.
+const relativeDays = new Intl.RelativeTimeFormat('uk', { numeric: 'auto' })
+const startRelativeLabel = computed(() => {
+  if (!startDate.value) return ''
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const days = Math.round((startOfDay(startDate.value) - startOfDay(new Date())) / DAY_MS)
+  return days < 0 ? 'вже розпочався' : relativeDays.format(days, 'day')
+})
+
+const slots = computed(() => props.tournament?.tournamentSlots ?? 0)
+const teamsCount = computed(() => props.tournament?.teams?.length ?? 0)
+const isFull = computed(() => slots.value > 0 && teamsCount.value >= slots.value)
+const fillRatio = computed(() => (slots.value ? Math.min(1, teamsCount.value / slots.value) : 0))
+
+const hasEntryFee = computed(() => !!props.entryFee && props.entryFee > 0)
+// `entryFee` — квиток команди в копійках; з гравця — п'ята частина (див. TEAM_SIZE).
+const feePerPlayerLabel = computed(() => formatEntryFeeUah((props.entryFee ?? 0) / TEAM_SIZE))
+const feePerTeamLabel = computed(() => formatEntryFeeUah(props.entryFee))
+
 const paymentStatusHint = computed(() => {
   if (props.myTeamPaymentStatus === 'UNDERPAID') {
     return 'Отримано неповну оплату. Доплатіть різницю, щоб приєднатися до турніру.'
@@ -242,3 +297,325 @@ const emit = defineEmits<{
   recheck: []
 }>()
 </script>
+
+<style scoped lang="scss">
+// ─── Панель ─────────────────────────────────────────────────────────────────
+// Скло поверх банера героя: індиго-градієнт з розмиттям, ціанова волосина,
+// світлова лінія зверху і золоте «повітря» за призом (шари фону — обидва
+// псевдоелементи лишаються для `.hud-corners`), HUD-кутники з м'яким сяйвом.
+.join-panel {
+  position: relative;
+  isolation: isolate;
+  --hud-corner-size: 18px;
+  --hud-corner-inset: 8px;
+  --hud-corner-radius: 3px;
+  --hud-corner-color: rgba(var(--ds-primary-rgb), 0.6);
+  --hud-corner-glow: drop-shadow(0 0 6px rgba(var(--ds-primary-rgb), 0.45));
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(var(--ds-primary-rgb), 0.6) 50%, transparent 100%)
+      top / 100% 1px no-repeat,
+    radial-gradient(ellipse 70% 45% at 18% 0%, rgba(var(--ds-gold-rgb), 0.1), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 100% 100%, rgba(var(--ds-primary-rgb), 0.08), transparent 70%),
+    linear-gradient(160deg, rgba(20, 23, 41, 0.84) 0%, rgba(7, 8, 15, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--ds-border);
+  box-shadow: var(--ds-elevation-4), var(--ds-glow-primary-soft);
+}
+
+// Підказка-футер: волосина зверху прив'язує її до панелі, а не лишає плавати.
+.join-panel__hint {
+  @apply flex items-start justify-center gap-6 px-6 pt-12 text-center;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ds-text-faint);
+
+  svg {
+    flex: none;
+    margin-top: 1px;
+    color: rgba(var(--ds-primary-rgb), 0.7);
+  }
+}
+
+// ─── Показники ──────────────────────────────────────────────────────────────
+.join-stats {
+  @apply flex flex-col gap-14;
+}
+
+// Поява каскадом (60 мс між клітинками); під `prefers-reduced-motion`
+// глушиться глобально в `_tokens.scss`.
+@keyframes join-stat-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.join-stats__cell {
+  @apply flex min-w-0 flex-col gap-5;
+  animation: join-stat-in 320ms var(--ds-ease-out) both;
+}
+
+// Один реєстр підписів для всієї панелі: моно, капс, помірний трекінг.
+.join-stats__label {
+  @apply inline-flex items-center gap-5;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
+
+  svg {
+    flex: none;
+    color: rgba(var(--ds-primary-rgb), 0.75);
+  }
+
+  &--gold {
+    color: var(--ds-gold);
+    text-shadow: var(--ds-neon-text-gold);
+  }
+
+  &--primary {
+    color: var(--ds-primary);
+    text-shadow: var(--ds-neon-text-subtle);
+  }
+}
+
+.join-stats__value {
+  font-family: var(--ds-font-mono);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--ds-text-strong);
+}
+
+.join-stats__value-dim {
+  color: var(--ds-text-faint);
+  font-weight: 600;
+}
+
+// Другий рядок клітинки (відлік / шкала слотів) — однакова висота, щоб
+// обидві клітинки рейки стояли на одній базовій лінії.
+.join-stats__sub {
+  @apply flex items-center;
+  min-height: 14px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--ds-text-faint);
+}
+
+// ─── Рейка: дата / учасники ─────────────────────────────────────────────────
+.join-stats__row {
+  @apply grid grid-cols-1;
+
+  .join-stats__cell {
+    @apply py-8;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .join-stats__cell:nth-child(1) {
+    animation-delay: 60ms;
+  }
+
+  .join-stats__cell:nth-child(2) {
+    animation-delay: 120ms;
+  }
+
+  // Від `xs` — один рядок: волосина між клітинками, а не під ними.
+  @screen xs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    .join-stats__cell {
+      @apply px-14 py-4;
+      border-top: 0;
+    }
+
+    .join-stats__cell:first-child {
+      padding-left: 0;
+    }
+
+    .join-stats__cell:last-child {
+      padding-right: 0;
+    }
+
+    .join-stats__cell + .join-stats__cell {
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  }
+}
+
+// ─── Приз ───────────────────────────────────────────────────────────────────
+// Головне число панелі: той самий золотий рецепт, що й у картці списку.
+.join-stats__prize {
+  @apply flex-row items-center gap-12 rounded-xl border px-14 py-12;
+  border-color: rgba(var(--ds-gold-rgb), 0.3);
+  background:
+    linear-gradient(90deg, rgba(var(--ds-gold-rgb), 0.14), transparent 70%),
+    rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 1px 0 rgba(var(--ds-gold-rgb), 0.18);
+
+  &.is-empty {
+    border-color: rgba(var(--ds-primary-rgb), 0.14);
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 1px 0 rgba(var(--ds-primary-rgb), 0.1);
+  }
+}
+
+.join-stats__prize-icon {
+  @apply inline-flex size-44 shrink-0 items-center justify-center rounded-lg;
+  color: var(--ds-gold);
+  background: rgba(var(--ds-gold-rgb), 0.12);
+  border: 1px solid rgba(var(--ds-gold-rgb), 0.35);
+  filter: drop-shadow(0 0 6px rgba(var(--ds-gold-rgb), 0.45));
+
+  .is-empty & {
+    color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.1);
+    filter: none;
+  }
+}
+
+.join-stats__prize-value {
+  font-family: var(--ds-font-mono);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ds-gold);
+  text-shadow: var(--ds-neon-text-gold);
+
+  .is-empty & {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ds-text-muted);
+    text-shadow: none;
+  }
+}
+
+// ─── Квиток внеску ──────────────────────────────────────────────────────────
+// Внесок — це квиток команди, тож і виглядає як квиток: ціановий корінець з
+// іконкою, пунктирна перфорація, два вирізи по краях (маска, а не заливка —
+// панель скляна, суцільне коло тут виглядало б плямою).
+.join-ticket {
+  --ticket-stub: 58px;
+  --ticket-notch: 7px;
+  @apply flex-row items-stretch gap-0 rounded-xl border;
+  animation-delay: 180ms;
+  border-color: rgba(var(--ds-primary-rgb), 0.32);
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 1px 0 rgba(var(--ds-primary-rgb), 0.18);
+  -webkit-mask:
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-stub) 0, transparent 98%, #000) top / 100% 51% no-repeat,
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-stub) 100%, transparent 98%, #000)
+      bottom / 100% 51% no-repeat;
+  mask:
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-stub) 0, transparent 98%, #000) top / 100% 51% no-repeat,
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-stub) 100%, transparent 98%, #000)
+      bottom / 100% 51% no-repeat;
+}
+
+.join-ticket__stub {
+  @apply inline-flex shrink-0 items-center justify-center;
+  width: var(--ticket-stub);
+  color: var(--ds-primary);
+  background: linear-gradient(180deg, rgba(var(--ds-primary-rgb), 0.16), rgba(var(--ds-primary-rgb), 0.08));
+  border-right: 1px dashed rgba(var(--ds-primary-rgb), 0.45);
+  filter: drop-shadow(0 0 6px rgba(var(--ds-primary-rgb), 0.5));
+}
+
+.join-ticket__body {
+  @apply flex min-w-0 flex-1 flex-col gap-4 px-14 py-12;
+}
+
+.join-ticket__value {
+  @apply inline-flex flex-wrap items-baseline gap-x-6;
+  font-family: var(--ds-font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ds-text-strong);
+  text-shadow: var(--ds-neon-text-subtle);
+}
+
+.join-ticket__unit {
+  font-family: var(--ds-font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ds-text-muted);
+  text-shadow: none;
+}
+
+.join-ticket__note {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ds-text-faint);
+}
+
+// ─── Заповненість слотів ────────────────────────────────────────────────────
+.join-stats__slots {
+  @apply w-full;
+  gap: 3px;
+}
+
+.join-stats__tick,
+.join-stats__bar {
+  flex: 1;
+  min-width: 0;
+  height: 4px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+// Зайняті поділки загоряються по черзі слідом за появою клітинки.
+@keyframes join-tick-in {
+  from {
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+  }
+}
+
+.join-stats__tick {
+  transition: background-color var(--ds-duration-base) ease, box-shadow var(--ds-duration-base) ease;
+
+  &.is-filled {
+    background: var(--ds-primary);
+    box-shadow: 0 0 6px rgba(var(--ds-primary-rgb), 0.55);
+    animation: join-tick-in 240ms ease-out both;
+    animation-delay: calc(280ms + var(--tick-index, 0) * 40ms);
+  }
+}
+
+.join-stats__bar {
+  overflow: hidden;
+}
+
+// Масштаб замість width — анімація не чіпає layout.
+.join-stats__bar-fill {
+  display: block;
+  height: 100%;
+  transform-origin: left center;
+  background: var(--ds-primary);
+  box-shadow: 0 0 6px rgba(var(--ds-primary-rgb), 0.55);
+  transition: transform 300ms var(--ds-ease-out);
+}
+
+// Повний склад — золото, як і призова мова: місць більше немає.
+.join-stats__slots.is-full {
+  .join-stats__tick.is-filled,
+  .join-stats__bar-fill {
+    background: var(--ds-gold);
+    box-shadow: 0 0 6px rgba(var(--ds-gold-rgb), 0.55);
+  }
+}
+</style>

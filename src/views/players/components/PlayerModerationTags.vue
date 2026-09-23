@@ -3,9 +3,9 @@
     <span
       v-for="tag in tags"
       :key="tag.id"
-      class="inline-flex items-center whitespace-nowrap rounded-lg border
-        border-amber-400/20 bg-amber-400/[0.07] px-8 py-3
-        text-xs font-medium text-amber-200/80"
+      class="inline-flex h-24 items-center whitespace-nowrap rounded-md border
+        border-amber-400/30 bg-amber-400/[0.18] px-10 text-[11px] font-semibold
+        uppercase tracking-[0.06em] text-amber-200"
     >
       {{ tag.title }}
     </span>

@@ -1,295 +1,298 @@
 <template>
-  <div
-    class="rounded-xl border border-white/10 shadow-elevation-2
-     bg-surface flex relative flex-col w-full flex-1 gap-20 lg:self-stretch min-h-0 p-20 2xs:min-w-[400px]
-     overflow-y-auto"
-  >
-    <div class="grid min-h-0 h-fit grid-cols-1 gap-20 2sm:grid-cols-2">
+  <section class="roster neon-card rounded-2xl">
+    <div class="grid min-h-0 h-fit grid-cols-1 gap-24 2sm:grid-cols-2">
       <!-- MAIN ROSTER -->
-      <div class="flex-1 h-fit w-full min-w-0">
-        <h3 class="text-xl text-center font-semibold flex items-center justify-center gap-8">
-          <span>Основа</span>
-          <el-tooltip
-            placement="top"
-            effect="dark"
-            :content="mainRosterAvgRatingTooltip"
-          >
-            <span
-              class="inline-flex cursor-default text-gray-500 outline-none transition-colors hover:text-white/75"
-              tabindex="0"
-              role="img"
-              aria-label="Середній рейтинг основи"
-            >
-              <PhInfo :size="20" weight="bold" />
-            </span>
-          </el-tooltip>
-        </h3>
-        <el-divider class="mt-15" />
+      <div class="roster__col">
+        <header class="roster__head">
+          <span class="sys-label !text-[10px]">// Основа</span>
+          <span class="hud-line h-px min-w-12 flex-1" aria-hidden="true" />
+          <span class="roster__count">
+            {{ pad(team?.mainPlayers?.length ?? 0) }}<span class="roster__of">/{{ pad(MAIN_SLOTS) }}</span>
+          </span>
+        </header>
 
-        <div class="rounded-xl bg-gray-800/50 p-16 flex flex-col gap-20 min-h-0 justify-between">
-          <div
-            v-for="player in team?.mainPlayers"
+        <ol class="roster__rack">
+          <li
+            v-for="(player, idx) in team?.mainPlayers"
             :key="player.id"
-            class="relative overflow-visible rounded-2xl"
+            class="roster-slot is-filled"
           >
-            <PlayerCard
-              :player="player"
-              :is-captain="player.id === team?.captain?.id"
-            />
-            <template v-if="showRemoveButton(player)">
-              <el-popover
-                v-if="isAdmin"
-                trigger="click"
-                placement="top-end"
-                :width="260"
-              >
-                <template #reference>
-                  <button
-                    type="button"
-                    class="player-remove-from-team-btn"
-                    :disabled="removePlayerLoadingId === player.id"
-                    aria-label="Прибрати з команди"
-                    @click.stop
-                  >
-                    <PhX :size="14" weight="bold" class="pointer-events-none" />
-                  </button>
-                </template>
-                <div class="flex flex-col gap-10">
-                  <p class="text-sm leading-snug text-gray-300">
-                    {{ hasActiveTournaments ? tournamentRemovePlayerWarning : removePlayerPenaltyPrompt }}
-                  </p>
-                  <el-button
-                    type="danger"
-                    size="small"
-                    :loading="removePlayerLoadingId === player.id"
-                    @click.stop="emit('remove-player', player.id, ERemovePlayerPenalty.SUBTRACT)"
-                  >
-                    З втратою пойнтів
-                  </el-button>
-                  <el-button
-                    size="small"
-                    :loading="removePlayerLoadingId === player.id"
-                    @click.stop="emit('remove-player', player.id, ERemovePlayerPenalty.NONE)"
-                  >
-                    Без втрати пойнтів
-                  </el-button>
-                </div>
-              </el-popover>
-              <el-popconfirm
-                v-else-if="hasActiveTournaments"
-                width="320"
-                placement="top-end"
-                :title="tournamentRemovePlayerWarning"
-                confirm-button-text="Видалити"
-                cancel-button-text="Скасувати"
-                @confirm="emit('remove-player', player.id)"
-              >
-                <template #reference>
-                  <button
-                    type="button"
-                    class="player-remove-from-team-btn"
-                    :disabled="removePlayerLoadingId === player.id"
-                    aria-label="Прибрати з команди"
-                    @click.stop
-                  >
-                    <PhX :size="14" weight="bold" class="pointer-events-none" />
-                  </button>
-                </template>
-              </el-popconfirm>
-              <button
-                v-else
-                type="button"
-                class="player-remove-from-team-btn"
-                :disabled="removePlayerLoadingId === player.id"
-                aria-label="Прибрати з команди"
-                @click.stop="confirmAndRemovePlayer(player.id)"
-              >
-                <PhX :size="14" weight="bold" class="pointer-events-none" />
-              </button>
-            </template>
-          </div>
+            <span class="roster-slot__index">{{ pad(idx + 1) }}</span>
+            <div class="roster-slot__card">
+              <PlayerCard :player="player" :is-captain="player.id === team?.captain?.id" />
 
-          <template v-if="canEditTeamRoster">
+              <template v-if="showRemoveButton(player)">
+                <el-popover
+                  v-if="isAdmin"
+                  trigger="click"
+                  placement="top-end"
+                  :width="300"
+                  popper-class="roster-popper"
+                >
+                  <template #reference>
+                    <button
+                      type="button"
+                      class="roster-slot__remove"
+                      :disabled="removePlayerLoadingId === player.id"
+                      aria-label="Прибрати з команди"
+                      @click.stop
+                    >
+                      <PhX :size="14" weight="bold" class="pointer-events-none" />
+                    </button>
+                  </template>
+                  <div class="remove-pop">
+                    <div class="remove-pop__head">
+                      <span class="remove-pop__well"><PhWarning :size="14" weight="fill" /></span>
+                      <span class="sys-label sys-label--pink !text-[9px]">// Прибрати гравця</span>
+                    </div>
+                    <p class="remove-pop__text">
+                      {{ hasActiveTournaments ? tournamentRemovePlayerWarning : removePlayerPenaltyPrompt }}
+                    </p>
+                    <div class="remove-pop__actions">
+                      <el-button
+                        type="danger"
+                        class="remove-pop__btn"
+                        :loading="removePlayerLoadingId === player.id"
+                        @click.stop="emit('remove-player', player.id, ERemovePlayerPenalty.SUBTRACT)"
+                      >
+                        <PhTrendDown :size="16" weight="bold" />
+                        <span>З втратою пойнтів</span>
+                      </el-button>
+                      <el-button
+                        plain
+                        class="remove-pop__btn"
+                        :loading="removePlayerLoadingId === player.id"
+                        @click.stop="emit('remove-player', player.id, ERemovePlayerPenalty.NONE)"
+                      >
+                        <PhShieldCheck :size="16" weight="bold" />
+                        <span>Без втрати пойнтів</span>
+                      </el-button>
+                    </div>
+                  </div>
+                </el-popover>
+                <el-popconfirm
+                  v-else-if="hasActiveTournaments"
+                  width="320"
+                  placement="top-end"
+                  :title="tournamentRemovePlayerWarning"
+                  confirm-button-text="Видалити"
+                  cancel-button-text="Скасувати"
+                  @confirm="emit('remove-player', player.id)"
+                >
+                  <template #reference>
+                    <button
+                      type="button"
+                      class="roster-slot__remove"
+                      :disabled="removePlayerLoadingId === player.id"
+                      aria-label="Прибрати з команди"
+                      @click.stop
+                    >
+                      <PhX :size="14" weight="bold" class="pointer-events-none" />
+                    </button>
+                  </template>
+                </el-popconfirm>
+                <button
+                  v-else
+                  type="button"
+                  class="roster-slot__remove"
+                  :disabled="removePlayerLoadingId === player.id"
+                  aria-label="Прибрати з команди"
+                  @click.stop="confirmAndRemovePlayer(player.id)"
+                >
+                  <PhX :size="14" weight="bold" class="pointer-events-none" />
+                </button>
+              </template>
+            </div>
+          </li>
+
+          <li v-for="i in mainSlotCounts" :key="`open-${i}`" class="roster-slot">
+            <span class="roster-slot__index">{{ pad((team?.mainPlayers?.length ?? 0) + i) }}</span>
             <button
-              v-for="i in mainSlotCounts"
-              :key="i"
-              class="h-48 rounded-lg border border-dashed
-               border-gray-600 text-gray-400 hover:border-primary hover:text-primary"
+              v-if="canEditTeamRoster"
+              type="button"
+              class="roster-slot__open"
               @click="emit('add-player', 'main')"
             >
-              + Додати гравця
+              <span class="roster-slot__plus"><PhPlus :size="14" weight="bold" /></span>
+              <span class="roster-slot__open-label">Додати гравця</span>
+              <span class="roster-slot__open-tag">Вільно</span>
             </button>
-          </template>
-          <template v-else>
-            <div
-              v-for="i in mainSlotCounts"
-              :key="i"
-              class="h-48 rounded-lg border border-dashed border-gray-600 text-gray-400
-                     flex items-center justify-center"
-            >
-              Відсутній
+            <div v-else class="roster-slot__open is-static">
+              <span class="roster-slot__open-label">Вільно</span>
             </div>
-          </template>
-        </div>
+          </li>
+        </ol>
       </div>
 
-      <!-- RESERVE -->
-      <div class="flex-1 h-fit w-full min-w-0">
-        <h3 class="text-xl text-center font-semibold">Запас</h3>
-        <el-divider class="mt-15" />
+      <!-- RESERVE + COACH -->
+      <div class="roster__col gap-24">
+        <div class="roster__col">
+          <header class="roster__head">
+            <span class="sys-label !text-[10px]">// Запас</span>
+            <span class="hud-line h-px min-w-12 flex-1" aria-hidden="true" />
+            <span class="roster__count">
+              {{ pad(team?.reservedPlayers?.length ?? 0) }}<span class="roster__of">/{{ pad(RESERVE_SLOTS) }}</span>
+            </span>
+          </header>
 
-        <div class="rounded-xl bg-gray-800/30 p-16 flex flex-col gap-20 min-h-0">
-          <div
-            v-for="player in team?.reservedPlayers"
-            :key="player.id"
-            class="relative overflow-visible rounded-2xl"
-          >
-            <PlayerCard
-              :player="player"
-              :is-captain="player.id === team?.captain?.id"
-            />
-            <template v-if="showRemoveButton(player)">
-              <el-popover
-                v-if="isAdmin"
-                trigger="click"
-                placement="top-end"
-                :width="260"
-              >
-                <template #reference>
+          <ol class="roster__rack">
+            <li
+              v-for="(player, idx) in team?.reservedPlayers"
+              :key="player.id"
+              class="roster-slot is-filled"
+            >
+              <span class="roster-slot__index">{{ pad(idx + 1) }}</span>
+              <div class="roster-slot__card">
+                <PlayerCard :player="player" :is-captain="player.id === team?.captain?.id" />
+
+                <template v-if="showRemoveButton(player)">
+                  <el-popover
+                    v-if="isAdmin"
+                    trigger="click"
+                    placement="top-end"
+                    :width="300"
+                    popper-class="roster-popper"
+                  >
+                    <template #reference>
+                      <button
+                        type="button"
+                        class="roster-slot__remove"
+                        :disabled="removePlayerLoadingId === player.id"
+                        aria-label="Прибрати з команди"
+                        @click.stop
+                      >
+                        <PhX :size="14" weight="bold" class="pointer-events-none" />
+                      </button>
+                    </template>
+                    <div class="remove-pop">
+                      <div class="remove-pop__head">
+                        <span class="remove-pop__well"><PhWarning :size="14" weight="fill" /></span>
+                        <span class="sys-label sys-label--pink !text-[9px]">// Прибрати гравця</span>
+                      </div>
+                      <p class="remove-pop__text">
+                        {{ hasActiveTournaments ? tournamentRemovePlayerWarning : removePlayerPenaltyPrompt }}
+                      </p>
+                      <div class="remove-pop__actions">
+                        <el-button
+                          type="danger"
+                          class="remove-pop__btn"
+                          :loading="removePlayerLoadingId === player.id"
+                          @click.stop="emit('remove-player', player.id, ERemovePlayerPenalty.SUBTRACT)"
+                        >
+                          <PhTrendDown :size="16" weight="bold" />
+                          <span>З втратою пойнтів</span>
+                        </el-button>
+                        <el-button
+                          plain
+                          class="remove-pop__btn"
+                          :loading="removePlayerLoadingId === player.id"
+                          @click.stop="emit('remove-player', player.id, ERemovePlayerPenalty.NONE)"
+                        >
+                          <PhShieldCheck :size="16" weight="bold" />
+                          <span>Без втрати пойнтів</span>
+                        </el-button>
+                      </div>
+                    </div>
+                  </el-popover>
+                  <el-popconfirm
+                    v-else-if="hasActiveTournaments"
+                    width="320"
+                    placement="top-end"
+                    :title="tournamentRemovePlayerWarning"
+                    confirm-button-text="Видалити"
+                    cancel-button-text="Скасувати"
+                    @confirm="emit('remove-player', player.id)"
+                  >
+                    <template #reference>
+                      <button
+                        type="button"
+                        class="roster-slot__remove"
+                        :disabled="removePlayerLoadingId === player.id"
+                        aria-label="Прибрати з команди"
+                        @click.stop
+                      >
+                        <PhX :size="14" weight="bold" class="pointer-events-none" />
+                      </button>
+                    </template>
+                  </el-popconfirm>
                   <button
+                    v-else
                     type="button"
-                    class="player-remove-from-team-btn"
+                    class="roster-slot__remove"
                     :disabled="removePlayerLoadingId === player.id"
                     aria-label="Прибрати з команди"
-                    @click.stop
+                    @click.stop="confirmAndRemovePlayer(player.id)"
                   >
                     <PhX :size="14" weight="bold" class="pointer-events-none" />
                   </button>
                 </template>
-                <div class="flex flex-col gap-10">
-                  <p class="text-sm leading-snug text-gray-300">
-                    {{ hasActiveTournaments ? tournamentRemovePlayerWarning : removePlayerPenaltyPrompt }}
-                  </p>
-                  <el-button
-                    type="danger"
-                    size="small"
-                    :loading="removePlayerLoadingId === player.id"
-                    @click.stop="emit('remove-player', player.id, ERemovePlayerPenalty.SUBTRACT)"
-                  >
-                    З втратою пойнтів
-                  </el-button>
-                  <el-button
-                    size="small"
-                    :loading="removePlayerLoadingId === player.id"
-                    @click.stop="emit('remove-player', player.id, ERemovePlayerPenalty.NONE)"
-                  >
-                    Без втрати пойнтів
-                  </el-button>
-                </div>
-              </el-popover>
-              <el-popconfirm
-                v-else-if="hasActiveTournaments"
-                width="320"
-                placement="top-end"
-                :title="tournamentRemovePlayerWarning"
-                confirm-button-text="Видалити"
-                cancel-button-text="Скасувати"
-                @confirm="emit('remove-player', player.id)"
-              >
-                <template #reference>
-                  <button
-                    type="button"
-                    class="player-remove-from-team-btn"
-                    :disabled="removePlayerLoadingId === player.id"
-                    aria-label="Прибрати з команди"
-                    @click.stop
-                  >
-                    <PhX :size="14" weight="bold" class="pointer-events-none" />
-                  </button>
-                </template>
-              </el-popconfirm>
-              <button
-                v-else
-                type="button"
-                class="player-remove-from-team-btn"
-                :disabled="removePlayerLoadingId === player.id"
-                aria-label="Прибрати з команди"
-                @click.stop="confirmAndRemovePlayer(player.id)"
-              >
-                <PhX :size="14" weight="bold" class="pointer-events-none" />
-              </button>
-            </template>
-          </div>
+              </div>
+            </li>
 
-          <template v-if="canEditTeamRoster">
-            <button
-              v-for="i in reserveSlotCounts"
-              :key="i"
-              class="h-48 rounded-lg border border-dashed
-               border-gray-600 text-gray-400 hover:border-primary hover:text-primary"
-              @click="emit('add-player', 'reserved')"
-            >
-              + Додати гравця
-            </button>
-          </template>
-          <template v-else>
-            <div
-              v-for="i in reserveSlotCounts"
-              :key="i"
-              class="h-48 rounded-lg border border-dashed border-gray-600 text-gray-400
-                     flex items-center justify-center"
-            >
-              Відсутній
-            </div>
-          </template>
-        </div>
-
-        <!-- COACH -->
-        <div
-          v-if="team?.coach || canEditTeamRoster"
-          class="mt-20"
-        >
-          <h3 class="text-xl text-center font-semibold">Тренер</h3>
-          <el-divider class="mt-15" />
-
-          <div class="rounded-xl bg-gray-800/30 p-16 flex flex-col gap-20 min-h-0">
-            <div
-              v-if="team?.coach"
-              class="relative overflow-visible rounded-2xl"
-            >
-              <PlayerCard :player="team.coach" />
+            <li v-for="i in reserveSlotCounts" :key="`open-${i}`" class="roster-slot">
+              <span class="roster-slot__index">{{ pad((team?.reservedPlayers?.length ?? 0) + i) }}</span>
               <button
                 v-if="canEditTeamRoster"
                 type="button"
-                class="player-remove-from-team-btn"
-                :disabled="removeCoachLoading"
-                aria-label="Прибрати тренера"
-                @click.stop="confirmAndRemoveCoach()"
+                class="roster-slot__open"
+                @click="emit('add-player', 'reserved')"
               >
-                <PhX :size="14" weight="bold" class="pointer-events-none" />
+                <span class="roster-slot__plus"><PhPlus :size="14" weight="bold" /></span>
+                <span class="roster-slot__open-label">Додати гравця</span>
+                <span class="roster-slot__open-tag">Вільно</span>
               </button>
-            </div>
+              <div v-else class="roster-slot__open is-static">
+                <span class="roster-slot__open-label">Вільно</span>
+              </div>
+            </li>
+          </ol>
+        </div>
 
-            <button
-              v-else-if="canEditTeamRoster"
-              class="h-48 rounded-lg border border-dashed
-               border-gray-600 text-gray-400 hover:border-primary hover:text-primary"
-              @click="emit('add-player', 'coach')"
-            >
-              + Додати тренера
-            </button>
-          </div>
+        <div v-if="team?.coach || canEditTeamRoster" class="roster__col">
+          <header class="roster__head">
+            <span class="sys-label !text-[10px]">// Тренер</span>
+            <span class="hud-line h-px min-w-12 flex-1" aria-hidden="true" />
+            <span class="roster__count">
+              {{ pad(team?.coach ? 1 : 0) }}<span class="roster__of">/01</span>
+            </span>
+          </header>
+
+          <ol class="roster__rack">
+            <li v-if="team?.coach" class="roster-slot is-filled">
+              <span class="roster-slot__index">01</span>
+              <div class="roster-slot__card">
+                <PlayerCard :player="team.coach" />
+                <button
+                  v-if="canEditTeamRoster"
+                  type="button"
+                  class="roster-slot__remove"
+                  :disabled="removeCoachLoading"
+                  aria-label="Прибрати тренера"
+                  @click.stop="confirmAndRemoveCoach()"
+                >
+                  <PhX :size="14" weight="bold" class="pointer-events-none" />
+                </button>
+              </div>
+            </li>
+            <li v-else class="roster-slot">
+              <span class="roster-slot__index">01</span>
+              <button type="button" class="roster-slot__open" @click="emit('add-player', 'coach')">
+                <span class="roster-slot__plus"><PhPlus :size="14" weight="bold" /></span>
+                <span class="roster-slot__open-label">Додати тренера</span>
+                <span class="roster-slot__open-tag">Вільно</span>
+              </button>
+            </li>
+          </ol>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
 import { ElMessageBox } from 'element-plus'
-import { PhInfo, PhX } from '@phosphor-icons/vue'
+import { PhPlus, PhShieldCheck, PhTrendDown, PhWarning, PhX } from '@phosphor-icons/vue'
 import { ERemovePlayerPenalty } from '@/views/teams/teams.enums'
-import { computeTeamAvgRatingRounded } from '@/components/tournaments-tags/tournament.constants'
 
 const props = defineProps<{
   team: TTeam | null
@@ -312,24 +315,19 @@ const tournamentRemovePlayerWarning =
 
 const removePlayerPenaltyPrompt = 'Прибрати гравця зі складу команди?'
 
+const MAIN_SLOTS = 5
+const RESERVE_SLOTS = 3
+
+const pad = (n: number) => String(Math.min(n, 99)).padStart(2, '0')
+
 const mainSlotCounts = computed(() => {
   const count = props.team?.mainPlayers?.length ?? 0
-  return Math.max(0, 5 - count)
+  return Math.max(0, MAIN_SLOTS - count)
 })
 
 const reserveSlotCounts = computed(() => {
   const count = props.team?.reservedPlayers?.length ?? 0
-  return Math.max(0, 3 - count)
-})
-
-const mainRosterAvgRatingRounded = computed(() =>
-  props.team?.avgRating ?? computeTeamAvgRatingRounded(props.team?.mainPlayers)
-)
-
-const mainRosterAvgRatingTooltip = computed(() => {
-  const avg = mainRosterAvgRatingRounded.value
-  if (avg == null) return 'У складі основи поки немає гравців'
-  return `Середній рейтинг основи: ${avg}`
+  return Math.max(0, RESERVE_SLOTS - count)
 })
 
 function showRemoveButton (player: { id: string }) {
@@ -369,58 +367,235 @@ async function confirmAndRemoveCoach () {
 }
 </script>
 
-<style scoped>
-.player-remove-from-team-btn {
-  position: absolute;
-  left: 100%;
-  top: 0;
-  z-index: 30;
-  display: flex;
-  width: 1.875rem;
-  height: 1.875rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  transform: translate(-50%, -50%);
-  transform-origin: center center;
-  border: 1px solid rgb(255 255 255 / 0.12);
-  background: linear-gradient(155deg, rgb(24 24 27 / 0.97) 0%, rgb(9 9 11 / 0.98) 100%);
-  color: rgb(212 212 216);
-  box-shadow:
-    0 2px 10px rgb(0 0 0 / 0.45),
-    inset 0 1px 0 rgb(255 255 255 / 0.06);
+<style lang="scss" scoped>
+.roster {
+  @apply relative flex w-full flex-1 flex-col p-20 2xs:min-w-[400px] lg:self-stretch;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.roster__col {
+  @apply flex h-fit w-full min-w-0 flex-1 flex-col gap-12;
+}
+
+.roster__head {
+  @apply flex items-center gap-12;
+}
+
+.roster__count {
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--ds-primary);
+  text-shadow: var(--ds-neon-text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.roster__of {
+  color: var(--ds-text-faint);
+  text-shadow: none;
+}
+
+// ─── Rack ───────────────────────────────────────────────────────────────────
+.roster__rack {
+  @apply m-0 flex list-none flex-col gap-10 rounded-xl p-12;
+  border: 1px solid var(--ds-border);
+  background: rgba(7, 8, 15, 0.35);
+}
+
+.roster-slot {
+  @apply grid items-center gap-10;
+  grid-template-columns: 20px minmax(0, 1fr);
+}
+
+.roster-slot__index {
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ds-text-faint);
+  transition: color var(--ds-duration-base) ease;
+}
+
+.is-filled .roster-slot__index {
+  color: rgba(var(--ds-primary-rgb), 0.75);
+}
+
+.roster-slot__card {
+  @apply relative min-w-0 overflow-visible rounded-2xl;
+}
+
+// Remove: an in-card icon button. Hidden until the row is hovered on pointer
+// devices; always present on touch, and on keyboard focus.
+.roster-slot__remove {
+  @apply absolute right-8 top-8 z-30 inline-flex size-28 items-center justify-center rounded-lg;
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(7, 8, 15, 0.85);
   backdrop-filter: blur(4px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
   cursor: pointer;
   transition:
-    transform 0.2s cubic-bezier(0.34, 1.2, 0.64, 1),
-    border-color 0.2s ease,
-    color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+    opacity var(--ds-duration-base) ease,
+    color var(--ds-duration-base) ease,
+    border-color var(--ds-duration-base) ease,
+    background-color var(--ds-duration-base) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+
+  &:active:not(:disabled) {
+    transform: scale(0.94);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.75);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.38;
+    pointer-events: none;
+  }
 }
 
-.player-remove-from-team-btn:hover:not(:disabled) {
-  transform: translate(-50%, -50%) scale(1.06);
-  border-color: rgb(248 113 113 / 0.45);
-  color: rgb(254 226 226);
-  background: linear-gradient(155deg, rgb(69 10 10 / 0.92) 0%, rgb(9 9 11 / 0.98) 100%);
-  box-shadow:
-    0 6px 22px rgb(127 29 29 / 0.35),
-    inset 0 1px 0 rgb(255 255 255 / 0.06);
+// ─── Open slot ──────────────────────────────────────────────────────────────
+.roster-slot__open {
+  @apply flex h-56 w-full items-center gap-12 rounded-xl border px-14 text-left;
+  color: rgba(255, 255, 255, 0.72);
+  border-color: rgba(var(--ds-primary-rgb), 0.2);
+  background:
+    repeating-linear-gradient(-45deg, rgba(var(--ds-primary-rgb), 0.05) 0 1px, transparent 1px 10px),
+    rgba(7, 8, 15, 0.4);
+  cursor: pointer;
+  transition:
+    border-color var(--ds-duration-base) ease,
+    background-color var(--ds-duration-base) ease,
+    box-shadow var(--ds-duration-base) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+
+  &:active:not(.is-static) {
+    transform: scale(0.99);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.7);
+    outline-offset: 2px;
+  }
+
+  &.is-static {
+    justify-content: center;
+    color: var(--ds-text-faint);
+    cursor: default;
+  }
 }
 
-.player-remove-from-team-btn:active:not(:disabled) {
-  transform: translate(-50%, -50%) scale(0.94);
+.roster-slot__plus {
+  @apply inline-flex size-28 shrink-0 items-center justify-center rounded-lg;
+  color: var(--ds-primary);
+  border: 1px solid rgba(var(--ds-primary-rgb), 0.35);
+  background: rgba(var(--ds-primary-rgb), 0.1);
+  transition: background-color var(--ds-duration-base) ease, color var(--ds-duration-base) ease;
 }
 
-.player-remove-from-team-btn:focus-visible {
-  outline: 2px solid rgb(59 130 246 / 0.75);
-  outline-offset: 3px;
+.roster-slot__open-label {
+  font-size: 14px;
+  font-weight: 600;
 }
 
-.player-remove-from-team-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.38;
-  pointer-events: none;
+.roster-slot__open-tag {
+  margin-left: auto;
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
+}
+
+// ─── Pointer-only hover ─────────────────────────────────────────────────────
+@media (hover: hover) and (pointer: fine) {
+  .roster-slot__remove {
+    opacity: 0;
+  }
+
+  .roster-slot:hover .roster-slot__remove,
+  .roster-slot:focus-within .roster-slot__remove {
+    opacity: 1;
+  }
+
+  .roster-slot__remove:hover:not(:disabled) {
+    color: #fecaca;
+    border-color: rgba(248, 113, 113, 0.5);
+    background: rgba(69, 10, 10, 0.92);
+  }
+
+  .roster-slot__open:not(.is-static):hover {
+    color: #fff;
+    border-color: rgba(var(--ds-primary-rgb), 0.55);
+    box-shadow: 0 0 18px rgba(var(--ds-primary-rgb), 0.15);
+
+    .roster-slot__plus {
+      color: var(--ds-background);
+      background: var(--ds-primary);
+    }
+
+    .roster-slot__open-tag {
+      color: var(--ds-primary);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roster-slot__remove,
+  .roster-slot__open,
+  .roster-slot__plus {
+    transition: none;
+  }
+}
+</style>
+
+<style lang="scss">
+// Remove-player popover (teleported popper, so not scoped).
+.el-popover.roster-popper {
+  padding: 14px;
+  border-color: rgba(var(--ds-pink-rgb), 0.3);
+  background: rgba(16, 19, 36, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--ds-elevation-4), 0 0 24px rgba(var(--ds-pink-rgb), 0.12);
+}
+
+.remove-pop {
+  @apply flex flex-col gap-10;
+}
+
+.remove-pop__head {
+  @apply flex items-center gap-8;
+}
+
+.remove-pop__well {
+  @apply inline-flex size-24 items-center justify-center rounded-md;
+  color: var(--ds-pink);
+  background: rgba(var(--ds-pink-rgb), 0.12);
+  border: 1px solid rgba(var(--ds-pink-rgb), 0.35);
+}
+
+.remove-pop__text {
+  @apply m-0 text-[13px] leading-relaxed;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.remove-pop__actions {
+  @apply flex flex-col gap-8 pt-2;
+
+  .remove-pop__btn {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+
+  .el-button > span {
+    @apply inline-flex items-center gap-8;
+  }
 }
 </style>

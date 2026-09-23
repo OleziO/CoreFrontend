@@ -86,8 +86,7 @@
               >
                 <el-icon class="text-2xl mb-1"><Plus /></el-icon>
                 <el-button
-                  class="w-full !h-30 !bg-cyan-600 !border-cyan-600 hover:!bg-cyan-500
-           text-white font-medium !rounded-lg mt-2 shadow-lg shadow-cyan-900/20"
+                  class="w-full mt-2"
                   type="primary"
                 >
                   Upload
@@ -100,8 +99,7 @@
         <el-button
           :loading="loading"
           native-type="submit"
-          class="w-full !h-30 !bg-cyan-600 !border-cyan-600 hover:!bg-cyan-500
-           text-white font-medium !rounded-lg mt-2 shadow-lg shadow-cyan-900/20"
+          class="w-full mt-2"
           type="primary"
           @click="handleSubmit"
         >

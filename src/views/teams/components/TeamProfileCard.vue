@@ -1,174 +1,147 @@
 <template>
-  <div
-    class="rounded-xl w-full bg-surface p-20 flex flex-col gap-20 relative
-           border border-white/[0.08] transition-all duration-300 ease-out"
-    :class="teamProfileCardShadowClass"
+  <article
+    class="team-hero neon-card hud-corners hud-corners--fade rounded-2xl"
+    :class="{ 'is-lit': team?.isVerified, 'team-hero--has-menu': canEditTeamRoster }"
   >
-    <div class="flex flex-col gap-14">
-      <div class="flex items-start gap-16">
-        <div class="relative mt-15 shrink-0">
-          <el-avatar
-            :size="118"
-            shape="square"
-            :src="teamLogoSrc ?? ''"
-            class="!size-118 rounded-2xl bg-white/[0.06] ring-2 ring-gray-700
-              shadow-[0_4px_14px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
-          >
-            <template #default>
-              <PhUser :size="32" weight="bold" class="text-white/70" />
-            </template>
-          </el-avatar>
+    <span class="hud-corners hud-corners--mirror hud-corners--fade absolute inset-0 z-[3]" aria-hidden="true" />
+    <span class="team-hero__glow" aria-hidden="true" />
 
-          <el-tooltip
-            :content="team?.isVerified ? 'Верифікована команда' : 'Не верифікована'"
-          >
-            <StatusBadge
-              v-if="team"
-              :preset="team.isVerified ? 'verified' : 'unverified'"
-              size="md"
-              icon-only
-              class="absolute -bottom-4 -right-4 ring-2 ring-gray-900"
-            />
-          </el-tooltip>
-        </div>
+    <!-- Roster menu, pinned to the top-right corner -->
+    <el-dropdown
+      v-if="canEditTeamRoster"
+      trigger="click"
+      :placement="isMobile ? 'left-start' : 'bottom-end'"
+      popper-class="header-dropdown"
+      class="team-hero__menu"
+      @click.stop
+    >
+      <button type="button" class="team-hero__menu-btn" aria-label="Дії з командою" @click.stop>
+        <PhDotsThree :size="20" weight="bold" />
+      </button>
 
-        <div class="flex flex-1 min-w-0 flex-col gap-6 mt-15">
-          <div class="flex flex-wrap items-center gap-10">
-            <el-tooltip placement="top" :content="team?.name">
-              <h1
-                class="text-xl md:max-w-300 max-w-150 font-bold uppercase
-                  whitespace-nowrap leading-tight truncate"
-              >
-                {{ team?.name }}
-              </h1>
-            </el-tooltip>
-          </div>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item v-if="canVerifyPlayers" @click="emit('verify-players')">
+            <PhUserCheck :size="20" />
+            <span class="ml-8">Подати заявку на верифікацію</span>
+          </el-dropdown-item>
+          <el-dropdown-item @click="emit('transfer-captain')">
+            <PhCrown :size="20" />
+            <span class="ml-8">Передати капітанство</span>
+          </el-dropdown-item>
+          <el-dropdown-item class="header-user-menu__item--danger" divided @click="emit('disband-team')">
+            <PhTrash :size="20" />
+            <span class="ml-8">Розпустити команду</span>
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
 
-          <div
-            class="flex min-w-0 flex-nowrap items-center justify-between gap-10"
-          >
-            <div class="flex min-w-0 flex-1 items-center gap-3">
-              <span class="text-[10px] shrink-0 font-semibold uppercase tracking-[0.16em] text-gray-600">
-                Dota ID
-              </span>
-              <button
-                type="button"
-                class="group/dota-id inline-flex min-w-0 max-w-full cursor-pointer items-center gap-8
-                       rounded-lg border border-transparent px-8 py-4 font-mono text-xs tabular-nums
-                       outline-none transition-all duration-200
-                       hover:border-white/10 hover:bg-white/[0.04]"
-                :class="dotaTeamIdTrimmed
-                  ? 'text-gray-400 hover:text-primary'
-                  : 'cursor-default text-gray-600'"
-                @click="dotaTeamIdTrimmed && copyDotaTeamId()"
-              >
-                <span class="min-w-0 truncate">{{ dotaTeamIdTrimmed || '—' }}</span>
-                <PhCopy
-                  v-if="dotaTeamIdTrimmed"
-                  size="14"
-                  class="shrink-0 opacity-55 transition-opacity group-hover/dota-id:opacity-100"
-                />
-              </button>
-            </div>
-            <el-button
-              v-if="team?.dotaTeamId?.trim()"
-              class="!size-36 shrink-0 hover:bg-white/10"
-              tag="a"
-              target="_blank"
-              rel="noopener noreferrer"
-              :href="getDotabuffTeamUrl(team.dotaTeamId)"
-              title="Dotabuff"
-            >
-              <Icon :size="16" name="dotabuff" />
-            </el-button>
-          </div>
-        </div>
+    <!-- Identity: framed logo + name + meta chips -->
+    <div class="team-hero__main">
+      <div class="team-hero__logo">
+        <el-avatar :size="112" shape="square" :src="teamLogoSrc ?? ''" class="team-hero__avatar">
+          <template #default>
+            <PhUser :size="32" weight="bold" class="text-white/70" />
+          </template>
+        </el-avatar>
+
+        <el-tooltip :content="team?.isVerified ? 'Верифікована команда' : 'Не верифікована команда'">
+          <StatusBadge
+            v-if="team"
+            :preset="team.isVerified ? 'verified' : 'unverified'"
+            size="md"
+            icon-only
+            class="team-hero__seal"
+          />
+        </el-tooltip>
       </div>
 
-      <div
-        v-if="canEditTeamProfile || (isAdmin && team)"
-        class="mt-12 flex w-full flex-col gap-10 lg:flex-row lg:items-stretch lg:gap-12"
-      >
-        <el-button
-          v-if="canEditTeamProfile"
-          type="primary"
-          class="h-30 w-full shrink-0 lg:flex-1 max-sm:text-xs max-sm:!px-8"
-          @click="emit('edit-team')"
-        >
-          <PhPencil />
-          <span class="ml-8">Редагувати{{ windowWidth > 650 ? ' команду' : '' }}</span>
-        </el-button>
+      <div class="team-hero__body">
+        <el-tooltip placement="top" :content="team?.name">
+          <h1 class="team-hero__name">{{ team?.name }}</h1>
+        </el-tooltip>
 
-        <el-button
-          v-if="isAdmin && team && !team.isVerified"
-          type="success"
-          class="h-30 w-full shrink-0 lg:flex-1 max-sm:text-xs max-sm:!px-8"
-          :loading="verifyTeamLoading"
-          @click="emit('verify-team')"
-        >
-          <PhSealCheck :size="20" class="shrink-0" />
-          <span class="ml-8">Верифікувати команду</span>
-        </el-button>
+        <div class="team-hero__meta">
+          <!-- Dota ID: the chip is the copy button -->
+          <button
+            type="button"
+            class="team-chip min-w-0 flex-1"
+            :class="{ 'is-static': !dotaTeamIdTrimmed }"
+            :disabled="!dotaTeamIdTrimmed"
+            :title="dotaTeamIdTrimmed ? 'Скопіювати Dota ID' : undefined"
+            @click="copyDotaTeamId"
+          >
+            <span class="team-chip__k">Dota ID</span>
+            <span class="team-chip__v truncate">{{ dotaTeamIdTrimmed || '—' }}</span>
+            <PhCopy v-if="dotaTeamIdTrimmed" :size="13" class="team-chip__icon ml-auto" />
+          </button>
 
-        <el-button
-          v-else-if="isAdmin && team?.isVerified"
-          type="warning"
-          class="h-30 w-full shrink-0 lg:flex-1 max-sm:text-xs max-sm:!px-8"
-          :loading="verifyTeamLoading"
-          @click="emit('unverify-team')"
-        >
-          <PhSealWarning :size="20" class="shrink-0" />
-          <span class="ml-8">Зняти верифікацію</span>
-        </el-button>
+          <span v-if="avgRating != null" class="team-chip is-static shrink-0" title="Середній рейтинг основи">
+            <span class="team-chip__k">avg</span>
+            <span class="team-chip__v">{{ avgRating.toLocaleString('uk-UA') }}</span>
+          </span>
+
+          <a
+            v-if="dotaTeamIdTrimmed"
+            :href="getDotabuffTeamUrl(dotaTeamIdTrimmed)"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="team-chip team-chip--icon shrink-0"
+            title="Профіль на Dotabuff"
+            aria-label="Профіль на Dotabuff"
+          >
+            <Icon :size="16" name="dotabuff" class="team-chip__brand" />
+          </a>
+        </div>
       </div>
     </div>
 
-    <!-- ACTIONS -->
-    <div class="flex flex-col gap-10">
-      <el-dropdown
-        v-if="canEditTeamRoster"
-        trigger="click"
-        :placement="isMobile ? 'left-start' : 'bottom'"
-        popper-class="header-dropdown"
-        class="absolute top-10 right-15 cursor-pointer text-white hover:text-white/50"
-        @click.stop
+    <!-- Actions -->
+    <div v-if="canEditTeamProfile || (isAdmin && team)" class="team-hero__actions">
+      <el-button
+        v-if="canEditTeamProfile"
+        type="primary"
+        class="team-hero__btn"
+        @click="emit('edit-team')"
       >
-        <PhDotsThree size="26" weight="bold" @click.stop />
+        <PhPencil :size="18" />
+        <span>Редагувати{{ windowWidth > 650 ? ' команду' : '' }}</span>
+      </el-button>
 
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item
-              v-if="canVerifyPlayers"
-              @click="emit('verify-players')"
-            >
-              <PhUserCheck :size="20" />
-              <span class="ml-8">Верифікувати гравців</span>
-            </el-dropdown-item>
-            <el-dropdown-item @click="emit('transfer-captain')">
-              <PhCrown :size="20" />
-              <span class="ml-8">Передати капітанство</span>
-            </el-dropdown-item>
-            <el-dropdown-item
-              class="header-user-menu__item--danger"
-              divided
-              @click="emit('disband-team')"
-            >
-              <PhTrash :size="20" />
-              <span class="ml-8">Розпустити команду</span>
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
+      <el-button
+        v-if="isAdmin && team && !team.isVerified"
+        type="success"
+        class="team-hero__btn"
+        :loading="verifyTeamLoading"
+        @click="emit('verify-team')"
+      >
+        <PhSealCheck :size="18" />
+        <span>Верифікувати команду</span>
+      </el-button>
+
+      <el-button
+        v-else-if="isAdmin && team?.isVerified"
+        type="warning"
+        plain
+        class="team-hero__btn"
+        :loading="verifyTeamLoading"
+        @click="emit('unverify-team')"
+      >
+        <PhSealWarning :size="18" />
+        <span>Зняти верифікацію</span>
+      </el-button>
     </div>
-  </div>
+  </article>
 </template>
 
 <script setup lang="ts">
 import {
-  PhCopy, PhCrown, PhDotsThree, PhPencil, PhSealCheck, PhSealWarning, PhTrash, PhUser, PhUserCheck
+  PhCopy, PhCrown, PhDotsThree, PhPencil, PhSealCheck, PhSealWarning, PhTrash,
+  PhUser, PhUserCheck
 } from '@phosphor-icons/vue'
-import { useClipboard } from '@vueuse/core'
-import { resolvePublicOrApiUrl, getDotabuffTeamUrl } from '@/core/helpers'
+import { getCopy, resolvePublicOrApiUrl, getDotabuffTeamUrl } from '@/core/helpers'
+import { getTeamAvgRating } from '@/views/teams/teams-filters.utils'
 
 const props = defineProps<{
   team: TTeam | null
@@ -190,23 +163,221 @@ const emit = defineEmits<{
   'disband-team': []
 }>()
 
-const { copy } = useClipboard({ legacy: true })
-
 const teamLogoSrc = computed(() => resolvePublicOrApiUrl(props.team?.logoUrl))
 const dotaTeamIdTrimmed = computed(() => props.team?.dotaTeamId?.trim() ?? '')
-
-// Verification is now signaled by the StatusBadge (icon + label), so the card
-// uses a neutral elevation — verified teams keep a subtle primary hover glow.
-const teamProfileCardShadowClass = computed(() =>
-  props.team?.isVerified
-    ? 'shadow-elevation-3 hover:shadow-glow-primary'
-    : 'shadow-elevation-3'
-)
+// Основа без запасних — так само, як рахує бекенд і як показує картка команди.
+const avgRating = computed(() => (props.team ? getTeamAvgRating(props.team) : null))
 
 function copyDotaTeamId () {
-  const id = dotaTeamIdTrimmed.value
-  if (!id) return
-  copy(id)
-  ElMessage.success('Dota ID скопійовано')
+  if (dotaTeamIdTrimmed.value) getCopy(dotaTeamIdTrimmed.value, 'Dota ID')
 }
 </script>
+
+<style lang="scss" scoped>
+.team-hero {
+  --hud-corner-inset: 10px;
+  // Arms end at 26px, inside the 28px padding, so a full-width action button
+  // or the roster menu never sits on top of a bracket.
+  --hud-corner-size: 16px;
+  --hud-corner-weight: 2px;
+
+  @apply relative flex w-full flex-col gap-18 overflow-hidden p-28;
+}
+
+// Soft cyan bloom behind the logo so the identity block has a light source.
+.team-hero__glow {
+  position: absolute;
+  top: -30%;
+  left: -12%;
+  width: 55%;
+  height: 120%;
+  background: radial-gradient(ellipse at center, rgba(var(--ds-primary-rgb), 0.16), transparent 62%);
+  filter: blur(28px);
+  pointer-events: none;
+}
+
+// ─── Menu ───────────────────────────────────────────────────────────────────
+// The button takes the top-right corner slot, so the mirrored bracket there is
+// dropped — otherwise its arms (10–32px) peek out from behind the 32px button.
+.team-hero__menu {
+  @apply absolute right-12 top-12 z-[4];
+}
+
+.team-hero--has-menu > .hud-corners--mirror::before {
+  display: none;
+}
+
+.team-hero__menu-btn {
+  @apply inline-flex size-32 cursor-pointer items-center justify-center rounded-lg border;
+  color: rgba(255, 255, 255, 0.75);
+  border-color: var(--ds-border);
+  background: rgba(7, 8, 15, 0.45);
+  transition:
+    color var(--ds-duration-base) ease,
+    border-color var(--ds-duration-base) ease,
+    background-color var(--ds-duration-base) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+
+  &:active {
+    transform: scale(0.94);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.7);
+    outline-offset: 2px;
+  }
+}
+
+// ─── Identity ───────────────────────────────────────────────────────────────
+.team-hero__main {
+  @apply relative z-[2] flex items-start gap-18;
+}
+
+.team-hero__logo {
+  @apply relative shrink-0;
+}
+
+.team-hero__avatar {
+  @apply rounded-2xl;
+  width: 112px !important;
+  height: 112px !important;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 0 0 1px rgba(var(--ds-primary-rgb), 0.35),
+    0 12px 28px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.team-hero__seal {
+  @apply absolute -bottom-6 -right-6 z-[2];
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+.team-hero__body {
+  @apply flex min-w-0 flex-1 flex-col gap-12 pt-2;
+}
+
+.team-hero__name {
+  @apply pr-40 font-display text-[24px] uppercase leading-[1.05] tracking-wide text-white md:text-[28px];
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  text-shadow: var(--ds-neon-text-subtle);
+}
+
+.team-hero__meta {
+  @apply flex flex-nowrap items-center gap-8;
+}
+
+// HUD chip: label / value / trailing icon. Buttons and links share the look;
+// `.is-static` is a read-only fact.
+.team-chip {
+  @apply inline-flex h-30 items-center gap-8 rounded-lg border px-10 no-underline;
+  color: rgba(255, 255, 255, 0.82);
+  border-color: rgba(var(--ds-primary-rgb), 0.2);
+  background: rgba(7, 8, 15, 0.5);
+  font-family: var(--ds-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--ds-duration-base) ease,
+    border-color var(--ds-duration-base) ease,
+    background-color var(--ds-duration-base) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+
+  &:active:not(.is-static) {
+    transform: scale(0.97);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.7);
+    outline-offset: 2px;
+  }
+
+  &.is-static {
+    cursor: default;
+  }
+}
+
+.team-chip--icon {
+  @apply w-30 justify-center px-0;
+}
+
+.team-chip__k {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
+}
+
+.team-chip__v {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.team-chip__brand {
+  color: var(--ds-primary);
+}
+
+.team-chip__icon {
+  flex-shrink: 0;
+  color: var(--ds-text-faint);
+  transition: color var(--ds-duration-base) ease, transform var(--ds-duration-base) var(--ds-ease-out);
+}
+
+// ─── Actions ────────────────────────────────────────────────────────────────
+.team-hero__actions {
+  @apply relative z-[2] flex flex-col gap-10 sm:flex-row;
+}
+
+.team-hero__btn {
+  @apply w-full flex-1;
+  margin-left: 0 !important;
+
+  :deep(> span) {
+    @apply inline-flex items-center gap-8;
+  }
+}
+
+// ─── Pointer-only hover ─────────────────────────────────────────────────────
+@media (hover: hover) and (pointer: fine) {
+  .team-hero__menu-btn:hover {
+    color: #fff;
+    border-color: rgba(var(--ds-primary-rgb), 0.5);
+    background: rgba(var(--ds-primary-rgb), 0.08);
+  }
+
+  .team-chip:not(.is-static):hover {
+    color: #fff;
+    border-color: rgba(var(--ds-primary-rgb), 0.55);
+    background: rgba(var(--ds-primary-rgb), 0.08);
+
+    .team-chip__icon {
+      color: var(--ds-primary);
+    }
+  }
+
+  a.team-chip:hover .team-chip__icon {
+    transform: translate(1px, -1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .team-chip,
+  .team-chip__icon,
+  .team-hero__menu-btn {
+    transition: none;
+  }
+
+  a.team-chip:hover .team-chip__icon {
+    transform: none;
+  }
+}
+</style>

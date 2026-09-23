@@ -60,7 +60,7 @@
 
     <template #footer>
       <div class="flex justify-end gap-10">
-        <el-button :disabled="loading" class="!bg-transparent !border-white/10 !text-gray-300" @click="close">
+        <el-button :disabled="loading" @click="close">
           Скасувати
         </el-button>
         <el-button

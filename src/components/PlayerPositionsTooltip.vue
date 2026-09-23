@@ -60,7 +60,7 @@ withDefaults(
 .position-tag-pill {
   @apply m-0 shrink-0;
   @apply !text-xs !font-semibold;
-  @apply !rounded-lg;
+  @apply !rounded-md;
   @apply !px-14 !py-7;
   @apply !h-auto;
   @apply !min-h-0;

@@ -89,18 +89,7 @@ export function computeTeamAvgRatingRounded (
 export const PROFILE_CAPTAIN_ROLE_UA = 'Капітан'
 
 export const tournamentStatusClassMap: Record<string, string> = {
-  REGISTRATION: `
-    !border !border-cyan-500/40 !bg-cyan-500/10 !text-cyan-300
-    rounded-lg !px-10 !py-6 text-sm font-semibold uppercase tracking-wide
-    shadow-[0_0_12px_rgba(34,211,238,0.2)]
-  `,
-  QUALIFICATIONS: `
-    !border !border-green-500/40 !bg-green-500/10 !text-green-400
-    rounded-lg !px-10 !py-6 text-sm font-semibold uppercase tracking-wide
-    shadow-[0_0_12px_rgba(34,197,94,0.2)]
-  `,
-  PLAYOFF: `
-    !border !border-red-500/40 !bg-red-500/10 !text-red-400
-    rounded-lg !px-10 !py-6 text-sm font-semibold uppercase tracking-wide animate-pulse
-  `
+  REGISTRATION: 'tag-tone-primary tag-dot',
+  QUALIFICATIONS: 'tag-tone-success tag-dot',
+  PLAYOFF: 'tag-tone-danger tag-dot'
 }

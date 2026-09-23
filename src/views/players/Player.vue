@@ -51,11 +51,10 @@
           class="grid w-full grid-cols-1 gap-16 md:grid-cols-2 md:items-stretch"
         >
           <div
-            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-white/10
-              bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 md:h-full
-              px-16 py-14 text-center shadow-elevation-2 2md:px-18 2md:py-16"
+            class="neon-card hud-corners flex min-h-0 min-w-0 flex-col items-center gap-14 rounded-2xl md:h-full
+              px-16 py-16 text-center 2md:px-20 2md:py-18"
           >
-            <h2 class="shrink-0 text-sm font-semibold uppercase tracking-wider text-gray-500">
+            <h2 class="section-title shrink-0">
               Команда
             </h2>
             <div
@@ -65,51 +64,12 @@
                 leading-relaxed text-gray-400
               "
             >
-              <template v-if="playerTeamLinkId">
-                <RouterLink
-                  :to="{ name: routeNames.team, params: { id: playerTeamLinkId } }"
-                  class="group flex w-full max-w-full min-w-0 cursor-pointer items-start gap-16 rounded-xl
-                    border border-white/10 bg-white/[0.03] px-12 py-12 no-underline
-                    transition hover:border-white/15 hover:bg-white/[0.06]
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-                >
-                  <div
-                    class="relative h-56 w-56 shrink-0 overflow-hidden rounded-xl bg-white/[0.06]
-                      shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] ring-1 ring-gray-800/80"
-                  >
-                    <img
-                      v-if="profileTeamLogoSrc"
-                      :src="profileTeamLogoSrc"
-                      alt=""
-                      class="pointer-events-none h-full w-full object-cover"
-                    >
-                    <div
-                      v-else
-                      class="flex h-full w-full items-center justify-center text-white/35"
-                    >
-                      <PhUsersThree :size="24" weight="duotone" />
-                    </div>
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <h3
-                      class="truncate text-lg font-semibold text-white transition group-hover:text-primary/90"
-                    >
-                      {{ profileTeam?.name ?? 'Команда' }}
-                    </h3>
-                    <span
-                      v-if="profileTeamDotaTeamIdDisplay"
-                      class="mt-4 flex w-fit max-w-full items-center gap-6 text-xs text-gray-400
-                        transition hover:text-primary cursor-pointer"
-                      @click.stop.prevent="
-                        getCopy(profileTeamDotaTeamIdDisplay, 'Dota ID команди скопійовано')
-                      "
-                    >
-                      {{ profileTeamDotaTeamIdDisplay }}
-                      <PhCopy size="13" />
-                    </span>
-                  </div>
-                </RouterLink>
-              </template>
+              <PlayerTeamTile
+                v-if="playerTeamLinkId"
+                :team-id="playerTeamLinkId"
+                :team="profileTeam"
+                :player-id="player.id"
+              />
               <template v-else>
                 <div class="flex w-full justify-center">
                   <el-button type="primary" @click="openCreateTeamModal">
@@ -121,11 +81,10 @@
           </div>
 
           <div
-            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-white/10
-              bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 md:h-full
-              px-16 py-14 text-center shadow-elevation-2 2md:px-18 2md:py-16"
+            class="neon-card hud-corners flex min-h-0 min-w-0 flex-col items-center gap-14 rounded-2xl md:h-full
+              px-16 py-16 text-center 2md:px-20 2md:py-18"
           >
-            <h2 class="shrink-0 text-sm font-semibold uppercase tracking-wider text-gray-500">
+            <h2 class="section-title shrink-0">
               Позиції
             </h2>
             <div
@@ -138,24 +97,23 @@
                 <div
                   v-for="row in profilePositionRows"
                   :key="row.id"
-                  class="inline-flex items-center gap-8 rounded-lg border border-white/10
-                    bg-gradient-to-b from-white/[0.08] to-white/[0.02]
-                    px-12 py-7 text-left
-                    shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
-                    transition duration-200 hover:-translate-y-px hover:border-white/15"
+                  class="position-chip inline-flex items-center gap-8 rounded-lg px-12 py-8 text-left"
                 >
                   <component
                     :is="row.icon"
                     :size="22"
                     weight="duotone"
-                    class="shrink-0 text-primary"
+                    class="position-chip__icon shrink-0 text-primary"
                   />
-                  <span class="text-sm font-medium leading-tight text-white">{{ row.label }}</span>
+                  <span class="font-display text-[12px] uppercase tracking-wide leading-tight text-white">
+                    {{ row.label }}
+                  </span>
                 </div>
               </div>
               <p
                 v-else
-                class="mx-auto max-w-[90%] text-center text-sm text-gray-500"
+                class="mx-auto max-w-[90%] text-center text-sm text-gray-500 px-12 py-12 rounded-xl border
+                  border-dashed border-primary/20 bg-black/20"
               >
                 Позиції не вказані. Їх можна додати при редагуванні профілю.
               </p>
@@ -169,11 +127,10 @@
           class="grid w-full grid-cols-1 gap-16 md:grid-cols-2 md:items-stretch"
         >
           <div
-            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-white/10
-              bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 md:h-full
-              px-16 py-14 text-center shadow-elevation-2 2md:px-18 2md:py-16"
+            class="neon-card hud-corners flex min-h-0 min-w-0 flex-col items-center gap-14 rounded-2xl md:h-full
+              px-16 py-16 text-center 2md:px-20 2md:py-18"
           >
-            <h2 class="shrink-0 text-sm font-semibold uppercase tracking-wider text-gray-500">
+            <h2 class="section-title shrink-0">
               Команда
             </h2>
             <div
@@ -183,60 +140,28 @@
                 leading-relaxed text-gray-400
               "
             >
-              <RouterLink
+              <PlayerTeamTile
                 v-if="playerTeamLinkId"
-                :to="{ name: routeNames.team, params: { id: playerTeamLinkId } }"
-                class="group flex w-full max-w-full min-w-0 cursor-pointer items-start gap-16 rounded-xl
-                  border border-white/10 bg-white/[0.03] px-12 py-12 no-underline
-                  transition hover:border-white/15 hover:bg-white/[0.06]
-                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                :team-id="playerTeamLinkId"
+                :team="profileTeam"
+                :player-id="player.id"
+              />
+              <div
+                v-else
+                class="flex w-full flex-col items-center justify-center gap-8 rounded-xl border border-dashed
+                  border-primary/20 bg-black/20 px-12 py-16 text-center"
               >
-                <div
-                  class="relative h-56 w-56 shrink-0 overflow-hidden rounded-xl bg-white/[0.06]
-                    shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] ring-1 ring-gray-800/80"
-                >
-                  <img
-                    v-if="profileTeamLogoSrc"
-                    :src="profileTeamLogoSrc"
-                    alt=""
-                    class="pointer-events-none h-full w-full object-cover"
-                  >
-                  <div
-                    v-else
-                    class="flex h-full w-full items-center justify-center text-white/35"
-                  >
-                    <PhUsersThree :size="24" weight="duotone" />
-                  </div>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <h3 class="truncate text-lg font-semibold text-white transition group-hover:text-primary/90">
-                    {{ profileTeam?.name ?? 'Команда' }}
-                  </h3>
-                  <span
-                    v-if="profileTeamDotaTeamIdDisplay"
-                    class="mt-4 flex w-fit max-w-full items-center gap-6 text-xs text-gray-400
-                      transition hover:text-primary cursor-pointer"
-                    @click.stop.prevent="
-                      getCopy(profileTeamDotaTeamIdDisplay, 'Dota ID команди скопійовано')
-                    "
-                  >
-                    {{ profileTeamDotaTeamIdDisplay }}
-                    <PhCopy size="13" />
-                  </span>
-                </div>
-              </RouterLink>
-              <span v-else class="block w-full text-center text-sm text-gray-500">
-                Інформація про команду недоступна
-              </span>
+                <PhUsersThree :size="26" weight="duotone" class="text-primary/50" />
+                <span class="text-sm text-gray-500">Інформація про команду недоступна</span>
+              </div>
             </div>
           </div>
 
           <div
-            class="flex min-h-0 min-w-0 flex-col items-center gap-10 rounded-2xl border border-white/10
-              bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 md:h-full
-              px-16 py-14 text-center shadow-elevation-2 2md:px-18 2md:py-16"
+            class="neon-card hud-corners flex min-h-0 min-w-0 flex-col items-center gap-14 rounded-2xl md:h-full
+              px-16 py-16 text-center 2md:px-20 2md:py-18"
           >
-            <h2 class="shrink-0 text-sm font-semibold uppercase tracking-wider text-gray-500">
+            <h2 class="section-title shrink-0">
               Позиції
             </h2>
             <div
@@ -249,24 +174,23 @@
                 <div
                   v-for="row in profilePositionRows"
                   :key="row.id"
-                  class="inline-flex items-center gap-8 rounded-lg border border-white/10
-                    bg-gradient-to-b from-white/[0.08] to-white/[0.02]
-                    px-12 py-7 text-left
-                    shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
-                    transition duration-200 hover:-translate-y-px hover:border-white/15"
+                  class="position-chip inline-flex items-center gap-8 rounded-lg px-12 py-8 text-left"
                 >
                   <component
                     :is="row.icon"
                     :size="22"
                     weight="duotone"
-                    class="shrink-0 text-primary"
+                    class="position-chip__icon shrink-0 text-primary"
                   />
-                  <span class="text-sm font-medium leading-tight text-white">{{ row.label }}</span>
+                  <span class="font-display text-[12px] uppercase tracking-wide leading-tight text-white">
+                    {{ row.label }}
+                  </span>
                 </div>
               </div>
               <p
                 v-else
-                class="mx-auto max-w-[90%] text-center text-sm text-gray-500"
+                class="mx-auto max-w-[90%] text-center text-sm text-gray-500 px-12 py-12 rounded-xl border
+                  border-dashed border-primary/20 bg-black/20"
               >
                 Позиції не вказані
               </p>
@@ -304,14 +228,15 @@
             <span class="inline-block w-5 h-5 rounded-full bg-warning animate-pulse" />
             Pending
           </span>
-          <button
-            type="button"
-            class="ml-8 flex items-center justify-center w-20 h-20 rounded-lg
-                   text-gray-500 hover:text-white hover:bg-white/10 transition-colors"
+          <el-button
+            text
+            size="small"
+            class="btn-icon ml-8"
+            aria-label="Закрити"
             @click="mmrNotificationDismissed = true"
           >
             <PhX :size="13" weight="bold" />
-          </button>
+          </el-button>
         </div>
 
         <!-- Body -->
@@ -350,7 +275,6 @@
 
 <script setup lang="ts">
 import {
-  PhCopy,
   PhUsersThree,
   PhArrowRight,
   PhClockCountdown,
@@ -360,7 +284,6 @@ import dayjs from 'dayjs'
 import type { TMmrUpdateRequest } from '@/views/players/mmr-requests.service'
 
 import {
-  getCopy,
   getSteamProfileUrl,
   getDotabuffProfileUrl,
   getDiscordProfileUrl,
@@ -368,8 +291,7 @@ import {
   getPlayerRankImageSrcFromPlayerRank,
   formatPlayerRatingMmr,
   getPlayerDotaPositions,
-  isPlayerVerified,
-  resolvePublicOrApiUrl
+  isPlayerVerified
 } from '@/core/helpers'
 import { positionOptions } from '@/components/player-tags/player.enums'
 import { routeNames } from '@/router/route-names'
@@ -464,17 +386,6 @@ watch(
   },
   { immediate: true }
 )
-
-const profileTeamLogoSrc = computed(() =>
-  resolvePublicOrApiUrl(profileTeam.value?.logoUrl)
-)
-
-/** Dota Team ID з API для підпису та копіювання */
-const profileTeamDotaTeamIdDisplay = computed(() => {
-  const raw = profileTeam.value?.dotaTeamId
-  if (raw == null || String(raw).trim() === '') return null
-  return String(raw).trim()
-})
 
 /** Позиції Dota з `positionOptions` (ті самі іконки, що в фільтрах) — для /me */
 const profilePositionRows = computed(() => {
@@ -604,3 +515,30 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped lang="scss">
+// Position chip: cyan-tinted well with a glowing role icon.
+.position-chip {
+  border: 1px solid rgba(var(--ds-primary-rgb), 0.25);
+  background: rgba(var(--ds-primary-rgb), 0.06);
+  box-shadow: inset 0 1px 0 rgba(var(--ds-primary-rgb), 0.12);
+  transition:
+    border-color var(--ds-duration-base) ease,
+    background-color var(--ds-duration-base) ease,
+    box-shadow var(--ds-duration-base) ease,
+    transform var(--ds-duration-base) var(--ds-ease-out);
+}
+
+.position-chip__icon {
+  filter: drop-shadow(0 0 6px rgba(var(--ds-primary-rgb), 0.6));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .position-chip:hover {
+    transform: translateY(-1px);
+    border-color: rgba(var(--ds-primary-rgb), 0.6);
+    background: rgba(var(--ds-primary-rgb), 0.1);
+    box-shadow: inset 0 1px 0 rgba(var(--ds-primary-rgb), 0.2), var(--ds-glow-primary-soft);
+  }
+}
+</style>

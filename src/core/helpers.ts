@@ -1,6 +1,6 @@
 import { ERole } from '@/types/general.enums'
 import get from 'lodash/get'
-import type { LocationQueryValue, RouteLocationNormalized } from 'vue-router'
+import type { LocationQuery, LocationQueryValue, RouteLocationNormalized } from 'vue-router'
 import type { TPlayerRankDto } from '@/api/types/api.types'
 import { getDotaPositionLabel, roleLabelMap } from '@/components/player-tags/player.enums'
 
@@ -246,13 +246,40 @@ export function isPlayerVerified (
   return hasPlayerRole(player.roles, ERole.PLAYER)
 }
 
-export function getCopy (data: number | string | undefined | null, message: string) {
-  const { copy } = useClipboard()
+/** Єдиний текст тоста після копіювання: «<що саме> успішно скопійовано». */
+export function formatCopiedMessage (label: string) {
+  return `${label} успішно скопійовано`
+}
+
+/**
+ * Копіює значення в буфер і показує тост. `label` — що саме скопійовано
+ * («Discord», «Dota ID», «Посилання»), а не готове повідомлення.
+ */
+export function getCopy (data: number | string | undefined | null, label: string) {
+  const { copy } = useClipboard({ legacy: true })
 
   if (!data) return
 
-  copy(data as string)
-  ElMessage.success(message)
+  copy(String(data))
+  ElMessage.success(formatCopiedMessage(label))
+}
+
+/**
+ * Повертає копію query, де `keys` замінено значеннями з `patch` (порожні —
+ * прибрано), а решта параметрів лишається як є. Для модалок фільтрів, щоб
+ * «Застосувати» не зтирало чужі параметри маршруту.
+ */
+export function replaceQueryKeys (
+  query: LocationQuery,
+  keys: readonly string[],
+  patch: Record<string, string | undefined>
+): Record<string, LocationQueryValue | LocationQueryValue[]> {
+  const next: Record<string, LocationQueryValue | LocationQueryValue[]> = { ...query }
+  for (const key of keys) delete next[key]
+  for (const [key, value] of Object.entries(patch)) {
+    if (value != null && value !== '') next[key] = value
+  }
+  return next
 }
 
 export async function scrollToSection (section: HTMLElement | null) {

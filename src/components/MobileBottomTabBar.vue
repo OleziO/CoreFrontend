@@ -64,10 +64,20 @@ function isTabActive (name: string): boolean {
 .mobile-tabbar {
   @apply fixed bottom-0 left-0 right-0 z-50
          grid grid-cols-5
-         border-t border-white/10
          bg-surface/95 backdrop-blur-xl
          shadow-elevation-4;
+  border-top: 1px solid var(--ds-border);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Neon hairline across the top edge. */
+.mobile-tabbar::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, rgba(46, 229, 255, 0.55) 50%, transparent 100%);
 }
 
 /* Ховаємо таббар на десктопі саме тут, а не класом `lg:hidden` у шаблоні:
@@ -80,11 +90,27 @@ function isTabActive (name: string): boolean {
 }
 
 .mobile-tab {
-  @apply flex flex-col items-center justify-center gap-2
+  @apply relative flex flex-col items-center justify-center gap-2
          min-h-[58px] px-4 py-6
          text-caption font-medium text-white/55
          bg-transparent border-0 cursor-pointer
          transition-colors duration-200;
+}
+
+/* Active indicator: a short neon bar on the top edge of the tab. */
+.mobile-tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 28px;
+  height: 2px;
+  border-radius: 9999px;
+  background: var(--ds-primary);
+  box-shadow: 0 0 10px rgba(46, 229, 255, 0.8);
+  transform: translateX(-50%) scaleX(0);
+  transform-origin: center;
+  transition: transform var(--ds-duration-base) var(--ds-ease-out);
 }
 
 .mobile-tab:hover {
@@ -93,6 +119,11 @@ function isTabActive (name: string): boolean {
 
 .mobile-tab--active {
   @apply text-primary;
+  text-shadow: var(--ds-neon-text-subtle);
+}
+
+.mobile-tab--active::before {
+  transform: translateX(-50%) scaleX(1);
 }
 
 .mobile-tab__label {
