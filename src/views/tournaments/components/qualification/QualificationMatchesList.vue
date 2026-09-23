@@ -42,12 +42,12 @@
         </el-button>
         <el-button
           v-if="showTechLossButton"
-          type="danger"
+          type="success"
           plain
           class="btn-cta"
           @click="$emit('tech-loss')"
         >
-          Технічна поразка
+          Внести результати
         </el-button>
         <el-button
           v-if="showAddResultButton"

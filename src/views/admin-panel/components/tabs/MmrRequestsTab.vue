@@ -164,41 +164,6 @@
         </el-empty>
       </div>
     </div>
-
-    <!-- Proof carousel dialog -->
-    <el-dialog
-      v-model="carouselVisible"
-      width="90vw"
-      append-to-body
-      destroy-on-close
-      title="Докази"
-      class="mmr-proof-dialog"
-    >
-      <el-carousel
-        :initial-index="carouselStart"
-        height="100%"
-        :autoplay="false"
-        trigger="click"
-        indicator-position="outside"
-      >
-        <el-carousel-item
-          v-for="(proof, idx) in carouselProofs"
-          :key="proof.id"
-        >
-          <div class="flex h-full items-center justify-center overflow-hidden rounded-lg bg-black/30">
-            <el-image
-              :src="proof.url"
-              :preview-src-list="proofUrls"
-              :initial-index="idx as number"
-              fit="contain"
-              preview-teleported
-              hide-on-click-modal
-              class="size-full cursor-zoom-in"
-            />
-          </div>
-        </el-carousel-item>
-      </el-carousel>
-    </el-dialog>
   </div>
 </template>
 
@@ -210,7 +175,7 @@ import {
 } from '@phosphor-icons/vue'
 import { ElMessage } from 'element-plus'
 import { routeNames } from '@/router/route-names'
-import type { TMmrUpdateRequest, TMmrProof } from '@/views/players/mmr-requests.service'
+import type { TMmrUpdateRequest } from '@/views/players/mmr-requests.service'
 
 type TFilter = 'pending' | 'approved' | 'rejected'
 
@@ -226,11 +191,7 @@ const activeFilter = ref<TFilter>('pending')
 const isLoading = ref(false)
 const processingId = ref<string | null>(null)
 
-const carouselVisible = ref(false)
-const carouselProofs = ref<TMmrProof[]>([])
-const carouselStart = ref(0)
-
-const proofUrls = computed(() => carouselProofs.value.map((p) => p.url))
+const { open: openAppModal } = useAppModals()
 
 const mmrFormat = new Intl.NumberFormat('uk-UA')
 
@@ -324,9 +285,7 @@ async function reject (row: TMmrUpdateRequest) {
 }
 
 function openCarousel (row: TMmrUpdateRequest, idx: number) {
-  carouselProofs.value = row.proofs
-  carouselStart.value = idx
-  carouselVisible.value = true
+  openAppModal('MmrProofsLightboxModal', { proofs: row.proofs, initialIndex: idx })
 }
 
 function formatCreatedAt (dateStr: string): string {
@@ -798,46 +757,6 @@ onMounted(fetchRequests)
   .mmr-row-leave-active,
   .mmr-row-move {
     transition: none;
-  }
-}
-</style>
-
-<!--
-  Не scoped: el-dialog з append-to-body телепортується в <body>,
-  тому scoped :deep() селектори не доходять до нього.
-  Стилі прив'язані до унікального класу .mmr-proof-dialog.
--->
-<style>
-/* Майже повноекранне вікно з доказами — 90vw x 90vh, адаптивне */
-.mmr-proof-dialog.el-dialog {
-  max-width: 90vw;
-  height: 90vh;
-  margin: 5vh auto !important;
-  display: flex;
-  flex-direction: column;
-}
-
-.mmr-proof-dialog.el-dialog .el-dialog__body {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-/* Карусель заповнює доступну висоту; лишаємо місце для індикаторів (outside) */
-.mmr-proof-dialog.el-dialog .el-carousel {
-  height: 100% !important;
-}
-
-.mmr-proof-dialog.el-dialog .el-carousel__container {
-  height: calc(100% - 40px) !important;
-}
-
-@media (max-width: 768px) {
-  .mmr-proof-dialog.el-dialog {
-    width: 95vw !important;
-    max-width: 95vw;
-    height: 90vh;
-    margin: 5vh auto !important;
   }
 }
 </style>

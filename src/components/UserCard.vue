@@ -2,6 +2,7 @@
   <div
     class="user-card neon-card hud-corners group relative z-10 flex w-full !cursor-pointer flex-col gap-16
            overflow-hidden rounded-2xl px-18 py-20"
+    :class="accentClass"
     :style="{ maxWidth: `${width}px` }"
     @click="goToPlayerPage(user.id)"
   >
@@ -161,6 +162,7 @@ import {
   formatPlayerRatingMmr,
   getCopy,
   getPlayerRankImageSrcFromPlayerRank,
+  getPlayerRoleAccentClass,
   isPlayerVerified
 } from '@/core/helpers'
 import {
@@ -188,6 +190,9 @@ const isMobile = computed(() => window.width.value < 850)
 const verificationLoading = ref(false)
 
 const isVerified = computed(() => isPlayerVerified(props.user))
+
+/** Рольовий акцент рамки (`.role-frame--*`): адмін — золото, медіа — фіолет. */
+const accentClass = computed(() => getPlayerRoleAccentClass(props.user))
 
 const rankImageSrc = computed(() => getPlayerRankImageSrcFromPlayerRank(props.user.rank))
 
@@ -224,6 +229,14 @@ async function toggleVerificationFromMenu () {
 // Player dossier card. One hero number (MMR) in the mono neon register, a
 // five-pip position readout that shows the whole role profile at a glance,
 // and a soft brand aura behind the avatar so the surface is not flat.
+
+// Role frame (`.role-frame--*` in _neon.scss) tints border and corners; the
+// aura follows so the whole card reads in the role colour.
+.role-frame--gold .user-card__aura,
+.role-frame--violet .user-card__aura {
+  background: radial-gradient(closest-side, rgba(var(--role-frame-rgb), 0.2), transparent 100%);
+}
+
 .user-card__aura {
   position: absolute;
   inset: -40px auto auto -40px;

@@ -80,6 +80,16 @@ class TournamentsService {
     return await rawGet(`/tournaments/${tournamentId}/payments/me`) as TTournamentPaymentIntent | null
   }
 
+  /**
+   * POST /tournaments/:id/donations/intent — створити рахунок на донат обраної суми (копійки)
+   * через Monobank ФОП-еквайринг; повертає посилання на сторінку оплати.
+   * Ендпоінт ще відсутній у згенерованій схемі, тож викликаємо через нетипізований клієнт.
+   */
+  async createDonationIntent (tournamentId: string, amount: number): Promise<TTournamentDonationIntent> {
+    const rawPost = apiClient.post as unknown as (url: string, data?: unknown) => Promise<unknown>
+    return await rawPost(`/tournaments/${tournamentId}/donations/intent`, { amount }) as TTournamentDonationIntent
+  }
+
   /** POST /tournaments/:id/payments/:teamId/mark-paid — адмін позначає команду як таку, що сплатила внесок. */
   async adminMarkTeamPaid (
     tournamentId: string,

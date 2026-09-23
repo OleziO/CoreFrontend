@@ -123,6 +123,13 @@
     border-color: rgba(var(--ds-gold-rgb), 0.28);
     box-shadow: var(--ds-elevation-3), 0 0 12px rgba(var(--ds-gold-rgb), 0.16);
   }
+
+  // Violet variant (secondary accent) — media / streamer surfaces.
+  &--violet {
+    --neon-card-line-color: var(--ds-secondary-rgb);
+    border-color: rgba(var(--ds-secondary-rgb), 0.28);
+    box-shadow: var(--ds-elevation-3), 0 0 12px rgba(var(--ds-secondary-rgb), 0.16);
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -136,6 +143,51 @@
     border-color: rgba(var(--ds-gold-rgb), 0.6);
     box-shadow: var(--ds-elevation-4), var(--ds-glow-gold);
   }
+
+  .neon-card--violet:hover {
+    border-color: rgba(var(--ds-secondary-rgb), 0.6);
+    box-shadow: var(--ds-elevation-4), var(--ds-glow-secondary);
+  }
+}
+
+// ─── Role frames ────────────────────────────────────────────────────────────
+// The whole `.neon-card.hud-corners` frame (border, top hairline, corner
+// brackets, halo) takes a role colour: gold for admins, violet for media.
+// Resting alpha is higher than `.neon-card--*` so the tint is unmistakable
+// next to plain cyan cards. Resolved by `getPlayerRoleAccentClass`.
+@mixin role-frame($rgb, $glow) {
+  --neon-card-line-color: #{$rgb};
+  --neon-card-line: 0.8;
+  --role-frame-rgb: #{$rgb};
+  border-color: rgba($rgb, 0.5);
+  box-shadow: var(--ds-elevation-3), 0 0 12px rgba($rgb, 0.18);
+
+  // `.hud-corners` sets its own default further down this file; the compound
+  // selector outranks it so the brackets take the role colour.
+  &.hud-corners {
+    --hud-corner-color: rgba(#{$rgb}, 0.85);
+    --hud-corner-glow: drop-shadow(0 0 6px rgba(#{$rgb}, 0.5));
+  }
+
+  &.is-lit {
+    border-color: rgba($rgb, 0.8);
+    box-shadow: var(--ds-elevation-3), $glow;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      border-color: rgba($rgb, 0.8);
+      box-shadow: var(--ds-elevation-4), $glow;
+    }
+  }
+}
+
+.role-frame--gold {
+  @include role-frame(var(--ds-gold-rgb), var(--ds-glow-gold));
+}
+
+.role-frame--violet {
+  @include role-frame(var(--ds-secondary-rgb), var(--ds-glow-secondary));
 }
 
 // ─── Chamfered shapes ───────────────────────────────────────────────────────
@@ -384,4 +436,77 @@
       top / 100% 1px no-repeat,
     linear-gradient(160deg, rgba(20, 23, 41, 0.86) 0%, rgba(13, 15, 28, 0.92) 100%);
   box-shadow: var(--ds-elevation-3);
+}
+
+// ─── Skeleton ───────────────────────────────────────────────────────────────
+// Loading placeholders that speak the same language as the loaded UI: a dark
+// well with a faint cyan hairline instead of a flat grey block. A single
+// shimmer sweep crosses each bone; `--skeleton-delay` on a parent staggers
+// sibling cards into a cascade. Motion is transform only and is removed
+// entirely under reduced motion.
+.skeleton-bone {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid rgba(var(--ds-primary-rgb), 0.08);
+  background: rgba(255, 255, 255, 0.05);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      transparent 20%,
+      rgba(var(--ds-primary-rgb), 0.14) 50%,
+      transparent 80%
+    );
+    transform: translateX(-100%);
+    animation: skeleton-sweep 1.8s ease-in-out infinite;
+    animation-delay: var(--skeleton-delay, 0ms);
+  }
+
+  // Pill / avatar shapes.
+  &--round {
+    border-radius: 9999px;
+  }
+
+  // Primary-tinted bone for the one solid action a card owns (CTA).
+  &--primary {
+    border-color: rgba(var(--ds-primary-rgb), 0.28);
+    background: rgba(var(--ds-primary-rgb), 0.12);
+  }
+
+  // Inset well (stats strip, data panel) that holds other bones.
+  &--well {
+    border-radius: 8px;
+    border-color: rgba(var(--ds-primary-rgb), 0.16);
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 1px 0 rgba(var(--ds-primary-rgb), 0.12);
+
+    &::after {
+      content: none;
+    }
+  }
+}
+
+// Sweep once, then rest for the remainder of the cycle so cards do not strobe.
+@keyframes skeleton-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  55%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-bone::after {
+    animation: none;
+    transform: none;
+    opacity: 0.35;
+  }
 }

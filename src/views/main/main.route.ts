@@ -8,6 +8,7 @@ export const mainRoutes: RouteRecordRaw[] = [
   {
     path: '',
     name: mainRouteNames.rootPage,
+    meta: { public: true },
     component: () => import('@/views/main/Main.vue')
   }
 ]

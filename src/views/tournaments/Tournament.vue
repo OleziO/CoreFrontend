@@ -117,10 +117,19 @@
             :can-submit-playoff-match="canSubmitPlayoffMatch"
             :can-manage-players="canManagePlayers"
             :is-localhost="isLocalhost"
+            :playoff-teams-count="playoff?.teams.length ?? null"
+            :is-completed="isPlayoffCompleted"
             @open-playoff-submit="openPlayoffSubmit"
             @open-tech-loss-playoff="openTechLossPlayoff"
             @open-test-match-modal="openTestMatchModal"
           />
+        </div>
+
+        <div
+          v-if="activeTab === 'stream'"
+          class="mt-20"
+        >
+          <TournamentStreamTab :tournament-id="tournamentId" />
         </div>
 
         <div
@@ -232,6 +241,10 @@ const isPlayoffPhase = computed(() =>
 
 const playoffEmbedUrl = computed(() => playoff.value?.embedUrl ?? '')
 
+/** Плей-оф зіграно: турнір завершений статусом або за датою — сітка лишається як архів. */
+const isPlayoffCompleted = computed(() =>
+  tournament.value?.tournamentStatus === 'COMPLETED' || isTournamentEndedByDate(tournament.value))
+
 async function loadPlayoff (opts?: { force?: boolean }) {
   if (!tournamentId) return
   if (playoffLoading.value) return
@@ -310,6 +323,7 @@ const tabs = computed(() => {
     items.push({ label: 'Кваліфікація', value: 'qualification' })
   }
   items.push({ label: 'Сітка', value: 'bracket' })
+  items.push({ label: 'Трансляція', value: 'stream' })
 
   if (canManagePlayers.value) {
     items.push({ label: 'Управління', value: 'admin' })

@@ -64,6 +64,18 @@ export function getDotabuffTeamUrl (dotaTeamId: string | null | undefined) {
   return `https://www.dotabuff.com/esports/teams/${dotaTeamId}`
 }
 
+/**
+ * Справжній ID матчу Dota 2 — лише цифри. Технічні поразки зберігаються з
+ * префіксом (`tech_loss_<uuid>`), для них сторінки на Dotabuff не існує.
+ */
+export function isDotaMatchId (value: string | null | undefined): value is string {
+  return typeof value === 'string' && /^\d+$/.test(value)
+}
+
+export function getDotabuffMatchUrl (dotaMatchId: string | null | undefined) {
+  return isDotaMatchId(dotaMatchId) ? `https://www.dotabuff.com/matches/${dotaMatchId}` : null
+}
+
 export function firstQueryValue (value: RouteLocationNormalized['query'][string]) {
   if (value == null) return undefined
 
@@ -238,12 +250,29 @@ export function playerMatchesRoleFilterToken (
   return pr.some(r => r.name === token)
 }
 
+/**
+ * Гравець верифікований, якщо є `verifiedAt` або роль «Гравець».
+ * Роль «Медіа» (стрімери) також вважається верифікованою.
+ */
 export function isPlayerVerified (
   player: { roles?: readonly { name: string }[] | null; verifiedAt?: string | null } | null | undefined
 ): boolean {
   if (!player) return false
   if (player.verifiedAt) return true
-  return hasPlayerRole(player.roles, ERole.PLAYER)
+  return hasPlayerRole(player.roles, ERole.PLAYER) || hasPlayerRole(player.roles, ERole.MEDIA)
+}
+
+/**
+ * Рольовий акцент рамки (картка, профіль): адмін — золото, медіа (стрімер) — фіолет.
+ * Адмін має пріоритет. Повертає клас `.role-frame--*` з `_neon.scss` або порожній рядок.
+ */
+export function getPlayerRoleAccentClass (
+  player: { roles?: readonly { name: string; isAdminRole?: boolean }[] | null } | null | undefined
+): '' | 'role-frame--gold' | 'role-frame--violet' {
+  if (!player) return ''
+  if (hasAdminRole(player.roles)) return 'role-frame--gold'
+  if (hasPlayerRole(player.roles, ERole.MEDIA)) return 'role-frame--violet'
+  return ''
 }
 
 /** Єдиний текст тоста після копіювання: «<що саме> успішно скопійовано». */

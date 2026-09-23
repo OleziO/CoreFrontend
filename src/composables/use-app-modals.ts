@@ -33,7 +33,10 @@ export const appModals = useModals({
   GroupOperationsModal:
     defineAsyncComponent(() => import('@/views/finance-monitor/modals/GroupOperationsModal.vue')) as Component,
   CreateCustomCategoryModal:
-    defineAsyncComponent(() => import('@/views/finance-monitor/modals/CreateCustomCategoryModal.vue')) as Component
+    defineAsyncComponent(() => import('@/views/finance-monitor/modals/CreateCustomCategoryModal.vue')) as Component,
+  MmrProofsLightboxModal:
+    defineAsyncComponent(() => import('@/views/admin-panel/modals/MmrProofsLightboxModal.vue')) as Component,
+  LoginModal: defineAsyncComponent(() => import('@/components/modals/LoginModal.vue')) as Component
 })
 
 export function useAppModals () {

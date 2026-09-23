@@ -9,9 +9,10 @@
       <span class="qual-phase__glow" aria-hidden="true" />
 
       <div
-        class="relative grid gap-16 p-16 sm:p-20 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-28"
+        class="relative grid gap-20 px-36 py-30 sm:px-44 sm:py-34 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center
+          lg:gap-40"
       >
-        <div class="qual-phase__reveal flex min-w-0 flex-col gap-10" style="--reveal-index: 0">
+        <div class="qual-phase__reveal flex min-w-0 flex-col gap-12" style="--reveal-index: 0">
           <p class="qual-phase__eyebrow sys-label">
             <span class="qual-phase__tick" aria-hidden="true" />
             <span>Етап</span>
@@ -445,8 +446,8 @@ function onSubmitted (updated: QualificationMatch) {
 // той самий рецепт, що й панель приєднання в героя, тож вкладка читається як
 // продовження сторінки, а не окремий віджет.
 .qual-phase {
-  --hud-corner-size: 16px;
-  --hud-corner-inset: 8px;
+  --hud-corner-size: 14px;
+  --hud-corner-inset: 10px;
   --hud-corner-radius: 3px;
   --hud-corner-color: rgba(var(--ds-primary-rgb), 0.55);
   --hud-corner-glow: drop-shadow(0 0 6px rgba(var(--ds-primary-rgb), 0.4));
@@ -634,7 +635,7 @@ function onSubmitted (updated: QualificationMatch) {
 }
 
 .qual-phase__stat {
-  @apply flex min-w-0 flex-col gap-4 px-12 py-10 sm:px-16;
+  @apply flex min-w-0 flex-col gap-6 px-36 py-22 sm:px-44 sm:py-24;
 
   & + & {
     border-left: 1px solid rgba(255, 255, 255, 0.06);

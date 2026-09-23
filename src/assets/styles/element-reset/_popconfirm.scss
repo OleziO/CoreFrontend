@@ -1,40 +1,86 @@
 @use "element-plus/theme-chalk/src/popconfirm";
-@use "../mixins" as *;
 
-/* Панель як у dropdown: .el-dropdown-menu */
+// ─────────────────────────────────────────────────────────────────────────────
+// Popconfirm — компактне підтвердження біля тригера. Темне скло з ціановою
+// волосиною, іконка в тонованому диску, «Скасувати» — тиха текстова дія, щоб
+// єдиною кольоровою кнопкою лишалась дія підтвердження.
+//
+// Тон береться з типу кнопки підтвердження через `:has()`: `danger` фарбує
+// верхню лінію, диск і стрілку в червоний — деструктивне питання читається
+// ще до тексту. Інакше — ціан.
+// ─────────────────────────────────────────────────────────────────────────────
+
 .el-popper.el-tooltip:has(.el-popconfirm) {
-  @include glass-popper;
-  @include neon-top-line(var(--ds-primary), 0.6);
-  @apply rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)];
+  --pc-tone: var(--ds-primary-rgb);
+  --pc-bg: rgba(13, 15, 28, 0.94);
+
   box-sizing: border-box;
-  padding: 12px 14px !important;
-  min-width: 200px;
+  min-width: 220px;
   max-width: min(100vw - 24px, 400px);
+  padding: 14px 16px 12px !important;
+  border: 1px solid rgba(var(--pc-tone), 0.28) !important;
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(var(--pc-tone), 0.7) 50%, transparent 100%) top / 100% 1px no-repeat,
+    var(--pc-bg) !important;
+  box-shadow: var(--ds-elevation-3), 0 0 18px rgba(var(--pc-tone), 0.14);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  .el-popper__arrow::before {
+    background: var(--pc-bg) !important;
+    border-color: rgba(var(--pc-tone), 0.28) !important;
+  }
+
+  // Деструктивне підтвердження
+  &:has(.el-popconfirm__action .el-button--danger) {
+    --pc-tone: 239, 68, 68;
+  }
 }
 
 .el-popconfirm {
-  @apply flex flex-col gap-10 min-w-0;
+  @apply flex min-w-0 flex-col gap-12;
   max-width: 100%;
 }
 
 .el-popconfirm__main {
-  @apply
-    text-sm
-    text-white/90
-    flex items-start gap-10
-    leading-snug;
+  @apply flex items-start gap-10;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 1.45;
+  color: var(--ds-text);
 }
 
+// Іконка в тонованому диску — маленький «знак питання» стає видимим маркером тону.
 .el-popconfirm__icon {
-  @apply shrink-0 mt-2 text-warning;
-  font-size: 18px;
+  @apply inline-flex shrink-0 items-center justify-center rounded-lg;
+  width: 28px;
+  height: 28px;
+  margin-top: -3px;
+  font-size: 15px;
+  color: rgb(var(--pc-tone)) !important;
+  background: rgba(var(--pc-tone), 0.1);
+  box-shadow: inset 0 0 0 1px rgba(var(--pc-tone), 0.3);
 }
 
 .el-popconfirm__action {
-  @apply flex justify-end gap-8 pt-10 items-center mt-2 border-t border-white/10;
-}
+  @apply flex items-center justify-end gap-6 pt-10;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 
-.el-popconfirm__action .el-button--small {
-  @apply px-12 py-6 min-h-0 #{!important};
+  .el-button--small {
+    @apply min-h-0 px-12 py-6 #{!important};
+    height: 32px;
+  }
+
+  // «Скасувати» — без рамки й заливки, лише текст; кольорова кнопка одна.
+  .el-button--small:not(.el-button--primary):not(.el-button--danger):not(.el-button--success) {
+    --el-button-bg-color: transparent;
+    --el-button-border-color: transparent;
+    --el-button-hover-bg-color: rgba(255, 255, 255, 0.06);
+    --el-button-hover-border-color: transparent;
+    --el-button-active-bg-color: rgba(255, 255, 255, 0.1);
+    --el-button-active-border-color: transparent;
+    --el-button-text-color: var(--ds-text-muted);
+    --el-button-hover-text-color: #fff;
+  }
 }

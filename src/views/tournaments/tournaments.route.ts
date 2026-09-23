@@ -10,6 +10,7 @@ export const tournamentRoutes: RouteRecordRaw[] = [
   {
     path: 'tournaments',
     name: tournamentRouteNames.tournaments,
+    meta: { public: true },
     component: () => import('@/views/tournaments/Tournaments.vue')
   },
   {

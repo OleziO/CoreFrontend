@@ -51,12 +51,16 @@
                 @mouseenter="hoveredColId = col.id"
               >
                 <el-tooltip
-                  :content="cell.tooltip"
                   placement="top"
-                  :disabled="!cell.tooltip"
+                  :disabled="!cell.match"
                   :show-after="200"
+                  :persistent="false"
                   effect="dark"
+                  popper-class="qual-match-tip-popper"
                 >
+                  <template #content>
+                    <QualificationMatchTooltip v-if="cell.match" :match="cell.match" />
+                  </template>
                   <span
                     class="qual-matrix-cell__label inline-flex w-full h-full items-center justify-center
                       cursor-default"
@@ -76,7 +80,9 @@
 
 <script setup lang="ts">
 import QualificationMatrixTeamThumb from './QualificationMatrixTeamThumb.vue'
+import QualificationMatchTooltip from './QualificationMatchTooltip.vue'
 import type { TQualificationMatch } from '@/api/types/api.types'
+import { isDotaMatchId } from '@/core/helpers'
 import {
   buildQualificationMatrixTeams,
   buildQualificationPairMap,
@@ -103,7 +109,8 @@ const hoveredColId = ref<string | null>(null)
 interface ICellPresentation {
   label: string
   className: string
-  tooltip: string
+  /** Зіграний матч для картки-тултіпа; `null` — клітинка без результату. */
+  match: TQualificationMatch | null
   ariaLabel: string
 }
 
@@ -111,15 +118,16 @@ function cellPresentation (rowId: string, colId: string): ICellPresentation {
   const kind = resolveQualificationMatrixCell(rowId, colId, pairMap.value)
   const match = rowId === colId ? undefined : pairMap.value.get(qualificationPairKey(rowId, colId))
 
-  let tooltip = ''
+  // Текстовий дубль картки-тултіпа для читачів екрана (сам тултіп — розмітка).
+  let matchAriaLabel = ''
   if ((kind === 'win' || kind === 'loss') && match) {
     const opponentName = teams.value.find((t) => t.id === colId)?.name ?? ''
-    tooltip =
+    matchAriaLabel =
       kind === 'win'
         ? `Перемога над «${opponentName}»`
         : `Поразка від «${opponentName}»`
-    if (match.dotaMatchId) {
-      tooltip += ` · Dota ${match.dotaMatchId}`
+    if (isDotaMatchId(match.dotaMatchId)) {
+      matchAriaLabel += `, матч Dota 2 ${match.dotaMatchId}`
     }
   }
 
@@ -140,9 +148,10 @@ function cellPresentation (rowId: string, colId: string): ICellPresentation {
 
   // Діагональ малюється штрихуванням замість «X» — буква лишається для читачів екрана.
   const label = kind === 'diagonal' ? '' : qualificationMatrixCellLabel(kind)
-  const ariaLabel = kind === 'diagonal' ? 'Та сама команда' : ''
+  const ariaLabel = kind === 'diagonal' ? 'Та сама команда' : matchAriaLabel
+  const shownMatch = (kind === 'win' || kind === 'loss') && match ? match : null
 
-  return { label, className, tooltip, ariaLabel }
+  return { label, className, match: shownMatch, ariaLabel }
 }
 </script>
 

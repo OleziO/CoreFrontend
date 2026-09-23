@@ -14,6 +14,7 @@
         <div class="flex gap-20 flex-wrap 2lg:flex-nowrap nm:pt-60 pt-20">
           <PlayerProfileHeader
             v-if="player"
+            :class="roleAccentClass"
             :player="player"
             :player-tags="playerTags"
             :is-verified="isVerified"
@@ -32,11 +33,12 @@
             @link-steam="handleSteamLink"
             @request-mmr="openRequestMmrModal"
           />
-          <PlayerMatchStats :match-stats="matchStats" />
+          <PlayerMatchStats :class="roleAccentClass" :match-stats="matchStats" />
         </div>
 
         <!-- Улюблені герої (OpenDota + Steam CDN) -->
         <PlayerFavoriteHeroes
+          :class="roleAccentClass"
           :has-account="favoriteHeroesHasAccount"
           :is-pending="favoriteHeroesPending"
           :is-error="favoriteHeroesError"
@@ -53,6 +55,7 @@
           <div
             class="neon-card hud-corners flex min-h-0 min-w-0 flex-col items-center gap-14 rounded-2xl md:h-full
               px-16 py-16 text-center 2md:px-20 2md:py-18"
+            :class="roleAccentClass"
           >
             <h2 class="section-title shrink-0">
               Команда
@@ -83,6 +86,7 @@
           <div
             class="neon-card hud-corners flex min-h-0 min-w-0 flex-col items-center gap-14 rounded-2xl md:h-full
               px-16 py-16 text-center 2md:px-20 2md:py-18"
+            :class="roleAccentClass"
           >
             <h2 class="section-title shrink-0">
               Позиції
@@ -129,6 +133,7 @@
           <div
             class="neon-card hud-corners flex min-h-0 min-w-0 flex-col items-center gap-14 rounded-2xl md:h-full
               px-16 py-16 text-center 2md:px-20 2md:py-18"
+            :class="roleAccentClass"
           >
             <h2 class="section-title shrink-0">
               Команда
@@ -160,6 +165,7 @@
           <div
             class="neon-card hud-corners flex min-h-0 min-w-0 flex-col items-center gap-14 rounded-2xl md:h-full
               px-16 py-16 text-center 2md:px-20 2md:py-18"
+            :class="roleAccentClass"
           >
             <h2 class="section-title shrink-0">
               Позиції
@@ -291,6 +297,7 @@ import {
   getPlayerRankImageSrcFromPlayerRank,
   formatPlayerRatingMmr,
   getPlayerDotaPositions,
+  getPlayerRoleAccentClass,
   isPlayerVerified
 } from '@/core/helpers'
 import { positionOptions } from '@/components/player-tags/player.enums'
@@ -329,6 +336,9 @@ const rankImageSrc = computed(() => getPlayerRankImageSrcFromPlayerRank(player.v
 const ratingMmrLabel = computed(() => formatPlayerRatingMmr(player.value?.rating))
 
 const isVerified = computed(() => isPlayerVerified(player.value))
+
+/** Рольовий акцент рамок профілю (`.role-frame--*`): адмін — золото, медіа — фіолет. */
+const roleAccentClass = computed(() => getPlayerRoleAccentClass(player.value))
 
 const matchStats = computed(() => getPlayerMatchStats(player.value))
 

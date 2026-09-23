@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { firstQueryValue, hasAdminRole } from '@/core/helpers'
 import { routes, routeNames } from './route-names'
+import { resolveAuthGuard } from './guards/auth.guard'
 
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -33,9 +34,10 @@ router.beforeEach(async (to, from, next) => { // Перед роутингом �
 
   const authStore = useAuthStore()
 
-  if (!authStore.token && to.name === 'me') {
-    return next('/')
-  }
+  // Приватні маршрути за замовчуванням (див. guards/auth.guard.ts): без токена — LoginModal, view не монтується.
+  const authRedirect = resolveAuthGuard(to, from)
+  if (authRedirect === false) return next(false)
+  if (authRedirect !== null) return next(authRedirect)
 
   if (authStore.token && !authStore.user) {
     await authStore.fetchUser()

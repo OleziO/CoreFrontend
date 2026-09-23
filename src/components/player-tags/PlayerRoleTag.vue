@@ -161,8 +161,11 @@ const overflowRoles = computed(() => {
 <style scoped>
 /* Мова тегів — element-reset/_tag.scss. Тут лише колір ролі (RGB-змінні з
    getRoleTagCssVars) і поведінка в сітці. Тег — ярлик, він обіймає текст і
-   ніколи не розтягується на ширину клітинки, інакше читається як кнопка. */
-.role-tag-pill {
+   ніколи не розтягується на ширину клітинки, інакше читається як кнопка.
+   Селектори складені з .el-tag: глобальний reset пише білий тон на
+   `.el-tag.el-tag--plain`, і при рівній специфічності він перекривав колір
+   ролі (App.vue підключається раніше за main.scss). */
+.el-tag.role-tag-pill {
   @apply m-0 shrink-0 max-w-full min-w-0;
   --rt: rgb(var(--rt-r) var(--rt-g) var(--rt-b));
   --el-tag-bg-color: rgb(var(--rt-r) var(--rt-g) var(--rt-b) / 0.2);
@@ -174,10 +177,10 @@ const overflowRoles = computed(() => {
    тег читався незалежно від відтінку, нормалізуємо його в OKLCH: беремо лише
    hue, а світлоту й насиченість фіксуємо — фон і рамка помітні, текст світлий. */
 @supports (color: oklch(from red l c h)) {
-  .role-tag-pill {
-    --el-tag-bg-color: oklch(from var(--rt) 0.62 min(c, 0.16) h / 0.26);
-    --el-tag-border-color: oklch(from var(--rt) 0.7 min(c, 0.16) h / 0.5);
-    --el-tag-text-color: oklch(from var(--rt) 0.9 min(c, 0.1) h);
+  .el-tag.role-tag-pill {
+    --el-tag-bg-color: oklch(from var(--rt) 0.62 min(c, 0.16) h / 0.3);
+    --el-tag-border-color: oklch(from var(--rt) 0.7 min(c, 0.16) h / 0.55);
+    --el-tag-text-color: oklch(from var(--rt) 0.88 min(c, 0.12) h);
   }
 }
 
@@ -191,7 +194,7 @@ const overflowRoles = computed(() => {
 }
 
 /* «+N» відкриває тултіп — єдиний інтерактивний тег, тож має курсор і hover */
-.role-tag-pill--more {
+.el-tag.role-tag-pill--more {
   @apply shrink-0 tabular-nums;
   --el-tag-bg-color: rgba(255, 255, 255, 0.08);
   --el-tag-border-color: rgba(255, 255, 255, 0.16);
@@ -201,7 +204,7 @@ const overflowRoles = computed(() => {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .role-tag-pill--more:hover {
+  .el-tag.role-tag-pill--more:hover {
     --el-tag-bg-color: rgba(255, 255, 255, 0.14);
     --el-tag-text-color: var(--ds-text-strong);
   }

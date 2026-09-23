@@ -79,18 +79,18 @@
 
     <!-- ================= CONTENT ================= -->
     <div class="h-full w-full relative z-10">
-      <div
+      <!-- Скелети повторюють геометрію VirtualList, тож картки стають на місце без стрибка -->
+      <CardGridSkeleton
         v-if="playersStore.loading"
-        class="grid grid-cols-1 2xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-24
-               justify-items-center px-20 pt-130 pb-20"
+        :columns="cardsPerRow"
+        :item-width="effectiveCardWidth"
+        :item-height="USER_CARD_HEIGHT"
+        label="Завантажуємо гравців…"
       >
-        <div
-          v-for="i in 8"
-          :key="i"
-          class="w-full max-w-[270px] rounded-2xl border border-white/10 bg-dark-card animate-pulse"
-          :style="{ height: `${USER_CARD_HEIGHT}px` }"
-        />
-      </div>
+        <template #item>
+          <UserCardSkeleton :width="effectiveCardWidth" />
+        </template>
+      </CardGridSkeleton>
 
       <VirtualList
         v-else
@@ -118,6 +118,7 @@ import {
   parsePlayersFilters,
   playerMatchesFilters
 } from '@/views/players/players-filters.utils'
+import { sortPlayersByRolePriority } from '@/views/players/players-sort.utils'
 
 /** Ширша картка: 4 в ряд замість 5, щоб імена та теги мали місце. */
 const USER_CARD_WIDTH = 340
@@ -142,9 +143,12 @@ const filteredPlayers = computed(() => {
     player => playerMatchesFilters(player, filters.value, playersStore.userRolesCatalog)
   )
 
-  return search.value
+  const visiblePlayers = search.value
     ? mappedPlayers.filter(player => searchPlayer(player))
     : mappedPlayers
+
+  /** Адміни → Медіа → Верифіковані → Неверифіковані (players-sort.utils). */
+  return sortPlayersByRolePriority(visiblePlayers)
 })
 
 const activeFiltersCount = computed(() => countActivePlayersFilters(filters.value))

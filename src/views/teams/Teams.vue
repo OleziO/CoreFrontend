@@ -23,7 +23,13 @@
               <h1 class="font-display text-3xl xl:text-4xl uppercase tracking-wide text-white neon-text-subtle">
                 Команди {{ window.width.value > 1024 ? 'платформи' : '' }}
               </h1>
-              <span class="font-mono text-xl text-primary/60">[{{ filteredTeams.length }}]</span>
+              <!-- Поки список вантажиться, лічильник — кістка, а не оманливе [0] -->
+              <span
+                v-if="teamsStore.loading"
+                class="skeleton-bone inline-block h-18 w-44 self-center"
+                aria-hidden="true"
+              />
+              <span v-else class="font-mono text-xl text-primary/60">[{{ filteredTeams.length }}]</span>
             </div>
           </div>
 
@@ -85,18 +91,19 @@
     </div>
 
     <div class="h-full w-full relative z-10">
-      <div
+      <!-- Скелети повторюють геометрію VirtualList, тож картки стають на місце без стрибка -->
+      <CardGridSkeleton
         v-if="teamsStore.loading"
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-24
-               justify-items-center px-20 pt-130 pb-20"
+        :columns="cardsPerRow"
+        :item-width="effectiveCardWidth"
+        :item-height="teamCardHeight"
+        grid-cell-class="pb-10 pr-12"
+        label="Завантажуємо команди…"
       >
-        <div
-          v-for="i in 8"
-          :key="i"
-          class="w-full max-w-[300px] rounded-2xl border border-white/10 bg-dark-card animate-pulse"
-          :style="{ height: `${teamCardHeight}px` }"
-        />
-      </div>
+        <template #item>
+          <TeamCardSkeleton :width="effectiveCardWidth" />
+        </template>
+      </CardGridSkeleton>
 
       <VirtualList
         v-else
