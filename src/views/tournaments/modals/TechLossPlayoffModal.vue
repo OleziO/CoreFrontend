@@ -79,8 +79,8 @@
               </span>
               <span class="tech-loss-option__meta">
                 <span class="tech-loss-option__chip">{{ roundLabel(m) }}</span>
-                <span v-if="m.format === 'bo3'" class="tech-loss-option__chip is-bo3">
-                  BO3 · {{ m.winsTeamA }}:{{ m.winsTeamB }}
+                <span v-if="m.format !== 'bo1'" class="tech-loss-option__chip is-bo3">
+                  {{ m.format.toUpperCase() }} · {{ m.winsTeamA }}:{{ m.winsTeamB }}
                 </span>
               </span>
             </span>
@@ -91,8 +91,9 @@
         <Transition name="fade-slide">
           <p v-if="selectedMatch" class="tech-loss__series">
             <span class="tech-loss__series-chip">{{ roundLabel(selectedMatch) }}</span>
-            <span v-if="selectedMatch.format === 'bo3'" class="tech-loss__series-chip is-bo3">
-              BO3 · рахунок {{ selectedMatch.winsTeamA }}:{{ selectedMatch.winsTeamB }}
+            <span v-if="selectedMatch.format !== 'bo1'" class="tech-loss__series-chip is-bo3">
+              {{ selectedMatch.format.toUpperCase() }} · рахунок
+              {{ selectedMatch.winsTeamA }}:{{ selectedMatch.winsTeamB }}
             </span>
             <span class="tech-loss__series-id">#{{ selectedMatch.challongeMatchId }}</span>
           </p>

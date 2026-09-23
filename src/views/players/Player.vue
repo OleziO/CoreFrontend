@@ -303,14 +303,11 @@ import {
 import { positionOptions } from '@/components/player-tags/player.enums'
 import { routeNames } from '@/router/route-names'
 import type { TTag } from '@/services/tags.types'
-import { playersService } from '@/views/players/players.service'
 import type { TCreateTeamPayload } from '@/views/teams/teams.service'
-import { teamsService } from '@/views/teams/teams.service'
 import { usePlayerFavoriteHeroes } from '@/views/players/composables/use-player-heroes'
 
 const route = useRoute()
 const router = useRouter()
-const player = ref<TPlayer | null>(null)
 /** Модераційні теги гравця (лише для адмін/модер перегляду) — не входять у `TPlayer`. */
 const playerTags = ref<TTag[]>([])
 
@@ -319,6 +316,14 @@ const { open, close } = useAppModals()
 const playerStore = usePlayersStore()
 const teamsStore = useTeamsStore()
 const me = useAuthStore()
+
+/** Джерело істини — стори (/me → auth, інакше players); мутації патчать їх, тож сторінка оновлюється сама. */
+const routePlayerId = computed(() => String(route.params.id ?? ''))
+const player = computed<TPlayer | null>(() =>
+  route.name === routeNames.profile
+    ? (me.user as TPlayer | null)
+    : (playerStore.players.find((p) => p.id === routePlayerId.value) ?? null)
+)
 
 const loading = ref(false)
 const linkingSteam = ref(false)
@@ -382,16 +387,18 @@ const playerTeamLinkId = computed(() => {
   return String(id)
 })
 
-const profileTeam = shallowRef<TTeam | null>(null)
+/** Команда гравця — зі стору (реактивно); при зміні teamId тихо освіжаємо її з беку. */
+const profileTeam = computed(() =>
+  playerTeamLinkId.value ? (teamsStore.teams.find((t) => t.id === playerTeamLinkId.value) ?? null) : null
+)
 const profileTeamLoading = ref(false)
 
 watch(
   playerTeamLinkId,
   async (teamId) => {
-    profileTeam.value = null
     if (!teamId) return
     profileTeamLoading.value = true
-    profileTeam.value = await teamsService.fetchTeam(teamId, { silent: true }).catch(() => null)
+    await teamsStore.refreshTeam(teamId)
     profileTeamLoading.value = false
   },
   { immediate: true }
@@ -426,11 +433,10 @@ watch(() => route.name, async () => {
 })
 
 async function onOpen () {
-  const id = String(route.params.id)
   const isMePage = route.name === routeNames.profile
   loading.value = true
   try {
-    player.value = isMePage ? (me.user as TPlayer) : await playerStore.findPlayer(id)
+    if (!isMePage) await playerStore.findPlayer(routePlayerId.value)
     if (!player.value) router.push('/')
     await loadPlayerTags()
   } finally {
@@ -460,11 +466,7 @@ async function togglePlayerVerification () {
   if (!player.value || verifyLoading.value) return
   verifyLoading.value = true
   try {
-    const updated = await playersService.setPlayerVerificationByAdmin(player.value.id, !isVerified.value)
-    if (updated) {
-      player.value = updated
-      playerStore.patchPlayerInList(updated)
-    }
+    await playerStore.setPlayerVerification(player.value.id, !isVerified.value)
   } finally {
     verifyLoading.value = false
   }
@@ -477,7 +479,6 @@ async function handleCreateTeam (dto: TCreateTeamPayload) {
   }
   close('TeamCreateModal')
   await me.fetchUser()
-  player.value = me.user as TPlayer
   await router.push({ name: routeNames.team, params: { id: created.id } })
 }
 
@@ -496,12 +497,9 @@ function openEditProfileModal () {
 
   open('PlayerEditProfileModal', {
     player: player.value,
-    onUpdated: async (updated: TPlayer) => {
-      player.value = updated
-      if (route.name === routeNames.profile) {
-        await me.fetchUser()
-        player.value = me.user as TPlayer
-      }
+    // Стори вже оновлено через playersStore; для /me додатково перечитуємо /auth/me (серверні поля, ролі).
+    onUpdated: async () => {
+      if (route.name === routeNames.profile) await me.fetchUser()
     },
     onTagsUpdated: (tags: TTag[]) => {
       playerTags.value = tags
@@ -518,7 +516,6 @@ onMounted(async () => {
   const result = me.handleSteamCallback(route.query)
   if (result === 'linked') {
     await me.fetchUser()
-    player.value = me.user as TPlayer
     router.replace({ name: routeNames.profile })
   } else if (result === 'error') {
     router.replace({ name: routeNames.profile })

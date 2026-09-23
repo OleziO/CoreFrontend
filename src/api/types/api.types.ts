@@ -21,6 +21,10 @@ export type TSubmitPlayoffMatchDto = components['schemas']['SubmitPlayoffMatchDt
 /** Тіло POST /tournaments/:id/playoff/disqualify. */
 export type TDisqualifyTeamDto = components['schemas']['DisqualifyTeamDto']
 export type TCreateTournamentDto = components['schemas']['CreateTournamentDto']
+/** Формат сітки плей-оф: SINGLE_ELIMINATION | DOUBLE_ELIMINATION. */
+export type TTournamentBracketType = components['schemas']['TournamentBracketType']
+/** Довжина серії у фінальних слотах плей-оф: 1 — BO1, 3 — BO3, 5 — BO5. */
+export type TPlayoffBestOf = components['schemas']['CreateTournamentDto']['grandFinalBestOf']
 export type TMatch = components['schemas']['Match']
 export type TUserRole = components['schemas']['UserRoles']
 export type TCurrentPlayerRole = components['schemas']['CurrentPlayerRoleDto']

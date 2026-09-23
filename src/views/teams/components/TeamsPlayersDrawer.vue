@@ -215,7 +215,6 @@ import {
 import { routeNames } from '@/router/route-names'
 import { getCopy, getDotabuffTeamUrl, resolvePublicOrApiUrl } from '@/core/helpers'
 import { computeTeamAvgRatingRounded } from '@/components/tournaments-tags/tournament.constants'
-import { teamsService } from '@/views/teams/teams.service'
 import { hydrateTeamPlayersRanks, shallowSnapshotTeamForHydrate } from '@/views/teams/team-roster-hydrate.utils'
 
 const MAIN_SLOTS = 5
@@ -227,12 +226,20 @@ const props = defineProps<{
 
 const modelValue = defineModel<boolean>({ default: false })
 
-const displayTeam = ref<TTeam>(props.team)
-
 const rosterHydrating = ref(false)
 
 const { open } = useAppModals()
 const teamsStore = useTeamsStore()
+
+/**
+ * Джерело істини — стор (якщо команда там є), інакше проп. Ростер гідратуємо (`rank`)
+ * прямо в computed, тож будь-який патч у сторі одразу видно в шухляді.
+ */
+const displayTeam = computed<TTeam>(() =>
+  hydrateTeamPlayersRanks(
+    shallowSnapshotTeamForHydrate(teamsStore.teams.find((t) => t.id === props.team.id) ?? props.team)
+  )
+)
 const authStore = useAuthStore()
 const isAdmin = computed(() => authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator)
 
@@ -288,52 +295,13 @@ const SlotLine: FunctionalComponent<{ free: number; isAdmin: boolean }, { add: [
 SlotLine.props = { free: Number, isAdmin: Boolean }
 SlotLine.emits = ['add']
 
-watch(
-  () => props.team,
-  () => {
-    displayTeam.value = props.team
-    if (modelValue.value) {
-      loadHydratedRoster().catch(() => undefined)
-    }
-  }
-)
-
-watch(
-  modelValue,
-  (open) => {
-    if (open) {
-      loadHydratedRoster().catch(() => undefined)
-    } else {
-      displayTeam.value = props.team
-    }
-  },
-  /**
-   * Модалка LazyComponent перший раз монтується вже відкритою (`isOpen: true`).
-   * Без `immediate` watcher не збігається з початковим `true`, і roster не гідратиться — лишаються лише дані без `rank`.
-   */
-  { immediate: true }
-)
-
-async function loadHydratedRoster () {
-  rosterHydrating.value = true
-  try {
-    displayTeam.value = hydrateTeamPlayersRanks(
-      shallowSnapshotTeamForHydrate(props.team)
-    )
-  } finally {
-    rosterHydrating.value = false
-  }
-}
-
 /** Після зміни складу — актуальний GET /teams/:id (для модалки та лічильників слотів). */
 async function loadFreshTeamFromApi () {
   const tid = props.team?.id
   if (!tid) return
   rosterHydrating.value = true
   try {
-    const hydrated = hydrateTeamPlayersRanks(await teamsService.fetchTeam(tid))
-    displayTeam.value = hydrated
-    teamsStore.patchTeamInList(hydrated)
+    await teamsStore.refreshTeam(tid)
   } finally {
     rosterHydrating.value = false
   }

@@ -109,7 +109,9 @@ class TournamentsService {
   ): Promise<TQualificationMatch> {
     return await apiClient.post(
       '/tournaments/{id}/qualification/submit',
-      { dotaMatchId },
+      // `skipMatchValidation` став обовʼязковим у SubmitMatchDto. `true` повторює
+      // дефолт бекенду (для не-адмінів ігнорується) — поведінка не змінюється.
+      { dotaMatchId, skipMatchValidation: true },
       { dynamicKeys: { id: tournamentId } }
     )
   }

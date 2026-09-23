@@ -275,9 +275,8 @@ async function submitAdd () {
     if (props.isCoach) {
       const coachId = ids[0]
       try {
-        const updatedTeam = await teamsStore.updateTeam(tid, { coachId })
-        teamsStore.patchTeamInList(updatedTeam)
-        playerStore.setPlayerTeamIdClientside(coachId, tid)
+        // Стор патчить команду та teamId тренера в players / /me сам.
+        await teamsStore.updateTeam(tid, { coachId })
       } catch (e: unknown) {
         ElMessage.error(getApiErrorMessage(e, 'Не вдалося призначити тренера'))
         return

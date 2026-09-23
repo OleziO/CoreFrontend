@@ -119,6 +119,7 @@
             :is-localhost="isLocalhost"
             :playoff-teams-count="playoff?.teams.length ?? null"
             :is-completed="isPlayoffCompleted"
+            :has-qualification="tournament?.hasQualification !== false"
             @open-playoff-submit="openPlayoffSubmit"
             @open-tech-loss-playoff="openTechLossPlayoff"
             @open-test-match-modal="openTestMatchModal"
@@ -153,7 +154,6 @@ import {
   PROFILE_CAPTAIN_ROLE_UA,
   isJoinableTournamentStatus
 } from '@/components/tournaments-tags/tournament.constants'
-import { teamsService } from '@/views/teams/teams.service'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import {
   getRegistrationBlockReason,
@@ -161,9 +161,7 @@ import {
 } from '@/core/utils/tournament-registration'
 import type { TSponsor } from '@/config/sponsors'
 
-const tournament = ref<TTournament | null>(null)
 const activeTab = ref('teams')
-const myTeam = shallowRef<TTeam | null>(null)
 const payments = ref<TTournamentPaymentSummary[]>([])
 const paymentIntent = ref<TTournamentPaymentIntent | null>(null)
 const paymentIntentLoading = ref(false)
@@ -178,7 +176,17 @@ const joinHiddenCaptainByApi = ref(false)
 const route = useRoute()
 const authStore = useAuthStore()
 const tournamentStore = useTournamentStore()
+const teamsStore = useTeamsStore()
 const tournamentId = String(route.params.id)
+
+/** Джерело істини — стор; reload і patch з вкладок патчать його, тож сторінка оновлюється сама. */
+const tournament = computed(() => tournamentStore.tournamentsData.find((t) => t.id === tournamentId) ?? null)
+
+/** Команда користувача — зі стору (реактивно); `hydrateMyTeam` лише освіжає її з беку. */
+const myTeam = computed(() => {
+  const tid = authStore.user?.teamId
+  return tid ? (teamsStore.teams.find((t) => t.id === tid) ?? null) : null
+})
 const apiBaseUrl = import.meta.env.VITE_API_PUBLIC_URL
 
 const { open: openAppModal } = useAppModals()
@@ -334,15 +342,7 @@ const tabs = computed(() => {
 
 async function hydrateMyTeam () {
   const tid = authStore.user?.teamId
-  if (!tid) {
-    myTeam.value = null
-    return
-  }
-  try {
-    myTeam.value = await teamsService.fetchTeam(tid, { silent: true })
-  } catch {
-    myTeam.value = null
-  }
+  if (tid) await teamsStore.refreshTeam(tid)
 }
 
 const hasCaptainUserRole = computed(() =>
@@ -469,10 +469,7 @@ async function loadPayments () {
 }
 
 async function reloadTournament () {
-  const data = await tournamentStore.reloadTournament(tournamentId)
-  if (data) {
-    tournament.value = data
-  }
+  await tournamentStore.reloadTournament(tournamentId)
   await loadPayments()
 }
 
@@ -515,7 +512,7 @@ async function pollPaymentStatus () {
   upsertMyPayment(intent)
   if (intent.status === 'PAID') {
     stopPaymentPolling()
-    ElMessage.success('Оплату підтверджено — тепер можна приєднатися до турніру')
+    ElMessage.success('Оплату підтверджено — команду зареєстровано на турнір')
     await reloadTournament()
   } else if (intent.status === 'UNDERPAID') {
     stopPaymentPolling()
@@ -548,7 +545,7 @@ async function recheckPayment () {
 }
 
 function patchTournament (next: TTournament) {
-  tournament.value = next
+  tournamentStore.patchTournamentInList(next)
 }
 
 function handleJoinTransportError (raw: string) {
@@ -657,11 +654,10 @@ const inactiveTournamentBanner = computed(() => {
 })
 
 onMounted(async () => {
-  const cached = await tournamentStore.findTournament(tournamentId)
-  if (cached) tournament.value = cached
+  // Спочатку кеш (миттєвий рендер), потім свіжий GET — обидва живуть у сторі.
+  await tournamentStore.findTournament(tournamentId)
   try {
     const fresh = await tournamentsService.fetchTournament(tournamentId)
-    tournament.value = fresh
     tournamentStore.patchTournamentInList(fresh)
   } catch (e: unknown) {
     if (!tournament.value) {

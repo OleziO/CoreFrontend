@@ -47,7 +47,6 @@
 <script setup lang="ts">
 import { ElMessageBox } from 'element-plus'
 import { useWindowSize } from '@vueuse/core'
-import { teamsService } from '@/views/teams/teams.service'
 import type { TUpdateTeamPayload } from '@/views/teams/teams.service'
 import { ERemovePlayerPenalty } from '@/views/teams/teams.enums'
 
@@ -63,7 +62,8 @@ const isMobile = computed(() => currWindow.width.value < 850)
 const teamsStore = useTeamsStore()
 const playersStore = usePlayersStore()
 
-const team = ref<TTeam | null>(null)
+/** Джерело істини — стор; усі мутації патчать його, тож сторінка оновлюється сама. */
+const team = computed(() => teamsStore.teams.find(t => t.id === id) ?? null)
 
 const isAdmin = computed(() => authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator)
 
@@ -92,10 +92,7 @@ async function handleVerifyTeam () {
   const tid = team.value?.id
   if (!tid || team.value?.isVerified) return
   verifyTeamLoading.value = true
-  const updated = await teamsStore.verifyTeam(tid)
-  if (updated) {
-    team.value = updated
-  }
+  await teamsStore.verifyTeam(tid)
   verifyTeamLoading.value = false
 }
 
@@ -114,10 +111,7 @@ async function handleUnverifyTeam () {
   ).then(() => true).catch(() => false)
   if (!confirmed) return
   verifyTeamLoading.value = true
-  const updated = await teamsStore.unverifyTeam(tid)
-  if (updated) {
-    team.value = updated
-  }
+  await teamsStore.unverifyTeam(tid)
   verifyTeamLoading.value = false
 }
 
@@ -125,10 +119,7 @@ async function handleRemovePlayer (playerId: string, penalty?: ERemovePlayerPena
   const tid = team.value?.id
   if (!tid) return
   removePlayerLoadingId.value = playerId
-  const updated = await teamsStore.removePlayerFromTeam(tid, playerId, penalty)
-  if (updated) {
-    team.value = updated
-  }
+  await teamsStore.removePlayerFromTeam(tid, playerId, penalty)
   removePlayerLoadingId.value = null
 }
 
@@ -136,10 +127,7 @@ async function handleRemoveCoach () {
   const tid = team.value?.id
   if (!tid) return
   removeCoachLoading.value = true
-  const updated = await teamsStore.removeCoach(tid)
-  if (updated) {
-    team.value = updated
-  }
+  await teamsStore.removeCoach(tid)
   removeCoachLoading.value = false
 }
 
@@ -147,10 +135,7 @@ async function handleTeamUpdate (payload: TUpdateTeamPayload) {
   const tid = team.value?.id
   if (!tid) return
   const updated = await teamsStore.updateTeamProfile(tid, payload)
-  if (updated) {
-    team.value = updated
-    close('TeamCreateModal')
-  }
+  if (updated) close('TeamCreateModal')
 }
 
 function openVerificationBooking () {
@@ -162,10 +147,7 @@ function changeCapTeam () {
   if (!team.value?.id) return
   open('ChangeCaptainModal', {
     team: team.value,
-    teamId: team.value.id,
-    onUpdated: (updated: TTeam) => {
-      team.value = updated
-    }
+    teamId: team.value.id
   })
 }
 
@@ -181,13 +163,7 @@ function handleOpenAddPlayer (slot: 'main' | 'reserved' | 'coach') {
       team: team.value,
       isMain: slot === 'main',
       isCoach: slot === 'coach',
-      onAdded: async () => {
-        const updated = await teamsService.loadTeam(team.value?.id ?? id)
-        if (updated) {
-          teamsStore.patchTeamInList(updated)
-          team.value = updated
-        }
-      }
+      onAdded: () => teamsStore.refreshTeam(id)
     })
   } else {
     open('CreateInviteModal', {
@@ -198,13 +174,8 @@ function handleOpenAddPlayer (slot: 'main' | 'reserved' | 'coach') {
 }
 
 onMounted(async () => {
-  const cached = await teamsStore.findTeam(id)
-  if (cached) {
-    team.value = cached
-  } else {
-    const loaded = await teamsService.loadTeam(id)
-    if (loaded) teamsStore.patchTeamInList(loaded)
-    team.value = loaded
-  }
+  // Спочатку кеш (миттєвий рендер), потім тихий GET /teams/:id — свіжі дані лягають у стор.
+  await teamsStore.findTeam(id)
+  await teamsStore.refreshTeam(id)
 })
 </script>

@@ -1,5 +1,9 @@
 // Entry-fee (kopecks) is not yet in the generated schema; extend locally until
 // `npm run api` picks it up from the deployed backend.
+// NB: Swagger бекенду описує `upperBracketFinalBestOf` / `lowerBracketFinalBestOf` /
+// `grandFinalBestOf` у відповіді як `Record<string, never>`, хоча реально приходить
+// 1 | 3 | 5 (див. CreateTournamentDto). Читайте їх через нормалізатор (`toBestOf`),
+// а не напряму, доки бекенд не виправить @ApiProperty на сутності Tournament.
 type TTournament = TResponse<'/tournaments', 'get'>[number] & {
   entryFee?: number | null
   // ISO-дата ручного закриття реєстрації адміном; null/undefined — не закрито вручну.

@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { ElMessage } from 'element-plus'
 import type { TCurrentPlayer, TUserRole as UserRole } from '@/api/types/api.types'
 import { authService } from '@/services/auth.service'
+import { entitySync } from '@/store/entity-sync'
+import { collectTeamRosterIds, mergeDefined } from '@/core/utils/entity-sync.utils'
 
 export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
@@ -88,10 +90,35 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const data = await authService.getMe()
       user.value = data
+      entitySync.currentUserChanged(data)
       return data
     } catch {
       user.value = null
       return null
+    }
+  }
+
+  // ─── Непропагуючі мутатори для entity-sync (не викликають хаб) ──────────────
+
+  /** Дані гравця з /players або з ростеру — це той самий користувач, накладаємо поля. */
+  function applyPlayerToCurrentUser (p: TPlayer) {
+    if (!user.value || user.value.id !== p.id) return
+    user.value = mergeDefined(user.value, p as Partial<TCurrentPlayer>)
+  }
+
+  /** Після зміни складу команди: користувач у ростері → teamId команди, інакше знімаємо. */
+  function applyTeamMembership (team: TTeam) {
+    if (!user.value) return
+    if (collectTeamRosterIds(team).has(user.value.id)) {
+      if (user.value.teamId !== team.id) user.value.teamId = team.id
+    } else if (user.value.teamId === team.id) {
+      user.value.teamId = null
+    }
+  }
+
+  function clearTeamMembership (teamId: string) {
+    if (user.value?.teamId != null && String(user.value.teamId) === String(teamId)) {
+      user.value.teamId = null
     }
   }
 
@@ -108,6 +135,9 @@ export const useAuthStore = defineStore('auth', () => {
     handleDiscordCallback,
     linkSteam,
     fetchUser,
-    handleSteamCallback
+    handleSteamCallback,
+    applyPlayerToCurrentUser,
+    applyTeamMembership,
+    clearTeamMembership
   }
 })

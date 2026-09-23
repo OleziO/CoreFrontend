@@ -244,6 +244,9 @@ async function accept () {
   accepting.value = true
   try {
     await invitesService.acceptInvite(token.value)
+    // Склад команди та teamId користувача змінились на сервері — освіжаємо /me і команду в сторах.
+    await authStore.fetchUser()
+    if (invite.value?.teamId) await useTeamsStore().refreshTeam(invite.value.teamId)
     ElMessage.success('Ви успішно приєдналися до команди!')
     router.push({ name: routeNames.profile })
   } catch (e: any) {

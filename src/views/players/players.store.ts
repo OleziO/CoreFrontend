@@ -1,11 +1,17 @@
 import type { TUserRoleCatalog, TAdminPlayerRoleItem, TUpdatePlayerDto } from '@/api/types/api.types'
 
-import { useAuthStore } from '@/store/modules/auth'
 import { playersService } from '@/views/players/players.service'
+import { entitySync } from '@/store/entity-sync'
+import { collectTeamRosterPlayers, mergeDefined } from '@/core/utils/entity-sync.utils'
 
 export const usePlayersStore = defineStore('players', () => {
   const players = ref<TPlayer[]>([])
   const loading = ref(false)
+  /**
+   * Чи завантажено повний список. Не покладаємось на `players.length`: після прямого
+   * заходу на картку `patchPlayerInList` додає один запис, і порожній кеш перестає бути порожнім.
+   */
+  const listLoaded = ref(false)
 
   const userRolesCatalogRef = shallowRef<TUserRoleCatalog[] | null>(null)
   const userRolesCatalog = computed((): TUserRoleCatalog[] => userRolesCatalogRef.value ?? [])
@@ -15,22 +21,63 @@ export const usePlayersStore = defineStore('players', () => {
   }
 
   /**
-   * Оновити кеш гравця після мутації (верифікація, ролі тощо).
+   * Оновити кеш гравця після мутації (верифікація, ролі тощо) і розіслати зміну в інші стори
+   * (ростери команд і турнірів, поточний користувач).
    * Якщо гравця ще немає в списку — додає запис (наприклад після прямого заходу на картку).
    */
   function patchPlayerInList (updated: TPlayer) {
     const list = players.value
     const ix = list.findIndex(p => p.id === updated.id)
     if (ix !== -1) {
-      list.splice(ix, 1, updated)
+      list.splice(ix, 1, mergeDefined(list[ix], updated))
     } else {
       list.push(updated)
     }
+    entitySync.playerChanged(updated)
   }
 
   function removePlayerFromList (id: string) {
     players.value = players.value.filter(p => p.id !== id)
+    entitySync.playerRemoved(id)
   }
+
+  // ─── Непропагуючі мутатори для entity-sync (не викликають хаб) ──────────────
+
+  /** Оновлює лише наявний запис (без додавання) — дані з /auth/me або ростеру команди. */
+  function applyPlayerData (updated: TPlayer) {
+    const ix = players.value.findIndex(p => p.id === updated.id)
+    if (ix === -1) return
+    players.value.splice(ix, 1, mergeDefined(players.value[ix], updated))
+  }
+
+  /**
+   * Після зміни команди: гравці ростеру отримують `teamId` команди та свіжі ембеднуті поля;
+   * ті, хто ще вказує на цю команду, але зник з ростеру — `teamId = null`.
+   */
+  function applyTeamMembership (team: TTeam) {
+    const roster = new Map(collectTeamRosterPlayers(team).map(p => [p.id, p]))
+    players.value = players.value.map((p) => {
+      const embedded = roster.get(p.id)
+      if (embedded) {
+        return { ...mergeDefined(p, embedded), teamId: team.id }
+      }
+      if (p.teamId != null && String(p.teamId) === String(team.id)) {
+        return { ...p, teamId: null }
+      }
+      return p
+    })
+  }
+
+  /** Після видалення/розпуску команди: усім з цим teamId ставимо null. */
+  function clearTeamMembership (releasedTeamId: string) {
+    const match = String(releasedTeamId)
+    for (const p of players.value) {
+      if (String(p.teamId ?? '') !== match) continue
+      p.teamId = null
+    }
+  }
+
+  // ─── Мутації через API ───────────────────────────────────────────────────────
 
   async function updatePlayer (id: string, data: Partial<TUpdatePlayerDto>): Promise<TPlayer> {
     const updated = await playersService.updatePlayer(id, data)
@@ -52,6 +99,13 @@ export const usePlayersStore = defineStore('players', () => {
     return updated
   }
 
+  /** Адмін-верифікація гравця; тости показує сервіс. Повертає null при помилці. */
+  async function setPlayerVerification (playerId: string, verified: boolean): Promise<TPlayer | null> {
+    const updated = await playersService.setPlayerVerificationByAdmin(playerId, verified)
+    if (updated) patchPlayerInList(updated)
+    return updated
+  }
+
   async function fetchUserRoles (opts?: { force?: boolean }) {
     const force = opts?.force ?? false
     if (!force && userRolesCatalogRef.value?.length) {
@@ -64,7 +118,7 @@ export const usePlayersStore = defineStore('players', () => {
   }
 
   async function findPlayer (playerId?: string | null) {
-    if (!players.value.length) {
+    if (!listLoaded.value) {
       await getPlayers()
     }
 
@@ -73,35 +127,15 @@ export const usePlayersStore = defineStore('players', () => {
     return players.value.find(player => player.id === playerId) || null
   }
 
-  /** Після видалення/розпуску команди: у локальному кеші всім з цим teamId ставимо null + оновлення /me якщо треба */
-  function clearTeamMembershipClientside (releasedTeamId: string) {
-    const match = String(releasedTeamId)
-    for (const p of players.value) {
-      if (String(p.teamId ?? '') !== match) continue
-      p.teamId = null
-    }
-
-    const auth = useAuthStore()
-    if (auth.user?.teamId != null && String(auth.user.teamId) === match) {
-      auth.user.teamId = null
-    }
-  }
-
-  function setPlayerTeamIdClientside (playerId: string, nextTeamId: string | null) {
-    const p = players.value.find(pl => pl.id === playerId)
-    if (p) p.teamId = nextTeamId
-
-    const auth = useAuthStore()
-    if (auth.user?.id === playerId) auth.user.teamId = nextTeamId
-  }
-
   async function getPlayers (opts?: { force?: boolean }) {
-    if (!opts?.force && players.value.length) return players.value
+    if (!opts?.force && listLoaded.value) return players.value
 
     loading.value = true
 
     try {
       players.value = await playersService.fetchPlayers()
+      listLoaded.value = true
+      entitySync.playersLoaded(players.value)
     } finally {
       loading.value = false
     }
@@ -112,17 +146,20 @@ export const usePlayersStore = defineStore('players', () => {
   return {
     players,
     loading,
+    listLoaded,
     userRolesCatalog,
     setUserRolesCatalog,
     patchPlayerInList,
     removePlayerFromList,
+    applyPlayerData,
+    applyTeamMembership,
+    clearTeamMembership,
     updatePlayer,
     deletePlayer,
     setPlayerRoles,
+    setPlayerVerification,
     fetchUserRoles,
     findPlayer,
-    clearTeamMembershipClientside,
-    setPlayerTeamIdClientside,
     // searchPlayer,
     getPlayers
   }

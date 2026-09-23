@@ -94,8 +94,8 @@
               <span class="td-section__index">02</span>
               <span class="td-section__icon td-section__icon--pink"><PhTreeStructure :size="14" weight="bold" /></span>
               <span class="td-section__title">Формат сітки</span>
-              <span class="td-soon" title="Бекенд у розробці — значення поки не зберігаються">
-                <PhWrench :size="9" weight="bold" /> BE · скоро
+              <span v-if="isBracketLocked" class="td-locked" title="Плей-оф уже стартував">
+                <PhLockSimple :size="9" weight="bold" /> Зафіксовано
               </span>
             </header>
             <div class="td-section__body">
@@ -109,9 +109,10 @@
                     type="button"
                     role="radio"
                     class="td-seg__opt"
-                    :class="{ 'is-active': form.bracketFormat === opt.value }"
-                    :aria-checked="form.bracketFormat === opt.value"
-                    @click="form.bracketFormat = opt.value"
+                    :class="{ 'is-active': form.bracketType === opt.value }"
+                    :aria-checked="form.bracketType === opt.value"
+                    :disabled="isBracketLocked"
+                    @click="form.bracketType = opt.value"
                   >
                     <span class="td-seg__icon"><component :is="opt.icon" :size="16" weight="bold" /></span>
                     <span class="td-seg__text">
@@ -122,21 +123,67 @@
                 </div>
               </div>
 
-              <!-- Матч за третє місце -->
-              <label class="td-option td-option--gold" :class="{ 'is-on': form.thirdPlaceMatch }">
+              <!-- Матч за третє місце: лише Single elimination, у Double бронзу визначає фінал нижньої сітки -->
+              <label
+                class="td-option td-option--gold"
+                :class="{ 'is-on': form.hasThirdPlaceMatch, 'is-locked': !canToggleThirdPlace }"
+              >
                 <span class="td-option__icon"><PhMedal :size="16" weight="bold" /></span>
                 <span class="td-option__text">
                   <span class="td-option__title">Матч за третє місце</span>
                   <span class="td-option__desc">
-                    Переможені у півфіналах зіграють додатковий матч за бронзу.
+                    <template v-if="!isSingleElimination">
+                      У Double elimination третє місце визначає фінал нижньої сітки — окремий матч не потрібен.
+                    </template>
+                    <template v-else-if="form.hasThirdPlaceMatch">
+                      Переможені у півфіналах зіграють додатковий матч за бронзу.
+                    </template>
+                    <template v-else>
+                      Без матчу за бронзу: обидва півфіналісти отримують 3–4 місце.
+                    </template>
                   </span>
                 </span>
-                <el-switch v-model="form.thirdPlaceMatch" class="td-option__switch" aria-label="Матч за третє місце" />
+                <el-switch
+                  v-model="form.hasThirdPlaceMatch"
+                  :disabled="!canToggleThirdPlace"
+                  class="td-option__switch"
+                  aria-label="Матч за третє місце"
+                />
               </label>
 
-              <p class="td-note td-note--warn">
-                <PhWrench :size="12" weight="bold" class="shrink-0" />
-                Формат сітки та матч за третє місце поки не зберігаються — бекенд у розробці.
+              <!-- Формат фіналів: BO1 / BO3 / BO5 на кожен фінальний слот -->
+              <div class="td-field td-field--plain">
+                <span class="td-label">
+                  Формат фіналів <span class="td-label__opt">решта раундів — BO1</span>
+                </span>
+                <div class="td-bo">
+                  <div v-for="row in finalsRows" :key="row.key" class="td-bo__row">
+                    <span class="td-bo__text">
+                      <span class="td-bo__title">{{ row.label }}</span>
+                      <span class="td-bo__desc">{{ row.desc }}</span>
+                    </span>
+                    <div class="td-bo__seg" role="radiogroup" :aria-label="`Формат: ${row.label}`">
+                      <button
+                        v-for="bo in BEST_OF_OPTIONS"
+                        :key="bo"
+                        type="button"
+                        role="radio"
+                        class="td-bo__opt"
+                        :class="{ 'is-active': form[row.key] === bo }"
+                        :aria-checked="form[row.key] === bo"
+                        :disabled="isBracketLocked"
+                        @click="form[row.key] = bo"
+                      >
+                        BO{{ bo }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p v-if="isBracketLocked" class="td-note td-note--warn">
+                <PhLockSimple :size="12" weight="bold" class="shrink-0" />
+                Плей-оф уже стартував — формат сітки, матч за третє місце та формат фіналів змінити не можна.
               </p>
             </div>
           </section>
@@ -366,8 +413,8 @@ import uk from 'element-plus/es/locale/lang/uk'
 import { ElMessage } from 'element-plus'
 import type { UploadFile } from 'element-plus'
 import {
-  PhCalendar, PhCheck, PhFlagCheckered, PhImageSquare, PhMedal, PhPencilSimple, PhPlus, PhSlidersHorizontal, PhTicket,
-  PhTreeStructure, PhGitFork, PhTrophy, PhUsersThree, PhWarningCircle, PhWrench
+  PhCalendar, PhCheck, PhFlagCheckered, PhImageSquare, PhLockSimple, PhMedal, PhPencilSimple, PhPlus,
+  PhSlidersHorizontal, PhTicket, PhTreeStructure, PhGitFork, PhTrophy, PhUsersThree, PhWarningCircle
 } from '@phosphor-icons/vue'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { UPLOAD_ERROR, validateImageFileForUpload } from '@/services/image-upload.service'
@@ -378,10 +425,16 @@ import {
 } from '@/components/tournaments-tags/tournament.constants'
 import { getImageUrl } from '@/core/helpers'
 import { getScheduleViolation, type TTournamentScheduleForm } from '@/core/utils/tournament-schedule'
-import type { TCreateTournamentDto as CreateTournamentDto, TUpdateTournamentDto as UpdateTournamentDto } from '@/api/types/api.types'
+import type {
+  TCreateTournamentDto as CreateTournamentDto,
+  TUpdateTournamentDto as UpdateTournamentDto,
+  TPlayoffBestOf,
+  TTournamentBracketType
+} from '@/api/types/api.types'
 
 type TUploadKey = 'header' | 'list'
-type TBracketFormat = 'SINGLE' | 'DOUBLE'
+/** Поля форми з довжиною серії — по одному на фінальний слот сітки. */
+type TBestOfKey = 'upperBracketFinalBestOf' | 'lowerBracketFinalBestOf' | 'grandFinalBestOf'
 
 /** Склад команди в Dota 2 — квиток команди = внесок з гравця × TEAM_SIZE. */
 const TEAM_SIZE = 5
@@ -440,21 +493,50 @@ const statusDotClass: Record<TTournamentStatusValue, string> = {
   PLAYOFF: 'td-status-dot--playoff'
 }
 
-const bracketOptions: { value: TBracketFormat; label: string; desc: string; icon: Component }[] = [
-  { value: 'SINGLE', label: 'Single elimination', desc: 'Одна поразка — виліт', icon: PhTreeStructure },
-  { value: 'DOUBLE', label: 'Double elimination', desc: 'Верхня та нижня сітки', icon: PhGitFork }
+const bracketOptions: { value: TTournamentBracketType; label: string; desc: string; icon: Component }[] = [
+  { value: 'SINGLE_ELIMINATION', label: 'Single elimination', desc: 'Одна поразка — виліт', icon: PhTreeStructure },
+  { value: 'DOUBLE_ELIMINATION', label: 'Double elimination', desc: 'Верхня та нижня сітки', icon: PhGitFork }
+]
+
+const BEST_OF_OPTIONS: readonly TPlayoffBestOf[] = [1, 3, 5]
+
+/** Дефолти бекенду: Double elimination, без матчу за бронзу, усі фінали BO3. */
+const DEFAULT_BRACKET_TYPE: TTournamentBracketType = 'DOUBLE_ELIMINATION'
+const DEFAULT_BEST_OF: TPlayoffBestOf = 3
+
+type TFinalsRow = {
+  key: TBestOfKey
+  label: string
+  desc: string
+  /** Слот існує лише у Double elimination. */
+  doubleOnly?: boolean
+}
+
+const FINALS_ROWS: TFinalsRow[] = [
+  {
+    key: 'upperBracketFinalBestOf',
+    label: 'Фінал верхньої сітки',
+    desc: 'Переможець іде у гранд-фінал, переможений — у фінал нижньої.',
+    doubleOnly: true
+  },
+  {
+    key: 'lowerBracketFinalBestOf',
+    label: 'Фінал нижньої сітки',
+    desc: 'Переможець іде у гранд-фінал, переможений — третє місце.',
+    doubleOnly: true
+  },
+  { key: 'grandFinalBestOf', label: 'Гранд-фінал', desc: 'Вирішальна серія турніру.' }
 ]
 
 const form = reactive({
   name: '',
   tournamentStatus: 'REGISTRATION' as CreateTournamentDto['tournamentStatus'],
   hasQualification: true,
-  /**
-   * TODO(BE): формат сітки та матч за третє місце ще не мають полів у
-   * CreateTournamentDto — тримаються лише у формі й у payload не йдуть.
-   */
-  bracketFormat: 'SINGLE' as TBracketFormat,
-  thirdPlaceMatch: false,
+  bracketType: DEFAULT_BRACKET_TYPE as TTournamentBracketType,
+  hasThirdPlaceMatch: false,
+  upperBracketFinalBestOf: DEFAULT_BEST_OF as TPlayoffBestOf,
+  lowerBracketFinalBestOf: DEFAULT_BEST_OF as TPlayoffBestOf,
+  grandFinalBestOf: DEFAULT_BEST_OF as TPlayoffBestOf,
   registrationStartsAt: '',
   registrationEndsAt: '',
   qualificationStartsAt: '',
@@ -522,6 +604,37 @@ const statusOptions = computed(() =>
   tournamentCreateStatusOptions.filter(o => form.hasQualification || o.key !== 'QUALIFICATIONS')
 )
 
+const isSingleElimination = computed(() => form.bracketType === 'SINGLE_ELIMINATION')
+
+/** Бекенд дозволяє міняти формат сітки лише доки не стартував плей-оф. */
+const isBracketLocked = computed(() => {
+  const status = props.tournament?.tournamentStatus
+  return isEditMode.value && (status === 'PLAYOFF' || status === 'COMPLETED')
+})
+
+/** Матч за бронзу існує лише в Single elimination — у Double його замінює фінал нижньої сітки. */
+const canToggleThirdPlace = computed(() => isSingleElimination.value && !isBracketLocked.value)
+
+/**
+ * У Single elimination є тільки один фінал — рядок гранд-фіналу підписуємо як
+ * «Фінал». Приховані слоти лишаються у формі й ідуть у payload зі своїм
+ * значенням: поля у DTO обовʼязкові, бекенд їх просто не використовує.
+ */
+const finalsRows = computed<TFinalsRow[]>(() =>
+  FINALS_ROWS
+    .filter(row => !row.doubleOnly || !isSingleElimination.value)
+    .map(row => (
+      row.key === 'grandFinalBestOf' && isSingleElimination.value
+        ? { ...row, label: 'Фінал', desc: 'Єдина серія довша за BO1 у Single elimination.' }
+        : row
+    ))
+)
+
+/** Бекенд відхиляє hasThirdPlaceMatch=true для Double elimination — скидаємо одразу. */
+watch(() => form.bracketType, (type) => {
+  if (type === 'DOUBLE_ELIMINATION') form.hasThirdPlaceMatch = false
+})
+
 /** Порушення послідовності етапів; дзеркалить перевірку бекенду. */
 const scheduleError = computed(() => getScheduleViolation(form))
 
@@ -572,9 +685,19 @@ function handleBannerPick (key: TUploadKey, uploadFile: UploadFile) {
   ingestImageFile(key, raw)
 }
 
+/** Захист від нетипових значень з API: усе, що не 1 | 3 | 5, стає дефолтом BO3. */
+function toBestOf (value: unknown): TPlayoffBestOf {
+  return BEST_OF_OPTIONS.find(bo => bo === value) ?? DEFAULT_BEST_OF
+}
+
 function populateFromTournament (t: TTournament) {
   form.name = t.name ?? ''
   form.hasQualification = t.hasQualification !== false
+  form.bracketType = t.bracketType ?? DEFAULT_BRACKET_TYPE
+  form.hasThirdPlaceMatch = form.bracketType === 'SINGLE_ELIMINATION' && t.hasThirdPlaceMatch === true
+  form.upperBracketFinalBestOf = toBestOf(t.upperBracketFinalBestOf)
+  form.lowerBracketFinalBestOf = toBestOf(t.lowerBracketFinalBestOf)
+  form.grandFinalBestOf = toBestOf(t.grandFinalBestOf)
   const editableStatuses: TTournamentStatusValue[] = ['REGISTRATION', 'QUALIFICATIONS', 'PLAYOFF']
   form.tournamentStatus = editableStatuses.includes(t.tournamentStatus as TTournamentStatusValue)
     ? (t.tournamentStatus as TTournamentStatusValue)
@@ -597,8 +720,11 @@ function clearData () {
   form.name = ''
   form.tournamentStatus = 'REGISTRATION'
   form.hasQualification = true
-  form.bracketFormat = 'SINGLE'
-  form.thirdPlaceMatch = false
+  form.bracketType = DEFAULT_BRACKET_TYPE
+  form.hasThirdPlaceMatch = false
+  form.upperBracketFinalBestOf = DEFAULT_BEST_OF
+  form.lowerBracketFinalBestOf = DEFAULT_BEST_OF
+  form.grandFinalBestOf = DEFAULT_BEST_OF
   for (const key of ALL_SCHEDULE_KEYS) form[key] = ''
   prizePoolText.value = ''
   slotsText.value = ''
@@ -641,8 +767,13 @@ const handleSubmit = async () => {
     ...(prizePoolText.value !== '' && { prizePool: Number(prizePoolText.value) }),
     ...(slotsText.value !== '' && { tournamentSlots: Number(slotsText.value) }),
     // Гривні з гравця → квиток команди в копійках. Порожнє поле — безкоштовний турнір (0).
-    entryFee: teamTicketUah.value * 100
-    // TODO(BE): bracketFormat / thirdPlaceMatch — додати, коли з'являться в DTO.
+    entryFee: teamTicketUah.value * 100,
+    // Формат сітки. У Single elimination верхній/нижній best-of бекенд ігнорує, але поля обовʼязкові.
+    bracketType: form.bracketType,
+    hasThirdPlaceMatch: form.bracketType === 'SINGLE_ELIMINATION' && form.hasThirdPlaceMatch,
+    upperBracketFinalBestOf: form.upperBracketFinalBestOf,
+    lowerBracketFinalBestOf: form.lowerBracketFinalBestOf,
+    grandFinalBestOf: form.grandFinalBestOf
   }
 
   loading.value = true
@@ -652,14 +783,9 @@ const handleSubmit = async () => {
      * створенні, а PATCH із цим полем бекенд відхилить (forbidNonWhitelisted).
      */
     const saved = isEditMode.value && props.tournament
-      ? await tournamentStore.updateTournament(props.tournament.id, basePayload as UpdateTournamentDto)
-      /**
-       * `as unknown` — тимчасовий місток: бекенд уже приймає створення без
-       * `division`, але згенерований `schema.d.ts` ще вважає поле обовʼязковим.
-       * Прибрати разом з `npm run api` після викочування Фази 3.
-       */
+      ? await tournamentStore.updateTournament(props.tournament.id, basePayload satisfies UpdateTournamentDto)
       : await tournamentStore.createTournament(
-        { ...basePayload, hasQualification: form.hasQualification } as unknown as CreateTournamentDto
+        { ...basePayload, hasQualification: form.hasQualification } satisfies CreateTournamentDto
       )
     const id = saved.id
 
@@ -776,7 +902,7 @@ const handleSubmit = async () => {
   color: rgba(255, 255, 255, 0.9);
 }
 
-.td-soon {
+.td-locked {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1075,6 +1201,11 @@ const handleSubmit = async () => {
     outline: 2px solid rgba(var(--ds-primary-rgb), 0.6);
     outline-offset: 2px;
   }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.7;
+  }
 }
 
 .td-seg__icon {
@@ -1109,6 +1240,102 @@ const handleSubmit = async () => {
   font-size: 11px;
   line-height: 1.4;
   color: var(--ds-text-faint);
+}
+
+// ─── Finals best-of rows (label + BO1/BO3/BO5 segmented control) ────────────
+.td-bo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.td-bo__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(7, 8, 15, 0.35);
+}
+
+.td-bo__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.td-bo__title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.td-bo__desc {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ds-text-faint);
+}
+
+.td-bo__seg {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.td-bo__opt {
+  min-width: 44px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ds-text-muted);
+  cursor: pointer;
+  transition: border-color var(--ds-duration-fast) ease, background-color var(--ds-duration-fast) ease,
+    color var(--ds-duration-fast) ease, box-shadow var(--ds-duration-fast) ease;
+
+  &.is-active {
+    color: var(--ds-primary);
+    border-color: rgba(var(--ds-primary-rgb), 0.45);
+    background: rgba(var(--ds-primary-rgb), 0.1);
+    box-shadow: var(--ds-glow-primary-soft);
+    text-shadow: var(--ds-neon-text-subtle);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.6);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.7;
+  }
+}
+
+@media (max-width: 520px) {
+  .td-bo__row {
+    flex-wrap: wrap;
+  }
+
+  .td-bo__seg {
+    width: 100%;
+  }
+
+  .td-bo__opt {
+    flex: 1;
+  }
 }
 
 // ─── Fee: input, then the computed team ticket as a full-width strip ────────
@@ -1473,9 +1700,14 @@ const handleSubmit = async () => {
 // ─── Pointer-only hover ─────────────────────────────────────────────────────
 @media (hover: hover) and (pointer: fine) {
   .td-option:not(.is-locked):hover,
-  .td-seg__opt:not(.is-active):hover {
+  .td-seg__opt:not(.is-active):not(:disabled):hover {
     border-color: rgba(var(--ds-primary-rgb), 0.28);
     background: rgba(var(--ds-primary-rgb), 0.04);
+  }
+
+  .td-bo__opt:not(.is-active):not(:disabled):hover {
+    color: #fff;
+    background: rgba(var(--ds-primary-rgb), 0.06);
   }
 
   .td-drop:hover {
@@ -1500,6 +1732,7 @@ const handleSubmit = async () => {
   .td-option,
   .td-seg__opt,
   .td-seg__icon,
+  .td-bo__opt,
   .td-drop,
   .td-drop__plus,
   .td-drop__edit,

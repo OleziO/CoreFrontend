@@ -122,11 +122,7 @@ export interface paths {
         get: operations["AuthController_getSteamLinkUrl"];
         put?: never;
         post?: never;
-        /**
-         * Unlink Steam account
-         * @description Clears the steamId on the current player.
-         */
-        delete: operations["AuthController_unlinkSteam"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -190,38 +186,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/user-roles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["UserRolesController_findAll"];
-        put?: never;
-        post: operations["UserRolesController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/user-roles/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["UserRolesController_findOne"];
-        put?: never;
-        post?: never;
-        delete: operations["UserRolesController_remove"];
-        options?: never;
-        head?: never;
-        patch: operations["UserRolesController_update"];
         trace?: never;
     };
     "/teams": {
@@ -384,6 +348,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/user-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UserRolesController_findAll"];
+        put?: never;
+        post: operations["UserRolesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user-roles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UserRolesController_findOne"];
+        put?: never;
+        post?: never;
+        delete: operations["UserRolesController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["UserRolesController_update"];
+        trace?: never;
+    };
     "/tournaments": {
         parameters: {
             query?: never;
@@ -414,6 +410,46 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["TournamentsController_update"];
+        trace?: never;
+    };
+    "/tournaments/{id}/registration/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin: close tournament registration ahead of the deadline
+         * @description Блокує приєднання команд і створення платіжних інтентів незалежно від registrationEndsAt. Дати турніру та вікно подачі кваліфікаційних матчів не змінюються. Повертає актуальний турнір.
+         */
+        post: operations["TournamentsController_closeRegistration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/registration/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin: reopen registration closed ahead of the deadline
+         * @description Знімає ручне закриття. Далі діють лише планові дати registrationStartsAt / registrationEndsAt. Повертає актуальний турнір.
+         */
+        post: operations["TournamentsController_openRegistration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/tournaments/{id}/qualification": {
@@ -458,6 +494,94 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["TournamentsController_leave"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-team entry-fee payment status for a tournament */
+        get: operations["TournamentsController_getPayments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/payments/intent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create/return the caller team's entry-fee payment intent */
+        post: operations["TournamentsController_createPaymentIntent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/payments/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller team's entry-fee payment status */
+        get: operations["TournamentsController_getMyPayment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/donations/intent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a donation intent (public; no auth required)
+         * @description Mints a new Monobank invoice for a donation towards the tournament and returns its hosted payment page. Every call is a separate donation.
+         */
+        post: operations["TournamentsController_createDonationIntent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/payments/{teamId}/mark-paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin: mark a team as having paid the entry fee */
+        post: operations["TournamentsController_markPaymentPaid"];
         delete?: never;
         options?: never;
         head?: never;
@@ -522,6 +646,26 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["TournamentsController_startPlayoff"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tournaments/{id}/playoff/restart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restart the playoff from scratch
+         * @description Destroys all playoff results, series and disqualifications, re-derives participants from current qualification standings, then rebuilds the Challonge bracket and Dota league mirror. End state matches starting the playoff for the first time. If no playoff exists yet, this starts one. Irreversible.
+         */
+        post: operations["TournamentsController_restartPlayoff"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1002,6 +1146,8 @@ export interface components {
             /** Format: date-time */
             verifiedAt: string | null;
             /** Format: date-time */
+            verificationBlockedUntil: string | null;
+            /** Format: date-time */
             disbandedAt: string | null;
             mainPlayers: components["schemas"]["Player"][];
             reservedPlayers: components["schemas"]["Player"][];
@@ -1014,6 +1160,7 @@ export interface components {
             id: string;
             name: string;
             prizePool: number | null;
+            entryFee: number | null;
             /** @enum {string|null} */
             division: "DIVISION_I" | "DIVISION_II" | "DIVISION_III" | null;
             headerBannerUrl: string;
@@ -1024,13 +1171,25 @@ export interface components {
             /** Format: date-time */
             registrationEndsAt: string;
             /** Format: date-time */
+            registrationClosedAt: string | null;
+            /** Format: date-time */
+            qualificationStartsAt: string | null;
+            /** Format: date-time */
+            qualificationEndsAt: string | null;
+            hasQualification: boolean;
+            /** Format: date-time */
             tournamentStartsAt: string;
             /** Format: date-time */
             tournamentEndsAt: string;
-            hasQualification: boolean;
             /** @enum {string} */
             tournamentStatus: "REGISTRATION" | "QUALIFICATIONS" | "PLAYOFF" | "COMPLETED";
             tournamentGridUrl: string;
+            /** @enum {string} */
+            bracketType: "SINGLE_ELIMINATION" | "DOUBLE_ELIMINATION";
+            hasThirdPlaceMatch: boolean;
+            upperBracketFinalBestOf: Record<string, never>;
+            lowerBracketFinalBestOf: Record<string, never>;
+            grandFinalBestOf: Record<string, never>;
             teams: components["schemas"]["Team"][];
             eligibleRoles: components["schemas"]["UserRoles"][];
         };
@@ -1129,28 +1288,6 @@ export interface components {
             teamId?: string | null;
             roles: components["schemas"]["CurrentPlayerRoleDto"][];
         };
-        CreateUserRoleDto: {
-            /** @enum {string} */
-            name: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін";
-            isAdminRole: boolean;
-        };
-        UserRoleResponseDto: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            name: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін";
-            isAdminRole: boolean;
-            /**
-             * @description CSS hex #RRGGBB (для parseHexColor на клієнті)
-             * @example #2563EB
-             */
-            color: string;
-        };
-        UpdateUserRoleDto: {
-            /** @enum {string} */
-            name?: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін";
-            isAdminRole?: boolean;
-        };
         CreateTeamDto: {
             name: string;
             /**
@@ -1163,6 +1300,8 @@ export interface components {
             isVerified: boolean;
             isPlayingTournament: boolean;
         };
+        /** @enum {string} */
+        TournamentBracketType: "SINGLE_ELIMINATION" | "DOUBLE_ELIMINATION";
         TeamTournamentEmbeddedDto: {
             id: string;
             name: string;
@@ -1175,11 +1314,23 @@ export interface components {
             /** Format: date-time */
             registrationEndsAt: string;
             /** Format: date-time */
+            qualificationStartsAt: string | null;
+            /** Format: date-time */
+            qualificationEndsAt: string | null;
+            /** Format: date-time */
             tournamentStartsAt: string;
             /** Format: date-time */
             tournamentEndsAt: string;
             /** @enum {string} */
             tournamentStatus: "REGISTRATION" | "QUALIFICATIONS" | "PLAYOFF" | "COMPLETED";
+            bracketType: components["schemas"]["TournamentBracketType"];
+            hasThirdPlaceMatch: boolean;
+            /** @enum {number} */
+            upperBracketFinalBestOf: 1 | 3 | 5;
+            /** @enum {number} */
+            lowerBracketFinalBestOf: 1 | 3 | 5;
+            /** @enum {number} */
+            grandFinalBestOf: 1 | 3 | 5;
             tournamentGridUrl?: string | null;
         };
         TeamResponseDto: {
@@ -1236,7 +1387,32 @@ export interface components {
             /** @enum {string} */
             slot: "main" | "reserved";
         };
-        /** @enum {string} */
+        CreateUserRoleDto: {
+            /** @enum {string} */
+            name: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін";
+            isAdminRole: boolean;
+        };
+        UserRoleResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            name: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін";
+            isAdminRole: boolean;
+            /**
+             * @description CSS hex #RRGGBB (для parseHexColor на клієнті)
+             * @example #2563EB
+             */
+            color: string;
+        };
+        UpdateUserRoleDto: {
+            /** @enum {string} */
+            name?: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін";
+            isAdminRole?: boolean;
+        };
+        /**
+         * @description Deprecated and ignored. Tournaments are open entry; this field is removed once the frontend stops sending it.
+         * @enum {string}
+         */
         TournamentDivision: "DIVISION_I" | "DIVISION_II" | "DIVISION_III";
         /**
          * @description COMPLETED cannot be set on creation
@@ -1246,15 +1422,60 @@ export interface components {
         CreateTournamentDto: {
             name: string;
             prizePool?: number | null;
-            division: components["schemas"]["TournamentDivision"];
+            /** @description Entry fee in kopecks. null or 0 means the tournament is free (no payment gate). */
+            entryFee?: number | null;
+            /**
+             * @deprecated
+             * @description Deprecated and ignored. Tournaments are open entry; this field is removed once the frontend stops sending it.
+             */
+            division?: components["schemas"]["TournamentDivision"];
             headerBannerUrl?: string;
             listBannerUrl?: string;
             tournamentSlots?: number;
+            /** @description Початок реєстрації команд на турнір. */
             registrationStartsAt: string;
+            /** @description Кінець реєстрації команд на турнір. */
             registrationEndsAt: string;
-            /** @description Defaults to true. Fixed at creation; not accepted on update. */
-            hasQualification?: boolean;
+            /**
+             * @description Чи проводиться кваліфікація. false — без кваліфікаційного етапу: дати кваліфікації не передаються, слоти команд обовʼязкові й не більші за розмір сітки, статус QUALIFICATIONS недоступний. Змінити після створення не можна.
+             * @default true
+             */
+            hasQualification: boolean;
+            /**
+             * @description Формат сітки плей-оф. SINGLE_ELIMINATION — одна поразка вибиває, BO3 лише у фіналі. DOUBLE_ELIMINATION — верхня та нижня сітки, BO3 у фіналах верхньої й нижньої сіток і у гранд-фіналі. Без значення — DOUBLE_ELIMINATION. Можна змінити, доки не стартував плей-оф.
+             * @default DOUBLE_ELIMINATION
+             */
+            bracketType: components["schemas"]["TournamentBracketType"];
+            /**
+             * @description Чи проводиться матч за третє місце між переможеними у півфіналах. Лише для SINGLE_ELIMINATION — у DOUBLE_ELIMINATION третє місце визначає фінал нижньої сітки, тож true там відхиляється. Без значення — false. Можна змінити, доки не стартував плей-оф.
+             * @default false
+             */
+            hasThirdPlaceMatch: boolean;
+            /**
+             * @description Формат фіналу верхньої сітки (матч перед гранд-фіналом): 1 — BO1, 3 — BO3, 5 — BO5. Лише для DOUBLE_ELIMINATION — у SINGLE_ELIMINATION є тільки фінал, тож значення не використовується. Без значення — 3. Можна змінити, доки не стартував плей-оф.
+             * @default 3
+             * @enum {number}
+             */
+            upperBracketFinalBestOf: 1 | 3 | 5;
+            /**
+             * @description Формат фіналу нижньої сітки: 1 — BO1, 3 — BO3, 5 — BO5. Лише для DOUBLE_ELIMINATION — у SINGLE_ELIMINATION значення не використовується. Без значення — 3. Можна змінити, доки не стартував плей-оф.
+             * @default 3
+             * @enum {number}
+             */
+            lowerBracketFinalBestOf: 1 | 3 | 5;
+            /**
+             * @description Формат гранд-фіналу (у SINGLE_ELIMINATION — фіналу): 1 — BO1, 3 — BO3, 5 — BO5. Без значення — 3. Можна змінити, доки не стартував плей-оф.
+             * @default 3
+             * @enum {number}
+             */
+            grandFinalBestOf: 1 | 3 | 5;
+            /** @description Початок вікна подачі кваліфікаційних матчів. Може перетинатися з реєстрацією. Обовʼязкове, якщо hasQualification не false. */
+            qualificationStartsAt?: string;
+            /** @description Кінець вікна подачі кваліфікаційних матчів. Має бути не пізніше tournamentStartsAt. Обовʼязкове, якщо hasQualification не false. */
+            qualificationEndsAt?: string;
+            /** @description Початок плей-оф — момент автоматичного старту сітки. */
             tournamentStartsAt: string;
+            /** @description Кінець плей-оф / турніру. */
             tournamentEndsAt: string;
             /** @description COMPLETED cannot be set on creation */
             tournamentStatus: components["schemas"]["TournamentStatus"];
@@ -1263,13 +1484,55 @@ export interface components {
         UpdateTournamentDto: {
             name?: string;
             prizePool?: number | null;
+            /** @description Entry fee in kopecks. null or 0 means the tournament is free (no payment gate). */
+            entryFee?: number | null;
+            /**
+             * @deprecated
+             * @description Deprecated and ignored. Tournaments are open entry; this field is removed once the frontend stops sending it.
+             */
             division?: components["schemas"]["TournamentDivision"];
             headerBannerUrl?: string;
             listBannerUrl?: string;
             tournamentSlots?: number;
+            /** @description Початок реєстрації команд на турнір. */
             registrationStartsAt?: string;
+            /** @description Кінець реєстрації команд на турнір. */
             registrationEndsAt?: string;
+            /**
+             * @description Формат сітки плей-оф. SINGLE_ELIMINATION — одна поразка вибиває, BO3 лише у фіналі. DOUBLE_ELIMINATION — верхня та нижня сітки, BO3 у фіналах верхньої й нижньої сіток і у гранд-фіналі. Без значення — DOUBLE_ELIMINATION. Можна змінити, доки не стартував плей-оф.
+             * @default DOUBLE_ELIMINATION
+             */
+            bracketType: components["schemas"]["TournamentBracketType"];
+            /**
+             * @description Чи проводиться матч за третє місце між переможеними у півфіналах. Лише для SINGLE_ELIMINATION — у DOUBLE_ELIMINATION третє місце визначає фінал нижньої сітки, тож true там відхиляється. Без значення — false. Можна змінити, доки не стартував плей-оф.
+             * @default false
+             */
+            hasThirdPlaceMatch: boolean;
+            /**
+             * @description Формат фіналу верхньої сітки (матч перед гранд-фіналом): 1 — BO1, 3 — BO3, 5 — BO5. Лише для DOUBLE_ELIMINATION — у SINGLE_ELIMINATION є тільки фінал, тож значення не використовується. Без значення — 3. Можна змінити, доки не стартував плей-оф.
+             * @default 3
+             * @enum {number}
+             */
+            upperBracketFinalBestOf: 1 | 3 | 5;
+            /**
+             * @description Формат фіналу нижньої сітки: 1 — BO1, 3 — BO3, 5 — BO5. Лише для DOUBLE_ELIMINATION — у SINGLE_ELIMINATION значення не використовується. Без значення — 3. Можна змінити, доки не стартував плей-оф.
+             * @default 3
+             * @enum {number}
+             */
+            lowerBracketFinalBestOf: 1 | 3 | 5;
+            /**
+             * @description Формат гранд-фіналу (у SINGLE_ELIMINATION — фіналу): 1 — BO1, 3 — BO3, 5 — BO5. Без значення — 3. Можна змінити, доки не стартував плей-оф.
+             * @default 3
+             * @enum {number}
+             */
+            grandFinalBestOf: 1 | 3 | 5;
+            /** @description Початок вікна подачі кваліфікаційних матчів. Може перетинатися з реєстрацією. Обовʼязкове, якщо hasQualification не false. */
+            qualificationStartsAt?: string;
+            /** @description Кінець вікна подачі кваліфікаційних матчів. Має бути не пізніше tournamentStartsAt. Обовʼязкове, якщо hasQualification не false. */
+            qualificationEndsAt?: string;
+            /** @description Початок плей-оф — момент автоматичного старту сітки. */
             tournamentStartsAt?: string;
+            /** @description Кінець плей-оф / турніру. */
             tournamentEndsAt?: string;
             /** @description COMPLETED cannot be set on creation */
             tournamentStatus?: components["schemas"]["TournamentStatus"];
@@ -1316,9 +1579,53 @@ export interface components {
              */
             teamId?: string;
         };
+        /** @enum {string} */
+        PaymentStatus: "PENDING" | "UNDERPAID" | "PAID";
+        TournamentPaymentSummaryDto: {
+            /** Format: uuid */
+            teamId: string;
+            status: components["schemas"]["PaymentStatus"];
+            /** @description Amount paid so far, in kopecks. */
+            amountPaid: number;
+        };
+        TournamentPaymentIntentDto: {
+            /** @description Unique code carried as the reference on the Monobank invoice. */
+            reference: string;
+            status: components["schemas"]["PaymentStatus"];
+            /** @description Entry fee owed, in kopecks. */
+            amount: number;
+            /** @description Amount paid so far, in kopecks. */
+            amountPaid: number;
+            /** @description Monobank payment page for the open invoice, or null when there is none to pay. */
+            pageUrl: string | null;
+        };
+        CreateTournamentDonationDto: {
+            /**
+             * @description Donation amount in kopecks, e.g. 10000 for 100 грн.
+             * @example 10000
+             */
+            amount: number;
+        };
+        TournamentDonationIntentDto: {
+            /** @description Unique DON- code carried as the reference on the Monobank invoice. */
+            reference: string;
+            /** @description Donation amount requested, in kopecks. */
+            amount: number;
+            /** @description Monobank payment page for the invoice, or null when acquiring is not configured. */
+            pageUrl: string | null;
+        };
+        MarkPaymentPaidDto: {
+            /** @description Optional audit note explaining the manual override. */
+            note?: string;
+        };
         SubmitMatchDto: {
             /** @description Dota2 numeric match ID from the played game */
             dotaMatchId: string;
+            /**
+             * @description Admin-only: skip OpenDota match validation (10 players / duration / end-time / team-ID / roster checks). Ignored for non-admins. The match is still fetched so the winner and awarded points are derived from real data.
+             * @default true
+             */
+            skipMatchValidation: boolean;
         };
         PlayoffTeamsDto: {
             /**
@@ -1330,8 +1637,19 @@ export interface components {
              */
             teamIds?: string[];
         };
+        PlayoffFinalsBestOfDto: {
+            /** @enum {number|null} */
+            upperBracketFinal?: 1 | 3 | 5 | null;
+            /** @enum {number|null} */
+            lowerBracketFinal?: 1 | 3 | 5 | null;
+            /** @enum {number} */
+            grandFinal: 1 | 3 | 5;
+        };
         PlayoffResponseDto: {
             embedUrl: string;
+            bracketType: components["schemas"]["TournamentBracketType"];
+            hasThirdPlaceMatch: boolean;
+            finalsBestOf: components["schemas"]["PlayoffFinalsBestOfDto"];
             teams: components["schemas"]["TeamResponseDto"][];
         };
         ManualPlayoffSeriesGameDto: {
@@ -1420,15 +1738,18 @@ export interface components {
             teamB: components["schemas"]["OpenPlayoffMatchTeamDto"];
             /** @description Core identifier for persisted series envelope */
             seriesId: string;
-            /** @enum {string} */
-            format: "bo1" | "bo3";
             /**
-             * @description `finals_bo3` — один із BO3-finals (верхній / нижній / grand final сітки).
+             * @description Series length of this slot. Regular rounds are always `bo1`; finals slots carry the length configured on the tournament (`bo1` / `bo3` / `bo5`).
              * @enum {string}
              */
-            seriesKind: "standard" | "finals_bo3";
+            format: "bo1" | "bo3" | "bo5";
             /**
-             * @description Конкретний тип finals-серії (лише коли BO3-finals). Інакше null.
+             * @description `finals` — one of the finals slots (upper-bracket final, lower-bracket final or grand final), whatever its `format`.
+             * @enum {string}
+             */
+            seriesKind: "standard" | "finals";
+            /**
+             * @description Which finals slot this is (only when `seriesKind` is `finals`). Otherwise null.
              * @enum {string|null}
              */
             finalSeriesType?: "upper_bracket_final" | "lower_bracket_final" | "grand_final" | null;
@@ -1749,23 +2070,6 @@ export interface operations {
             };
         };
     };
-    AuthController_unlinkSteam: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     AuthController_verifySteamAccount: {
         parameters: {
             query?: never;
@@ -1815,113 +2119,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CurrentPlayerDto"];
-                };
-            };
-        };
-    };
-    UserRolesController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserRoleResponseDto"][];
-                };
-            };
-        };
-    };
-    UserRolesController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateUserRoleDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserRoleResponseDto"];
-                };
-            };
-        };
-    };
-    UserRolesController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserRoleResponseDto"];
-                };
-            };
-        };
-    };
-    UserRolesController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserRolesController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateUserRoleDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserRoleResponseDto"];
                 };
             };
         };
@@ -2234,6 +2431,113 @@ export interface operations {
             };
         };
     };
+    UserRolesController_findAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRoleResponseDto"][];
+                };
+            };
+        };
+    };
+    UserRolesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUserRoleDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRoleResponseDto"];
+                };
+            };
+        };
+    };
+    UserRolesController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRoleResponseDto"];
+                };
+            };
+        };
+    };
+    UserRolesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UserRolesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRoleResponseDto"];
+                };
+            };
+        };
+    };
     TournamentsController_findAll: {
         parameters: {
             query?: never;
@@ -2339,6 +2643,44 @@ export interface operations {
             };
         };
     };
+    TournamentsController_closeRegistration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TournamentsController_openRegistration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     TournamentsController_getQualification: {
         parameters: {
             query?: never;
@@ -2417,6 +2759,158 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    TournamentsController_getPayments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TournamentPaymentSummaryDto"][];
+                };
+            };
+        };
+    };
+    TournamentsController_createPaymentIntent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TournamentPaymentIntentDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TournamentPaymentIntentDto"];
+                };
+            };
+        };
+    };
+    TournamentsController_getMyPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TournamentPaymentIntentDto"];
+                };
+            };
+        };
+    };
+    TournamentsController_createDonationIntent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTournamentDonationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TournamentDonationIntentDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TournamentDonationIntentDto"];
+                };
+            };
+            /** @description Amount is not an integer or is outside 1000..5000000 kopecks */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Tournament not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TournamentsController_markPaymentPaid: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                teamId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkPaymentPaidDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TournamentPaymentSummaryDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TournamentPaymentSummaryDto"];
+                };
             };
         };
     };
@@ -2559,6 +3053,35 @@ export interface operations {
                 "application/json": components["schemas"]["PlayoffTeamsDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayoffResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayoffResponseDto"];
+                };
+            };
+        };
+    };
+    TournamentsController_restartPlayoff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {

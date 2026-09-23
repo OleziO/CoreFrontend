@@ -173,8 +173,6 @@ import {
   PhDotsThree
 } from '@phosphor-icons/vue'
 
-import { playersService } from '@/views/players/players.service'
-
 const props = withDefaults(defineProps<{
   user: TPlayer
   width?: number
@@ -216,9 +214,7 @@ async function toggleVerificationFromMenu () {
   if (!u || verificationLoading.value) return
   verificationLoading.value = true
   try {
-    const wantVerified = !isVerified.value
-    const updated = await playersService.setPlayerVerificationByAdmin(u.id, wantVerified)
-    if (updated) usePlayersStore().patchPlayerInList(updated)
+    await usePlayersStore().setPlayerVerification(u.id, !isVerified.value)
   } finally {
     verificationLoading.value = false
   }

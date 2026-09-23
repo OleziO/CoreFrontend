@@ -120,11 +120,20 @@
       <!-- Плей-оф ще не почався -->
       <div v-else-if="!isPlayoffPhase" class="bracket__state">
         <TournamentBracketSkeleton class="bracket__state-art" />
-        <p class="bracket__state-title">Сітка з'явиться після кваліфікації</p>
-        <p class="bracket__state-text">
-          Команди, що пройдуть відбір, будуть розсіяні в сітку плей-оф. Слідкуйте за
-          матрицею матчів у вкладці «Кваліфікація».
-        </p>
+        <template v-if="hasQualification">
+          <p class="bracket__state-title">Сітка з'явиться після кваліфікації</p>
+          <p class="bracket__state-text">
+            Команди, що пройдуть відбір, будуть розсіяні в сітку плей-оф. Слідкуйте за
+            матрицею матчів у вкладці «Кваліфікація».
+          </p>
+        </template>
+        <template v-else>
+          <p class="bracket__state-title">Сітка з'явиться після старту турніру</p>
+          <p class="bracket__state-text">
+            Зареєстровані команди будуть розсіяні в сітку плей-оф одразу після старту.
+            Слідкуйте за списком команд у вкладці «Команди».
+          </p>
+        </template>
       </div>
 
       <!-- Плей-оф триває, але сітку ще не сформовано -->
@@ -160,11 +169,14 @@ interface IProps {
   playoffTeamsCount?: number | null
   /** Турнір завершено — сітка лишається як архів, статус не «Live». */
   isCompleted?: boolean
+  /** Без кваліфікації команди з реєстрації потрапляють у сітку одразу після старту. */
+  hasQualification?: boolean
 }
 
 const props = withDefaults(defineProps<IProps>(), {
   playoffTeamsCount: null,
-  isCompleted: false
+  isCompleted: false,
+  hasQualification: true
 })
 
 const emit = defineEmits<{
