@@ -7,44 +7,29 @@
       <SponsorBanner
         :sponsors="bannerSponsors"
         :dense="variant === 'compact'"
-        :thumbnails="variant === 'full'"
-      >
-        <!-- Порожня карусель: запрошення замість банера -->
-        <template #empty>
-          <div class="flex flex-col items-center gap-8 px-16 text-center">
-            <span class="text-[10px] uppercase tracking-[0.25em] text-gray-500">Місце вільне</span>
-            <a
-              :href="inviteUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex shrink-0 items-center gap-6 rounded-lg border border-[#e8b931]/35
-                     px-14 py-8 text-[11px] font-semibold text-[#e8b931] transition-colors duration-200
-                     hover:border-[#e8b931]/60 hover:bg-[#e8b931]/[0.06] hover:text-[#f5c842] cursor-pointer"
-            >
-              <PhHandshake :size="14" weight="fill" />
-              Стати спонсором
-            </a>
-          </div>
-        </template>
-      </SponsorBanner>
+        :label="label"
+        :invite-url="inviteUrl"
+      />
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { PhHandshake } from '@phosphor-icons/vue'
 import { getSponsors, getBannerSponsors, type TSponsor } from '@/config/sponsors'
 
 const props = withDefaults(defineProps<{
   /** Список спонсорів. За замовчуванням береться з локального конфігу. */
   sponsors?: TSponsor[]
-  /** `full` — банер + мініатюри; `compact` — вузький банер (список турнірів). */
+  /** `full` — повний банер; `compact` — вузька смуга (список турнірів). */
   variant?: 'full' | 'compact'
-  /** Куди веде заклик «Стати спонсором» у порожній каруселі. */
+  /** Підпис у шапці карусели. */
+  label?: string
+  /** Куди веде заклик «Стати спонсором» (шапка + порожній слот). */
   inviteUrl?: string
 }>(), {
   sponsors: () => getSponsors(),
   variant: 'full',
+  label: 'Спонсори турніру',
   inviteUrl: 'https://discord.gg/QeDj9TjmgM'
 })
 
