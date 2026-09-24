@@ -174,8 +174,8 @@ function handleOpenAddPlayer (slot: 'main' | 'reserved' | 'coach') {
 }
 
 onMounted(async () => {
-  // Спочатку кеш (миттєвий рендер), потім тихий GET /teams/:id — свіжі дані лягають у стор.
-  await teamsStore.findTeam(id)
-  await teamsStore.refreshTeam(id)
+  // Cache-first: команда зі стору без запиту; GET /teams/:id лише коли її там ще немає.
+  // Актуальність кешу підтримує entity-sync після кожної мутації.
+  await teamsStore.ensureTeam(id)
 })
 </script>

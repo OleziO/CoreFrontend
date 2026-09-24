@@ -387,7 +387,7 @@ const playerTeamLinkId = computed(() => {
   return String(id)
 })
 
-/** Команда гравця — зі стору (реактивно); при зміні teamId тихо освіжаємо її з беку. */
+/** Команда гравця — зі стору (реактивно); GET /teams/:id лише якщо її в сторі ще немає. */
 const profileTeam = computed(() =>
   playerTeamLinkId.value ? (teamsStore.teams.find((t) => t.id === playerTeamLinkId.value) ?? null) : null
 )
@@ -398,7 +398,7 @@ watch(
   async (teamId) => {
     if (!teamId) return
     profileTeamLoading.value = true
-    await teamsStore.refreshTeam(teamId)
+    await teamsStore.ensureTeam(teamId)
     profileTeamLoading.value = false
   },
   { immediate: true }
@@ -436,7 +436,8 @@ async function onOpen () {
   const isMePage = route.name === routeNames.profile
   loading.value = true
   try {
-    if (!isMePage) await playerStore.findPlayer(routePlayerId.value)
+    // Cache-first: гравець зі стору без запиту; GET /players/:id лише коли його там ще немає.
+    if (!isMePage) await playerStore.ensurePlayer(routePlayerId.value)
     if (!player.value) router.push('/')
     await loadPlayerTags()
   } finally {

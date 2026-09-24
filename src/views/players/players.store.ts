@@ -127,20 +127,44 @@ export const usePlayersStore = defineStore('players', () => {
     return players.value.find(player => player.id === playerId) || null
   }
 
+  /** Один запит на всіх, хто одночасно просить список (сторінка + модалка + картка). */
+  let listInFlight: Promise<TPlayer[]> | null = null
+
   async function getPlayers (opts?: { force?: boolean }) {
     if (!opts?.force && listLoaded.value) return players.value
+    if (listInFlight) return listInFlight
+
+    listInFlight = (async () => {
+      loading.value = true
+      try {
+        players.value = await playersService.fetchPlayers()
+        listLoaded.value = true
+        entitySync.playersLoaded(players.value)
+      } finally {
+        loading.value = false
+      }
+      return players.value
+    })().finally(() => { listInFlight = null })
+
+    return listInFlight
+  }
+
+  /**
+   * Cache-first для сторінки гравця: якщо гравець уже в сторі — жодного запиту,
+   * інакше один GET /players/:id (без завантаження всього списку). Повертає null, якщо не знайдено.
+   */
+  async function ensurePlayer (playerId: string): Promise<TPlayer | null> {
+    const cached = players.value.find(p => p.id === playerId)
+    if (cached) return cached
 
     loading.value = true
-
     try {
-      players.value = await playersService.fetchPlayers()
-      listLoaded.value = true
-      entitySync.playersLoaded(players.value)
+      const fresh = await playersService.fetchPlayerItemById(playerId)
+      if (fresh) patchPlayerInList(fresh)
+      return fresh
     } finally {
       loading.value = false
     }
-
-    return players.value
   }
 
   return {
@@ -160,6 +184,7 @@ export const usePlayersStore = defineStore('players', () => {
     setPlayerVerification,
     fetchUserRoles,
     findPlayer,
+    ensurePlayer,
     // searchPlayer,
     getPlayers
   }

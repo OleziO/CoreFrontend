@@ -654,8 +654,8 @@ const inactiveTournamentBanner = computed(() => {
 })
 
 onMounted(async () => {
-  // Спочатку кеш (миттєвий рендер), потім свіжий GET — обидва живуть у сторі.
-  await tournamentStore.findTournament(tournamentId)
+  // Сторінка турніру — єдина, що тягне свіжі дані при кожному відкритті (статус, склад, оплати
+  // змінюються з боку інших користувачів). Кеш, якщо є, рендериться миттєво поки йде GET.
   try {
     const fresh = await tournamentsService.fetchTournament(tournamentId)
     tournamentStore.patchTournamentInList(fresh)

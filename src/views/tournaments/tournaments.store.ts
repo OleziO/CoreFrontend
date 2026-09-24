@@ -117,23 +117,32 @@ export const useTournamentStore = defineStore('tournaments', () => {
 
   // ─── Читання ─────────────────────────────────────────────────────────────────
 
+  /** Один запит на всіх, хто одночасно просить список. */
+  let listInFlight: Promise<TTournament[] | undefined> | null = null
+
   async function getTournaments (opts?: { force?: boolean }) {
     if (!opts?.force && listLoaded.value) return tournamentsData.value
+    if (listInFlight) return listInFlight
 
-    loading.value = true
-    try {
-      const data = await tournamentsService.fetchTournaments()
-      tournamentsData.value = data || []
-      listLoaded.value = true
-      entitySync.tournamentsLoaded(tournamentsData.value)
-      return data
-    } catch (e) {
-      if (e instanceof AxiosError) {
-        ElMessage.error(e.response?.data?.detail || 'Помилка при завантаженні турнірів')
+    listInFlight = (async () => {
+      loading.value = true
+      try {
+        const data = await tournamentsService.fetchTournaments()
+        tournamentsData.value = data || []
+        listLoaded.value = true
+        entitySync.tournamentsLoaded(tournamentsData.value)
+        return data
+      } catch (e) {
+        if (e instanceof AxiosError) {
+          ElMessage.error(e.response?.data?.detail || 'Помилка при завантаженні турнірів')
+        }
+        return undefined
+      } finally {
+        loading.value = false
       }
-    } finally {
-      loading.value = false
-    }
+    })().finally(() => { listInFlight = null })
+
+    return listInFlight
   }
 
   async function findTournament (tournamentId: string | null) {

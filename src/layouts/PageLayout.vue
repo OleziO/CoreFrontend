@@ -19,7 +19,9 @@
     <main class="app-main pb-[64px] lg:pb-0">
       <router-view #default="{ Component }">
         <transition name="fade">
-          <component :is="Component" />
+          <!-- key по path: між /teams/1 → /teams/2 інстанс сторінки інакше перевикористовується
+               і `route.params.id`, зчитаний у setup, лишається старим -->
+          <component :is="Component" :key="route.path" />
         </transition>
       </router-view>
     </main>
@@ -31,7 +33,9 @@
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const route = useRoute()
+</script>
 
 <style scoped>
 /* Establish a stacking context so the fixed atmosphere can sit at z-index:-1,

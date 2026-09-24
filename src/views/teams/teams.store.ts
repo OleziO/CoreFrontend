@@ -79,17 +79,42 @@ export const useTeamsStore = defineStore('teams', () => {
     return teams.value.find(team => team.id === teamId) || null
   }
 
+  /** Один запит на всіх, хто одночасно просить список (сторінка + модалка + картка). */
+  let listInFlight: Promise<TTeam[] | undefined> | null = null
+
   async function getTeams (opts?: { force?: boolean }) {
     if (!opts?.force && listLoaded.value) return teams.value
+    if (listInFlight) return listInFlight
+
+    listInFlight = (async () => {
+      loading.value = true
+      try {
+        teams.value = await teamsService.fetchAllTeams()
+        listLoaded.value = true
+        entitySync.teamsLoaded(teams.value)
+        return teams.value
+      } catch (e) {
+        if (e instanceof Error) { ElMessage.error(e.message) }
+        return undefined
+      } finally {
+        loading.value = false
+      }
+    })().finally(() => { listInFlight = null })
+
+    return listInFlight
+  }
+
+  /**
+   * Cache-first для сторінки команди: якщо команда вже в сторі — жодного запиту,
+   * інакше один GET /teams/:id (без завантаження всього списку). Повертає null, якщо не знайдено.
+   */
+  async function ensureTeam (teamId: string): Promise<TTeam | null> {
+    const cached = teams.value.find(t => t.id === teamId)
+    if (cached) return cached
 
     loading.value = true
     try {
-      teams.value = await teamsService.fetchAllTeams()
-      listLoaded.value = true
-      entitySync.teamsLoaded(teams.value)
-      return teams.value
-    } catch (e) {
-      if (e instanceof Error) { ElMessage.error(e.message) }
+      return await refreshTeam(teamId)
     } finally {
       loading.value = false
     }
@@ -227,6 +252,7 @@ export const useTeamsStore = defineStore('teams', () => {
     listLoaded,
     getTeams,
     findTeam,
+    ensureTeam,
     refreshTeam,
     patchTeamInList,
     applyPlayerToRosters,
