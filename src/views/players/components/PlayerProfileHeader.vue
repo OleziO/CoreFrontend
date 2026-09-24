@@ -92,7 +92,7 @@
       </el-tooltip>
     </div>
 
-    <!-- ACTIONS: усі кнопки в одному рядку, ділять ширину картки порівну -->
+    <!-- ACTIONS: усі кнопки в одному рядку, ділять ширину картки порівну (крім квадратної «Редагувати» на телефоні) -->
     <div
       v-if="showAdminVerificationActions || showAdditionalInfo || (isProfilePage && !player.steamId)"
       class="mt-24 flex w-full flex-wrap items-center gap-10"
@@ -115,18 +115,20 @@
         {{ isVerified ? 'Зняти верифікацію' : 'Верифікувати' }}
       </el-button>
 
+      <!-- На телефоні «Редагувати» — квадратна кнопка-іконка, щоб поруч влізла кнопка верифікації -->
       <el-dropdown
         v-if="showAdditionalInfo && canRequestMmr"
         trigger="click"
-        class="min-w-0 flex-1"
+        class="min-w-0 flex-1 max-xs:flex-none"
       >
         <el-button
           type="primary"
-          class="w-full max-sm:!px-8"
+          class="w-full max-sm:!px-8 max-xs:aspect-square max-xs:!px-0"
+          aria-label="Редагувати профіль"
         >
-          <PhPencil :size="16" class="mr-10 shrink-0" />
-          <span>Редагувати{{ showFullLabel ? ' профіль' : '' }}</span>
-          <PhCaretDown class="ml-8 shrink-0 opacity-70" size="12" />
+          <PhPencil :size="16" class="mr-10 shrink-0 max-xs:mr-0" />
+          <span class="max-xs:hidden">Редагувати{{ showFullLabel ? ' профіль' : '' }}</span>
+          <PhCaretDown class="ml-8 shrink-0 opacity-70 max-xs:hidden" size="12" />
         </el-button>
         <template #dropdown>
           <el-dropdown-menu>
@@ -143,11 +145,12 @@
       <el-button
         v-else-if="showAdditionalInfo"
         type="primary"
-        class="min-w-0 flex-1 max-sm:!px-8"
+        class="min-w-0 flex-1 max-sm:!px-8 max-xs:aspect-square max-xs:flex-none max-xs:!px-0"
+        aria-label="Редагувати профіль"
         @click="emit('editProfile')"
       >
-        <PhPencil :size="16" class="mr-10 shrink-0" />
-        <span>Редагувати{{ showFullLabel ? ' профіль' : '' }}</span>
+        <PhPencil :size="16" class="mr-10 shrink-0 max-xs:mr-0" />
+        <span class="max-xs:hidden">Редагувати{{ showFullLabel ? ' профіль' : '' }}</span>
       </el-button>
 
       <el-button

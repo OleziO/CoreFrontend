@@ -150,11 +150,11 @@
             </span>
           </a>
 
-          <!-- Live metrics orbit the figure (lg+) -->
+          <!-- Live metrics orbit the figure -->
           <dl
             v-for="(metric, index) in metrics"
             :key="metric.label"
-            class="hero-chip hero-chip--metric hero-fade hidden md:flex"
+            class="hero-chip hero-chip--metric hero-fade"
             :class="`hero-chip--metric-${index + 1}`"
             :style="{ '--i': 9 + index }"
           >
@@ -764,6 +764,17 @@ $lead: 180ms;
     transform: scale(var(--hero-scale, 1));
     filter: blur(0) drop-shadow(0 24px 40px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 28px rgba(var(--ds-primary-rgb), 0.22));
   }
+
+  // iOS Safari can't keep a filtered 1440px render in GPU memory and paints the
+  // layer as a white square. Phones and tablets get a plain opacity crossfade.
+  @media (max-width: theme('screens.lg')) {
+    filter: none;
+    transition: opacity 900ms ease, transform 900ms var(--ds-ease-out);
+
+    &.is-active {
+      filter: none;
+    }
+  }
 }
 
 // Floating HUD chips anchored to the arena corners.
@@ -877,6 +888,41 @@ $lead: 180ms;
     bottom: 10%;
     animation-duration: 700ms, 7.5s;
     animation-delay: calc(#{$lead} + 12 * #{$stagger}), 2s;
+  }
+}
+
+// Phones: the arena spans the whole column, so negative offsets push chips past
+// the screen edge (the section clips them). Pull the orbit in tight to the figure.
+@media (max-width: theme('screens.md')) {
+  .hero-chip--featured {
+    left: 0;
+    top: 4%;
+    max-width: 62%;
+  }
+
+  .hero-chip--stream {
+    right: 0;
+    bottom: 10%;
+  }
+
+  .hero-chip--metric-1 {
+    right: 0;
+    top: 4%;
+  }
+
+  .hero-chip--metric-2 {
+    left: 0;
+    top: 40%;
+  }
+
+  .hero-chip--metric-3 {
+    right: 0;
+    top: 40%;
+  }
+
+  .hero-chip--metric-4 {
+    left: 0;
+    bottom: 24%;
   }
 }
 

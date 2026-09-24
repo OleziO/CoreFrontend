@@ -102,11 +102,12 @@
       <el-button
         v-if="canEditTeamProfile"
         type="primary"
-        class="team-hero__btn"
+        class="team-hero__btn team-hero__btn--edit"
+        aria-label="Редагувати команду"
         @click="emit('edit-team')"
       >
         <PhPencil :size="18" />
-        <span>Редагувати{{ windowWidth > 650 ? ' команду' : '' }}</span>
+        <span class="team-hero__btn-label">Редагувати{{ windowWidth > 650 ? ' команду' : '' }}</span>
       </el-button>
 
       <el-button
@@ -333,17 +334,27 @@ function copyDotaTeamId () {
 }
 
 // ─── Actions ────────────────────────────────────────────────────────────────
+// Один рядок: кнопки ділять ширину, а на телефоні «Редагувати» стискається до
+// квадратної іконки в кінці рядка — як у профілі гравця.
 .team-hero__actions {
-  @apply relative z-[2] flex flex-col gap-10 sm:flex-row;
+  @apply relative z-[2] flex gap-10;
 }
 
 .team-hero__btn {
-  @apply w-full flex-1;
+  @apply min-w-0 flex-1;
   margin-left: 0 !important;
 
   :deep(> span) {
     @apply inline-flex items-center gap-8;
   }
+}
+
+.team-hero__btn--edit {
+  @apply max-xs:order-last max-xs:flex-none max-xs:aspect-square max-xs:px-0;
+}
+
+.team-hero__btn-label {
+  @apply max-xs:hidden;
 }
 
 // ─── Pointer-only hover ─────────────────────────────────────────────────────

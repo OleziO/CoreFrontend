@@ -371,9 +371,9 @@ async function donate (amountUah: number) {
   text-shadow: 0 0 20px rgba(var(--ds-gold-rgb), 0.2);
 }
 
-// Три суми в ряд на мобільному й планшеті, у стовпчик — у вузькій бічній картці.
+// Суми в стовпчик на телефоні й у вузькій бічній картці, три в ряд — на планшеті.
 .stream__donate-actions {
-  @apply relative mt-6 grid grid-cols-3 gap-10 lg:grid-cols-1;
+  @apply relative mt-6 grid grid-cols-1 gap-10 sm:grid-cols-3 lg:grid-cols-1;
 
   :deep(.el-button) {
     @apply w-full;

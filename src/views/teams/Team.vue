@@ -4,12 +4,12 @@
     class="w-full flex justify-center overflow-auto py-20 px-20 lg:px-40"
   >
     <div
-      class="nm:pt-60 pt-20 relative grid lg:grid-cols-[1fr_2fr] h-full w-full lg:max-w-[1400px] gap-20
+      class="nm:pt-60 pt-20 relative grid grid-cols-1 lg:grid-cols-[1fr_2fr] h-full w-full lg:max-w-[1400px] gap-20
       lg:items-stretch scrollbar-gutter-stable"
     >
       <AppBackButton />
 
-      <aside class="flex flex-1 flex-col gap-20 max-w-full lg:max-w-[600px] lg:self-stretch">
+      <aside class="flex min-w-0 flex-1 flex-col gap-20 max-w-full lg:max-w-[600px] lg:self-stretch">
         <TeamProfileCard
           :team="team"
           :can-edit-team-profile="canEditTeamProfile"
