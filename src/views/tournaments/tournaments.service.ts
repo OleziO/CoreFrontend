@@ -173,6 +173,18 @@ class TournamentsService {
     )
   }
 
+  /**
+   * POST /tournaments/:id/playoff/regenerate-matches — перегенерувати матчі плей-оф (адмін).
+   * На відміну від `playoff/restart`, сітку, учасників і вже подані результати НЕ чіпає:
+   * бекенд заново створює записи матчів/серій для незіграних пар (і їх дзеркало в лізі Dota 2)
+   * за поточним станом сітки Challonge. Без тіла; відповідь — актуальний PlayoffResponseDto.
+   * Ендпоінт ще відсутній у згенерованій схемі, тож викликаємо через нетипізований клієнт.
+   */
+  async regeneratePlayoffMatches (tournamentId: string): Promise<TPlayoff> {
+    const rawPost = apiClient.post as unknown as (url: string, data?: unknown) => Promise<unknown>
+    return await rawPost(`/tournaments/${tournamentId}/playoff/regenerate-matches`, {}) as TPlayoff
+  }
+
   /** POST /tournaments/:id/playoff/submit — подати ID матчу Dota 2 (будь-який залогінений користувач). */
   async submitPlayoffMatch (tournamentId: string, dotaMatchId: string) {
     return await apiClient.post(

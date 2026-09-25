@@ -277,18 +277,37 @@
               </p>
             </div>
 
-            <el-button
-              tag="a"
-              :href="playoffPublicUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="shrink-0"
-            >
-              <span class="inline-flex items-center gap-8">
-                Відкрити на Challonge
-                <PhArrowSquareOut :size="14" weight="bold" aria-hidden="true" />
-              </span>
-            </el-button>
+            <div class="flex shrink-0 flex-wrap items-center gap-8">
+              <el-popconfirm
+                width="300"
+                placement="bottom-end"
+                :title="REGENERATE_CONFIRM_TITLE"
+                confirm-button-text="Перегенерувати"
+                cancel-button-text="Скасувати"
+                @confirm="regeneratePlayoffMatches"
+              >
+                <template #reference>
+                  <el-button plain :loading="regenerateLoading" :disabled="actionLoading">
+                    <span class="inline-flex items-center gap-8">
+                      <PhArrowsClockwise v-if="!regenerateLoading" :size="14" weight="bold" aria-hidden="true" />
+                      Перегенерувати матчі
+                    </span>
+                  </el-button>
+                </template>
+              </el-popconfirm>
+
+              <el-button
+                tag="a"
+                :href="playoffPublicUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span class="inline-flex items-center gap-8">
+                  Відкрити на Challonge
+                  <PhArrowSquareOut :size="14" weight="bold" aria-hidden="true" />
+                </span>
+              </el-button>
+            </div>
           </div>
         </section>
 
@@ -413,6 +432,7 @@ import 'dayjs/locale/uk'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   PhArrowSquareOut,
+  PhArrowsClockwise,
   PhCheck,
   PhCoins,
   PhLightning,
@@ -751,6 +771,9 @@ async function markPaid (teamId: string) {
 const playoff = ref<TPlayoff | null>(null)
 const playoffLoading = ref(false)
 const actionLoading = ref(false)
+const regenerateLoading = ref(false)
+const REGENERATE_CONFIRM_TITLE =
+  'Перегенерувати матчі плей-оф? Сітка й подані результати збережуться, незіграні матчі буде створено заново.'
 const eligibleLoading = ref(false)
 const playoffEligibleTeams = ref<TTeam[]>([])
 
@@ -791,6 +814,24 @@ async function disqualify (teamId: string) {
     ElMessage.error(friendlyPlayoffError(e, 'Не вдалося дискваліфікувати команду'))
   } finally {
     actionLoading.value = false
+  }
+}
+
+/** Перегенерувати незіграні матчі плей-оф за поточною сіткою (сітка й результати лишаються). */
+async function regeneratePlayoffMatches () {
+  const id = props.tournament?.id
+  if (!id || regenerateLoading.value) return
+  regenerateLoading.value = true
+  try {
+    const response = await tournamentsService.regeneratePlayoffMatches(id)
+    playoff.value = response
+    ElMessage.success('Матчі плей-оф перегенеровано')
+    emit('playoff-updated', response)
+    emit('refresh')
+  } catch (e: unknown) {
+    ElMessage.error(friendlyPlayoffError(e, 'Не вдалося перегенерувати матчі плей-оф'))
+  } finally {
+    regenerateLoading.value = false
   }
 }
 
