@@ -234,6 +234,26 @@
                 </el-form-item>
               </div>
 
+              <!-- Ліга в клієнті Dota 2 (league_id) — турнір і його матчі дзеркалюються туди -->
+              <el-form-item class="td-field">
+                <template #label>
+                  <span>Dota 2 League ID <span class="td-label__opt">опціонально</span></span>
+                </template>
+                <el-input
+                  v-model="dotaLeagueIdText"
+                  inputmode="numeric"
+                  placeholder="17588"
+                  size="large"
+                  class="td-num"
+                  clearable
+                  @input="dotaLeagueIdText = String($event).replace(/\D+/g, '')"
+                >
+                  <template #prefix>
+                    <span class="td-affix">ID</span>
+                  </template>
+                </el-input>
+              </el-form-item>
+
               <!-- Внесок: вводиться З ГРАВЦЯ, квиток команди рахується автоматично -->
               <div class="td-fee">
                 <el-form-item class="td-field td-fee__input">
@@ -450,6 +470,8 @@ const elementPlusUk = uk
 
 const prizePoolText = ref('')
 const slotsText = ref('')
+/** ID ліги в клієнті Dota 2 — числовий рядок, у payload іде як number. */
+const dotaLeagueIdText = ref('')
 /**
  * Внесок вводиться З ГРАВЦЯ в гривнях. У контракті `entryFee` — квиток за
  * команду в копійках, тож у payload іде `× TEAM_SIZE × 100`.
@@ -708,6 +730,7 @@ function populateFromTournament (t: TTournament) {
   }
   prizePoolText.value = t.prizePool != null ? String(t.prizePool) : ''
   slotsText.value = t.tournamentSlots != null ? String(t.tournamentSlots) : ''
+  dotaLeagueIdText.value = t.dotaLeagueId != null ? String(t.dotaLeagueId) : ''
   // Копійки за команду → гривні з гравця.
   feePerPlayerText.value = t.entryFee != null && t.entryFee > 0
     ? String(Math.round(t.entryFee / 100 / TEAM_SIZE))
@@ -728,6 +751,7 @@ function clearData () {
   for (const key of ALL_SCHEDULE_KEYS) form[key] = ''
   prizePoolText.value = ''
   slotsText.value = ''
+  dotaLeagueIdText.value = ''
   feePerPlayerText.value = ''
   for (const k of Object.keys(files) as TUploadKey[]) {
     if (previews[k] && previews[k].startsWith('blob:')) URL.revokeObjectURL(previews[k])
@@ -749,6 +773,16 @@ function toIsoUtc (pickerValue: string): string {
   return dayjs(pickerValue, 'YYYY-MM-DD HH:mm').toISOString()
 }
 
+/**
+ * Ліга Dota 2 іде в payload лише коли заповнена. При редагуванні очищене поле
+ * відв'язує лігу (null), але тільки якщо вона була — інакше ключ не передається.
+ */
+function dotaLeagueIdPayload (): { dotaLeagueId?: number | null } {
+  if (dotaLeagueIdText.value !== '') return { dotaLeagueId: Number(dotaLeagueIdText.value) }
+  if (isEditMode.value && props.tournament?.dotaLeagueId != null) return { dotaLeagueId: null }
+  return {}
+}
+
 const handleSubmit = async () => {
   if (!isFormValid.value || loading.value) return
 
@@ -766,6 +800,7 @@ const handleSubmit = async () => {
     tournamentEndsAt: toIsoUtc(form.tournamentEndsAt),
     ...(prizePoolText.value !== '' && { prizePool: Number(prizePoolText.value) }),
     ...(slotsText.value !== '' && { tournamentSlots: Number(slotsText.value) }),
+    ...dotaLeagueIdPayload(),
     // Гривні з гравця → квиток команди в копійках. Порожнє поле — безкоштовний турнір (0).
     entryFee: teamTicketUah.value * 100,
     // Формат сітки. У Single elimination верхній/нижній best-of бекенд ігнорує, але поля обовʼязкові.

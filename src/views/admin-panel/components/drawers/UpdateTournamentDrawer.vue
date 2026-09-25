@@ -56,6 +56,16 @@
           />
         </el-form-item>
 
+        <el-form-item label="Dota 2 League ID (опціонально)">
+          <el-input
+            v-model.number="tournamentData.dotaLeagueId"
+            type="number"
+            min="0"
+            placeholder="ID ліги в клієнті Dota 2"
+            size="large"
+          />
+        </el-form-item>
+
         <el-form-item label="Зображення турніру">
           <div class="flex items-center gap-4 w-full">
             <el-upload
@@ -135,7 +145,8 @@ const defaultTournamentData = (): ITournamentUpdateFormData => ({
   registrationStartsAt: '',
   registrationEndsAt: '',
   status: '',
-  limit: null
+  limit: null,
+  dotaLeagueId: null
 })
 
 const tournamentData = ref<ITournamentUpdateFormData>(defaultTournamentData())
@@ -152,7 +163,8 @@ watch(() => showUpdateTournamentDrawer.value, (isOpen) => {
       tournamentStartsAt: props.newTournamentData.tournamentStartsAt || '',
       tournamentEndsAt: props.newTournamentData.tournamentEndsAt || '',
       registrationStartsAt: props.newTournamentData.registrationStartsAt || '',
-      registrationEndsAt: props.newTournamentData.registrationEndsAt || ''
+      registrationEndsAt: props.newTournamentData.registrationEndsAt || '',
+      dotaLeagueId: props.newTournamentData.dotaLeagueId ?? null
     }
     if (props.newTournamentData.headerBannerUrl) {
       preview.value = getImageUrl(props.newTournamentData.headerBannerUrl)

@@ -20,7 +20,12 @@ export type TPlayoffTeamsDto = components['schemas']['PlayoffTeamsDto']
 export type TSubmitPlayoffMatchDto = components['schemas']['SubmitPlayoffMatchDto']
 /** Тіло POST /tournaments/:id/playoff/disqualify. */
 export type TDisqualifyTeamDto = components['schemas']['DisqualifyTeamDto']
-export type TCreateTournamentDto = components['schemas']['CreateTournamentDto']
+/**
+ * ID ліги в клієнті Dota 2 (league_id), до якої прив'язано турнір. Поля ще немає в
+ * згенерованій схемі — локальне розширення, доки `npm run api` не підхопить його з бекенду.
+ */
+export type TTournamentDotaLeagueDto = { dotaLeagueId?: number | null }
+export type TCreateTournamentDto = components['schemas']['CreateTournamentDto'] & TTournamentDotaLeagueDto
 /** Формат сітки плей-оф: SINGLE_ELIMINATION | DOUBLE_ELIMINATION. */
 export type TTournamentBracketType = components['schemas']['TournamentBracketType']
 /** Довжина серії у фінальних слотах плей-оф: 1 — BO1, 3 — BO3, 5 — BO5. */
@@ -39,7 +44,7 @@ export type TCreateTeamDto = components['schemas']['CreateTeamDto']
 export type TUpdateTeamDto = components['schemas']['UpdateTeamDto']
 /** У OpenAPI схема називається `AddPlayerDto` (POST /teams/:id/players). */
 export type TAddTeamPlayerDto = components['schemas']['AddPlayerDto']
-export type TUpdateTournamentDto = components['schemas']['UpdateTournamentDto']
+export type TUpdateTournamentDto = components['schemas']['UpdateTournamentDto'] & TTournamentDotaLeagueDto
 export type TCreateMatchDto = components['schemas']['CreateMatchDto']
 export type TUpdateMatchDto = components['schemas']['UpdateMatchDto']
 export type TCreateUserRoleDto = components['schemas']['CreateUserRoleDto']

@@ -12,6 +12,9 @@ type TTournament = TResponse<'/tournaments', 'get'>[number] & {
   // виводяться з дат реєстрації. Опційні, доки `npm run api` не підхопить схему.
   qualificationStartsAt?: string
   qualificationEndsAt?: string
+  // ID ліги в клієнті Dota 2 (league_id); null/undefined — не прив'язано. Опційне, доки
+  // `npm run api` не підхопить схему.
+  dotaLeagueId?: number | null
   // Populated client-side by hydrating from GET /tournaments/:id/qualification
   qualification?: import('@/api/types/api.types').TQualificationPhase | null
 }
