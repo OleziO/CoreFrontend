@@ -559,7 +559,7 @@ interface ISocialLink {
 const socials: ISocialLink[] = [
   { label: 'Twitch', handle: '/core_league', url: 'https://www.twitch.tv/core_league', icon: 'twitch', rgb: '145, 70, 255' },
   { label: 'YouTube', handle: '@Core_League', url: 'https://www.youtube.com/@Core_League', icon: 'youtube', rgb: '255, 64, 64' },
-  { label: 'Telegram', handle: '@core_league_dota2', url: 'https://t.me/core_league_dota2', icon: 'telegram', rgb: '42, 171, 238' },
+  { label: 'Telegram', handle: '@core_league_lviv', url: 'https://t.me/core_league_lviv', icon: 'telegram', rgb: '42, 171, 238' },
   {
     label: 'Instagram',
     handle: '@core__league',

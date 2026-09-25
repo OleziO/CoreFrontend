@@ -100,7 +100,7 @@ function isActive (name: string): boolean {
 
 const socialLinks: Array<{ name: string; url: string; icon: Component }> = [
   { name: 'YouTube', url: 'https://www.youtube.com/@Core_League', icon: PhYoutubeLogo },
-  { name: 'Telegram', url: 'https://t.me/core_league_dota2', icon: PhTelegramLogo },
+  { name: 'Telegram', url: 'https://t.me/core_league_lviv', icon: PhTelegramLogo },
   { name: 'Discord', url: 'https://discord.gg/QeDj9TjmgM', icon: PhDiscordLogo },
   { name: 'Instagram', url: 'https://www.instagram.com/core__league/', icon: PhInstagramLogo },
   { name: 'TikTok', url: 'https://www.tiktok.com/@core_league_lviv', icon: PhTiktokLogo },

@@ -79,7 +79,7 @@
 
         <div class="hero-fade mt-28 flex flex-col items-center gap-14 sm:flex-row" style="--i: 5">
           <a
-            href="https://t.me/core_league_dota2"
+            href="https://t.me/core_league_lviv"
             target="_blank"
             rel="noopener noreferrer"
             class="hero-cta hero-cta--neon"
