@@ -904,11 +904,12 @@ async function onSubmit () {
     }
 
     ElMessage.success('Профіль оновлено')
-    await reportCityRoleSync(payload)
     emit('submit', form.value)
     emit('updated', updated)
     props.onUpdated?.(updated)
     modelValue.value = false
+    // Discord-звіт не блокує закриття: бекенд ставить ролі в черзі, відповідь може йти секунди.
+    reportCityRoleSync(payload)
   } catch (e) {
     const data = (e as { response?: { data?: { message?: string } } })?.response?.data
     ElMessage.error(data?.message || 'Не вдалося оновити профіль')
