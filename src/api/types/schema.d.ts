@@ -1979,6 +1979,8 @@ export interface components {
              *     ]
              */
             errors: string[];
+            /** @description Duplicate city roles (same name, bot colour) deleted this run, oldest kept */
+            deletedDuplicates: string[];
         };
         CountryDto: {
             /**
