@@ -194,6 +194,7 @@
             :filter-method="onLanCityFilter"
             multiple
             filterable
+            :reserve-keyword="false"
             clearable
             collapse-tags
             collapse-tags-tooltip
