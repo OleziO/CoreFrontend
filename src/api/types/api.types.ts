@@ -42,6 +42,8 @@ export type TTournamentFormat = 'ONLINE' | 'LAN'
 export type TCountry = components['schemas']['CountryDto']
 /** Відповідь GET /locations/cities?countryCode=XX. */
 export type TCitiesResponse = components['schemas']['CitiesResponseDto']
+/** Відповідь POST /players/me/lan-roles/sync — що Discord відповів на призначення ролей міст. */
+export type TLanRoleSyncReport = components['schemas']['LanRoleSyncReportDto']
 /**
  * OpenAPI кладе `positions` / `wantToPlay` як одиничний enum `|null`; фактично PATCH приймає масиви
  * (як і `positions`).

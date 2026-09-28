@@ -1089,6 +1089,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/players/me/lan-roles/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlayersController_resyncLanRoles"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/locations/countries": {
         parameters: {
             query?: never;
@@ -1946,6 +1962,23 @@ export interface components {
             teamBId: string;
             /** @enum {string} */
             phase: "qualification" | "playoff";
+        };
+        LanRoleSyncReportDto: {
+            /** @description False when the bot token or guild id is missing on the server */
+            configured: boolean;
+            /** @description Roles created this run */
+            created: string[];
+            /** @description Roles now on the member */
+            assigned: string[];
+            /** @description Roles taken off the member */
+            removed: string[];
+            /**
+             * @description Discord failures, with HTTP status and Discord message
+             * @example [
+             *       "assign \"Львів\": HTTP 403 Missing Permissions (50013)"
+             *     ]
+             */
+            errors: string[];
         };
         CountryDto: {
             /**
@@ -3848,6 +3881,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    PlayersController_resyncLanRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LanRoleSyncReportDto"];
+                };
             };
         };
     };

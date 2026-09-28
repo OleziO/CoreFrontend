@@ -7,6 +7,7 @@ import type { components } from '@/api/types/schema'
 
 import type {
   TAdminPlayerRoleItem,
+  TLanRoleSyncReport,
   TUpdatePlayerDto
 } from '@/api/types/api.types'
 
@@ -47,6 +48,14 @@ class PlayersService {
         dynamicKeys: { id }
       })
     return await apiClient.get('/players/{id}', { dynamicKeys: { id } }) as TPlayer
+  }
+
+  /**
+   * Повторно призначає поточному користувачу Discord-ролі його LAN-міст і повертає звіт
+   * (у т.ч. помилки Discord). Без тостів — рішення, що показати, ухвалює викликач.
+   */
+  async syncMyLanRoles (): Promise<TLanRoleSyncReport> {
+    return await apiClient.post('/players/me/lan-roles/sync')
   }
 
   async deletePlayer (id: string): Promise<string> {

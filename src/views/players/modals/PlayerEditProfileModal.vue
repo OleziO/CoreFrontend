@@ -851,6 +851,28 @@ async function syncPlayerTags () {
   props.onTagsUpdated?.(finalTags)
 }
 
+/**
+ * Discord-ролі LAN-міст ставить бекенд після збереження, але мовчки. Для власного профілю
+ * питаємо звіт і показуємо причину, якщо Discord відмовив (права бота, ієрархія ролей тощо).
+ */
+async function reportLanRoleSync (lanCities: string[] | null | undefined) {
+  const isOwnProfile = props.player.id === authStore.user?.id
+  if (!isOwnProfile || !lanCities?.length) return
+  try {
+    const report = await playersService.syncMyLanRoles()
+    if (report.errors.length) {
+      ElMessage({
+        type: 'warning',
+        duration: 8000,
+        showClose: true,
+        message: `Discord-ролі міст не призначено: ${report.errors[0]}`
+      })
+    }
+  } catch {
+    /* Discord-звіт необов'язковий — профіль уже збережено */
+  }
+}
+
 async function onSubmit () {
   if (!isValid.value) return
 
@@ -879,6 +901,7 @@ async function onSubmit () {
     }
 
     ElMessage.success('Профіль оновлено')
+    await reportLanRoleSync(payload.lanCities)
     emit('submit', form.value)
     emit('updated', updated)
     props.onUpdated?.(updated)
