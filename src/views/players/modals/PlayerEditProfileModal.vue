@@ -853,12 +853,14 @@ async function syncPlayerTags () {
 }
 
 /**
- * Discord-ролі LAN-міст ставить бекенд після збереження, але мовчки. Для власного профілю
- * питаємо звіт і показуємо причину, якщо Discord відмовив (права бота, ієрархія ролей тощо).
+ * Discord-ролі міст (рідне місто в Україні + LAN-міста) ставить бекенд після збереження, але
+ * мовчки. Для власного профілю питаємо звіт і показуємо причину, якщо Discord відмовив
+ * (права бота, ієрархія ролей тощо).
  */
-async function reportLanRoleSync (lanCities: string[] | null | undefined) {
+async function reportCityRoleSync (payload: Partial<TUpdatePlayerDto>) {
   const isOwnProfile = props.player.id === authStore.user?.id
-  if (!isOwnProfile || !lanCities?.length) return
+  const hasHomeCity = payload.countryCode === LAN_COUNTRY_CODE && !!payload.city
+  if (!isOwnProfile || (!payload.lanCities?.length && !hasHomeCity)) return
   try {
     const report = await playersService.syncMyLanRoles()
     if (report.errors.length) {
@@ -902,7 +904,7 @@ async function onSubmit () {
     }
 
     ElMessage.success('Профіль оновлено')
-    await reportLanRoleSync(payload.lanCities)
+    await reportCityRoleSync(payload)
     emit('submit', form.value)
     emit('updated', updated)
     props.onUpdated?.(updated)
