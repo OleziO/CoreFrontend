@@ -7,5 +7,6 @@ export const profileRouteNames = {
 export const profileRoutes: RouteRecordRaw[] = [{
   path: 'me',
   name: profileRouteNames.profile,
+  meta: { seo: { title: 'Мій профіль' } },
   component: () => import('@/views/players/Player.vue')
 }]

@@ -170,6 +170,7 @@ import {
   registrationBlockBannerMap
 } from '@/core/utils/tournament-registration'
 import type { TSponsor } from '@/config/sponsors'
+import { useSeo } from '@/composables/use-seo'
 
 const activeTab = ref('teams')
 const payments = ref<TTournamentPaymentSummary[]>([])
@@ -191,6 +192,13 @@ const tournamentId = String(route.params.id)
 
 /** Джерело істини — стор; reload і patch з вкладок патчать його, тож сторінка оновлюється сама. */
 const tournament = computed(() => tournamentStore.tournamentsData.find((t) => t.id === tournamentId) ?? null)
+
+useSeo(() => ({
+  title: tournament.value?.name ? `${tournament.value.name} — турнір з Dota 2` : undefined,
+  description: tournament.value?.name
+    ? `Турнір ${tournament.value.name} на Core League: учасники, сітка, матчі та трансляції.`
+    : undefined
+}))
 
 /** Команда користувача — зі стору (реактивно); `hydrateMyTeam` лише освіжає її з беку. */
 const myTeam = computed(() => {

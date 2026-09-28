@@ -8,7 +8,7 @@ export const loginSuccessRoutes: RouteRecordRaw[] = [
   {
     path: 'login-success',
     name: loginSuccessRouteNames.loginSuccess,
-    meta: { public: true },
+    meta: { public: true, seo: { title: 'Вхід виконано', noindex: true } },
     component: () => import('@/views/login-success/LoginSuccess.vue')
   }
 ]

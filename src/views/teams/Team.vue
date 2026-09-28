@@ -49,6 +49,7 @@ import { ElMessageBox } from 'element-plus'
 import { useWindowSize } from '@vueuse/core'
 import type { TUpdateTeamPayload } from '@/views/teams/teams.service'
 import { ERemovePlayerPenalty } from '@/views/teams/teams.enums'
+import { useSeo } from '@/composables/use-seo'
 
 const route = useRoute()
 const id = String(route.params.id)
@@ -64,6 +65,8 @@ const playersStore = usePlayersStore()
 
 /** Джерело істини — стор; усі мутації патчать його, тож сторінка оновлюється сама. */
 const team = computed(() => teamsStore.teams.find(t => t.id === id) ?? null)
+
+useSeo(() => ({ title: team.value?.name ? `${team.value.name} — команда Dota 2` : undefined }))
 
 const isAdmin = computed(() => authStore.isAdmin.isAdmin || authStore.isAdmin.isModerator)
 

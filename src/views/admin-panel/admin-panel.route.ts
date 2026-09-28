@@ -8,6 +8,7 @@ export const adminPanelRoutes: RouteRecordRaw[] = [
   {
     path: 'admin',
     name: adminPanelRouteNames.adminPanel,
+    meta: { seo: { title: 'Адмін-панель' } },
     component: () => import('@/views/admin-panel/AdminPanel.vue')
   }
 ]

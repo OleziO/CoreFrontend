@@ -313,6 +313,7 @@ import { routeNames } from '@/router/route-names'
 import type { TTag } from '@/services/tags.types'
 import type { TCreateTeamPayload } from '@/views/teams/teams.service'
 import { usePlayerFavoriteHeroes } from '@/views/players/composables/use-player-heroes'
+import { useSeo } from '@/composables/use-seo'
 
 const route = useRoute()
 const router = useRouter()
@@ -332,6 +333,12 @@ const player = computed<TPlayer | null>(() =>
     ? (me.user as TPlayer | null)
     : (playerStore.players.find((p) => p.id === routePlayerId.value) ?? null)
 )
+
+useSeo(() => ({
+  title: route.name === routeNames.profile
+    ? 'Мій профіль'
+    : (player.value?.discordName ? `${player.value.discordName} — гравець Dota 2` : undefined)
+}))
 
 const loading = ref(false)
 const linkingSteam = ref(false)

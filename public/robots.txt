@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /me
+Disallow: /auth/
+Disallow: /login-success
+Disallow: /invites/
+Disallow: /finance
+
+Sitemap: https://www.core-league-dota2.org/sitemap.xml

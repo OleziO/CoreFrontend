@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
   <head>
     <meta charset="UTF-8" />
     <!-- Always dark: the app has one theme, so native widgets (scrollbars, selects,
@@ -8,10 +8,72 @@
     <meta name="theme-color" content="#07080f" />
     <link rel="icon" href="/favicon.jpg" />
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
+    <!-- SEO. Статичні значення дублюють src/config/seo.ts для ботів без JS
+         (прев'ю в Telegram/Discord, перший прохід Googlebot). Для решти маршрутів
+         теги перезаписує composables/use-seo.ts у router.afterEach. -->
+    <title>Core League — турніри з Dota 2 у Львові та Україні</title>
+    <meta name="description" content="Core League — українська кіберспортивна ліга з Dota 2. Онлайн та LAN-турніри 5×5 у Львові й по всій Україні, призові фонди, рейтинг гравців і live-трансляції. Збери команду та реєструйся на турнір." />
+    <meta name="keywords" content="турніри дота, турніри dota 2, турніри львів, кіберспорт львів, dota 2 ліга україна, dota 2 турнір реєстрація, core league" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://www.core-league-dota2.org/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Core League" />
+    <meta property="og:locale" content="uk_UA" />
+    <meta property="og:title" content="Core League — турніри з Dota 2 у Львові та Україні" />
+    <meta property="og:description" content="Українська кіберспортивна ліга з Dota 2: онлайн та LAN-турніри 5×5, призові фонди, рейтинг гравців і live-трансляції." />
+    <meta property="og:url" content="https://www.core-league-dota2.org/" />
+    <meta property="og:image" content="https://www.core-league-dota2.org/core_logo_ny.jpg" />
+    <meta property="og:image:width" content="1024" />
+    <meta property="og:image:height" content="1024" />
+    <meta property="og:image:alt" content="Логотип Core League" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Core League — турніри з Dota 2 у Львові та Україні" />
+    <meta name="twitter:description" content="Українська кіберспортивна ліга з Dota 2: онлайн та LAN-турніри 5×5, призові фонди, рейтинг гравців і live-трансляції." />
+    <meta name="twitter:image" content="https://www.core-league-dota2.org/core_logo_ny.jpg" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SportsOrganization",
+          "@id": "https://www.core-league-dota2.org/#organization",
+          "name": "Core League",
+          "alternateName": "Core League Dota 2",
+          "url": "https://www.core-league-dota2.org/",
+          "logo": "https://www.core-league-dota2.org/core_logo_ny.jpg",
+          "description": "Українська кіберспортивна ліга з Dota 2: онлайн та LAN-турніри 5×5 у Львові та по всій Україні.",
+          "sport": "Dota 2",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Львів",
+            "addressCountry": "UA"
+          },
+          "sameAs": [
+            "https://t.me/core_league_lviv",
+            "https://discord.gg/QeDj9TjmgM",
+            "https://www.instagram.com/core_league_lviv/",
+            "https://www.twitch.tv/core_league"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.core-league-dota2.org/#website",
+          "url": "https://www.core-league-dota2.org/",
+          "name": "Core League",
+          "inLanguage": "uk",
+          "publisher": { "@id": "https://www.core-league-dota2.org/#organization" }
+        }
+      ]
+    }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;500;600;700&family=Russo+One&display=swap" rel="stylesheet">
-    <title>Core League</title>
   </head>
   <body>
     <div id="app"></div>

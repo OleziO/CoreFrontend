@@ -18,6 +18,8 @@ declare module 'vue-virtual-scroller' {
 interface ImportMetaEnv {
   readonly VITE_API_PUBLIC_URL: string
   readonly VITE_API_PUBLIC_URL_V2: string
+  /** Публічний origin сайту для canonical/og:url (без слеша в кінці). Опційно. */
+  readonly VITE_SITE_URL?: string
 }
 
 interface ImportMeta {

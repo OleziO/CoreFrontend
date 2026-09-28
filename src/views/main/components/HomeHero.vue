@@ -69,12 +69,12 @@
             <span class="hero-kicker__dot" aria-hidden="true" />
             Dota 2
           </span>
-          <span class="hero-kicker__text">Українська кіберспортивна ліга</span>
+          <span class="hero-kicker__text">Українська кіберспортивна ліга · Львів</span>
         </span>
 
         <p class="hero-fade mt-20 max-w-[520px] text-base leading-relaxed text-gray-400 md:text-lg" style="--i: 4">
-          Організовані турніри 5×5, live трансляції та справжня кіберспортивна
-          інфраструктура для українських команд.
+          Організовані турніри з Dota 2 у форматі 5×5, live трансляції та справжня
+          кіберспортивна інфраструктура для команд зі Львова та всієї України.
         </p>
 
         <div class="hero-fade mt-28 flex flex-col items-center gap-14 sm:flex-row" style="--i: 5">

@@ -9,7 +9,7 @@ export const inviteRoutes: RouteRecordRaw[] = [
     path: 'invites/:token',
     name: inviteRouteNames.invite,
     // Публічний: сторінка сама показує запрошення і пропонує увійти з поверненням назад.
-    meta: { public: true },
+    meta: { public: true, seo: { title: 'Запрошення до команди', noindex: true } },
     component: () => import('@/views/invites/InvitePage.vue')
   }
 ]

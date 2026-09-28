@@ -363,6 +363,10 @@
     "getCountryFlagEmoji": true,
     "locationsService": true,
     "useLocations": true,
-    "getCountryFlagUrl": true
+    "getCountryFlagUrl": true,
+    "applyRouteSeo": true,
+    "applySeo": true,
+    "resolveRouteSeo": true,
+    "useSeo": true
   }
 }

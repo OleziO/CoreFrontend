@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { firstQueryValue, hasAdminRole } from '@/core/helpers'
 import { routes, routeNames } from './route-names'
 import { resolveAuthGuard } from './guards/auth.guard'
+import { applyRouteSeo } from '@/composables/use-seo'
 
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -48,4 +49,9 @@ router.beforeEach(async (to, from, next) => { // Перед роутингом �
   }
 
   next()
+})
+
+// SEO: title/description/canonical/robots для маршруту; view з даними API перекриває через useSeo().
+router.afterEach((to) => {
+  applyRouteSeo(to)
 })
