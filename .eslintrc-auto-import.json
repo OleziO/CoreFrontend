@@ -367,6 +367,7 @@
     "applyRouteSeo": true,
     "applySeo": true,
     "resolveRouteSeo": true,
-    "useSeo": true
+    "useSeo": true,
+    "analyticsService": true
   }
 }

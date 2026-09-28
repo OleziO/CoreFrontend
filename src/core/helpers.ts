@@ -202,13 +202,14 @@ export function formatPlayerPositionsSummary (p: { positions?: unknown } | null 
 }
 
 export type TPlayerMatchRecord = {
-  totalWinMatches?: number | null
-  totalLostMatches?: number | null
+  wins?: number | null
+  losses?: number | null
 }
 
-export function getPlayerMatchStats (p: (TPlayer | TPlayerMatchRecord) | null | undefined) {
-  const wins = Math.max(0, Number((p as TPlayerMatchRecord)?.totalWinMatches ?? 0) || 0)
-  const losses = Math.max(0, Number((p as TPlayerMatchRecord)?.totalLostMatches ?? 0) || 0)
+/** Перемоги / поразки → загальна кількість, текст і колір вінрейту для блоку статистики. */
+export function getPlayerMatchStats (p: TPlayerMatchRecord | null | undefined) {
+  const wins = Math.max(0, Number(p?.wins ?? 0) || 0)
+  const losses = Math.max(0, Number(p?.losses ?? 0) || 0)
   const total = wins + losses
 
   let winrateClass = 'text-red-400/90'

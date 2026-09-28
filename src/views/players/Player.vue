@@ -33,7 +33,12 @@
             @link-steam="handleSteamLink"
             @request-mmr="openRequestMmrModal"
           />
-          <PlayerMatchStats :class="roleAccentClass" :match-stats="matchStats" />
+          <PlayerMatchStats
+            :class="roleAccentClass"
+            :stats="matchStats"
+            :loading="matchStatsPending"
+            :error="matchStatsError"
+          />
         </div>
 
         <!-- Локація + «Хочу грати» — на обох профілях, над улюбленими героями -->
@@ -301,7 +306,6 @@ import {
   getSteamProfileUrl,
   getDotabuffProfileUrl,
   getDiscordProfileUrl,
-  getPlayerMatchStats,
   getPlayerRankImageSrcFromPlayerRank,
   formatPlayerRatingMmr,
   getPlayerDotaPositions,
@@ -313,6 +317,7 @@ import { routeNames } from '@/router/route-names'
 import type { TTag } from '@/services/tags.types'
 import type { TCreateTeamPayload } from '@/views/teams/teams.service'
 import { usePlayerFavoriteHeroes } from '@/views/players/composables/use-player-heroes'
+import { usePlayerMatchStats } from '@/views/players/composables/use-player-match-stats'
 import { useSeo } from '@/composables/use-seo'
 
 const route = useRoute()
@@ -360,7 +365,12 @@ const isVerified = computed(() => isPlayerVerified(player.value))
 /** Рольовий акцент рамок профілю (`.role-frame--*`): адмін — золото, медіа — фіолет. */
 const roleAccentClass = computed(() => getPlayerRoleAccentClass(player.value))
 
-const matchStats = computed(() => getPlayerMatchStats(player.value))
+/** Матчі у турнірах платформи — окремий запит, бо не входять у `TPlayer`. */
+const {
+  stats: matchStats,
+  isPending: matchStatsPending,
+  isError: matchStatsError
+} = usePlayerMatchStats(() => player.value?.id)
 
 const {
   hasAccount: favoriteHeroesHasAccount,

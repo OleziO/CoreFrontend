@@ -13,6 +13,7 @@ declare global {
   const VIRTUAL_GRID_CARD_GAP_PX: typeof import('../src/composables/use-virtual-grid')['VIRTUAL_GRID_CARD_GAP_PX']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
   const adminPanelService: typeof import('../src/views/admin-panel/admin-panel.service')['adminPanelService']
+  const analyticsService: typeof import('../src/views/analytics/analytics.service')['analyticsService']
   const appModals: typeof import('../src/composables/use-app-modals')['appModals']
   const applyRouteSeo: typeof import('../src/composables/use-seo')['applyRouteSeo']
   const applySeo: typeof import('../src/composables/use-seo')['applySeo']

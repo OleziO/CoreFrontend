@@ -52,6 +52,22 @@ export interface paths {
         patch: operations["PlayersController_update"];
         trace?: never;
     };
+    "/players/{id}/match-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlayersController_getMatchStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/players/me/avatar": {
         parameters: {
             query?: never;
@@ -2128,6 +2144,27 @@ export interface components {
              */
             name: string;
         };
+        PlayerMatchStageStatsDto: {
+            /** @description Matches with a recorded result */
+            total: number;
+            wins: number;
+            losses: number;
+        };
+        PlayerMatchStatsDto: {
+            /** @description Maps played across all tournaments */
+            total: number;
+            wins: number;
+            losses: number;
+            /**
+             * @description Win rate 0–100, rounded; null when no maps were played
+             * @example 57
+             */
+            winrate?: number | null;
+            /** @description Distinct tournaments with at least one map played */
+            tournaments: number;
+            qualification: components["schemas"]["PlayerMatchStageStatsDto"];
+            playoff: components["schemas"]["PlayerMatchStageStatsDto"];
+        };
         CitiesResponseDto: {
             /** @example UA */
             countryCode: string;
@@ -2266,6 +2303,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlayerResponseDto"];
+                };
+            };
+        };
+    };
+    PlayersController_getMatchStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayerMatchStatsDto"];
                 };
             };
         };
