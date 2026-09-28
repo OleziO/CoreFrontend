@@ -44,7 +44,9 @@ router.beforeEach(async (to, from, next) => { // Перед роутингом �
     await authStore.fetchUser()
   }
 
-  if (to.name === routeNames.financeMonitor && !hasAdminRole(authStore.user?.roles)) {
+  // Адмінські сторінки (фінанси, аналітика): без адмін-ролі — на головну.
+  const adminOnlyRoutes: unknown[] = [routeNames.financeMonitor, routeNames.analytics]
+  if (adminOnlyRoutes.includes(to.name) && !hasAdminRole(authStore.user?.roles)) {
     return next('/')
   }
 

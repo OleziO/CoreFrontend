@@ -45,6 +45,16 @@
           <span>Адмінка</span>
         </RouterLink>
 
+        <RouterLink
+          v-if="hasAdminUaRole"
+          class="mobile-menu-link no-underline"
+          :to="{ name: routeNames.analytics }"
+          @click="close"
+        >
+          <PhChartLineUp :size="20" />
+          <span>Аналітика</span>
+        </RouterLink>
+
         <div class="mobile-menu-socials">
           <a
             v-for="social in socialLinks"
@@ -98,7 +108,7 @@
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
 import Icon, { type TIconName } from '@/components/Icon.vue'
-import { PhDiscordLogo, PhUser, PhGauge, PhSignOut, PhX } from '@phosphor-icons/vue'
+import { PhDiscordLogo, PhUser, PhChartLineUp, PhGauge, PhSignOut, PhX } from '@phosphor-icons/vue'
 import { hasAdminRole } from '@/core/helpers'
 
 const togglerStore = useTogglerStore()

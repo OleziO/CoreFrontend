@@ -885,6 +885,46 @@ export interface paths {
         patch: operations["MatchesController_update"];
         trace?: never;
     };
+    "/admin/analytics/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin analytics overview
+         * @description Aggregated dashboard data: social followers (live where a platform API is configured, otherwise the admin-entered value), totals, rank distribution, team verification split, tournament participants, wantToPlay breakdown and player cities. Live follower counts are cached for 10 minutes.
+         */
+        get: operations["AnalyticsController_getOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/analytics/socials/{channel}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set the manual follower count of a social channel
+         * @description Stored value used when no live source is configured for the channel (Instagram, TikTok). A live count, when available, still takes precedence. Pass `followers: null` to clear.
+         */
+        put: operations["AnalyticsController_setSocialFollowers"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/matches/{matchId}/result": {
         parameters: {
             query?: never;
@@ -1141,6 +1181,99 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        SocialChannelStatDto: {
+            /** @enum {string} */
+            channel: "discord" | "telegram" | "youtube" | "instagram" | "tiktok" | "twitch";
+            /** @example Telegram */
+            label: string;
+            /** @example https://t.me/core_league_lviv */
+            url: string;
+            /** @description Best known follower count: live when available, else manual, else null. */
+            followers: number | null;
+            /** @enum {string} */
+            source: "live" | "manual" | "unavailable";
+            /** @description ISO timestamp of the live fetch or the manual edit that produced `followers`. */
+            fetchedAt: string | null;
+            /** @description Admin-entered value, if any. */
+            manualFollowers: number | null;
+            manualUpdatedAt: string | null;
+        };
+        AnalyticsTotalsDto: {
+            players: number;
+            /** @description Players with `verifiedAt` set. */
+            verifiedPlayers: number;
+            /** @description Teams that are not disbanded. */
+            teams: number;
+            verifiedTeams: number;
+            tournaments: number;
+            /** @description Tournaments not yet COMPLETED. */
+            activeTournaments: number;
+        };
+        RankBucketDto: {
+            /** @description 1 (Герольд) … 8 (Титан) */
+            rankNumber: number;
+            /** @example Легенда */
+            nameUk: string;
+            players: number;
+        };
+        TeamsVerificationDto: {
+            verified: number;
+            unverified: number;
+        };
+        TournamentParticipantsDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            status: "REGISTRATION" | "QUALIFICATIONS" | "PLAYOFF" | "COMPLETED";
+            /** @description Teams registered in the tournament. */
+            teams: number;
+            slots: number | null;
+            /** @description ISO date of the playoff start (sort key). */
+            startsAt: string;
+        };
+        WantToPlayDto: {
+            /** @description Players who picked only ONLINE. */
+            onlineOnly: number;
+            /** @description Players who picked only LAN. */
+            lanOnly: number;
+            /** @description Players who picked both formats. */
+            both: number;
+            /** @description Players who explicitly picked no format (empty list). */
+            none: number;
+            /** @description Players who never answered (null). */
+            unset: number;
+            /** @description onlineOnly + both — everyone interested in online tournaments. */
+            online: number;
+            /** @description lanOnly + both. */
+            lan: number;
+        };
+        CityBucketDto: {
+            /** @example Львів */
+            city: string;
+            players: number;
+        };
+        AnalyticsOverviewDto: {
+            /** @description ISO timestamp the overview was built at. */
+            generatedAt: string;
+            socials: components["schemas"]["SocialChannelStatDto"][];
+            totals: components["schemas"]["AnalyticsTotalsDto"];
+            /** @description Always 8 buckets, rank 1 → 8. */
+            ranks: components["schemas"]["RankBucketDto"][];
+            teams: components["schemas"]["TeamsVerificationDto"];
+            /** @description Newest first. */
+            tournaments: components["schemas"]["TournamentParticipantsDto"][];
+            wantToPlay: components["schemas"]["WantToPlayDto"];
+            /** @description Sorted by players, descending. */
+            cities: components["schemas"]["CityBucketDto"][];
+        };
+        UpdateSocialFollowersDto: {
+            /**
+             * @description Follower / member count entered by an admin. `null` clears the manual value.
+             * @example 1250
+             */
+            followers: number | null;
+        };
         CreatePlayerDto: {
             /** @description Optional until linked; omit for Discord-only placeholder flows */
             steamId?: string;
@@ -2012,6 +2145,50 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    AnalyticsController_getOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsOverviewDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_setSocialFollowers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channel: "discord" | "telegram" | "youtube" | "instagram" | "tiktok" | "twitch";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSocialFollowersDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialChannelStatDto"];
+                };
+            };
+        };
+    };
     HealthController_getHealth: {
         parameters: {
             query?: never;

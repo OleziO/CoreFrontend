@@ -140,6 +140,17 @@
 
               <el-dropdown-item
                 v-if="hasAdminUaRole"
+                :class="{
+                  'header-user-menu__item--active': route.name === routeNames.analytics
+                }"
+                @click="router.push({ name: routeNames.analytics })"
+              >
+                <span class="header-menu__icon"><PhChartLineUp :size="16" weight="bold" /></span>
+                <span>Аналітика</span>
+              </el-dropdown-item>
+
+              <el-dropdown-item
+                v-if="hasAdminUaRole"
                 @click.stop="showCreateTournamentDrawer = true"
               >
                 <span class="header-menu__icon"><PhTrophy :size="16" weight="bold" /></span>
@@ -195,7 +206,7 @@
 import { routeNames } from '@/router/route-names'
 import logo from '@/assets/images/core-league-logo-full.png'
 import {
-  PhDiscordLogo, PhSignOut, PhUser, PhTrophy, PhCaretDown, PhGauge, PhClock
+  PhDiscordLogo, PhSignOut, PhUser, PhTrophy, PhCaretDown, PhGauge, PhChartLineUp, PhClock
 } from '@phosphor-icons/vue'
 import CreateTournamentDrawer from '@/views/admin-panel/components/drawers/CreateTournamentDrawer.vue'
 import { hasAdminRole } from '@/core/helpers'
