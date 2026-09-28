@@ -122,6 +122,7 @@ declare module 'vue' {
     TournamentJoinPanel: typeof import('./views/tournaments/components/TournamentJoinPanel.vue')['default']
     TournamentMatchesTab: typeof import('./views/tournaments/components/TournamentMatchesTab.vue')['default']
     TournamentParcitipantsTab: typeof import('./views/tournaments/components/TournamentParcitipantsTab.vue')['default']
+    TournamentPodium: typeof import('./views/tournaments/components/TournamentPodium.vue')['default']
     TournamentQualificationTab: typeof import('./views/tournaments/components/TournamentQualificationTab.vue')['default']
     TournamentRow: typeof import('./views/admin-panel/components/TournamentRow.vue')['default']
     TournamentsDetails: typeof import('./views/admin-panel/components/TournamentsDetails.vue')['default']

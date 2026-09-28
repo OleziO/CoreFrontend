@@ -72,6 +72,14 @@
       </div>
     </div>
 
+    <!-- Призери — одразу під героєм, поки банер ще розчиняється у фон -->
+    <div
+      v-if="podium.length"
+      class="w-full max-w-7xl mx-auto px-10 sm:px-15 lg:px-20 xl:px-40 pb-10"
+    >
+      <TournamentPodium :entries="podium" />
+    </div>
+
     <SponsorShowcase :sponsors="sponsors" />
 
     <div class="w-full max-w-7xl mx-auto px-10 sm:px-15 lg:px-20 xl:px-40 py-10 pb-20">
@@ -139,7 +147,7 @@
           <TournamentAdminTab
             :tournament="tournament"
             @refresh="reloadTournament"
-            @playoff-updated="(r: TPlayoff) => { playoff = r; playoffFetched = true }"
+            @playoff-updated="handleAdminPlayoffUpdated"
           />
         </div>
       </div>
@@ -160,6 +168,7 @@ import {
   registrationBlockBannerMap
 } from '@/core/utils/tournament-registration'
 import type { TSponsor } from '@/config/sponsors'
+import { useTournamentPodium } from '@/views/tournaments/composables/use-tournament-podium'
 
 const activeTab = ref('teams')
 const payments = ref<TTournamentPaymentSummary[]>([])
@@ -181,6 +190,9 @@ const tournamentId = String(route.params.id)
 
 /** Джерело істини — стор; reload і patch з вкладок патчать його, тож сторінка оновлюється сама. */
 const tournament = computed(() => tournamentStore.tournamentsData.find((t) => t.id === tournamentId) ?? null)
+
+/** Призери плей-оф для п'єдесталу під героєм; оновлюється після кожного поданого результату. */
+const { podium, refresh: refreshPodium } = useTournamentPodium(tournament)
 
 /** Команда користувача — зі стору (реактивно); `hydrateMyTeam` лише освіжає її з беку. */
 const myTeam = computed(() => {
@@ -284,6 +296,13 @@ const canSubmitPlayoffMatch = computed(() =>
 async function handlePlayoffSubmitted () {
   await loadPlayoff({ force: true })
   await reloadTournament()
+  await refreshPodium()
+}
+
+function handleAdminPlayoffUpdated (response: TPlayoff) {
+  playoff.value = response
+  playoffFetched.value = true
+  refreshPodium()
 }
 
 function openPlayoffSubmit () {
@@ -300,6 +319,7 @@ function openTechLossPlayoff () {
     onSubmitted: (response: TPlayoff) => {
       playoff.value = response
       reloadTournament()
+      refreshPodium()
     }
   })
 }

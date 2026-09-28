@@ -47,3 +47,16 @@ type TTournamentDonationIntent = {
   amount: number
   pageUrl: string | null
 }
+
+// Призові місця плей-оф. Бекенд не віддає підсумкову таблицю, тож п'єдестал
+// виводиться на клієнті з вирішених фінальних серій (див. utils/playoff-podium.utils.ts).
+type TTournamentPodiumPlace = 1 | 2 | 3
+type TTournamentPodiumTeam = {
+  id: string
+  name: string
+  logoUrl: string | null
+}
+type TTournamentPodiumEntry = {
+  place: TTournamentPodiumPlace
+  team: TTournamentPodiumTeam
+}
