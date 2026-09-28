@@ -88,6 +88,15 @@ const emit = defineEmits<{
 
 const modelValue = defineModel<boolean>({ default: false })
 
+/**
+ * el-dialog емітить `open` лише з watcher-а на modelValue. Async-модалка з реєстру
+ * монтується вже відкритою (перше відкриття після перезавантаження) — watcher не
+ * спрацьовує, і форма не підхоплює фільтри з query. Дублюємо подію на mount.
+ */
+onMounted(() => {
+  if (modelValue.value) emit('open')
+})
+
 const { width } = useWindowSize()
 
 // One column on phones, a fixed console width elsewhere.
