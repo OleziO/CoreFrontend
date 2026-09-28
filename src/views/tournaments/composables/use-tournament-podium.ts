@@ -20,9 +20,12 @@ export function useTournamentPodium (tournament: Ref<TTournament | null>) {
     return t.tournamentStatus === 'PLAYOFF' || getTournamentPhase(t) === 'past'
   })
 
+  /** Секцію показуємо одразу (зі скелетоном), щойно є з чого читати серії, — без стрибка макета. */
+  const isActive = computed(() => !!tournament.value && !!authStore.token && isPlayoffStage.value)
+
   async function refresh () {
     const t = tournament.value
-    if (!t || !authStore.token || !isPlayoffStage.value) {
+    if (!t || !isActive.value) {
       podium.value = []
       return
     }
@@ -49,5 +52,5 @@ export function useTournamentPodium (tournament: Ref<TTournament | null>) {
     { immediate: true }
   )
 
-  return { podium, loading, refresh }
+  return { podium, loading, isActive, refresh }
 }

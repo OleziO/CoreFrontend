@@ -17,8 +17,55 @@
       <h2 class="podium__title">Призери турніру</h2>
     </header>
 
+    <!-- Скелетон, доки серії сітки ще не прочитано: ті самі три тумби, щоб макет не стрибав -->
+    <ol
+      v-if="showSkeleton"
+      class="podium__steps"
+      aria-busy="true"
+      aria-label="Завантаження призерів"
+    >
+      <li
+        v-for="place in SKELETON_PLACES"
+        :key="place"
+        class="podium__step is-skeleton"
+        :class="`is-place-${place}`"
+        :style="{ '--skeleton-delay': `${(place - 1) * 140}ms` }"
+      >
+        <span v-if="place === 1" class="podium__crown-slot" aria-hidden="true" />
+        <span class="podium__avatar skeleton-bone" aria-hidden="true" />
+        <span class="skeleton-bone podium__bone-name" aria-hidden="true" />
+        <span class="skeleton-bone podium__bone-label" aria-hidden="true" />
+        <span class="podium__pedestal" aria-hidden="true">
+          <span class="podium__pedestal-number">{{ place }}</span>
+        </span>
+      </li>
+    </ol>
+
+    <!-- Плей-оф триває, гранд-фінал ще не вирішено: порожні тумби чекають на призерів -->
+    <div v-else-if="!entries.length" class="podium__pending podium__reveal" style="--reveal-index: 1">
+      <ol class="podium__steps podium__steps--pending" aria-hidden="true">
+        <li
+          v-for="place in SKELETON_PLACES"
+          :key="place"
+          class="podium__step is-pending"
+          :class="`is-place-${place}`"
+        >
+          <span v-if="place === 1" class="podium__crown-slot" />
+          <span class="podium__avatar podium__avatar--empty">
+            <PhQuestion :size="28" weight="duotone" />
+          </span>
+          <span class="podium__name podium__name--pending">Не визначено</span>
+          <span class="podium__place-label">{{ PLACE_LABEL[place] }}</span>
+          <span class="podium__pedestal">
+            <span class="podium__pedestal-number">{{ place }}</span>
+          </span>
+        </li>
+      </ol>
+      <p class="podium__pending-hint" role="status">Призерів визначить гранд-фінал</p>
+    </div>
+
     <!-- DOM-порядок 1 → 2 → 3 (для читачів екрана), візуальний — класичний 2 · 1 · 3 через order -->
-    <ol class="podium__steps" aria-label="Призові місця">
+    <ol v-else class="podium__steps" aria-label="Призові місця">
       <li
         v-for="entry in entries"
         :key="entry.place"
@@ -70,15 +117,22 @@
 </template>
 
 <script setup lang="ts">
-import { PhCrown, PhTrophy, PhUsersThree } from '@phosphor-icons/vue'
+import { PhCrown, PhQuestion, PhTrophy, PhUsersThree } from '@phosphor-icons/vue'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
 
 interface IProps {
   entries: TTournamentPodiumEntry[]
+  /** Серії сітки ще читаються — показуємо скелетон замість тумб. */
+  loading?: boolean
 }
 
-defineProps<IProps>()
+const props = withDefaults(defineProps<IProps>(), { loading: false })
+
+const SKELETON_PLACES: readonly TTournamentPodiumPlace[] = [1, 2, 3]
+
+// Повторне читання після поданого результату не має ховати вже показаних призерів.
+const showSkeleton = computed(() => props.loading && props.entries.length === 0)
 
 const PLACE_LABEL: Record<TTournamentPodiumPlace, string> = {
   1: 'Чемпіон',
@@ -268,6 +322,83 @@ function logoSrc (team: TTournamentPodiumTeam): string {
   .is-place-1 &:focus-visible {
     animation-play-state: paused;
   }
+}
+
+// Скелетон і порожній стан повторюють геометрію готового п'єдесталу (корона, аватар,
+// назва, підпис, тумба), щоб перемикання станів не зсувало сторінку.
+.podium__crown-slot {
+  display: block;
+  height: 24px;
+}
+
+// Висота рядків = висота назви (14px × 1.25) і підпису (10px) у готовому стані.
+.podium__bone-name {
+  height: 18px;
+  width: 70%;
+  border-radius: 9999px;
+}
+
+.podium__bone-label {
+  height: 10px;
+  width: 44%;
+  border-radius: 9999px;
+}
+
+// Специфічність вища за `.podium__name` (нижче), інакше білий колір назви переважить.
+.is-pending .podium__name--pending {
+  color: var(--ds-text-faint);
+  pointer-events: none;
+}
+
+.is-skeleton,
+.is-pending {
+  // Перекриває `.is-place-1 .podium__avatar` (сяйво чемпіона) — тут місце ще нічиє.
+  .podium__avatar {
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: none;
+    animation: none;
+  }
+
+  .podium__avatar--empty {
+    color: rgba(255, 255, 255, 0.28);
+    border-style: dashed;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .podium__place-label {
+    color: var(--ds-text-faint);
+    text-shadow: none;
+  }
+
+  .podium__pedestal {
+    border-top-color: rgba(255, 255, 255, 0.16);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.015) 70%, transparent 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .podium__pedestal-number {
+    color: rgba(255, 255, 255, 0.14);
+    text-shadow: none;
+  }
+}
+
+.podium__pending {
+  @apply relative z-[1] flex flex-col items-center;
+}
+
+.podium__pending-hint {
+  @apply absolute bottom-16 m-0 px-12 py-6 rounded-full border;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ds-text-muted);
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(7, 8, 15, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .podium__avatar-img {
