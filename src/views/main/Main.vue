@@ -562,8 +562,8 @@ const socials: ISocialLink[] = [
   { label: 'Telegram', handle: '@core_league_lviv', url: 'https://t.me/core_league_lviv', icon: 'telegram', rgb: '42, 171, 238' },
   {
     label: 'Instagram',
-    handle: '@core__league',
-    url: 'https://www.instagram.com/core__league/',
+    handle: '@core_league_lviv',
+    url: 'https://www.instagram.com/core_league_lviv/',
     icon: 'instagram',
     rgb: 'var(--ds-pink-rgb)'
   },

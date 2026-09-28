@@ -1,7 +1,7 @@
 import { ERole } from '@/types/general.enums'
 import get from 'lodash/get'
 import type { LocationQuery, LocationQueryValue, RouteLocationNormalized } from 'vue-router'
-import type { TPlayerRankDto } from '@/api/types/api.types'
+import type { TPlayerRankDto, TTournamentFormat } from '@/api/types/api.types'
 import { getDotaPositionLabel, roleLabelMap } from '@/components/player-tags/player.enums'
 
 export const createHashedObject = <
@@ -165,6 +165,23 @@ export function getPlayerDotaPositions (p: { positions?: unknown } | null | unde
     .sort((a, b) => a - b)
 }
 
+const TOURNAMENT_FORMAT_ORDER: TTournamentFormat[] = ['ONLINE', 'LAN']
+
+/** Формати «Хочу грати» гравця у сталому порядку (ONLINE, LAN); толерантно до сміття з API. */
+export function getPlayerWantToPlay (p: { wantToPlay?: unknown } | null | undefined): TTournamentFormat[] {
+  const raw = p?.wantToPlay
+  if (!Array.isArray(raw) || !raw.length) return []
+  const set = new Set(raw.map((v) => String(v).toUpperCase()))
+  return TOURNAMENT_FORMAT_ORDER.filter((f) => set.has(f))
+}
+
+/** Міста для LAN-турнірів гравця (лише непорожні рядки, без дублікатів). */
+export function getPlayerLanCities (p: { lanCities?: unknown } | null | undefined): string[] {
+  const raw = p?.lanCities
+  if (!Array.isArray(raw) || !raw.length) return []
+  return [...new Set(raw.map((v) => String(v ?? '').trim()).filter(Boolean))]
+}
+
 export type TPlayerPositionsSummary = {
   hasPositions: boolean
   oneLine: string
@@ -270,8 +287,9 @@ export function getPlayerRoleAccentClass (
   player: { roles?: readonly { name: string; isAdminRole?: boolean }[] | null } | null | undefined
 ): '' | 'role-frame--gold' | 'role-frame--violet' {
   if (!player) return ''
-  if (hasAdminRole(player.roles)) return 'role-frame--gold'
+  // Медіа пріоритетніше за адмін-рамку: у медійника з адмін-правами рамка лишається фіолетовою.
   if (hasPlayerRole(player.roles, ERole.MEDIA)) return 'role-frame--violet'
+  if (hasAdminRole(player.roles)) return 'role-frame--gold'
   return ''
 }
 

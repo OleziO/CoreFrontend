@@ -82,6 +82,137 @@
         </div>
       </section>
 
+      <!-- Location -->
+      <section class="flex flex-col gap-10">
+        <div class="profile-section__head">
+          <span class="sys-label !text-[10px]">// Локація</span>
+          <span class="hud-line h-px min-w-12 flex-1" aria-hidden="true" />
+          <span class="profile-section__count" :class="{ 'is-on': form.countryCode }">
+            {{ form.countryCode ?? '--' }}
+          </span>
+        </div>
+
+        <div class="location-grid">
+          <el-select
+            v-model="form.countryCode"
+            :loading="countriesLoading"
+            :filter-method="onCountryFilter"
+            filterable
+            clearable
+            :show-arrow="false"
+            placeholder="Країна"
+            class="w-full"
+            aria-label="Країна"
+            @change="onCountryChange"
+            @visible-change="onCountryVisibleChange"
+          >
+            <template #prefix>
+              <PhMapPin :size="16" weight="bold" class="text-primary" />
+            </template>
+            <el-option
+              v-for="country in filteredCountryOptions"
+              :key="country.value"
+              :label="country.label"
+              :value="country.value"
+            >
+              <span class="location-option">
+                <img
+                  class="location-flag"
+                  :src="getCountryFlagUrl(country.value, 40)"
+                  :srcset="`${getCountryFlagUrl(country.value, 80)} 2x`"
+                  alt=""
+                  loading="lazy"
+                  width="24"
+                  height="18"
+                >
+                <span class="truncate">{{ country.label }}</span>
+              </span>
+            </el-option>
+          </el-select>
+
+          <el-select
+            v-model="form.city"
+            :loading="citiesLoading"
+            :disabled="!form.countryCode"
+            :filter-method="onCityFilter"
+            filterable
+            clearable
+            :show-arrow="false"
+            :placeholder="form.countryCode ? 'Місто' : 'Спочатку оберіть країну'"
+            class="w-full"
+            aria-label="Місто"
+            @visible-change="onCityVisibleChange"
+          >
+            <el-option
+              v-for="city in visibleCityOptions"
+              :key="city"
+              :label="city"
+              :value="city"
+            />
+          </el-select>
+        </div>
+
+        <p class="profile-note">
+          Міста беруться з довідника; якщо вашого немає — оберіть найближче.
+        </p>
+      </section>
+
+      <!-- Want to play -->
+      <section class="flex flex-col gap-10">
+        <div class="profile-section__head">
+          <span class="sys-label !text-[10px]">// Хочу грати</span>
+          <span class="hud-line h-px min-w-12 flex-1" aria-hidden="true" />
+          <span class="profile-section__count" :class="{ 'is-on': form.wantToPlay.length }">
+            {{ pad(form.wantToPlay.length) }}<span class="profile-section__of">/{{ pad(formatCount) }}</span>
+          </span>
+        </div>
+
+        <div role="group" aria-label="Хочу грати" class="fmt-grid">
+          <button
+            v-for="fmt in wantToPlayOptions"
+            :key="fmt.value"
+            type="button"
+            class="pos-pick fmt-pick"
+            :class="{ 'is-on': form.wantToPlay.includes(fmt.value) }"
+            :aria-pressed="form.wantToPlay.includes(fmt.value)"
+            @click="toggleFormat(fmt.value)"
+          >
+            <component :is="fmt.icon" :size="18" weight="fill" class="pos-pick__icon" />
+            <span class="pos-pick__label fmt-pick__label">{{ fmt.label }}</span>
+          </button>
+        </div>
+
+        <!-- LAN: міста України, куди гравець готовий приїхати -->
+        <div v-if="wantsLan" class="flex flex-col gap-8">
+          <label for="profile-lan-cities" class="profile-note !text-gray-300">
+            Міста, куди можу приїхати на LAN-турнір
+          </label>
+          <el-select
+            id="profile-lan-cities"
+            v-model="form.lanCities"
+            :loading="citiesLoading"
+            :filter-method="onLanCityFilter"
+            multiple
+            filterable
+            clearable
+            collapse-tags
+            collapse-tags-tooltip
+            :max-collapse-tags="3"
+            :show-arrow="false"
+            placeholder="Оберіть міста"
+            class="w-full"
+            @visible-change="onLanCityVisibleChange"
+          >
+            <el-option
+              v-for="city in visibleLanCityOptions"
+              :key="city"
+              :label="city"
+              :value="city"
+            />
+          </el-select>
+        </div>
+      </section>
+
       <!-- Roles (admin only) -->
       <section v-if="canManageRoles" class="flex flex-col gap-10">
         <div class="profile-section__head">
@@ -228,20 +359,36 @@
 
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { PhArrowSquareOut, PhChartLineUp, PhCopy, PhFloppyDisk, PhLinkBreak, PhX } from '@phosphor-icons/vue'
-import { MAX_RATING, positionOptions } from '@/components/player-tags/player.enums'
+import {
+  PhArrowSquareOut,
+  PhChartLineUp,
+  PhCopy,
+  PhFloppyDisk,
+  PhLinkBreak,
+  PhMapPin,
+  PhX
+} from '@phosphor-icons/vue'
+import { MAX_RATING, positionOptions, wantToPlayOptions } from '@/components/player-tags/player.enums'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
-import { getCopy, isPlayerVerified } from '@/core/helpers'
+import { getCopy, getPlayerLanCities, getPlayerWantToPlay, isPlayerVerified } from '@/core/helpers'
+import { getCountryFlagUrl, useLocations, type ICountryOption } from '@/composables/use-locations'
 import { useAuthStore } from '@/store/modules/auth'
 import type { TTag } from '@/services/tags.types'
 import type {
   TAdminPlayerRoleItem,
+  TTournamentFormat,
   TUpdatePlayerDto
 } from '@/api/types/api.types'
 
 interface IEditProfileForm {
   mmr: number | null
   positions: number[]
+  /** ISO alpha-2 з довідника /locations/countries; null — не вказано. */
+  countryCode: string | null
+  city: string | null
+  wantToPlay: TTournamentFormat[]
+  /** Міста України для LAN-турнірів; має сенс лише коли обрано LAN. */
+  lanCities: string[]
   isNotification?: boolean
 }
 
@@ -303,11 +450,25 @@ function formPositionsToApi (selected: number[]): TPositionSlot[] | null {
   return out.length ? out : null
 }
 
+function normalizeCountryCode (code: string | null | undefined): string | null {
+  const c = String(code ?? '').trim().toUpperCase()
+  return /^[A-Z]{2}$/.test(c) ? c : null
+}
+
+function normalizeCity (city: string | null | undefined): string | null {
+  const c = String(city ?? '').trim()
+  return c || null
+}
+
 function applyFormFromPlayer (p: TPlayer) {
   const positions = pickPositions(p as TPlayerWithOptionalLegacy)
   form.value = {
     mmr: p.rating ?? null,
     positions: positions.length ? positions : [],
+    countryCode: normalizeCountryCode(p.countryCode),
+    city: normalizeCity(p.city),
+    wantToPlay: getPlayerWantToPlay(p),
+    lanCities: getPlayerLanCities(p),
     isNotification: true
   }
 }
@@ -400,7 +561,133 @@ function togglePosition (slot: number) {
 const form = ref<IEditProfileForm>({
   mmr: props.player.rating ?? null,
   positions: pickPositions(props.player as TPlayerWithOptionalLegacy),
+  countryCode: normalizeCountryCode(props.player.countryCode),
+  city: normalizeCity(props.player.city),
+  wantToPlay: getPlayerWantToPlay(props.player),
+  lanCities: getPlayerLanCities(props.player),
   isNotification: true
+})
+
+// ─── Локація (країна → місто) ────────────────────────────────────────────────
+const {
+  countryOptions,
+  countriesLoading,
+  citiesLoading,
+  loadCountries,
+  loadCities,
+  citiesOf
+} = useLocations()
+
+/**
+ * Довідник міст великий (тисячі записів), а класичний `el-select` рендерить кожну опцію в DOM —
+ * тому показуємо лише перші `CITY_RENDER_LIMIT` збігів; уточнення запиту звужує список.
+ */
+const CITY_RENDER_LIMIT = 200
+const cityQuery = ref('')
+
+function onCityFilter (query: string) {
+  cityQuery.value = query
+}
+
+function onCityVisibleChange (visible: boolean) {
+  if (!visible) cityQuery.value = ''
+}
+
+const visibleCityOptions = computed<string[]>(() => {
+  const all = citiesOf(form.value.countryCode)
+  const q = cityQuery.value.trim().toLowerCase()
+  const matched = q ? all.filter((name) => name.toLowerCase().includes(q)) : all
+  const selected = form.value.city
+  const head = matched.slice(0, CITY_RENDER_LIMIT)
+  // Без запиту обране місто завжди в списку, навіть якщо не потрапило у зріз — інакше селект не покаже підпис.
+  if (!q && selected && !head.includes(selected) && all.includes(selected)) head.unshift(selected)
+  return head
+})
+
+/** Пошук країни за українською назвою, англійською (не показується, але шукається) та кодом. */
+const countryQuery = ref('')
+
+function onCountryFilter (query: string) {
+  countryQuery.value = query
+}
+
+function onCountryVisibleChange (visible: boolean) {
+  if (!visible) countryQuery.value = ''
+}
+
+const filteredCountryOptions = computed<ICountryOption[]>(() => {
+  const q = countryQuery.value.trim().toLowerCase()
+  if (!q) return countryOptions.value
+  return countryOptions.value.filter(
+    (o) =>
+      o.label.toLowerCase().includes(q) ||
+      o.englishName.toLowerCase().includes(q) ||
+      o.value.toLowerCase() === q
+  )
+})
+
+async function loadLocationCatalogs () {
+  try {
+    await loadCountries()
+    if (form.value.countryCode) await loadCities(form.value.countryCode)
+    if (wantsLan.value) await loadCities(LAN_COUNTRY_CODE)
+  } catch {
+    /* тост уже показав locationsService */
+  }
+}
+
+/** Зміна країни знімає місто — воно належить попередній країні. */
+async function onCountryChange (code: string | null | undefined) {
+  form.value.countryCode = normalizeCountryCode(code)
+  form.value.city = null
+  if (!form.value.countryCode) return
+  try {
+    await loadCities(form.value.countryCode)
+  } catch {
+    /* тост уже показав locationsService */
+  }
+}
+
+// ─── «Хочу грати» ────────────────────────────────────────────────────────────
+const formatCount = wantToPlayOptions.length
+
+/** LAN-турніри проходять в Україні — міста беремо з довідника UA. */
+const LAN_COUNTRY_CODE = 'UA'
+const wantsLan = computed(() => form.value.wantToPlay.includes('LAN'))
+
+function toggleFormat (format: TTournamentFormat) {
+  const list = form.value.wantToPlay
+  form.value.wantToPlay = list.includes(format)
+    ? list.filter((f) => f !== format)
+    : wantToPlayOptions.map((o) => o.value).filter((v) => v === format || list.includes(v))
+  if (format === 'LAN' && wantsLan.value) {
+    loadCities(LAN_COUNTRY_CODE).catch(() => { /* тост уже показав locationsService */ })
+  }
+}
+
+const lanCityQuery = ref('')
+
+function onLanCityFilter (query: string) {
+  lanCityQuery.value = query
+}
+
+function onLanCityVisibleChange (visible: boolean) {
+  if (!visible) lanCityQuery.value = ''
+}
+
+/** Той самий зріз, що й для міста профілю: класичний селект рендерить усі опції в DOM. */
+const visibleLanCityOptions = computed<string[]>(() => {
+  const all = citiesOf(LAN_COUNTRY_CODE)
+  const q = lanCityQuery.value.trim().toLowerCase()
+  const matched = q ? all.filter((name) => name.toLowerCase().includes(q)) : all
+  const head = matched.slice(0, CITY_RENDER_LIMIT)
+  if (!q) {
+    // Обрані міста завжди в списку, інакше теги не матимуть підписів.
+    for (const selected of form.value.lanCities) {
+      if (!head.includes(selected)) head.unshift(selected)
+    }
+  }
+  return head
 })
 
 const saving = ref(false)
@@ -435,6 +722,7 @@ watch(modelValue, (open) => {
   applyRolesFromPlayer(props.player)
   loadRolesCatalog()
   loadTags()
+  loadLocationCatalogs()
 }, { immediate: true })
 
 const effectivePlayer = computed(() => playerAfterSteamMutation.value ?? props.player)
@@ -566,8 +854,13 @@ async function syncPlayerTags () {
 async function onSubmit () {
   if (!isValid.value) return
 
+  const countryCode = normalizeCountryCode(form.value.countryCode)
   const payload: Partial<TUpdatePlayerDto> = {
-    positions: formPositionsToApi(form.value.positions)
+    positions: formPositionsToApi(form.value.positions),
+    countryCode,
+    city: countryCode ? normalizeCity(form.value.city) : null,
+    wantToPlay: form.value.wantToPlay.length ? [...form.value.wantToPlay] : null,
+    lanCities: wantsLan.value && form.value.lanCities.length ? [...form.value.lanCities] : null
   }
   if (!mmrInputDisabled.value) {
     payload.rating = form.value.mmr ?? 0
@@ -748,6 +1041,42 @@ function onClose () {
 
 .pos-pick__label {
   @apply font-display text-[11px] uppercase leading-tight tracking-wide;
+}
+
+// ─── Location ───────────────────────────────────────────────────────────────
+.location-grid {
+  @apply grid gap-8;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  @media (max-width: 480px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.location-option {
+  @apply grid min-w-0 items-center gap-10;
+  grid-template-columns: 24px minmax(0, 1fr);
+}
+
+.location-flag {
+  @apply block h-[18px] w-[24px] shrink-0 rounded-[3px] object-cover;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+// ─── Want to play ───────────────────────────────────────────────────────────
+.fmt-grid {
+  @apply grid gap-8;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+// Same well as a position toggle, laid out as a row with the icon before the label.
+.fmt-pick {
+  @apply flex-row justify-start gap-10 px-14 py-12 text-left;
+}
+
+.fmt-pick__label {
+  font-size: 12px;
+  letter-spacing: 0.06em;
 }
 
 // ─── Steam ──────────────────────────────────────────────────────────────────

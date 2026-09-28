@@ -9,42 +9,26 @@
     <!-- Амбієнтне світло за аватаром: картка «дихає» кольором бренду -->
     <span class="user-card__aura" aria-hidden="true" />
 
-    <!-- Dropdown три крапки (адмін / модератор) -->
-    <el-dropdown
-      v-if="me.isAdmin.isAdmin || me.isAdmin.isModerator"
-      trigger="click"
-      :placement="isMobile ? 'left-start' : 'bottom'"
-      class="user-card__menu absolute right-10 top-10 z-30"
-      @click.stop
+    <!-- Локація: прапорець у куті, «Місто, Країна» — у підказці (висота картки незмінна) -->
+    <el-tooltip
+      v-if="locationLabel"
+      :content="locationLabel"
+      placement="top"
+      effect="dark"
+      :show-after="150"
     >
-      <button
-        type="button"
-        class="user-card__menu-btn"
-        aria-label="Дії адміністратора"
-        @click.stop
+      <img
+        :src="flagUrl"
+        :srcset="`${getCountryFlagUrl(user.countryCode, 40)} 2x`"
+        :alt="locationLabel"
+        width="16"
+        height="12"
+        loading="lazy"
+        draggable="false"
+        class="user-card__flag absolute right-18 top-20 z-30 h-[12px] w-[16px] select-none rounded-[2px]
+               object-cover ring-1 ring-white/15"
       >
-        <PhDotsThree :size="18" weight="bold" />
-      </button>
-
-      <template #dropdown>
-        <div class="w-[220px] flex flex-col gap-10 p-10 rounded-lg shadow-lg">
-          <el-button
-            :type="isVerified ? 'warning' : 'success'"
-            class="w-full justify-center shrink-0 max-sm:text-xs max-sm:!px-8"
-            :loading="verificationLoading"
-            @click.stop="toggleVerificationFromMenu"
-          >
-            <component
-              :is="isVerified ? PhSealWarning : PhSealCheck"
-              class="mr-8 shrink-0"
-              weight="bold"
-              size="16"
-            />
-            {{ isVerified ? 'Зняти верифікацію' : 'Верифікувати' }}
-          </el-button>
-        </div>
-      </template>
-    </el-dropdown>
+    </el-tooltip>
 
     <!-- Ідентичність: аватар + імена -->
     <div class="relative z-10 flex items-center gap-12">
@@ -90,7 +74,7 @@
         <button
           v-if="user.discordUsername"
           type="button"
-          class="user-card__handle"
+          class="user-card__handle !w-fit"
           :title="`Скопіювати @${user.discordUsername}`"
           @click.stop="copyDiscordName(user)"
         >
@@ -154,8 +138,6 @@
 </template>
 
 <script setup lang="ts">
-import { useWindowSize } from '@vueuse/core'
-
 import { routeNames } from '@/router/route-names'
 import {
   formatPlayerPositionsSummary,
@@ -165,13 +147,8 @@ import {
   getPlayerRoleAccentClass,
   isPlayerVerified
 } from '@/core/helpers'
-import {
-  PhCopy,
-  PhSealCheck,
-  PhUser,
-  PhSealWarning,
-  PhDotsThree
-} from '@phosphor-icons/vue'
+import { PhCopy, PhUser } from '@phosphor-icons/vue'
+import { getCountryFlagUrl, useLocations } from '@/composables/use-locations'
 
 const props = withDefaults(defineProps<{
   user: TPlayer
@@ -180,12 +157,7 @@ const props = withDefaults(defineProps<{
   width: 210
 })
 
-const window = useWindowSize()
-const me = useAuthStore()
 const router = useRouter()
-
-const isMobile = computed(() => window.width.value < 850)
-const verificationLoading = ref(false)
 
 const isVerified = computed(() => isPlayerVerified(props.user))
 
@@ -198,6 +170,17 @@ const ratingMmrLabel = computed(() => formatPlayerRatingMmr(props.user.rating))
 
 const positionsSummary = computed(() => formatPlayerPositionsSummary(props.user))
 
+// ─── Локація: «Місто, Країна» українською; країна — через Intl, без мережі ───
+const { countryLabel } = useLocations()
+const countryCode = computed(() => String(props.user.countryCode ?? '').trim().toUpperCase())
+const flagUrl = computed(() => getCountryFlagUrl(countryCode.value, 20))
+const locationLabel = computed(() => {
+  if (!countryCode.value) return ''
+  const country = countryLabel(countryCode.value)
+  const city = String(props.user.city ?? '').trim()
+  return city ? `${city}, ${country}` : country
+})
+
 /** Позиції гравця як множина для індикатора 1–5. */
 const positionIds = computed(() => new Set(positionsSummary.value.rows.map(row => row.id)))
 
@@ -207,17 +190,6 @@ function copyDiscordName (player: TPlayer) {
 
 function goToPlayerPage (id: string) {
   router.push({ name: routeNames.player, params: { id } })
-}
-
-async function toggleVerificationFromMenu () {
-  const u = props.user
-  if (!u || verificationLoading.value) return
-  verificationLoading.value = true
-  try {
-    await usePlayersStore().setPlayerVerification(u.id, !isVerified.value)
-  } finally {
-    verificationLoading.value = false
-  }
 }
 </script>
 
@@ -268,15 +240,10 @@ async function toggleVerificationFromMenu () {
   }
 }
 
-// Admin menu trigger: a real 32px button so it is a proper touch target.
-.user-card__menu-btn {
-  @apply inline-flex size-32 items-center justify-center rounded-md border-0 bg-transparent p-0 text-white/60;
-  transition: color var(--ds-duration-fast) ease, background-color var(--ds-duration-fast) ease;
-
-  &:focus-visible {
-    outline: 2px solid rgba(var(--ds-primary-rgb), 0.55);
-    outline-offset: 2px;
-  }
+// Country flag in the corner: quiet by default, lifts on card hover.
+.user-card__flag {
+  opacity: 0.85;
+  transition: opacity var(--ds-duration-fast) ease;
 }
 
 // Stats strip: two cells on one dark well, split by a hairline.
@@ -359,9 +326,8 @@ async function toggleVerificationFromMenu () {
     color: var(--ds-primary);
   }
 
-  .user-card__menu-btn:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.08);
+  .user-card:hover .user-card__flag {
+    opacity: 1;
   }
 }
 </style>

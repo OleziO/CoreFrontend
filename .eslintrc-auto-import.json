@@ -358,6 +358,11 @@
     "tagsService": true,
     "mmrRequestsService": true,
     "useVerificationStore": true,
-    "useMmrRequestsStore": true
+    "useMmrRequestsStore": true,
+    "getCountryDisplayName": true,
+    "getCountryFlagEmoji": true,
+    "locationsService": true,
+    "useLocations": true,
+    "getCountryFlagUrl": true
   }
 }

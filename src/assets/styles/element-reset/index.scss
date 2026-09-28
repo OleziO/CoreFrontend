@@ -18,6 +18,11 @@
 @use "element-plus/theme-chalk/src/message";
 @use "element-plus/theme-chalk/src/scrollbar";
 @use "element-plus/theme-chalk/src/option";
+// `el-select-v2` (virtualised dropdown) is styled separately from `select`: without
+// these two, its list has no `scrollbar-width: none`, so the global `* { scrollbar-width: thin }`
+// shows the native scrollbar next to EP's own virtual one (double scroll).
+@use "element-plus/theme-chalk/src/select-v2";
+@use "element-plus/theme-chalk/src/virtual-list";
 @use "element-plus/theme-chalk/src/popper";
 @use "element-plus/theme-chalk/src/form";
 @use "element-plus/theme-chalk/src/form-item";

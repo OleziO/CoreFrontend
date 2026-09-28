@@ -36,6 +36,14 @@
           <PlayerMatchStats :class="roleAccentClass" :match-stats="matchStats" />
         </div>
 
+        <!-- Локація + «Хочу грати» — на обох профілях, над улюбленими героями -->
+        <PlayerPlayPreferences
+          v-if="player"
+          :player="player"
+          :is-profile-page="isProfilePage"
+          :accent-class="roleAccentClass"
+        />
+
         <!-- Улюблені герої (OpenDota + Steam CDN) -->
         <PlayerFavoriteHeroes
           :class="roleAccentClass"

@@ -1089,6 +1089,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/locations/countries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationsController_getCountries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/locations/cities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationsController_getCities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1230,6 +1262,23 @@ export interface components {
             rank: components["schemas"]["PlayerRankDto"];
             /** @description Dota map / roles (1–5) */
             positions?: (1 | 2 | 3 | 4 | 5)[] | null;
+            /**
+             * @description ISO 3166-1 alpha-2 country code
+             * @example UA
+             */
+            countryCode?: string | null;
+            /** @example Kyiv */
+            city?: string | null;
+            /** @description Tournament formats the player wants to attend */
+            wantToPlay?: ("ONLINE" | "LAN")[] | null;
+            /**
+             * @description Ukrainian cities the player can travel to for LAN tournaments
+             * @example [
+             *       "Київ",
+             *       "Львів"
+             *     ]
+             */
+            lanCities?: string[] | null;
             /** Format: date-time */
             verifiedAt?: string | null;
             teamId?: string | null;
@@ -1251,6 +1300,29 @@ export interface components {
              * @enum {array|null}
              */
             positions?: 1 | 2 | 3 | 4 | 5 | null;
+            /**
+             * @description ISO 3166-1 alpha-2 country code from GET /locations/countries; null to clear (also clears city)
+             * @example UA
+             */
+            countryCode?: string | null;
+            /**
+             * @description City name from GET /locations/cities; null to clear
+             * @example Kyiv
+             */
+            city?: string | null;
+            /**
+             * @description Tournament formats the player wants to attend; omit or null when unset
+             * @enum {array|null}
+             */
+            wantToPlay?: "ONLINE" | "LAN" | null;
+            /**
+             * @description Ukrainian cities (names from GET /locations/cities?countryCode=UA) the player can travel to for LAN tournaments; ignored unless wantToPlay includes LAN
+             * @example [
+             *       "Київ",
+             *       "Львів"
+             *     ]
+             */
+            lanCities?: string[] | null;
         };
         DiscordExchangeDto: {
             /** @description Authorization code from Discord redirect */
@@ -1282,6 +1354,23 @@ export interface components {
             rank: components["schemas"]["PlayerRankDto"];
             /** @description Dota map / roles (1–5) */
             positions?: (1 | 2 | 3 | 4 | 5)[] | null;
+            /**
+             * @description ISO 3166-1 alpha-2 country code
+             * @example UA
+             */
+            countryCode?: string | null;
+            /** @example Kyiv */
+            city?: string | null;
+            /** @description Tournament formats the player wants to attend */
+            wantToPlay?: ("ONLINE" | "LAN")[] | null;
+            /**
+             * @description Ukrainian cities the player can travel to for LAN tournaments
+             * @example [
+             *       "Київ",
+             *       "Львів"
+             *     ]
+             */
+            lanCities?: string[] | null;
             /** Format: date-time */
             verifiedAt?: string | null;
             /** @description UUID команди або null поза складом */
@@ -1857,6 +1946,27 @@ export interface components {
             teamBId: string;
             /** @enum {string} */
             phase: "qualification" | "playoff";
+        };
+        CountryDto: {
+            /**
+             * @description ISO 3166-1 alpha-2 code (upper-case)
+             * @example UA
+             */
+            code: string;
+            /**
+             * @description English country name
+             * @example Ukraine
+             */
+            name: string;
+        };
+        CitiesResponseDto: {
+            /** @example UA */
+            countryCode: string;
+            /** @example [
+             *       "Kyiv",
+             *       "Lviv"
+             *     ] */
+            cities: string[];
         };
     };
     responses: never;
@@ -3738,6 +3848,47 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    LocationsController_getCountries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CountryDto"][];
+                };
+            };
+        };
+    };
+    LocationsController_getCities: {
+        parameters: {
+            query: {
+                /** @description ISO 3166-1 alpha-2 code from GET /locations/countries */
+                countryCode: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitiesResponseDto"];
+                };
             };
         };
     };

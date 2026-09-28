@@ -134,7 +134,7 @@
   }
 
   .el-select-dropdown {
-    @apply rounded-xl p-8;
+    @apply rounded-xl py-8 px-0;
   }
 
   .el-select-dropdown__item {

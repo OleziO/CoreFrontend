@@ -1,5 +1,14 @@
 import { ERole } from '@/types/general.enums'
-import { PhHandHeart, PhHandshake, PhLightning, PhShield, PhSword } from '@phosphor-icons/vue'
+import type { TTournamentFormat } from '@/api/types/api.types'
+import {
+  PhGameController,
+  PhGlobe,
+  PhHandHeart,
+  PhHandshake,
+  PhLightning,
+  PhShield,
+  PhSword
+} from '@phosphor-icons/vue'
 
 export const ROLES_ORDER = Object.values(ERole)
 
@@ -16,7 +25,7 @@ export const hasTeamLabelMap: Record<EUserIsTeam, string> = {
 }
 
 export const hasTeamBadgeLabelMap: Record<EUserIsTeam, string> = {
-  [EUserIsTeam.HAS_TEAM]: 'Склад',
+  [EUserIsTeam.HAS_TEAM]: 'В команді',
   [EUserIsTeam.NO_TEAM]: 'Вільний'
 }
 
@@ -70,6 +79,16 @@ export const positionOptions = [
 
 export function getDotaPositionLabel (positionId: number): string {
   return positionOptions.find(p => p.value === positionId)?.label ?? String(positionId)
+}
+
+/** Формати турнірів для блоку «Хочу грати» (профіль); порядок = порядок відображення. */
+export const wantToPlayOptions: { label: string; value: TTournamentFormat; icon: typeof PhGlobe }[] = [
+  { label: 'Онлайн турніри', value: 'ONLINE', icon: PhGlobe },
+  { label: 'LAN турніри', value: 'LAN', icon: PhGameController }
+]
+
+export function getTournamentFormatLabel (format: TTournamentFormat): string {
+  return wantToPlayOptions.find(o => o.value === format)?.label ?? format
 }
 
 export const teamStatusOptions = [

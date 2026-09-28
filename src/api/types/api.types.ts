@@ -36,9 +36,19 @@ export type TCurrentPlayerRole = components['schemas']['CurrentPlayerRoleDto']
 // export type TTournamentStatus = components['schemas']['TournamentStatus']
 
 // export type TCreatePlayerDto = components['schemas']['CreatePlayerDto']
-/** OpenAPI кладе `positions` як `1|…|5|null`; фактично PATCH приймає масив позицій. */
-export type TUpdatePlayerDto = Omit<components['schemas']['UpdatePlayerDto'], 'positions'> & {
+/** Формати турнірів, у яких гравець хоче брати участь (PATCH /players/:id `wantToPlay`). */
+export type TTournamentFormat = 'ONLINE' | 'LAN'
+/** Країна з GET /locations/countries (без RU / BY / IR — фільтрує бекенд). */
+export type TCountry = components['schemas']['CountryDto']
+/** Відповідь GET /locations/cities?countryCode=XX. */
+export type TCitiesResponse = components['schemas']['CitiesResponseDto']
+/**
+ * OpenAPI кладе `positions` / `wantToPlay` як одиничний enum `|null`; фактично PATCH приймає масиви
+ * (як і `positions`).
+ */
+export type TUpdatePlayerDto = Omit<components['schemas']['UpdatePlayerDto'], 'positions' | 'wantToPlay'> & {
   positions?: (1 | 2 | 3 | 4 | 5)[] | null
+  wantToPlay?: TTournamentFormat[] | null
 }
 export type TCreateTeamDto = components['schemas']['CreateTeamDto']
 export type TUpdateTeamDto = components['schemas']['UpdateTeamDto']

@@ -69,19 +69,26 @@ const tooltipText = computed(() => hasTeamLabelMap[teamFlag.value])
   @apply min-w-0 truncate;
 }
 
-/* У складі */
-.player-team-tag--in {
+/*
+ * Тони мають перебити глобальне `.el-tag.el-tag--plain.el-tag--primary` з element-reset/_tag.scss
+ * (EP за замовчуванням ставить type="primary" → бірюзовий), тому селектори навмисно з трьома класами.
+ */
+
+/* В команді — зелений */
+.el-tag.player-team-tag.player-team-tag--in {
   --el-tag-bg-color: rgba(34, 197, 94, 0.18);
   --el-tag-border-color: rgba(34, 197, 94, 0.32);
   --el-tag-text-color: #86efac;
+  --el-tag-hover-color: rgba(34, 197, 94, 0.32);
   --tag-dot-color: #22c55e;
 }
 
-/* Вільний гравець */
-.player-team-tag--out {
+/* Вільний гравець — сірий */
+.el-tag.player-team-tag.player-team-tag--out {
   --el-tag-bg-color: rgba(255, 255, 255, 0.08);
   --el-tag-border-color: rgba(255, 255, 255, 0.16);
   --el-tag-text-color: var(--ds-text-muted);
+  --el-tag-hover-color: rgba(255, 255, 255, 0.16);
   --tag-dot-color: rgba(255, 255, 255, 0.4);
 }
 </style>

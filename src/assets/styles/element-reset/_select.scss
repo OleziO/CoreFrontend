@@ -77,9 +77,17 @@
 
 /* ---------------- Dropdown container ---------------- */
 .el-select-dropdown {
-  @apply
-    rounded-xl
-    p-8;
+  @apply rounded-xl py-8 px-0;
+
+  /* Inset belongs to the list, not the box: the scrollbar rail then sits flush at the
+     right edge, and the extra right padding keeps option rows from running under it. */
+  .el-select-dropdown__list {
+    @apply pl-8 pr-14;
+  }
+
+  .el-scrollbar__bar.is-vertical {
+    right: 0;
+  }
 }
 
 /* ---------------- Items ---------------- */
@@ -97,9 +105,10 @@
     duration-200
     ease-out;
 
-  /* Hover state */
+  /* Hover state (`is-hovering` — keyboard/mouse hover in `el-select-v2`) */
   &:hover,
-  &.hover {
+  &.hover,
+  &.is-hovering {
     @apply bg-white/10 text-white;
   }
 
