@@ -18,7 +18,24 @@ type TTournament = TResponse<'/tournaments', 'get'>[number] & {
   // Populated client-side by hydrating from GET /tournaments/:id/qualification
   qualification?: import('@/api/types/api.types').TQualificationPhase | null
 }
-type TPlayoff = TResponse<'/tournaments/{id}/playoff', 'get'>
+
+// Призове місце плей-оф (елемент `TPlayoff.placements`).
+type TTournamentPodiumPlace = 1 | 2 | 3
+type TTournamentPodiumTeam = {
+  id: string
+  name: string
+  logoUrl: string | null
+}
+type TTournamentPodiumEntry = {
+  place: TTournamentPodiumPlace
+  team: TTournamentPodiumTeam
+}
+
+// `placements` — призери плей-оф, які бек рахує з таблиці playoff_series (без Challonge):
+// [] доки гранд-фінал не вирішено. Опційне, доки `npm run api` не підхопить схему.
+type TPlayoff = TResponse<'/tournaments/{id}/playoff', 'get'> & {
+  placements?: TTournamentPodiumEntry[]
+}
 type TTournamentTeam = TTournament['teams'][number]
 
 // Per-team entry-fee payment status. Mirrors the backend PaymentStatus enum and
@@ -46,17 +63,4 @@ type TTournamentDonationIntent = {
   /** Сума донату в копійках. */
   amount: number
   pageUrl: string | null
-}
-
-// Призові місця плей-оф. Бекенд не віддає підсумкову таблицю, тож п'єдестал
-// виводиться на клієнті з вирішених фінальних серій (див. utils/playoff-podium.utils.ts).
-type TTournamentPodiumPlace = 1 | 2 | 3
-type TTournamentPodiumTeam = {
-  id: string
-  name: string
-  logoUrl: string | null
-}
-type TTournamentPodiumEntry = {
-  place: TTournamentPodiumPlace
-  team: TTournamentPodiumTeam
 }

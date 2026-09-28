@@ -73,7 +73,8 @@
     </div>
 
     <!-- Призери — одразу під героєм, поки банер ще розчиняється у фон.
-         Секція є з першого рендера етапу плей-оф (скелетон → п'єдестал), щоб сторінка не стрибала. -->
+         Секція є з першого рендера етапу плей-оф (скелетон → п'єдестал), щоб сторінка не стрибала;
+         дані — `playoff.placements` з публічної сітки, тож видно й гостям. -->
     <div
       v-if="podiumActive"
       class="w-full max-w-7xl mx-auto px-10 sm:px-15 lg:px-20 xl:px-40 pb-10"
@@ -169,7 +170,6 @@ import {
   registrationBlockBannerMap
 } from '@/core/utils/tournament-registration'
 import type { TSponsor } from '@/config/sponsors'
-import { useTournamentPodium } from '@/views/tournaments/composables/use-tournament-podium'
 
 const activeTab = ref('teams')
 const payments = ref<TTournamentPaymentSummary[]>([])
@@ -191,14 +191,6 @@ const tournamentId = String(route.params.id)
 
 /** Джерело істини — стор; reload і patch з вкладок патчать його, тож сторінка оновлюється сама. */
 const tournament = computed(() => tournamentStore.tournamentsData.find((t) => t.id === tournamentId) ?? null)
-
-/** Призери плей-оф для п'єдесталу під героєм; оновлюється після кожного поданого результату. */
-const {
-  podium,
-  loading: podiumLoading,
-  isActive: podiumActive,
-  refresh: refreshPodium
-} = useTournamentPodium(tournament)
 
 /** Команда користувача — зі стору (реактивно); `hydrateMyTeam` лише освіжає її з беку. */
 const myTeam = computed(() => {
@@ -295,6 +287,20 @@ watch(
   { immediate: true }
 )
 
+/**
+ * Призери — з `playoff.placements` публічної відповіді сітки (бек читає їх з playoff_series).
+ * Секція є з першого рендера етапу плей-оф і лишається після завершення; сітка для неї
+ * підвантажується одразу, а не лише на вкладці «Сітка».
+ */
+const podiumActive = computed(() => isPlayoffPhase.value || isPlayoffCompleted.value)
+const podium = computed<TTournamentPodiumEntry[]>(() => playoff.value?.placements ?? [])
+/** Скелетон лише на першому читанні; повторні оновлення не ховають уже показаних призерів. */
+const podiumLoading = computed(() => playoffLoading.value && !playoffFetched.value)
+
+watch(podiumActive, (active) => {
+  if (active) loadPlayoff()
+}, { immediate: true })
+
 /** Подати результат матчу плей-оф може будь-який залогінений користувач під час плей-оф. */
 const canSubmitPlayoffMatch = computed(() =>
   !!authStore.token && tournament.value?.tournamentStatus === 'PLAYOFF')
@@ -302,13 +308,11 @@ const canSubmitPlayoffMatch = computed(() =>
 async function handlePlayoffSubmitted () {
   await loadPlayoff({ force: true })
   await reloadTournament()
-  await refreshPodium()
 }
 
 function handleAdminPlayoffUpdated (response: TPlayoff) {
   playoff.value = response
   playoffFetched.value = true
-  refreshPodium()
 }
 
 function openPlayoffSubmit () {
@@ -325,7 +329,6 @@ function openTechLossPlayoff () {
     onSubmitted: (response: TPlayoff) => {
       playoff.value = response
       reloadTournament()
-      refreshPodium()
     }
   })
 }
