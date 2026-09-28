@@ -1199,6 +1199,7 @@ export interface components {
             manualUpdatedAt: string | null;
         };
         AnalyticsTotalsDto: {
+            /** @description Players with a rating above 0. Accounts that never set their MMR are excluded from every player-based number. */
             players: number;
             /** @description Players with `verifiedAt` set. */
             verifiedPlayers: number;

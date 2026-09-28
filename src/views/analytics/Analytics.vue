@@ -115,7 +115,7 @@
         <AnalyticsPanel
           code="// 03 · Розподіл за рангами"
           title="Ранги гравців"
-          :subtitle="`${formatAnalyticsNumber(data.totals.players)} гравців за поточним рейтингом`"
+          :subtitle="`${formatAnalyticsNumber(data.totals.players)} гравців із заданим MMR за поточним рейтингом`"
           :delay="400"
         >
           <template #aside>
