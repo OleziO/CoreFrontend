@@ -37,3 +37,6 @@ type TAnalyticsStackedSegment = {
   value: number
   color: string
 }
+
+/** Топ-3 найбільш титулованих гравців (поле `topAchievers` дошки трофеїв). */
+type TAnalyticsTopAchiever = TAnalyticsAchievements['topAchievers'][number]

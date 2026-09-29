@@ -1229,6 +1229,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Platform leaderboard
+         * @description Every player with at least one recorded map or achievement, ranked by a composite score of podium finishes, achievements, map record and qualification points. The `weights` object states what each statistic is worth. Rebuilt at most once a minute.
+         */
+        get: operations["LeaderboardController_getLeaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1334,10 +1354,87 @@ export interface components {
             kind: components["schemas"]["PlayerAchievementKind"];
             holders: components["schemas"]["PlatformAchievementHolderDto"][];
         };
+        PlatformTopAchieverDto: {
+            playerId: string;
+            discordName?: string | null;
+            discordUsername?: string | null;
+            avatarUrl?: string | null;
+            /** @description Distinct achievement kinds the player holds — the ranking key */
+            achievements: number;
+            /** @description Sum of `count` over every held kind: tournaments for placements, maps for per-map feats, 1 otherwise */
+            trophies: number;
+            /** @description Podium finishes (1st + 2nd + 3rd places) across tournaments */
+            podiums: number;
+        };
         PlatformAchievementsDto: {
             /** @description ISO timestamp the board was built at. */
             generatedAt: string;
             achievements: components["schemas"]["PlatformAchievementDto"][];
+            /** @description Up to three players holding the most distinct achievement kinds, best first. Ties break on total trophies, then podiums, then name. */
+            topAchievers: components["schemas"]["PlatformTopAchieverDto"][];
+        };
+        LeaderboardPodiumDto: {
+            /** @description Tournaments won */
+            first: number;
+            /** @description Second places */
+            second: number;
+            /** @description Third places */
+            third: number;
+        };
+        LeaderboardWeightsDto: {
+            /** @description Per tournament won */
+            firstPlace: number;
+            /** @description Per second place */
+            secondPlace: number;
+            /** @description Per third place */
+            thirdPlace: number;
+            /** @description Per distinct achievement kind, excluding the three placement kinds (scored above) and the joke trophies */
+            achievement: number;
+            /** @description Per map won */
+            mapWon: number;
+            /** @description Per map played (win or loss) */
+            mapPlayed: number;
+            /** @description Per qualification point */
+            tournamentPoint: number;
+        };
+        LeaderboardPlayerDto: {
+            /** @description 1-based rank on the board */
+            position: number;
+            playerId: string;
+            discordName?: string | null;
+            discordUsername?: string | null;
+            avatarUrl?: string | null;
+            /** @description Profile confirmed by the administration */
+            verified: boolean;
+            /** @description Self-reported MMR; shown, not scored */
+            rating: number;
+            rank: components["schemas"]["PlayerRankDto"];
+            /** @description Composite score — see `weights` on the response */
+            score: number;
+            /** @description Distinct achievement kinds held */
+            achievements: number;
+            podium: components["schemas"]["LeaderboardPodiumDto"];
+            /** @description Maps with a recorded result, all tournaments */
+            maps: number;
+            wins: number;
+            losses: number;
+            /** @description Win rate 0–100, rounded; null when no maps were played */
+            winrate?: number | null;
+            /** @description Distinct tournaments with at least one map played */
+            tournaments: number;
+            /** @description Lifetime qualification points */
+            tournamentPoints: number;
+            /** @description Kills across recorded Dota match lines */
+            kills: number;
+            deaths: number;
+            assists: number;
+        };
+        LeaderboardDto: {
+            /** @description ISO timestamp the board was built at. */
+            generatedAt: string;
+            weights: components["schemas"]["LeaderboardWeightsDto"];
+            /** @description Every player with at least one recorded map or one achievement, best first. */
+            players: components["schemas"]["LeaderboardPlayerDto"][];
         };
         UpdateSocialFollowersDto: {
             /**
@@ -4294,6 +4391,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CitiesResponseDto"];
+                };
+            };
+        };
+    };
+    LeaderboardController_getLeaderboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaderboardDto"];
                 };
             };
         };

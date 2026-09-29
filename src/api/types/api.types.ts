@@ -76,3 +76,7 @@ export type TAdminPlayerRoleItem = components['schemas']['AdminPlayerRoleItemDto
 export type TAdminPlayerRolesResult = components['schemas']['AdminPlayerRolesResultDto']
 /** Відкритий матч плей-оф (GET /tournaments/:id/playoff/open-matches). */
 export type TOpenPlayoffMatch = components['schemas']['OpenPlayoffMatchDto']
+/** Відповідь GET /leaderboard — таблиця лідерів платформи зі зваженим рахунком та вагами формули. */
+export type TLeaderboard = components['schemas']['LeaderboardDto']
+export type TLeaderboardPlayer = components['schemas']['LeaderboardPlayerDto']
+export type TLeaderboardWeights = components['schemas']['LeaderboardWeightsDto']

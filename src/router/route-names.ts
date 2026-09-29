@@ -10,6 +10,7 @@ import { mainRouteNames, mainRoutes } from '@/views/main/main.route'
 import { loginSuccessRouteNames, loginSuccessRoutes } from '@/views/login-success/login-success.route'
 import { financeMonitorRouteNames, financeMonitorRoutes } from '@/views/finance-monitor/finance-monitor.route'
 import { analyticsRouteNames, analyticsRoutes } from '@/views/analytics/analytics.route'
+import { leaderboardRouteNames, leaderboardRoutes } from '@/views/leaderboard/leaderboard.route'
 
 export const routeNames = {
   ...playersRouteNames,
@@ -22,7 +23,8 @@ export const routeNames = {
   ...mainRouteNames,
   ...loginSuccessRouteNames,
   ...financeMonitorRouteNames,
-  ...analyticsRouteNames
+  ...analyticsRouteNames,
+  ...leaderboardRouteNames
 }
 
 export const routes = [
@@ -40,7 +42,8 @@ export const routes = [
       ...profileRoutes,
       ...adminPanelRoutes,
       ...financeMonitorRoutes,
-      ...analyticsRoutes
+      ...analyticsRoutes,
+      ...leaderboardRoutes
     ]
   }
 ]

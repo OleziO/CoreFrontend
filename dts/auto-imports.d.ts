@@ -70,6 +70,7 @@ declare global {
   const isReactive: typeof import('vue')['isReactive']
   const isReadonly: typeof import('vue')['isReadonly']
   const isRef: typeof import('vue')['isRef']
+  const leaderboardService: typeof import('../src/views/leaderboard/leaderboard.service')['leaderboardService']
   const locationsService: typeof import('../src/services/locations.service')['locationsService']
   const makeDestructurable: typeof import('@vueuse/core')['makeDestructurable']
   const mapActions: typeof import('pinia')['mapActions']

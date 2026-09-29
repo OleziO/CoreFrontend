@@ -4,6 +4,7 @@
 /// <reference path="../src/views/teams/teams.types.d.ts" />
 /// <reference path="../src/views/tournaments/tournaments.d.ts" />
 /// <reference path="../src/views/analytics/analytics.d.ts" />
+/// <reference path="../src/views/leaderboard/leaderboard.d.ts" />
 
 declare module 'vue-virtual-scroller' {
   import { DefineComponent } from 'vue'

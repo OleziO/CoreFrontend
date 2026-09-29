@@ -203,6 +203,11 @@
               {{ pluralizePlayers(achievementHoldersTotal) }} з трофеями
             </span>
           </template>
+          <AnalyticsTopAchievers
+            v-if="!achievementsError || achievementsData"
+            :achievers="achievementsData?.topAchievers ?? []"
+            :is-pending="achievementsPending"
+          />
           <AnalyticsAchievements
             :achievements="achievementsData?.achievements ?? []"
             :is-pending="achievementsPending"
@@ -246,6 +251,7 @@ import AnalyticsColumnChart from './components/AnalyticsColumnChart.vue'
 import AnalyticsBarList from './components/AnalyticsBarList.vue'
 import AnalyticsStackedBar from './components/AnalyticsStackedBar.vue'
 import AnalyticsAchievements from './components/AnalyticsAchievements.vue'
+import AnalyticsTopAchievers from './components/AnalyticsTopAchievers.vue'
 
 const TOURNAMENTS_LIMIT = 12
 const CITIES_LIMIT = 10

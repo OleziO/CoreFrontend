@@ -431,3 +431,8 @@ export function formatAchievementCaption (
   if (meta.category === 'podium') return pluralizeTournaments(count)
   return ''
 }
+
+/** Відмінки для лічильників трофеїв на дошці аналітики та в таблиці лідерів. */
+export const pluralizeAchievements = (n: number) => pluralizeUk(n, 'досягнення', 'досягнення', 'досягнень')
+export const pluralizeTrophies = (n: number) => pluralizeUk(n, 'трофей', 'трофеї', 'трофеїв')
+export const pluralizePodiums = (n: number) => pluralizeUk(n, 'п’єдестал', 'п’єдестали', 'п’єдесталів')
