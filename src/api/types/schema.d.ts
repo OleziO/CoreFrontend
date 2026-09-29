@@ -1249,6 +1249,214 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/duels/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Join the 1v1 queue
+         * @description Requires a linked Steam account. 409 when already in a duel, 429 during the no-show cooldown. Joining while already queued simply returns the current status.
+         */
+        post: operations["DuelsController_joinQueue"];
+        /** Leave the 1v1 queue */
+        delete: operations["DuelsController_leaveQueue"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duels/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My 1v1 status
+         * @description Rating, queue state, active duel and the last finished duel. Poll every ~3 s while queued or in a duel: the call doubles as the queue heartbeat, a client that stops polling is dropped from the queue after 20 s.
+         */
+        get: operations["DuelsController_getMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duels/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 1v1 leaderboard
+         * @description Every player with at least one played duel, best rating first.
+         */
+        get: operations["DuelsController_getLeaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duels/players/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 1v1 line of a player: rating + last 10 duels */
+        get: operations["DuelsController_getPlayerProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duels/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One duel (lobby password hidden for non-participants) */
+        get: operations["DuelsController_getDuel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/duels/bots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Host bot pool with live status from the bot-worker */
+        get: operations["DuelsAdminController_listBots"];
+        put?: never;
+        /**
+         * Add a Steam account to the pool
+         * @description Password is stored encrypted with HOSTBOT_SECRET_KEY. Steam Guard must be disabled on the account; the account must have opened Dota 2 once. The worker logs it in within ~30 s.
+         */
+        post: operations["DuelsAdminController_createBot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/duels/bots/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a bot (refused while it hosts a duel) */
+        delete: operations["DuelsAdminController_removeBot"];
+        options?: never;
+        head?: never;
+        /** Enable / disable a bot or rotate its password */
+        patch: operations["DuelsAdminController_updateBot"];
+        trace?: never;
+    };
+    "/admin/duels/players/{id}/rating": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Override a player’s 1v1 rating */
+        patch: operations["DuelsAdminController_setRating"];
+        trace?: never;
+    };
+    "/admin/duels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List duels, newest first (optional state filter) */
+        get: operations["DuelsAdminController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/duels/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel an active duel
+         * @description No rating change. The host bot leaves the lobby on its next tick.
+         */
+        post: operations["DuelsAdminController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/duels/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolve a FAILED / CANCELLED duel by hand
+         * @description With `winnerId` applies ±25 like a normal result; without it voids the duel.
+         */
+        post: operations["DuelsAdminController_resolve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2346,6 +2554,185 @@ export interface components {
              *       "Lviv"
              *     ] */
             cities: string[];
+        };
+        /** @description Compact player card used everywhere on the 1v1 ladder. */
+        DuelPlayerDto: {
+            id: string;
+            discordName: string | null;
+            discordUsername: string | null;
+            avatarUrl: string | null;
+            /** @description SteamID64 */
+            steamId: string | null;
+            /** @description Current 1v1 ladder rating */
+            rating: number;
+        };
+        DuelLobbyPlayerDto: {
+            playerId: string;
+            steamId64: string;
+            /** @description Sits in the Dota lobby right now */
+            present: boolean;
+            /**
+             * @description Side taken in the lobby; null when not present
+             * @enum {string|null}
+             */
+            side: "radiant" | "dire" | "unassigned" | null;
+        };
+        DuelStatsPlayerDto: {
+            playerId: string | null;
+            steamId64: string;
+            heroId: number | null;
+            kills: number | null;
+            deaths: number | null;
+            assists: number | null;
+            lastHits: number | null;
+            denies: number | null;
+            netWorth: number | null;
+            level: number | null;
+            isRadiant: boolean | null;
+            win: boolean | null;
+        };
+        /** @description Last live scoreboard snapshot the bot captured (best effort, may be absent). */
+        DuelStatsDto: {
+            durationSeconds: number | null;
+            players: components["schemas"]["DuelStatsPlayerDto"][];
+        };
+        DuelDto: {
+            id: string;
+            /** @enum {string} */
+            state: "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "RESOLVED" | "CANCELLED" | "FAILED";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            lobbyReadyAt: string | null;
+            /** Format: date-time */
+            liveAt: string | null;
+            /** Format: date-time */
+            finishedAt: string | null;
+            /**
+             * Format: date-time
+             * @description Both players must sit on a side before this moment (lobbyReadyAt + join timeout)
+             */
+            joinDeadlineAt: string | null;
+            player1: components["schemas"]["DuelPlayerDto"] | null;
+            player2: components["schemas"]["DuelPlayerDto"] | null;
+            /** @description Rating of player1 when they were paired */
+            player1Rating: number;
+            /** @description Rating of player2 when they were paired */
+            player2Rating: number;
+            lobbyName: string;
+            /** @description Only for the two participants while the lobby is open; null for everyone else */
+            lobbyPassword: string | null;
+            lobbyPlayers: components["schemas"]["DuelLobbyPlayerDto"][] | null;
+            radiantPlayerId: string | null;
+            direPlayerId: string | null;
+            winnerId: string | null;
+            loserId: string | null;
+            /** @description Valve match id */
+            dotaMatchId: string | null;
+            /** @description Points moved once the result was applied (25) */
+            ratingDelta: number | null;
+            /** @enum {string|null} */
+            cancelReason: "players_no_show" | "lobby_not_created" | "no_bots_available" | "admin" | null;
+            /** @enum {string|null} */
+            failReason: "lobby_lost" | "game_timeout" | "undetermined_outcome" | null;
+            adminReviewRequired: boolean;
+            stats: components["schemas"]["DuelStatsDto"] | null;
+        };
+        DuelRatingDto: {
+            playerId: string;
+            rating: number;
+            wins: number;
+            losses: number;
+            /** @description Positive = win streak, negative = loss streak */
+            streak: number;
+            /** @description Win rate 0–100, rounded; null before the first duel */
+            winrate: number | null;
+            /** Format: date-time */
+            lastPlayedAt: string | null;
+            /** Format: date-time */
+            cooldownUntil: string | null;
+        };
+        DuelQueueStateDto: {
+            /** Format: date-time */
+            joinedAt: string;
+            /** @description Seconds spent in the queue so far */
+            waitSeconds: number;
+            /** @description Current ± rating window used to find an opponent */
+            window: number;
+            /** @description Everyone currently queued, including the caller */
+            playersInQueue: number;
+        };
+        /** @description Everything the /1v1 page needs; polled every few seconds while queued or in a duel. */
+        DuelStatusDto: {
+            rating: components["schemas"]["DuelRatingDto"];
+            queue: components["schemas"]["DuelQueueStateDto"] | null;
+            activeDuel: components["schemas"]["DuelDto"] | null;
+            /** @description Most recent duel in a terminal state — the UI shows it as a result banner */
+            lastFinishedDuel: components["schemas"]["DuelDto"] | null;
+            /** @description Whether POST /duels/queue would succeed right now */
+            canQueue: boolean;
+            /** @enum {string|null} */
+            queueBlockedReason: "steam_not_linked" | "cooldown" | "active_duel" | "already_queued" | null;
+        };
+        DuelLeaderboardRowDto: {
+            /** @description 1-based rank on the board */
+            position: number;
+            player: components["schemas"]["DuelPlayerDto"];
+            rating: number;
+            wins: number;
+            losses: number;
+            winrate: number | null;
+            streak: number;
+            /** Format: date-time */
+            lastPlayedAt: string | null;
+        };
+        DuelLeaderboardDto: {
+            /** Format: date-time */
+            generatedAt: string;
+            players: components["schemas"]["DuelLeaderboardRowDto"][];
+        };
+        DuelPlayerProfileDto: {
+            /** @description null until the player queued at least once */
+            rating: components["schemas"]["DuelRatingDto"] | null;
+            /** @description Last 10 duels, newest first */
+            recent: components["schemas"]["DuelDto"][];
+        };
+        AdminResolveDuelDto: {
+            /** @description Player to credit with the win (±25 applied). null / omitted voids the duel without rating changes. */
+            winnerId?: string | null;
+        };
+        AdminSetDuelRatingDto: {
+            rating: number;
+        };
+        CreateHostBotDto: {
+            /** @description Steam login of the bot account (Steam Guard must be off) */
+            accountName: string;
+            password: string;
+            /**
+             * @description Valve server region (3 = EU West)
+             * @default 3
+             */
+            region?: number;
+        };
+        UpdateHostBotDto: {
+            enabled?: boolean;
+            /** @description New password; re-encrypted on save */
+            password?: string;
+        };
+        HostBotDto: {
+            id: number;
+            accountName: string;
+            steamId64: string | null;
+            region: number;
+            /** @enum {string} */
+            status: "OFFLINE" | "FREE" | "BUSY" | "BANNED";
+            currentDuelId: string | null;
+            lastError: string | null;
+            /** Format: date-time */
+            lastHeartbeatAt: string | null;
+            enabled: boolean;
+            /** @description true when the worker touched this row within the last 30 s — the process is alive */
+            alive: boolean;
         };
     };
     responses: never;
@@ -4410,6 +4797,303 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LeaderboardDto"];
+                };
+            };
+        };
+    };
+    DuelsController_joinQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelStatusDto"];
+                };
+            };
+        };
+    };
+    DuelsController_leaveQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelStatusDto"];
+                };
+            };
+        };
+    };
+    DuelsController_getMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelStatusDto"];
+                };
+            };
+        };
+    };
+    DuelsController_getLeaderboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelLeaderboardDto"];
+                };
+            };
+        };
+    };
+    DuelsController_getPlayerProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelPlayerProfileDto"];
+                };
+            };
+        };
+    };
+    DuelsController_getDuel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelDto"];
+                };
+            };
+        };
+    };
+    DuelsAdminController_listBots: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HostBotDto"][];
+                };
+            };
+        };
+    };
+    DuelsAdminController_createBot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateHostBotDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HostBotDto"];
+                };
+            };
+        };
+    };
+    DuelsAdminController_updateBot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateHostBotDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HostBotDto"];
+                };
+            };
+        };
+    };
+    DuelsAdminController_removeBot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DuelsAdminController_setRating: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminSetDuelRatingDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelRatingDto"];
+                };
+            };
+        };
+    };
+    DuelsAdminController_list: {
+        parameters: {
+            query?: {
+                state?: "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "RESOLVED" | "CANCELLED" | "FAILED";
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelDto"][];
+                };
+            };
+        };
+    };
+    DuelsAdminController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelDto"];
+                };
+            };
+        };
+    };
+    DuelsAdminController_resolve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminResolveDuelDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelDto"];
                 };
             };
         };

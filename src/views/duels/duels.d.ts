@@ -1,0 +1,30 @@
+// Типи 1v1 ліги виводяться з OpenAPI-схеми (GET /duels/*).
+// Записи в `schema.d.ts` додано вручну за форматом openapi-typescript — `npm run api`
+// після деплою бекенду перегенерує їх один в один.
+type TDuelStatusResponse = TResponse<'/duels/me', 'get'>
+type TDuelLeaderboardResponse = TResponse<'/duels/leaderboard', 'get'>
+type TDuelPlayerProfileResponse = TResponse<'/duels/players/{id}', 'get'>
+
+/** Яку дошку показує `/leaderboard`: турнірний рейтинг (типово) або 1v1 (`?board=1v1`). */
+type TLeaderboardBoard = 'tournament' | '1v1'
+
+/** Результат дуелі з погляду конкретного гравця. */
+type TDuelOutcome = 'win' | 'loss' | 'cancelled' | 'failed' | 'active'
+
+/** Крок степпера активної дуелі: PENDING → LOBBY_CREATING → WAITING_PLAYERS → LIVE. */
+type TDuelStep = {
+  key: import('@/api/types/api.types').TDuelState
+  label: string
+  hint: string
+}
+
+/** Рядок історії дуелей, уже «повернутий» до поточного гравця. */
+type TDuelHistoryRow = {
+  duel: import('@/api/types/api.types').TDuel
+  outcome: TDuelOutcome
+  opponent: import('@/api/types/api.types').TDuelPlayer | null
+  /** ±25 з погляду гравця; null, коли рейтинг не змінювався. */
+  delta: number | null
+  /** Рядок статистики цього гравця зі знімка бота; null, коли знімок не зберігся. */
+  stats: import('@/api/types/api.types').TDuelStatsPlayer | null
+}

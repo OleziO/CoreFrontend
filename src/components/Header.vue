@@ -123,6 +123,22 @@
                 </RouterLink>
               </el-dropdown-item>
 
+              <el-dropdown-item
+                :class="{
+                  'header-user-menu__item--active': route.name === routeNames.duels
+                }"
+              >
+                <RouterLink
+                  :to="{ name: routeNames.duels }"
+                  active-class=""
+                  exact-active-class=""
+                  class="flex w-full items-center gap-10 no-underline text-inherit"
+                >
+                  <span class="header-menu__icon"><PhSword :size="16" weight="bold" /></span>
+                  <span>1v1 Ліга</span>
+                </RouterLink>
+              </el-dropdown-item>
+
               <li v-if="hasAdminUaRole" class="header-menu__section" role="presentation">
                 // Адміністрування
               </li>
@@ -206,7 +222,7 @@
 import { routeNames } from '@/router/route-names'
 import logo from '@/assets/images/core-league-logo-full.png'
 import {
-  PhDiscordLogo, PhSignOut, PhUser, PhTrophy, PhCaretDown, PhGauge, PhChartLineUp, PhClock
+  PhDiscordLogo, PhSignOut, PhUser, PhTrophy, PhCaretDown, PhGauge, PhChartLineUp, PhClock, PhSword
 } from '@phosphor-icons/vue'
 import CreateTournamentDrawer from '@/views/admin-panel/components/drawers/CreateTournamentDrawer.vue'
 import { hasAdminRole } from '@/core/helpers'

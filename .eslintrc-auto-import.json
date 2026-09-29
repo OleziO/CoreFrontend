@@ -369,6 +369,8 @@
     "resolveRouteSeo": true,
     "useSeo": true,
     "analyticsService": true,
-    "leaderboardService": true
+    "leaderboardService": true,
+    "duelsService": true,
+    "useDuelsAdminStore": true
   }
 }

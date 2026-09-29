@@ -63,7 +63,7 @@ import {
   PhTrophy,
   PhUsersThree,
   PhUser,
-  PhRanking,
+  PhRanking, PhSword,
   PhFileText,
   PhYoutubeLogo,
   PhTelegramLogo,
@@ -86,7 +86,8 @@ const navItems: Array<{ name: string; label: string; icon: Component }> = [
   { name: routeNames.tournaments, label: 'Турніри', icon: PhTrophy },
   { name: routeNames.teams, label: 'Команди', icon: PhUsersThree },
   { name: routeNames.players, label: 'Гравці', icon: PhUser },
-  { name: routeNames.leaderboard, label: 'Лідери', icon: PhRanking }
+  { name: routeNames.leaderboard, label: 'Лідери', icon: PhRanking },
+  { name: routeNames.duels, label: '1v1', icon: PhSword }
 ]
 
 // Сторінка деталей підсвічує свій розділ (як у мобільному таббарі).

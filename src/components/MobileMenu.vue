@@ -36,6 +36,15 @@
         </RouterLink>
 
         <RouterLink
+          :to="{ name: routeNames.duels }"
+          class="mobile-menu-link no-underline"
+          @click="close"
+        >
+          <PhSword :size="20" />
+          <span>1v1 Ліга</span>
+        </RouterLink>
+
+        <RouterLink
           v-if="hasAdminUaRole"
           class="mobile-menu-link no-underline"
           :to="{ name: routeNames.adminPanel }"
@@ -108,7 +117,7 @@
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
 import Icon, { type TIconName } from '@/components/Icon.vue'
-import { PhDiscordLogo, PhUser, PhChartLineUp, PhGauge, PhSignOut, PhX } from '@phosphor-icons/vue'
+import { PhDiscordLogo, PhUser, PhChartLineUp, PhGauge, PhSignOut, PhSword, PhX } from '@phosphor-icons/vue'
 import { hasAdminRole } from '@/core/helpers'
 
 const togglerStore = useTogglerStore()

@@ -1,0 +1,383 @@
+<template>
+  <section class="active-card neon-card hud-corners rounded-2xl" aria-labelledby="duel-active-title">
+    <header class="flex flex-wrap items-start justify-between gap-12">
+      <div class="flex min-w-0 flex-col gap-4">
+        <span class="sys-label sys-label--gold">// Активна дуель</span>
+        <h2 id="duel-active-title" class="active-card__title">{{ duelStateLabels[duel.state] }}</h2>
+      </div>
+      <span v-if="duel.state === 'WAITING_PLAYERS' && joinLeft > 0" class="active-card__deadline">
+        <PhTimer :size="14" weight="bold" />
+        {{ formatDuelCountdown(joinLeft) }}
+      </span>
+      <span v-else-if="duel.state === 'LIVE'" class="active-card__deadline is-live">
+        <span class="active-card__live-dot" aria-hidden="true" />
+        LIVE
+      </span>
+    </header>
+
+    <!-- Степпер -->
+    <ol class="active-card__steps" aria-label="Етапи дуелі">
+      <li
+        v-for="(step, index) in duelSteps"
+        :key="step.key"
+        class="active-card__step"
+        :class="{
+          'is-done': index < currentStep,
+          'is-current': index === currentStep
+        }"
+      >
+        <span class="active-card__step-index">
+          <PhCheck v-if="index < currentStep" :size="11" weight="bold" />
+          <template v-else>{{ index + 1 }}</template>
+        </span>
+        <span class="active-card__step-label">{{ step.label }}</span>
+      </li>
+    </ol>
+    <p class="active-card__hint">{{ duelSteps[Math.min(currentStep, duelSteps.length - 1)].hint }}</p>
+
+    <!-- Суперники -->
+    <div class="active-card__versus">
+      <DuelPlayerTile :player="me" :side="sideOf(me?.id)" label="Ви" />
+      <span class="active-card__vs">VS</span>
+      <DuelPlayerTile :player="opponent" :side="sideOf(opponent?.id)" label="Суперник" />
+    </div>
+
+    <!-- Лобі -->
+    <div v-if="duel.lobbyPassword" class="active-card__lobby">
+      <div class="active-card__lobby-row">
+        <span class="sys-label sys-label--muted !text-[9px]">Назва лобі</span>
+        <span class="active-card__lobby-value">{{ duel.lobbyName }}</span>
+        <el-button text size="small" class="btn-icon" aria-label="Скопіювати назву" @click="copyText(duel.lobbyName)">
+          <PhCopy :size="14" weight="bold" />
+        </el-button>
+      </div>
+      <div class="active-card__lobby-row">
+        <span class="sys-label sys-label--muted !text-[9px]">Пароль</span>
+        <span class="active-card__lobby-value active-card__lobby-value--pass">{{ duel.lobbyPassword }}</span>
+        <el-button
+          text
+          size="small"
+          class="btn-icon"
+          aria-label="Скопіювати пароль"
+          @click="copyText(duel.lobbyPassword)"
+        >
+          <PhCopy :size="14" weight="bold" />
+        </el-button>
+      </div>
+      <p class="active-card__hint">
+        Прийміть інвайт у Dota 2 (або знайдіть лобі за назвою і паролем) та станьте на сторону
+        Radiant або Dire. Гра стартує автоматично, щойно обидва гравці на місцях.
+      </p>
+    </div>
+
+    <!-- Присутність -->
+    <ul v-if="duel.lobbyPlayers?.length && duel.state === 'WAITING_PLAYERS'" class="active-card__presence">
+      <li v-for="p in duel.lobbyPlayers" :key="p.playerId" class="active-card__presence-row">
+        <span class="active-card__presence-dot" :class="{ 'is-on': p.present }" aria-hidden="true" />
+        <span class="truncate">{{ nameOf(p.playerId) }}</span>
+        <span class="active-card__presence-side" :class="p.side ? `is-${p.side}` : ''">
+          {{ p.present ? duelSideLabels[p.side ?? 'unassigned'] : 'не в лобі' }}
+        </span>
+      </li>
+    </ul>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { PhCheck, PhCopy, PhTimer } from '@phosphor-icons/vue'
+import { ElMessage } from 'element-plus'
+import {
+  duelOpponentOf,
+  duelPlayerName,
+  duelSideLabels,
+  duelStateLabels,
+  duelStepIndex,
+  duelSteps,
+  formatDuelCountdown,
+  secondsUntil
+} from '@/views/duels/duels.utils'
+import DuelPlayerTile from '@/views/duels/components/DuelPlayerTile.vue'
+import type { TDuel, TDuelLobbySide, TDuelPlayer } from '@/api/types/api.types'
+
+const props = defineProps<{
+  duel: TDuel
+  meId: string | null
+}>()
+
+const now = useNow({ interval: 1000 })
+const { copy, isSupported } = useClipboard()
+
+const currentStep = computed(() => duelStepIndex(props.duel.state))
+const joinLeft = computed(() => secondsUntil(props.duel.joinDeadlineAt, now.value))
+
+const me = computed<TDuelPlayer | null>(() => {
+  if (!props.meId) return null
+  if (props.duel.player1?.id === props.meId) return props.duel.player1
+  if (props.duel.player2?.id === props.meId) return props.duel.player2
+  return null
+})
+const opponent = computed(() => duelOpponentOf(props.duel, props.meId))
+
+function sideOf (playerId: string | null | undefined): TDuelLobbySide | null {
+  if (!playerId) return null
+  if (props.duel.radiantPlayerId === playerId) return 'radiant'
+  if (props.duel.direPlayerId === playerId) return 'dire'
+  const entry = props.duel.lobbyPlayers?.find((p) => p.playerId === playerId)
+  return entry?.present ? (entry.side ?? 'unassigned') : null
+}
+
+function nameOf (playerId: string): string {
+  if (props.duel.player1?.id === playerId) return duelPlayerName(props.duel.player1)
+  if (props.duel.player2?.id === playerId) return duelPlayerName(props.duel.player2)
+  return 'Гравець'
+}
+
+async function copyText (text: string) {
+  if (!isSupported.value) {
+    ElMessage.warning('Буфер обміну недоступний — скопіюйте вручну')
+    return
+  }
+  await copy(text)
+  ElMessage.success('Скопійовано')
+}
+</script>
+
+<style scoped>
+.active-card {
+  --hud-corner-inset: 8px;
+  --hud-corner-color: rgba(var(--ds-gold-rgb), 0.55);
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+@media (min-width: 768px) {
+  .active-card {
+    padding: 24px;
+  }
+}
+
+.active-card__title {
+  font-family: var(--ds-font-display);
+  font-size: 22px;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  color: var(--ds-text-strong);
+}
+
+.active-card__deadline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid rgba(var(--ds-gold-rgb), 0.4);
+  background: rgba(var(--ds-gold-rgb), 0.1);
+  font-family: var(--ds-font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ds-gold);
+}
+
+.active-card__deadline.is-live {
+  border-color: rgba(244, 63, 94, 0.5);
+  background: rgba(244, 63, 94, 0.1);
+  color: #fb7185;
+  letter-spacing: 0.16em;
+}
+
+.active-card__live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #fb7185;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.9);
+  animation: duel-live-blink 1.4s ease-in-out infinite;
+}
+
+@keyframes duel-live-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.active-card__steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.active-card__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.25);
+  text-align: center;
+  transition: border-color var(--ds-duration-base) ease, background-color var(--ds-duration-base) ease;
+}
+
+.active-card__step.is-done {
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.active-card__step.is-current {
+  border-color: rgba(var(--ds-gold-rgb), 0.55);
+  background: rgba(var(--ds-gold-rgb), 0.08);
+  box-shadow: 0 0 12px rgba(var(--ds-gold-rgb), 0.15);
+}
+
+.active-card__step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ds-text-faint);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.active-card__step.is-done .active-card__step-index {
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.6);
+}
+
+.active-card__step.is-current .active-card__step-index {
+  color: var(--ds-gold);
+  border-color: rgba(var(--ds-gold-rgb), 0.7);
+}
+
+.active-card__step-label {
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ds-text-muted);
+}
+
+.active-card__step.is-current .active-card__step-label {
+  color: var(--ds-text-strong);
+}
+
+.active-card__hint {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ds-text-muted);
+}
+
+.active-card__versus {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.active-card__vs {
+  font-family: var(--ds-font-display);
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  color: var(--ds-text-faint);
+}
+
+.active-card__lobby {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(var(--ds-primary-rgb), 0.3);
+  background: rgba(var(--ds-primary-rgb), 0.06);
+}
+
+.active-card__lobby-row {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.active-card__lobby-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ds-text-strong);
+}
+
+.active-card__lobby-value--pass {
+  font-family: var(--ds-font-mono);
+  font-size: 16px;
+  letter-spacing: 0.18em;
+  color: var(--ds-primary);
+  text-shadow: var(--ds-neon-text-subtle);
+}
+
+.active-card__presence {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.active-card__presence-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 13px;
+  color: var(--ds-text);
+}
+
+.active-card__presence-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.active-card__presence-dot.is-on {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+}
+
+.active-card__presence-side {
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
+}
+
+.active-card__presence-side.is-radiant {
+  color: #4ade80;
+}
+
+.active-card__presence-side.is-dire {
+  color: #f87171;
+}
+</style>

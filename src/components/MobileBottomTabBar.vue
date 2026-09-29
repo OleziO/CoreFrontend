@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
-import { PhHouse, PhTrophy, PhUsersThree, PhUser, PhRanking, PhList } from '@phosphor-icons/vue'
+import { PhHouse, PhTrophy, PhUsersThree, PhUser, PhRanking, PhSword, PhList } from '@phosphor-icons/vue'
 
 const route = useRoute()
 const togglerStore = useTogglerStore()
@@ -46,7 +46,8 @@ const tabs: { name: string; label: string; icon: Component }[] = [
   { name: routeNames.tournaments, label: 'Турніри', icon: PhTrophy },
   { name: routeNames.teams, label: 'Команди', icon: PhUsersThree },
   { name: routeNames.players, label: 'Гравці', icon: PhUser },
-  { name: routeNames.leaderboard, label: 'Лідери', icon: PhRanking }
+  { name: routeNames.leaderboard, label: 'Лідери', icon: PhRanking },
+  { name: routeNames.duels, label: '1v1', icon: PhSword }
 ]
 
 const detailOf: Record<string, string> = {
@@ -64,7 +65,7 @@ function isTabActive (name: string): boolean {
 <style scoped>
 .mobile-tabbar {
   @apply fixed bottom-0 left-0 right-0 z-50
-         grid grid-cols-6
+         grid grid-cols-7
          bg-surface/95 backdrop-blur-xl
          shadow-elevation-4;
   border-top: 1px solid var(--ds-border);
