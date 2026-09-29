@@ -8,23 +8,39 @@
           <th scope="col" class="board__th board__th--rank hidden lg:table-cell" :class="activeClass('rating')">
             Ранг
           </th>
-          <th scope="col" class="board__th board__th--num" :class="activeClass('score')">Рахунок</th>
-          <th scope="col" class="board__th board__th--num hidden md:table-cell" :class="activeClass('achievements')">
+          <th scope="col" class="board__th board__th--num board__th--score" :class="activeClass('score')">
+            Рахунок
+          </th>
+          <th
+            scope="col"
+            class="board__th board__th--num board__th--trophies hidden md:table-cell"
+            :class="activeClass('achievements')"
+          >
             Трофеї
           </th>
           <th scope="col" class="board__th board__th--podium hidden xl:table-cell">П’єдестал</th>
-          <th scope="col" class="board__th board__th--num hidden md:table-cell" :class="activeClass('wins')">
-            <span :class="activeClass('maps')">Матчі</span>
-          </th>
-          <th scope="col" class="board__th board__th--num" :class="activeClass('winrate')">Вінрейт</th>
           <th
             scope="col"
-            class="board__th board__th--num hidden xl:table-cell"
+            class="board__th board__th--num board__th--matches hidden md:table-cell"
+            :class="activeClass('wins')"
+          >
+            <span :class="activeClass('maps')">Матчі</span>
+          </th>
+          <th scope="col" class="board__th board__th--num board__th--winrate" :class="activeClass('winrate')">
+            Вінрейт
+          </th>
+          <th
+            scope="col"
+            class="board__th board__th--num board__th--points hidden xl:table-cell"
             :class="activeClass('tournamentPoints')"
           >
             Очки
           </th>
-          <th scope="col" class="board__th board__th--num hidden xl:table-cell" :class="activeClass('kills')">
+          <th
+            scope="col"
+            class="board__th board__th--num board__th--kda hidden xl:table-cell"
+            :class="activeClass('kills')"
+          >
             K / D / A
           </th>
         </tr>
@@ -184,16 +200,19 @@ function goToPlayer (id: string) {
 </script>
 
 <style scoped>
-/* Горизонтальний скрол лише як запобіжник — колонки й так ховаються за брейкпоінтами. */
 .board-scroll {
   width: 100%;
-  overflow-x: auto;
-  margin: 0 -8px;
-  padding: 0 8px;
+  min-width: 0;
 }
 
+/*
+  Фіксована розкладка: числові колонки мають задану ширину (у шапці), а колонка гравця
+  забирає решту й обрізає довгі ніки. Auto-розкладка ігнорує max-width на комірках,
+  тож на вузьких екранах таблиця вилазила за межі панелі.
+*/
 .board {
   width: 100%;
+  table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0 4px;
 }
@@ -222,15 +241,48 @@ function goToPlayer (id: string) {
 
 .board__th--pos,
 .board__td--pos {
-  width: 44px;
   text-align: center;
 }
 
-/* Колонка гравця забирає всю вільну ширину й обрізає довгі ніки — решта колонок лишається у видимій зоні. */
-.board__th--player,
-.board__td--player {
-  width: 100%;
-  max-width: 0;
+/* Ширини колонок для fixed-розкладки; колонка гравця без ширини — отримує залишок. */
+.board__th--pos {
+  width: 44px;
+}
+
+.board__th--rank {
+  width: 170px;
+}
+
+.board__th--score {
+  width: 84px;
+}
+
+.board__th--trophies {
+  width: 72px;
+}
+
+.board__th--podium {
+  width: 164px;
+}
+
+.board__th--matches {
+  width: 84px;
+}
+
+.board__th--winrate {
+  width: 76px;
+}
+
+.board__th--points {
+  width: 72px;
+}
+
+.board__th--kda {
+  width: 140px;
+}
+
+.board__td {
+  overflow: hidden;
 }
 
 .board__th.is-sorted,
@@ -344,9 +396,16 @@ function goToPlayer (id: string) {
     padding-right: 5px;
   }
 
-  .board__th--pos,
-  .board__td--pos {
+  .board__th--pos {
     width: 34px;
+  }
+
+  .board__th--score {
+    width: 72px;
+  }
+
+  .board__th--winrate {
+    width: 64px;
   }
 
   .board__player {
