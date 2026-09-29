@@ -103,7 +103,9 @@
                   </el-avatar>
                   <span class="holders__name">
                     <span class="truncate">{{ displayName(holder) }}</span>
-                    <span v-if="holder.discordUsername" class="holders__handle">@{{ holder.discordUsername }}</span>
+                    <span v-if="holder.discordUsername" class="holders__handle truncate">
+                      @{{ holder.discordUsername }}
+                    </span>
                   </span>
                   <span class="holders__value">
                     {{ formatAchievementCaption(row.kind, holder.count, holder.value) }}
@@ -319,21 +321,37 @@ function initialOf (holder: TAnalyticsAchievementHolder): string {
 
 .achievement-card__avatars {
   display: inline-flex;
+  isolation: isolate;
 }
 
-/* Глобальний .el-avatar фіксує 56px і кільце — тут потрібні мініатюри в тоні трофею. */
+/*
+  Глобальний .el-avatar фіксує 56px і кільце — тут потрібні мініатюри в тоні трофею.
+  Роздільник між сусідами — внутрішня рамка кожної аватарки (не зовнішня тінь),
+  тож вона нічого не «відрізає» в сусіда; перша аватарка лежить зверху.
+*/
 .achievement-card__avatar {
   --el-avatar-bg-color: rgba(var(--tile-tone), 0.35);
 
-  width: 22px;
-  height: 22px;
-  margin-left: -8px;
-  box-shadow: 0 0 0 1px rgba(var(--tile-tone), 0.6), 0 0 0 3px var(--ds-surface);
-  font-size: 10px;
+  width: 24px;
+  height: 24px;
+  margin-left: -6px;
+  border: 2px solid var(--ds-surface);
+  box-shadow: 0 0 0 1px rgba(var(--tile-tone), 0.55);
+  font-size: 9px;
+  line-height: 1;
 }
 
-.achievement-card__avatar:first-child {
+.achievement-card__avatar:nth-child(1) {
+  z-index: 3;
   margin-left: 0;
+}
+
+.achievement-card__avatar:nth-child(2) {
+  z-index: 2;
+}
+
+.achievement-card__avatar:nth-child(3) {
+  z-index: 1;
 }
 
 .achievement-card__count {
@@ -359,11 +377,17 @@ function initialOf (holder: TAnalyticsAchievementHolder): string {
   color: rgb(var(--ds-pink-rgb));
 }
 
-/* Поповер: шапка в тоні трофею, список рядків-посилань на профіль. */
+/*
+  Поповер: шапка в тоні трофею, список рядків-посилань на профіль.
+  Глобальний .el-popover — flex-контейнер, тож колонка мусить сама забрати всю ширину,
+  інакше вона стискається до контенту, а скролбар списку «зависає» посеред поппера.
+*/
 .holders {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
+  min-width: 0;
 }
 
 .holders__head {
@@ -397,21 +421,40 @@ function initialOf (holder: TAnalyticsAchievementHolder): string {
   color: var(--ds-text-muted);
 }
 
+/* Тонкий скролбар у тоні трофею впритул до правого краю; без горизонтального скролу. */
 .holders__list {
   display: flex;
   flex-direction: column;
   gap: 2px;
   max-height: 280px;
-  margin: 0;
-  padding: 0;
+  margin: 0 -6px 0 0;
+  padding: 0 6px 0 0;
+  overflow-x: hidden;
   overflow-y: auto;
   list-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--tile-tone), 0.45) rgba(255, 255, 255, 0.05);
+}
+
+.holders__list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.holders__list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.holders__list::-webkit-scrollbar-thumb {
+  background: rgba(var(--tile-tone), 0.45);
+  border-radius: 4px;
 }
 
 .holders__row {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
   padding: 6px 8px;
   border-radius: 8px;
   color: inherit;
