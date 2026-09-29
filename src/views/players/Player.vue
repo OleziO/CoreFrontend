@@ -51,6 +51,13 @@
           :is-empty="achievementsEmpty"
         />
 
+        <!-- 1v1 Ліга: рейтинг дуелей, W/L і останні матчі — під досягненнями -->
+        <PlayerDuelStats
+          v-if="player"
+          :class="roleAccentClass"
+          :player-id="player.id"
+        />
+
         <!-- Локація + «Хочу грати» — на обох профілях, над улюбленими героями -->
         <PlayerPlayPreferences
           v-if="player"

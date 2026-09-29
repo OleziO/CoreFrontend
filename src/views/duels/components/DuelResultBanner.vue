@@ -51,7 +51,16 @@ const title = computed(() => {
 const meta = computed(() => {
   const reason = duelEndReasonLabel(props.duel)
   if (outcome.value === 'failed') return `${reason}. Адміністрація перегляне результат.`
-  if (outcome.value === 'cancelled') return reason || 'Рейтинг не змінився.'
+  if (outcome.value === 'cancelled') {
+    if (delta.value != null && delta.value < 0) {
+      return props.duel.cancelReason === 'accept_timeout'
+        ? `Ви не прийняли матч вчасно: ${formatDuelDelta(delta.value)} і коротка пауза перед наступною чергою.`
+        : `Ви скасували матч: ${formatDuelDelta(delta.value)}.`
+    }
+    if (props.duel.cancelReason === 'player_cancelled') return 'Суперник скасував матч. Ваш рейтинг не змінився.'
+    if (props.duel.cancelReason === 'accept_timeout') return 'Суперник не прийняв матч. Ваш рейтинг не змінився.'
+    return reason || 'Рейтинг не змінився.'
+  }
   if (outcome.value === 'loss' && props.duel.cancelReason === 'players_no_show') {
     return 'Неявка в лобі: −25 і коротка пауза перед наступною чергою.'
   }

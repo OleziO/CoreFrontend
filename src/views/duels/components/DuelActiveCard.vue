@@ -80,13 +80,38 @@
         </span>
       </li>
     </ul>
+
+    <!-- Скасування: гравець — зі штрафом −10 до старту гри; адмін — свій матч без штрафу -->
+    <div v-if="canCancel" class="active-card__actions">
+      <el-button
+        type="danger"
+        plain
+        :loading="cancelling"
+        :disabled="cancelling"
+        @click="confirmCancel"
+      >
+        <PhXCircle v-if="!cancelling" :size="16" weight="bold" class="mr-6" />
+        Скасувати матч (−{{ DUEL_CANCEL_PENALTY }})
+      </el-button>
+      <el-button
+        v-if="isAdmin"
+        plain
+        :loading="cancelling"
+        :disabled="cancelling"
+        @click="confirmAdminCancel"
+      >
+        <PhShieldCheck v-if="!cancelling" :size="16" weight="bold" class="mr-6" />
+        Скасувати без штрафу
+      </el-button>
+    </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { PhCheck, PhCopy, PhTimer } from '@phosphor-icons/vue'
-import { ElMessage } from 'element-plus'
+import { PhCheck, PhCopy, PhShieldCheck, PhTimer, PhXCircle } from '@phosphor-icons/vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
+  DUEL_CANCEL_PENALTY,
   duelOpponentOf,
   duelPlayerName,
   duelSideLabels,
@@ -94,20 +119,33 @@ import {
   duelStepIndex,
   duelSteps,
   formatDuelCountdown,
+  isDuelCancellable,
   secondsUntil
 } from '@/views/duels/duels.utils'
 import DuelPlayerTile from '@/views/duels/components/DuelPlayerTile.vue'
 import type { TDuel, TDuelLobbySide, TDuelPlayer } from '@/api/types/api.types'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   duel: TDuel
   meId: string | null
+  /** Адмін бачить кнопку скасування без штрафу. */
+  isAdmin?: boolean
+  cancelling?: boolean
+}>(), {
+  isAdmin: false,
+  cancelling: false
+})
+
+const emit = defineEmits<{
+  cancel: []
+  adminCancel: []
 }>()
 
 const now = useNow({ interval: 1000 })
 const { copy, isSupported } = useClipboard()
 
 const currentStep = computed(() => duelStepIndex(props.duel.state))
+const canCancel = computed(() => isDuelCancellable(props.duel))
 const joinLeft = computed(() => secondsUntil(props.duel.joinDeadlineAt, now.value))
 
 const me = computed<TDuelPlayer | null>(() => {
@@ -130,6 +168,32 @@ function nameOf (playerId: string): string {
   if (props.duel.player1?.id === playerId) return duelPlayerName(props.duel.player1)
   if (props.duel.player2?.id === playerId) return duelPlayerName(props.duel.player2)
   return 'Гравець'
+}
+
+async function confirmCancel () {
+  try {
+    await ElMessageBox.confirm(
+      'Ви втратите  очок рейтингу, а суперник автоматично повернеться в чергу.',
+      'Скасувати матч?',
+      { confirmButtonText: 'Скасувати матч', cancelButtonText: 'Залишитись', type: 'warning' }
+    )
+  } catch {
+    return
+  }
+  emit('cancel')
+}
+
+async function confirmAdminCancel () {
+  try {
+    await ElMessageBox.confirm(
+      'Матч буде скасовано без зміни рейтингу. Суперник повернеться в чергу.',
+      'Скасувати без штрафу?',
+      { confirmButtonText: 'Скасувати', cancelButtonText: 'Залишитись', type: 'info' }
+    )
+  } catch {
+    return
+  }
+  emit('adminCancel')
 }
 
 async function copyText (text: string) {
@@ -211,7 +275,7 @@ async function copyText (text: string) {
 
 .active-card__steps {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
   margin: 0;
   padding: 0;
@@ -379,5 +443,17 @@ async function copyText (text: string) {
 
 .active-card__presence-side.is-dire {
   color: #f87171;
+}
+
+.active-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.active-card__actions :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 </style>

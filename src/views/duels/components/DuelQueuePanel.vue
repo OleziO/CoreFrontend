@@ -51,6 +51,18 @@
       </el-button>
     </div>
 
+    <!-- Жоден бот не онлайн — черга закрита, навіть якщо бекенд ще не оновив canQueue -->
+    <div v-else-if="botsOffline" class="queue-panel__body">
+      <div class="queue-panel__blocked queue-panel__blocked--danger">
+        <PhWarningCircle :size="20" weight="duotone" class="shrink-0 text-error" />
+        <span>{{ duelQueueBlockedLabels.no_bots_online }}</span>
+      </div>
+      <el-button type="primary" size="large" class="w-full" disabled>
+        <PhSword :size="18" weight="fill" class="mr-8" />
+        Шукати суперника
+      </el-button>
+    </div>
+
     <!-- Може стати в чергу -->
     <div v-else-if="status?.canQueue" class="queue-panel__body">
       <p class="queue-panel__text">
@@ -107,6 +119,8 @@ const props = defineProps<{
   isError: boolean
   joining: boolean
   leaving: boolean
+  /** Жоден бот-хост не онлайн — кнопка черги вимкнена. */
+  botsOffline?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -228,6 +242,12 @@ const blockedText = computed(() => {
   font-size: 13px;
   line-height: 1.45;
   color: var(--ds-text);
+}
+
+.queue-panel__blocked--danger {
+  border-style: solid;
+  border-color: rgba(244, 63, 94, 0.45);
+  background: rgba(244, 63, 94, 0.08);
 }
 
 @media (prefers-reduced-motion: no-preference) {

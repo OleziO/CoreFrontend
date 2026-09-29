@@ -27,6 +27,17 @@
         </RouterLink>
       </header>
 
+      <!-- Стан пулу ботів: червоний і без черги, коли жоден не онлайн -->
+      <DuelBotsStatusStrip :bots="bots" :is-error="botsError" />
+
+      <!-- Знайдено пару — увесь екран стає зеленою кнопкою «Прийняти» -->
+      <DuelAcceptOverlay
+        :duel="status?.activeDuel ?? null"
+        :me-id="meId"
+        :accepting="accepting"
+        @accept="accept"
+      />
+
       <!-- ─── Main grid ────────────────────────────────────────────────── -->
       <div class="grid gap-16 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
         <!-- Ліва колонка: результат → активна дуель / черга -->
@@ -42,6 +53,10 @@
             v-if="status?.activeDuel"
             :duel="status.activeDuel"
             :me-id="meId"
+            :is-admin="authStore.isAdmin.isAdmin"
+            :cancelling="cancelling"
+            @cancel="cancel"
+            @admin-cancel="adminCancel"
           />
 
           <DuelQueuePanel
@@ -52,6 +67,7 @@
             :is-error="isError"
             :joining="joining"
             :leaving="leaving"
+            :bots-offline="botsOffline"
             @join="join"
             @leave="leave"
             @login="openLogin"
@@ -63,9 +79,11 @@
             <ol class="duels-how__list">
               <li>Станьте в чергу — потрібен прив’язаний Steam-акаунт.</li>
               <li>Знайдемо суперника з рейтингом ±50 (вікно росте, поки ви чекаєте).</li>
+              <li>Прийміть матч за 30 секунд. Хто не прийме — −{{ DUEL_CANCEL_PENALTY }} і пауза.</li>
               <li>Бот створить закрите лобі 1v1 Mid і надішле інвайт у Dota 2.</li>
               <li>Зайдіть у лобі за 5 хвилин і станьте на сторону — гра стартує сама.</li>
               <li>Результат зчитується з Dota автоматично: +25 переможцю, −25 переможеному.</li>
+              <li>Скасувати матч можна до старту гри — це коштує −{{ DUEL_CANCEL_PENALTY }}.</li>
             </ol>
           </section>
         </div>
@@ -118,15 +136,19 @@
 <script setup lang="ts">
 import { PhRanking } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
+import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-status'
 import { useDuelStatus } from '@/views/duels/composables/use-duel-status'
 import { useGetDuelLeaderboard, useGetDuelPlayerProfile } from '@/views/duels/duels.queries'
 import {
+  DUEL_CANCEL_PENALTY,
   DUEL_RESULT_BANNER_TTL_MS,
   formatDuelPercent,
   isWithinLast,
   pluralizeDuelPlayers
 } from '@/views/duels/duels.utils'
+import DuelAcceptOverlay from '@/views/duels/components/DuelAcceptOverlay.vue'
 import DuelActiveCard from '@/views/duels/components/DuelActiveCard.vue'
+import DuelBotsStatusStrip from '@/views/duels/components/DuelBotsStatusStrip.vue'
 import DuelHistoryList from '@/views/duels/components/DuelHistoryList.vue'
 import DuelLeaderboardTable from '@/views/duels/components/DuelLeaderboardTable.vue'
 import DuelQueuePanel from '@/views/duels/components/DuelQueuePanel.vue'
@@ -148,10 +170,17 @@ const {
   isLoggedIn,
   joining,
   leaving,
+  accepting,
+  cancelling,
   join,
   leave,
+  accept,
+  cancel,
+  adminCancel,
   invalidateDuelQueries
 } = useDuelStatus()
+
+const { bots, isError: botsError, isOffline: botsOffline } = useDuelBotsStatus()
 
 const { data: leaderboard, isPending: leaderboardPending, error: leaderboardError } = useGetDuelLeaderboard()
 const topRows = computed(() => (leaderboard.value?.players ?? []).slice(0, TOP_SIZE))

@@ -5,6 +5,7 @@ import type {
   TAdminResolveDuelDto,
   TCreateHostBotDto,
   TDuel,
+  TDuelBotsStatus,
   TDuelLeaderboard,
   TDuelPlayerProfile,
   TDuelRating,
@@ -44,7 +45,32 @@ class DuelsService {
     }
   }
 
+  /** Прийняти знайдений матч (стан ACCEPTING). */
+  async acceptDuel (id: string): Promise<TDuelStatus> {
+    try {
+      return await apiClient.post('/duels/{id}/accept', undefined, { dynamicKeys: { id } })
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося прийняти матч'))
+      throw e
+    }
+  }
+
+  /** Скасувати свою дуель до старту гри: −10 рейтингу, суперник повертається в чергу. */
+  async cancelDuel (id: string): Promise<TDuelStatus> {
+    try {
+      return await apiClient.post('/duels/{id}/cancel', undefined, { dynamicKeys: { id } })
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося скасувати дуель'))
+      throw e
+    }
+  }
+
   // ─── публічні ─────────────────────────────────────────────────────────────
+
+  /** Стан пулу ботів-хостів: скільки онлайн, вільних, зайнятих. */
+  async fetchBotsStatus (): Promise<TDuelBotsStatus> {
+    return await apiClient.get('/duels/bots/status')
+  }
 
   async fetchLeaderboard (): Promise<TDuelLeaderboard> {
     return await apiClient.get('/duels/leaderboard')

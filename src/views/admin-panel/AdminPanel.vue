@@ -66,9 +66,10 @@
 
 <script setup lang="ts">
 import { createHashedObject } from '@/core/helpers'
-import { PhCalendarCheck, PhArrowsClockwise } from '@phosphor-icons/vue'
+import { PhCalendarCheck, PhArrowsClockwise, PhSword } from '@phosphor-icons/vue'
 import VerificationTab from './components/tabs/VerificationTab.vue'
 import MmrRequestsTab from './components/tabs/MmrRequestsTab.vue'
+import DuelsTab from './components/tabs/DuelsTab.vue'
 // Tabs hidden for now — out of scope (verification feature only) / broken.
 // Restore the imports + entries below to re-enable.
 // import { PhTrophy, PhClipboardText, PhBug } from '@phosphor-icons/vue'
@@ -76,7 +77,7 @@ import MmrRequestsTab from './components/tabs/MmrRequestsTab.vue'
 // import RequestsDetails from './components/RequestsDetails.vue'
 // import BugsTab from './components/tabs/BugsTab.vue'
 
-type TAdminTabType = 'tournaments' | 'requests' | 'verification' | 'bugs' | 'mmr-requests'
+type TAdminTabType = 'tournaments' | 'requests' | 'verification' | 'bugs' | 'mmr-requests' | 'duels'
 
 const tabs: {
   value: TAdminTabType
@@ -98,6 +99,12 @@ const tabs: {
     label: 'Запити MMR',
     icon: PhArrowsClockwise,
     component: MmrRequestsTab
+  },
+  {
+    value: 'duels',
+    label: '1v1 дуелі',
+    icon: PhSword,
+    component: DuelsTab
   }
   // { value: 'bugs', label: 'Баги', icon: PhBug, component: BugsTab }
 ]

@@ -11,33 +11,125 @@
       <!-- ─── Head ─────────────────────────────────────────────────────── -->
       <header class="leaderboard-head">
         <div class="flex min-w-0 flex-col gap-6">
-          <span class="sys-label sys-label--gold">// Рейтинг платформи</span>
+          <span class="sys-label sys-label--gold">// {{ isDuelBoard ? 'Рейтинг 1v1' : 'Рейтинг платформи' }}</span>
           <h1 class="leaderboard-head__title">Таблиця лідерів</h1>
           <p class="leaderboard-head__subtitle">
-            Перемоги, п’єдестали, досягнення та турнірні очки — хто задає темп у лізі.
+            <template v-if="isDuelBoard">
+              Рейтингові дуелі Solo Mid: +25 за перемогу, −25 за поразку. Хто найкращий на міді.
+            </template>
+            <template v-else>
+              Перемоги, п’єдестали, досягнення та турнірні очки — хто задає темп у лізі.
+            </template>
           </p>
         </div>
 
         <div class="leaderboard-head__aside">
-          <span v-if="generatedAt" class="leaderboard-head__stamp">
+          <!-- Перемикач дошки: турнірний рейтинг ↔ 1v1 (`?board=1v1`) -->
+          <div class="board-switch" role="tablist" aria-label="Тип рейтингу">
+            <button
+              v-for="option in boardOptions"
+              :key="option.value"
+              type="button"
+              role="tab"
+              class="board-switch__tab"
+              :class="{ 'is-active': board === option.value }"
+              :aria-selected="board === option.value"
+              @click="setBoard(option.value)"
+            >
+              <component :is="option.icon" :size="14" weight="bold" class="shrink-0" />
+              {{ option.label }}
+            </button>
+          </div>
+
+          <span v-if="!isDuelBoard && generatedAt" class="leaderboard-head__stamp">
             <span class="leaderboard-head__dot" aria-hidden="true" />
             Оновлено о {{ generatedAt }}
           </span>
           <el-button
             class="leaderboard-head__refresh"
-            :loading="isLoading"
-            :disabled="isLoading"
+            :loading="isDuelBoard ? duelLoading : isLoading"
+            :disabled="isDuelBoard ? duelLoading : isLoading"
             aria-label="Оновити таблицю"
-            @click="refetch()"
+            @click="isDuelBoard ? duelRefetch() : refetch()"
           >
-            <PhArrowsClockwise v-if="!isLoading" :size="16" weight="bold" />
+            <PhArrowsClockwise v-if="!(isDuelBoard ? duelLoading : isLoading)" :size="16" weight="bold" />
             <span class="ml-6 hidden sm:inline">Оновити</span>
           </el-button>
         </div>
       </header>
 
+      <!-- ─── 1v1 board ────────────────────────────────────────────────── -->
+      <template v-if="isDuelBoard">
+        <DuelBotsStatusStrip :bots="bots" :is-error="botsError" />
+
+        <section v-if="duelError && !duelData" class="leaderboard-error neon-card hud-corners rounded-2xl">
+          <PhWarningOctagon :size="28" weight="duotone" class="text-pink-400" />
+          <div class="flex flex-col gap-4">
+            <span class="text-base font-semibold text-white">Не вдалося завантажити рейтинг 1v1</span>
+            <span class="text-sm text-gray-400">{{ duelErrorMessage }}</span>
+          </div>
+          <el-button type="primary" class="ml-auto" @click="duelRefetch()">
+            Спробувати ще раз
+          </el-button>
+        </section>
+
+        <span v-else-if="duelPending" class="skeleton-bone block h-[520px] !rounded-2xl" />
+
+        <section
+          v-else-if="duelData && !duelData.players.length"
+          class="leaderboard-empty neon-card hud-corners rounded-2xl"
+        >
+          <PhSword :size="40" weight="duotone" class="text-primary" />
+          <span class="text-base font-semibold text-white">Таблиця 1v1 ще порожня</span>
+          <span class="text-sm text-gray-400">Перші рядки з’являться після перших зіграних дуелей.</span>
+          <RouterLink :to="{ name: routeNames.duels }" class="no-underline">
+            <el-button type="primary" class="mt-8">Стати в чергу</el-button>
+          </RouterLink>
+        </section>
+
+        <section
+          v-else-if="duelData"
+          class="leaderboard-panel neon-card hud-corners rounded-2xl"
+          aria-labelledby="duel-table"
+        >
+          <header class="leaderboard-panel__head">
+            <div class="flex min-w-0 flex-col gap-4">
+              <h2 id="duel-table" class="sys-label sys-label--muted">// Рейтинг 1v1</h2>
+              <p class="leaderboard-panel__subtitle">
+                {{ pluralizeDuelPlayers(duelData.players.length) }} із зіграними дуелями
+                <template v-if="duelSearch.trim()"> · знайдено {{ duelRows.length }}</template>
+              </p>
+            </div>
+            <div class="leaderboard-toolbar">
+              <el-input
+                v-model="duelSearch"
+                class="leaderboard-toolbar__search"
+                placeholder="Пошук по ніку"
+                clearable
+                aria-label="Пошук гравця"
+              >
+                <template #prepend>
+                  <PhMagnifyingGlass :size="16" />
+                </template>
+              </el-input>
+              <RouterLink :to="{ name: routeNames.duels }" class="no-underline">
+                <el-button type="primary">
+                  <PhSword :size="16" weight="fill" />
+                  <span class="ml-6">Грати 1v1</span>
+                </el-button>
+              </RouterLink>
+            </div>
+          </header>
+
+          <DuelLeaderboardTable v-if="duelRows.length" :rows="duelRows" :highlight-id="authStore.user?.id ?? null" />
+          <p v-else class="leaderboard-panel__empty">
+            Нікого не знайдено за запитом «{{ duelSearch.trim() }}»
+          </p>
+        </section>
+      </template>
+
       <!-- ─── Error ────────────────────────────────────────────────────── -->
-      <section v-if="error && !data" class="leaderboard-error neon-card hud-corners rounded-2xl">
+      <section v-else-if="error && !data" class="leaderboard-error neon-card hud-corners rounded-2xl">
         <PhWarningOctagon :size="28" weight="duotone" class="text-pink-400" />
         <div class="flex flex-col gap-4">
           <span class="text-base font-semibold text-white">Не вдалося завантажити таблицю лідерів</span>
@@ -167,10 +259,18 @@ import {
   PhMagnifyingGlass,
   PhQuestion,
   PhSortDescending,
+  PhSword,
   PhTrophy,
   PhWarningOctagon
 } from '@phosphor-icons/vue'
+import { routeNames } from '@/router/route-names'
 import { useGetLeaderboard } from '@/views/leaderboard/leaderboard.queries'
+import { useGetDuelLeaderboard } from '@/views/duels/duels.queries'
+import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-status'
+import { duelPlayerName, pluralizeDuelPlayers } from '@/views/duels/duels.utils'
+import DuelBotsStatusStrip from '@/views/duels/components/DuelBotsStatusStrip.vue'
+import DuelLeaderboardTable from '@/views/duels/components/DuelLeaderboardTable.vue'
+import type { TDuelLeaderboardRow } from '@/api/types/api.types'
 import {
   DEFAULT_LEADERBOARD_SORT,
   describeLeaderboardWeights,
@@ -187,7 +287,51 @@ import LeaderboardTable from './components/LeaderboardTable.vue'
 const PODIUM_SIZE = 3
 
 const authStore = useAuthStore()
-const { data, error, isPending, isLoading, refetch } = useGetLeaderboard()
+const route = useRoute()
+const router = useRouter()
+
+// ─── Перемикач дошки: `?board=1v1` → дуелі, інакше турнірний рейтинг ───────
+const boardOptions: { value: TLeaderboardBoard; label: string; icon: Component }[] = [
+  { value: 'tournament', label: 'Турніри', icon: PhTrophy },
+  { value: '1v1', label: '1v1', icon: PhSword }
+]
+
+const board = computed<TLeaderboardBoard>(() => (route.query.board === '1v1' ? '1v1' : 'tournament'))
+const isDuelBoard = computed(() => board.value === '1v1')
+
+function setBoard (next: TLeaderboardBoard) {
+  if (next === board.value) return
+  const query = { ...route.query }
+  if (next === '1v1') query.board = '1v1'
+  else delete query.board
+  router.replace({ query }).catch(() => { /* тихо */ })
+}
+
+const { data, error, isPending, isLoading, refetch } = useGetLeaderboard(() => !isDuelBoard.value)
+
+// ─── 1v1 ──────────────────────────────────────────────────────────────────
+const {
+  data: duelData,
+  error: duelError,
+  isPending: duelPending,
+  isLoading: duelLoading,
+  refetch: duelRefetch
+} = useGetDuelLeaderboard(() => isDuelBoard.value)
+const { bots, isError: botsError } = useDuelBotsStatus()
+
+const duelSearch = ref('')
+const duelErrorMessage = computed(() =>
+  duelError.value ? getApiErrorMessage(duelError.value, 'Перевірте з’єднання та спробуйте ще раз') : ''
+)
+const duelRows = computed<TDuelLeaderboardRow[]>(() => {
+  const needle = duelSearch.value.trim().toLowerCase()
+  const rows = duelData.value?.players ?? []
+  if (!needle) return rows
+  return rows.filter((row) =>
+    duelPlayerName(row.player).toLowerCase().includes(needle) ||
+    (row.player.discordUsername ?? '').toLowerCase().includes(needle)
+  )
+})
 
 const search = ref('')
 const sortKey = ref<TLeaderboardSortKey>(DEFAULT_LEADERBOARD_SORT)
@@ -242,8 +386,47 @@ const formulaLines = computed(() => (data.value ? describeLeaderboardWeights(dat
 
 .leaderboard-head__aside {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
+}
+
+/* ─── Перемикач дошки ────────────────────────────────────────────────────── */
+.board-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--ds-primary-rgb), 0.18);
+  background: rgba(7, 8, 15, 0.55);
+}
+
+.board-switch__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ds-text-muted);
+  cursor: pointer;
+  transition: background-color var(--ds-duration-fast) ease, color var(--ds-duration-fast) ease;
+}
+
+.board-switch__tab:hover {
+  color: var(--ds-text-strong);
+}
+
+.board-switch__tab.is-active {
+  background: rgba(var(--ds-primary-rgb), 0.16);
+  color: var(--ds-primary);
+  box-shadow: inset 0 0 0 1px rgba(var(--ds-primary-rgb), 0.4);
 }
 
 .leaderboard-head__stamp {

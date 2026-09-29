@@ -88,6 +88,7 @@ export type TDuelFailReason = NonNullable<TDuel['failReason']>
 export type TDuelStatus = components['schemas']['DuelStatusDto']
 export type TDuelQueueBlockedReason = NonNullable<TDuelStatus['queueBlockedReason']>
 export type TDuelQueueState = components['schemas']['DuelQueueStateDto']
+export type TDuelBotsStatus = components['schemas']['DuelBotsStatusDto']
 export type TDuelRating = components['schemas']['DuelRatingDto']
 export type TDuelLeaderboard = components['schemas']['DuelLeaderboardDto']
 export type TDuelLeaderboardRow = components['schemas']['DuelLeaderboardRowDto']

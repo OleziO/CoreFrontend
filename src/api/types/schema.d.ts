@@ -1327,6 +1327,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/duels/bots/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Host bot pool status
+         * @description Public. How many host bots are enabled, online, free and busy right now.
+         */
+        get: operations["DuelsController_getBotsStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duels/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept a found match
+         * @description Participants only, while the duel is ACCEPTING. Once both accept the duel moves to PENDING. A player who does not accept in time gets −10 and a cooldown; the one who accepted is re-queued.
+         */
+        post: operations["DuelsController_accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duels/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel my duel
+         * @description Participants only, until the game is LIVE. The caller loses 10 rating points, the opponent is re-queued automatically.
+         */
+        post: operations["DuelsController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/duels/{id}": {
         parameters: {
             query?: never;
@@ -2599,7 +2659,7 @@ export interface components {
         DuelDto: {
             id: string;
             /** @enum {string} */
-            state: "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "RESOLVED" | "CANCELLED" | "FAILED";
+            state: "ACCEPTING" | "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "RESOLVED" | "CANCELLED" | "FAILED";
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -2613,6 +2673,13 @@ export interface components {
              * @description Both players must sit on a side before this moment (lobbyReadyAt + join timeout)
              */
             joinDeadlineAt: string | null;
+            /**
+             * Format: date-time
+             * @description Both players must accept before this moment (ACCEPTING only, 30 s after pairing)
+             */
+            acceptDeadlineAt: string | null;
+            /** @description Players who already pressed Accept */
+            acceptedPlayerIds: string[];
             player1: components["schemas"]["DuelPlayerDto"] | null;
             player2: components["schemas"]["DuelPlayerDto"] | null;
             /** @description Rating of player1 when they were paired */
@@ -2632,7 +2699,9 @@ export interface components {
             /** @description Points moved once the result was applied (25) */
             ratingDelta: number | null;
             /** @enum {string|null} */
-            cancelReason: "players_no_show" | "lobby_not_created" | "no_bots_available" | "admin" | null;
+            cancelReason: "players_no_show" | "lobby_not_created" | "no_bots_available" | "admin" | "accept_timeout" | "player_cancelled" | null;
+            /** @description Who cancelled the duel (player or admin); null for automatic cancels */
+            cancelledById: string | null;
             /** @enum {string|null} */
             failReason: "lobby_lost" | "game_timeout" | "undetermined_outcome" | null;
             adminReviewRequired: boolean;
@@ -2672,7 +2741,18 @@ export interface components {
             /** @description Whether POST /duels/queue would succeed right now */
             canQueue: boolean;
             /** @enum {string|null} */
-            queueBlockedReason: "steam_not_linked" | "cooldown" | "active_duel" | "already_queued" | null;
+            queueBlockedReason: "steam_not_linked" | "cooldown" | "active_duel" | "already_queued" | "no_bots_online" | null;
+            /** @description Host bot pool snapshot; queueing is blocked while `online` is 0 */
+            bots: components["schemas"]["DuelBotsStatusDto"];
+        };
+        /** @description Public host-bot pool summary shown next to the queue. */
+        DuelBotsStatusDto: {
+            /** @description Enabled, non-banned bots */
+            total: number;
+            /** @description Bots whose worker is alive (FREE + BUSY) */
+            online: number;
+            free: number;
+            busy: number;
         };
         DuelLeaderboardRowDto: {
             /** @description 1-based rank on the board */
@@ -4919,6 +4999,67 @@ export interface operations {
             };
         };
     };
+    DuelsController_getBotsStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelBotsStatusDto"];
+                };
+            };
+        };
+    };
+    DuelsController_accept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelStatusDto"];
+                };
+            };
+        };
+    };
+    DuelsController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelStatusDto"];
+                };
+            };
+        };
+    };
     DuelsAdminController_listBots: {
         parameters: {
             query?: never;
@@ -5033,7 +5174,7 @@ export interface operations {
     DuelsAdminController_list: {
         parameters: {
             query?: {
-                state?: "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "RESOLVED" | "CANCELLED" | "FAILED";
+                state?: "ACCEPTING" | "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "RESOLVED" | "CANCELLED" | "FAILED";
                 limit?: number;
             };
             header?: never;

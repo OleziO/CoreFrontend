@@ -13,14 +13,32 @@ import type {
 
 /** Скільки очок переходить за дуель (дзеркало `DUEL_RATING_DELTA` на бекенді). */
 export const DUEL_RATING_DELTA = 25
+/** Штраф за самостійне скасування дуелі чи неприйняття матчу (дзеркало `DUEL_CANCEL_PENALTY`). */
+export const DUEL_CANCEL_PENALTY = 10
+/** Скільки секунд дається на «Прийняти» після знаходження пари. */
+export const DUEL_ACCEPT_WINDOW_SECONDS = 30
+/** Полінг стану пулу ботів. */
+export const DUEL_BOTS_POLL_MS = 10_000
 /** Полінг статусу, поки гравець у черзі або в дуелі. */
 export const DUEL_STATUS_POLL_MS = 3000
+/** Полінг у стані ACCEPTING — щоб побачити прийняття суперника без затримки. */
+export const DUEL_ACCEPT_POLL_MS = 1500
 /** Банер результату показуємо ще стільки після завершення дуелі. */
 export const DUEL_RESULT_BANNER_TTL_MS = 10 * 60 * 1000
 
-export const DUEL_ACTIVE_STATES: readonly TDuelState[] = ['PENDING', 'LOBBY_CREATING', 'WAITING_PLAYERS', 'LIVE']
+export const DUEL_ACTIVE_STATES: readonly TDuelState[] = [
+  'ACCEPTING',
+  'PENDING',
+  'LOBBY_CREATING',
+  'WAITING_PLAYERS',
+  'LIVE'
+]
+
+/** Стани, у яких гравець ще може скасувати дуель сам (гра не запущена). */
+const DUEL_CANCELLABLE_STATES: readonly TDuelState[] = ['ACCEPTING', 'PENDING', 'LOBBY_CREATING', 'WAITING_PLAYERS']
 
 export const duelStateLabels: Record<TDuelState, string> = {
+  ACCEPTING: 'Прийміть матч',
   PENDING: 'Очікує бота',
   LOBBY_CREATING: 'Створюємо лобі',
   WAITING_PLAYERS: 'Чекаємо гравців',
@@ -32,7 +50,8 @@ export const duelStateLabels: Record<TDuelState, string> = {
 
 /** Кроки степпера активної дуелі — у порядку проходження. */
 export const duelSteps: readonly TDuelStep[] = [
-  { key: 'PENDING', label: 'Пара знайдена', hint: 'Чекаємо вільного бота-хоста' },
+  { key: 'ACCEPTING', label: 'Прийняття', hint: 'Обидва гравці мають прийняти матч за 30 секунд' },
+  { key: 'PENDING', label: 'Бот', hint: 'Чекаємо вільного бота-хоста' },
   { key: 'LOBBY_CREATING', label: 'Лобі', hint: 'Бот створює лобі та надсилає інвайти' },
   { key: 'WAITING_PLAYERS', label: 'Гравці', hint: 'Обидва мають зайти в лобі та обрати сторону' },
   { key: 'LIVE', label: 'Гра', hint: 'Матч запущено — результат зарахуємо автоматично' }
@@ -42,7 +61,9 @@ export const duelCancelReasonLabels: Record<TDuelCancelReason, string> = {
   players_no_show: 'Гравець не зайшов у лобі',
   lobby_not_created: 'Не вдалося створити лобі',
   no_bots_available: 'Не було вільного бота',
-  admin: 'Скасовано адміністратором'
+  admin: 'Скасовано адміністратором',
+  accept_timeout: 'Матч не прийнято вчасно',
+  player_cancelled: 'Скасовано гравцем'
 }
 
 export const duelFailReasonLabels: Record<TDuelFailReason, string> = {
@@ -55,7 +76,8 @@ export const duelQueueBlockedLabels: Record<TDuelQueueBlockedReason, string> = {
   steam_not_linked: 'Щоб грати 1v1, прив’яжіть Steam-акаунт у профілі',
   cooldown: 'Пауза після неявки — спробуйте трохи пізніше',
   active_duel: 'У вас уже є активна дуель',
-  already_queued: 'Ви вже в черзі'
+  already_queued: 'Ви вже в черзі',
+  no_bots_online: 'Жоден бот-хост зараз не онлайн — черга тимчасово закрита'
 }
 
 export const duelSideLabels: Record<TDuelLobbySide, string> = {
@@ -69,6 +91,15 @@ export const hostBotStatusLabels: Record<THostBotStatus, string> = {
   FREE: 'Вільний',
   BUSY: 'Зайнятий',
   BANNED: 'Забанений'
+}
+
+/** Дуель можна скасувати самому (−10), поки гра не запущена. */
+export function isDuelCancellable (duel: TDuel | null | undefined): boolean {
+  return !!duel && DUEL_CANCELLABLE_STATES.includes(duel.state)
+}
+
+export function hasAcceptedDuel (duel: TDuel, playerId: string | null | undefined): boolean {
+  return !!playerId && (duel.acceptedPlayerIds ?? []).includes(playerId)
 }
 
 export function isDuelActive (duel: TDuel | null | undefined): boolean {
@@ -98,6 +129,11 @@ export function duelOpponentOf (duel: TDuel, playerId: string | null | undefined
 export function duelOutcomeFor (duel: TDuel, playerId: string | null | undefined): TDuelOutcome {
   if (isDuelActive(duel)) return 'active'
   if (duel.state === 'FAILED') return 'failed'
+  // Скасування гравцем / неприйняття — «скасовано» з −10 у винного (дельта береться з loserId).
+  const penaltyCancel = duel.cancelReason === 'player_cancelled' || duel.cancelReason === 'accept_timeout'
+  if (duel.state === 'CANCELLED' && penaltyCancel) {
+    return 'cancelled'
+  }
   // Скасована дуель із неявкою все ж рухає рейтинг: у присутнього — нічого, у відсутнього −25.
   if (playerId && duel.winnerId === playerId) return 'win'
   if (playerId && duel.loserId === playerId) return 'loss'

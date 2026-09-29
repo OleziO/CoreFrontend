@@ -1,9 +1,10 @@
 import { useQueryWrapper } from '@/core/use-query.utils'
 import { duelsService } from '@/views/duels/duels.service'
-import type { TDuelLeaderboard, TDuelPlayerProfile, TDuelStatus } from '@/api/types/api.types'
+import type { TDuelBotsStatus, TDuelLeaderboard, TDuelPlayerProfile, TDuelStatus } from '@/api/types/api.types'
 
 export const DUEL_STATUS_QUERY_KEY = ['duels', 'me'] as const
 export const DUEL_LEADERBOARD_QUERY_KEY = ['duels', 'leaderboard'] as const
+export const DUEL_BOTS_STATUS_QUERY_KEY = ['duels', 'bots'] as const
 export const duelPlayerProfileQueryKey = (playerId: string) => ['duels', 'players', playerId] as const
 
 /** Мій 1v1 статус (GET /duels/me). Запит вимкнено без токена — ендпоінт лише для авторизованих. */
@@ -39,4 +40,15 @@ export const useGetDuelPlayerProfile = (getPlayerId: () => string | null | undef
     refetchOnWindowFocus: false,
     staleTime: 30_000
   }, null)
+}
+
+/** Стан пулу ботів (GET /duels/bots/status) — публічний; полінг робить `useDuelBotsStatus`. */
+export const useGetDuelBotsStatus = (enabled: () => boolean = () => true) => {
+  return useQueryWrapper<TDuelBotsStatus>({
+    key: [...DUEL_BOTS_STATUS_QUERY_KEY],
+    query: () => duelsService.fetchBotsStatus(),
+    enabled,
+    refetchOnWindowFocus: true,
+    staleTime: 5_000
+  })
 }
