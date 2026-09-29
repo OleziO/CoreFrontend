@@ -256,6 +256,99 @@
       </section>
     </div>
 
+    <!-- ─── Матчі ────────────────────────────────────────────────────────── -->
+    <div v-if="activeTab === 'matches'" class="admin__stack">
+      <section class="admin-panel hud-panel rounded-2xl" aria-label="Матчі без ID Dota 2">
+        <header class="admin-panel__head admin-panel__head--split">
+          <div class="flex min-w-0 flex-col gap-6">
+            <p class="sys-label m-0">// Матчі</p>
+            <h3 class="admin-panel__title">Результати без ID Dota 2</h3>
+            <p class="admin-panel__hint">
+              Матчі, зараховані вручну (техпоразка або ручне внесення). Прив'яжіть справжній ID
+              зіграного матчу, щоб система підтягнула статистику гравців. Переможець і очки не змінюються.
+            </p>
+          </div>
+
+          <el-button plain :loading="manualMatchesLoading" @click="loadManualMatches">
+            <span class="inline-flex items-center gap-8">
+              <PhArrowsClockwise v-if="!manualMatchesLoading" :size="14" weight="bold" aria-hidden="true" />
+              Оновити
+            </span>
+          </el-button>
+        </header>
+
+        <el-table
+          v-loading="manualMatchesLoading"
+          :data="manualMatches"
+          row-key="matchId"
+          class="admin-table"
+          max-height="480"
+          empty-text="Усі результати мають ID Dota 2"
+        >
+          <el-table-column label="Етап" width="150">
+            <template #default="{ row }">
+              <span class="admin-stage" :class="{ 'is-playoff': row.stage === 'playoff' }">
+                {{ manualMatchStageLabel(row) }}
+              </span>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="Матч" min-width="280">
+            <template #default="{ row }">
+              <span class="admin-match">
+                <span class="admin-match__team" :class="{ 'is-winner': row.winnerTeamId === row.teamA.id }">
+                  <span class="admin-team__thumb admin-team__thumb--sm">
+                    <img v-if="teamLogo(row.teamA)" :src="teamLogo(row.teamA)" alt="" loading="lazy" decoding="async">
+                    <PhUsersThree v-else :size="12" weight="duotone" />
+                  </span>
+                  <span class="admin-table__name">{{ row.teamA.name }}</span>
+                  <PhTrophy
+                    v-if="row.winnerTeamId === row.teamA.id"
+                    :size="12"
+                    weight="fill"
+                    class="admin-match__trophy"
+                    aria-label="Переможець"
+                  />
+                </span>
+                <span class="admin-match__vs" aria-hidden="true">vs</span>
+                <span class="admin-match__team" :class="{ 'is-winner': row.winnerTeamId === row.teamB.id }">
+                  <span class="admin-team__thumb admin-team__thumb--sm">
+                    <img v-if="teamLogo(row.teamB)" :src="teamLogo(row.teamB)" alt="" loading="lazy" decoding="async">
+                    <PhUsersThree v-else :size="12" weight="duotone" />
+                  </span>
+                  <span class="admin-table__name">{{ row.teamB.name }}</span>
+                  <PhTrophy
+                    v-if="row.winnerTeamId === row.teamB.id"
+                    :size="12"
+                    weight="fill"
+                    class="admin-match__trophy"
+                    aria-label="Переможець"
+                  />
+                </span>
+              </span>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="Джерело" width="140">
+            <template #default="{ row }">
+              <span class="admin-table__amount">{{ manualMatchSourceLabel(row) }}</span>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="" width="170" align="right">
+            <template #default="{ row }">
+              <el-button type="primary" size="small" plain @click="openLinkDotaMatchId(row)">
+                <span class="inline-flex items-center gap-6">
+                  <PhLinkSimple :size="14" weight="bold" aria-hidden="true" />
+                  Прив'язати ID
+                </span>
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </section>
+    </div>
+
     <!-- ─── Плей-оф ──────────────────────────────────────────────────────── -->
     <div v-if="activeTab === 'playoff'" class="admin__stack">
       <section v-if="playoffLoading" class="admin-panel hud-panel rounded-2xl" aria-busy="true">
@@ -436,9 +529,11 @@ import {
   PhCheck,
   PhCoins,
   PhLightning,
+  PhLinkSimple,
   PhPencilSimple,
   PhPlus,
   PhTrash,
+  PhTrophy,
   PhUserMinus,
   PhUsersThree
 } from '@phosphor-icons/vue'
@@ -480,6 +575,7 @@ const eligibleTeams = computed(() => {
 const tabs = [
   { value: 'status', label: 'Огляд' },
   { value: 'participants', label: 'Команди та внески' },
+  { value: 'matches', label: 'Матчі' },
   { value: 'playoff', label: 'Плей-оф' }
 ]
 
@@ -675,8 +771,59 @@ watch(activeTab, (tab) => {
     loadTeams()
     loadPaymentsData()
   }
+  if (tab === 'matches') loadManualMatches()
   if (tab === 'playoff') loadPlayoffData()
 })
+
+// ─── Матчі без ID Dota 2 ────────────────────────────────────────────────────
+const { open: openAppModal } = useAppModals()
+const manualMatches = ref<TManualMatch[]>([])
+const manualMatchesLoading = ref(false)
+
+async function loadManualMatches () {
+  const id = props.tournament?.id
+  if (!id || manualMatchesLoading.value) return
+  manualMatchesLoading.value = true
+  try {
+    manualMatches.value = await tournamentsService.fetchManualMatches(id)
+  } catch (e: unknown) {
+    ElMessage.error(friendlyPlayoffError(e, 'Не вдалося завантажити матчі'))
+  } finally {
+    manualMatchesLoading.value = false
+  }
+}
+
+const FINAL_TYPE_LABELS: Record<string, string> = {
+  upper_bracket_final: 'Фінал верхньої',
+  lower_bracket_final: 'Фінал нижньої',
+  grand_final: 'Гранд-фінал'
+}
+
+function manualMatchStageLabel (m: TManualMatch): string {
+  if (m.stage === 'qualification') return 'Кваліфікація'
+  const base = (m.finalType && FINAL_TYPE_LABELS[m.finalType]) || 'Плей-оф'
+  return (m.bestOf ?? 1) > 1 && m.gameNumber ? `${base} · гра ${m.gameNumber}` : base
+}
+
+function manualMatchSourceLabel (m: TManualMatch): string {
+  const id = m.dotaMatchId ?? ''
+  if (id.startsWith('tech_loss_')) return 'Техпоразка'
+  if (id.startsWith('manual_')) return 'Вручну'
+  return id ? 'Тестовий' : 'Без ID'
+}
+
+function openLinkDotaMatchId (match: TManualMatch) {
+  const id = props.tournament?.id
+  if (!id) return
+  openAppModal('LinkDotaMatchIdModal', {
+    tournamentId: id,
+    match,
+    onLinked: (result: TLinkManualMatchResult) => {
+      manualMatches.value = manualMatches.value.filter((m) => m.matchId !== result.matchId)
+      emit('refresh')
+    }
+  })
+}
 
 const payments = ref<TTournamentPaymentSummary[]>([])
 const markPaidLoadingId = ref<string | null>(null)
@@ -1206,6 +1353,54 @@ async function deleteTournament () {
   letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;
   color: var(--ds-text-faint);
+}
+
+// Етап матчу з ручним результатом: кваліфікація — приглушений чіп, плей-оф — ціановий.
+.admin-stage {
+  @apply inline-flex items-center whitespace-nowrap rounded-md px-6 py-3;
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ds-text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+
+  &.is-playoff {
+    color: var(--ds-primary);
+    background: rgba(var(--ds-primary-rgb), 0.08);
+    box-shadow: inset 0 0 0 1px rgba(var(--ds-primary-rgb), 0.3);
+  }
+}
+
+// Пара команд у рядку: переможець підсвічений трофеєм, той, хто програв, — приглушений.
+.admin-match {
+  @apply inline-flex min-w-0 flex-wrap items-center gap-x-10 gap-y-4;
+}
+
+.admin-match__team {
+  @apply inline-flex min-w-0 items-center gap-8;
+
+  &:not(.is-winner) .admin-table__name {
+    color: var(--ds-text-muted);
+    font-weight: 500;
+  }
+}
+
+.admin-match__trophy {
+  flex: none;
+  color: var(--ds-primary);
+  filter: drop-shadow(0 0 4px rgba(var(--ds-primary-rgb), 0.5));
+}
+
+.admin-match__vs {
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(var(--ds-primary-rgb), 0.55);
 }
 
 // Дискваліфікація — тиха текстова дія: вісім червоних рамок у стовпці кричали б голосніше за дані.

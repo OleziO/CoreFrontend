@@ -64,3 +64,43 @@ type TTournamentDonationIntent = {
   amount: number
   pageUrl: string | null
 }
+
+// Матч, результат якого внесено вручну (техпоразка / ручне внесення): переможець є,
+// а справжнього числового dotaMatchId немає (null, `tech_loss_*`, `manual_*`).
+// GET /tournaments/:id/manual-matches; ендпоінт ще відсутній у згенерованій схемі.
+type TManualMatchStage = 'qualification' | 'playoff'
+type TManualMatchTeam = {
+  id: string
+  name: string
+  logoUrl: string | null
+}
+type TManualMatch = {
+  stage: TManualMatchStage
+  matchId: string
+  teamA: TManualMatchTeam
+  teamB: TManualMatchTeam
+  winnerTeamId: string
+  dotaMatchId: string | null
+  /** Лише плей-оф: номер гри в серії. */
+  gameNumber: number | null
+  /** Лише плей-оф: довжина серії (1 / 3 / 5). */
+  bestOf: number | null
+  /** Лише плей-оф: тип фіналу для фінальних слотів. */
+  finalType: 'upper_bracket_final' | 'lower_bracket_final' | 'grand_final' | string | null
+}
+
+// POST /tournaments/:id/manual-matches/link — прив'язати справжній ID Dota-матчу.
+type TLinkManualMatchPayload = {
+  stage: TManualMatchStage
+  matchId: string
+  dotaMatchId: string
+}
+type TLinkManualMatchResult = {
+  stage: TManualMatchStage
+  matchId: string
+  dotaMatchId: string
+  /** true, якщо команди вдалося розпізнати в OpenDota і переможець збігся. */
+  winnerVerified: boolean
+  /** Скільки рядків статистики гравців записано. */
+  participantsRecorded: number
+}

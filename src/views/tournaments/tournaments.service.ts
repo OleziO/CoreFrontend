@@ -195,6 +195,28 @@ class TournamentsService {
   }
 
   /**
+   * GET /tournaments/:id/manual-matches — матчі з ручним результатом без справжнього
+   * ID Dota 2 (адмін). Ендпоінт ще відсутній у згенерованій схемі, тож викликаємо
+   * через нетипізований клієнт.
+   */
+  async fetchManualMatches (tournamentId: string): Promise<TManualMatch[]> {
+    const rawGet = apiClient.get as unknown as (url: string) => Promise<unknown>
+    return await rawGet(`/tournaments/${tournamentId}/manual-matches`) as TManualMatch[]
+  }
+
+  /**
+   * POST /tournaments/:id/manual-matches/link — прив'язати справжній ID Dota-матчу до
+   * матчу з ручним результатом: бек підтягне статистику гравців, очки й сітку не чіпає.
+   */
+  async linkManualMatchDotaId (
+    tournamentId: string,
+    payload: TLinkManualMatchPayload
+  ): Promise<TLinkManualMatchResult> {
+    const rawPost = apiClient.post as unknown as (url: string, data?: unknown) => Promise<unknown>
+    return await rawPost(`/tournaments/${tournamentId}/manual-matches/link`, payload) as TLinkManualMatchResult
+  }
+
+  /**
    * GET /tournaments/:id/playoff — публічний перегляд сітки.
    * 404, якщо плей-оф ще не стартовано → повертаємо null.
    */

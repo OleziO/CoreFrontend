@@ -26,6 +26,8 @@ export const appModals = useModals({
     defineAsyncComponent(() => import('@/views/tournaments/modals/TechLossQualificationModal.vue')) as Component,
   TechLossPlayoffModal:
     defineAsyncComponent(() => import('@/views/tournaments/modals/TechLossPlayoffModal.vue')) as Component,
+  LinkDotaMatchIdModal:
+    defineAsyncComponent(() => import('@/views/tournaments/modals/LinkDotaMatchIdModal.vue')) as Component,
   EditOperationModal:
     defineAsyncComponent(() => import('@/views/finance-monitor/modals/EditOperationModal.vue')) as Component,
   EditGroupModal:
