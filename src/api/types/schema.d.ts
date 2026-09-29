@@ -957,6 +957,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/analytics/achievements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Platform trophy board
+         * @description Every achievement kind the platform awards with the players holding it, best holder first. Kinds nobody has earned yet come back with an empty holder list. Same crediting rules as GET /players/:id/achievements.
+         */
+        get: operations["AnalyticsController_getAchievements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/matches/{matchId}/result": {
         parameters: {
             query?: never;
@@ -1299,6 +1319,25 @@ export interface components {
             wantToPlay: components["schemas"]["WantToPlayDto"];
             /** @description Sorted by players, descending. */
             cities: components["schemas"]["CityBucketDto"][];
+        };
+        PlatformAchievementHolderDto: {
+            playerId: string;
+            discordName?: string | null;
+            discordUsername?: string | null;
+            avatarUrl?: string | null;
+            /** @description Times earned: tournaments for placements, 1 for platform records */
+            count: number;
+            /** @description The record value behind a platform trophy (maps or rating); null for placements */
+            value?: number | null;
+        };
+        PlatformAchievementDto: {
+            kind: components["schemas"]["PlayerAchievementKind"];
+            holders: components["schemas"]["PlatformAchievementHolderDto"][];
+        };
+        PlatformAchievementsDto: {
+            /** @description ISO timestamp the board was built at. */
+            generatedAt: string;
+            achievements: components["schemas"]["PlatformAchievementDto"][];
         };
         UpdateSocialFollowersDto: {
             /**
@@ -2186,7 +2225,7 @@ export interface components {
             name: string;
         };
         /** @enum {string} */
-        PlayerAchievementKind: "TOURNAMENT_FIRST_PLACE" | "TOURNAMENT_SECOND_PLACE" | "TOURNAMENT_THIRD_PLACE" | "MOST_MATCHES_PLAYED" | "MOST_MATCHES_WON" | "MOST_MATCHES_LOST" | "HIGHEST_RATING";
+        PlayerAchievementKind: "TOURNAMENT_FIRST_PLACE" | "TOURNAMENT_SECOND_PLACE" | "TOURNAMENT_THIRD_PLACE" | "FLAWLESS_CHAMPION" | "LOWER_BRACKET_CHAMPION" | "PERFECT_QUALIFICATION" | "MOST_MATCHES_PLAYED" | "MOST_MATCHES_WON" | "MOST_MATCHES_LOST" | "BEST_WINRATE" | "HIGHEST_RATING" | "MOST_TOURNAMENT_POINTS" | "MOST_KILLS" | "MOST_ASSISTS" | "MOST_DEATHS" | "FIRST_MATCH" | "MAPS_25" | "MAPS_100" | "TOURNAMENTS_5" | "WIN_STREAK_5" | "WIN_STREAK_10" | "KILLS_20_IN_MAP" | "ASSISTS_25_IN_MAP" | "DEATHLESS_WIN" | "HERO_LOYALIST" | "HERO_COLLECTOR" | "RADIANT_CHILD" | "DIRE_DEVOTEE" | "TEAM_CAPTAIN" | "VERIFIED_PLAYER" | "FULLY_CONNECTED" | "LAN_READY" | "PATRON" | "SQUAD_SOCIALITE" | "FEEDER_15_DEATHS" | "LOSS_STREAK_5";
         PlayerAchievementDto: {
             kind: components["schemas"]["PlayerAchievementKind"];
             /** @description How many times the trophy was earned: tournaments for placements, 1 for platform records */
@@ -2235,6 +2274,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AnalyticsOverviewDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_getAchievements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAchievementsDto"];
                 };
             };
         };

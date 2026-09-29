@@ -8,6 +8,11 @@ class AnalyticsService {
     return await apiClient.get('/admin/analytics/overview')
   }
 
+  /** Дошка трофеїв: усі види досягнень платформи з гравцями, які їх здобули. */
+  async fetchAchievements () {
+    return await apiClient.get('/admin/analytics/achievements')
+  }
+
   /**
    * Ручне значення підписників для каналу без публічного API (Instagram, TikTok).
    * Живе значення з платформи, якщо воно є, все одно має пріоритет — бекенд повертає

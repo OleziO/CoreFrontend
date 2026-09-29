@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AgeGate: typeof import('./components/AgeGate.vue')['default']
+    AnalyticsAchievements: typeof import('./views/analytics/components/AnalyticsAchievements.vue')['default']
     AnalyticsBarList: typeof import('./views/analytics/components/AnalyticsBarList.vue')['default']
     AnalyticsColumnChart: typeof import('./views/analytics/components/AnalyticsColumnChart.vue')['default']
     AnalyticsPanel: typeof import('./views/analytics/components/AnalyticsPanel.vue')['default']

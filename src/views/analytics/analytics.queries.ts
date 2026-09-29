@@ -12,3 +12,15 @@ export const useGetAnalyticsOverview = () => {
     staleTime: 60_000
   })
 }
+
+export const ANALYTICS_ACHIEVEMENTS_QUERY_KEY = ['admin', 'analytics', 'achievements'] as const
+
+export const useGetAnalyticsAchievements = () => {
+  return useQueryWrapper({
+    key: [...ANALYTICS_ACHIEVEMENTS_QUERY_KEY],
+    query: () => analyticsService.fetchAchievements(),
+    refetchOnWindowFocus: false,
+    // Трофеї змінюються лише після результатів матчів / фіналів.
+    staleTime: 60_000
+  })
+}

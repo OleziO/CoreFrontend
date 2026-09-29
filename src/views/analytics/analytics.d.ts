@@ -12,6 +12,11 @@ type TAnalyticsTournament = TAnalyticsOverview['tournaments'][number]
 type TAnalyticsWantToPlay = TAnalyticsOverview['wantToPlay']
 type TAnalyticsCity = TAnalyticsOverview['cities'][number]
 
+/** Дошка трофеїв (GET /admin/analytics/achievements): кожен вид досягнення з його володарями. */
+type TAnalyticsAchievements = TResponse<'/admin/analytics/achievements', 'get'>
+type TAnalyticsAchievement = TAnalyticsAchievements['achievements'][number]
+type TAnalyticsAchievementHolder = TAnalyticsAchievement['holders'][number]
+
 /** Один стовпчик / смужка на графіку: підпис, значення, опційно картинка та колір. */
 type TAnalyticsChartItem = {
   key: string

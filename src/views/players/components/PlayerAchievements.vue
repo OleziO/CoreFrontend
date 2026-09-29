@@ -93,13 +93,14 @@
           </div>
 
           <span
-            class="max-w-full truncate text-center font-display text-[11px] uppercase tracking-wide text-white"
+            class="line-clamp-2 max-w-full text-center font-display text-[11px] uppercase leading-tight tracking-wide
+              text-white"
             :title="row.label"
           >
             {{ row.label }}
           </span>
 
-          <span class="font-mono text-[10px] tabular-nums text-white/50">
+          <span class="text-center font-mono text-[10px] tabular-nums text-white/50">
             {{ row.caption }}
           </span>
         </div>
@@ -109,18 +110,14 @@
 </template>
 
 <script setup lang="ts">
-import type { Component } from 'vue'
+import { PhQuestion } from '@phosphor-icons/vue'
+import type { TPlayerAchievement } from '@/api/types/api.types'
 import {
-  PhChartLineUp,
-  PhCrown,
-  PhMedal,
-  PhMedalMilitary,
-  PhQuestion,
-  PhSmileyXEyes,
-  PhSword,
-  PhTrophy
-} from '@phosphor-icons/vue'
-import type { TPlayerAchievement, TPlayerAchievementKind } from '@/api/types/api.types'
+  achievementCatalog,
+  achievementKindOrder,
+  formatAchievementCaption,
+  isPlacementAchievement
+} from '@/views/players/player-achievements.utils'
 
 interface IProps {
   achievements: TPlayerAchievement[]
@@ -134,93 +131,13 @@ const props = withDefaults(defineProps<IProps>(), {
   skeletonCount: 4
 })
 
-interface IAchievementMeta {
-  label: string
-  description: string
-  icon: Component
-  /** `r, g, b` для `--tile-tone` — колір обводки, кільця та світіння плитки. */
-  tone: string
-  /** Підпис до значення рекорду; місця показують кількість турнірів. */
-  caption?: (value: number) => string
-  /** Жартівливий трофей — приглушена палітра замість урочистої. */
-  gloomy?: boolean
-}
-
-/** Український відмінок: «1 матч», «2 матчі», «5 матчів» (форми: одн., 2–4, 5+). */
-function pluralizeUk (n: number, one: string, few: string, many: string): string {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return `${n} ${one}`
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${n} ${few}`
-  return `${n} ${many}`
-}
-
-const pluralizeMatches = (n: number) => pluralizeUk(n, 'матч', 'матчі', 'матчів')
-const pluralizeTournaments = (n: number) => pluralizeUk(n, 'турнір', 'турніри', 'турнірів')
-
-/** Каталог трофеїв: відображення `kind` з беку у підпис, іконку та тон. */
-const achievementCatalog: Record<TPlayerAchievementKind, IAchievementMeta> = {
-  TOURNAMENT_FIRST_PLACE: {
-    label: 'Чемпіон',
-    description: '1-е місце в турнірі платформи',
-    icon: PhTrophy,
-    tone: 'var(--ds-gold-rgb)'
-  },
-  TOURNAMENT_SECOND_PLACE: {
-    label: 'Срібло',
-    description: '2-е місце в турнірі платформи',
-    icon: PhMedal,
-    tone: '198, 205, 220'
-  },
-  TOURNAMENT_THIRD_PLACE: {
-    label: 'Бронза',
-    description: '3-є місце в турнірі платформи',
-    icon: PhMedalMilitary,
-    tone: '205, 127, 50'
-  },
-  MOST_MATCHES_PLAYED: {
-    label: 'Ветеран',
-    description: 'Найбільше зіграних матчів на платформі',
-    icon: PhSword,
-    tone: 'var(--ds-primary-rgb)',
-    caption: pluralizeMatches
-  },
-  MOST_MATCHES_WON: {
-    label: 'Домінатор',
-    description: 'Найбільше перемог на платформі',
-    icon: PhCrown,
-    tone: '34, 197, 94',
-    caption: (n) => `${pluralizeMatches(n)} виграно`
-  },
-  MOST_MATCHES_LOST: {
-    label: 'Досвід через біль',
-    description: 'Найбільше поразок на платформі. Зате який досвід!',
-    icon: PhSmileyXEyes,
-    tone: '239, 68, 68',
-    caption: (n) => `${pluralizeMatches(n)} програно`,
-    gloomy: true
-  },
-  HIGHEST_RATING: {
-    label: 'Вершина рейтингу',
-    description: 'Найвищий MMR серед верифікованих гравців',
-    icon: PhChartLineUp,
-    tone: 'var(--ds-pink-rgb)',
-    caption: (n) => `${n} MMR`
-  }
-}
-
 /** Порядок як у каталозі: спочатку п'єдестал, потім рекорди. Невідомі `kind` з беку пропускаємо. */
 const rows = computed(() => {
-  const order = Object.keys(achievementCatalog) as TPlayerAchievementKind[]
   return props.achievements
     .filter((a) => a.kind in achievementCatalog)
-    .sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind))
+    .sort((a, b) => achievementKindOrder.indexOf(a.kind) - achievementKindOrder.indexOf(b.kind))
     .map((a) => {
       const meta = achievementCatalog[a.kind]
-      const isPlacement = a.tournaments.length > 0
-      const caption = isPlacement
-        ? pluralizeTournaments(a.count)
-        : (meta.caption && a.value != null ? meta.caption(a.value) : '')
       return {
         kind: a.kind,
         label: meta.label,
@@ -228,8 +145,8 @@ const rows = computed(() => {
         icon: meta.icon,
         tone: meta.tone,
         gloomy: meta.gloomy ?? false,
-        badge: isPlacement && a.count > 1 ? `×${a.count}` : '',
-        caption,
+        badge: isPlacementAchievement(a.kind) && a.count > 1 ? `×${a.count}` : '',
+        caption: formatAchievementCaption(a.kind, a.count, a.value),
         tournaments: a.tournaments
       }
     })

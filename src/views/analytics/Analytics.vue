@@ -189,6 +189,26 @@
             empty-text="Ніхто ще не вказав місто"
           />
         </AnalyticsPanel>
+
+        <!-- 08 · Досягнення -->
+        <AnalyticsPanel
+          code="// 08 · Досягнення"
+          title="Дошка трофеїв"
+          subtitle="Усі досягнення платформи — наведіть на трофей, щоб побачити, хто його здобув"
+          :delay="780"
+        >
+          <template #aside>
+            <span v-if="achievementHoldersTotal" class="analytics-chip">
+              <PhTrophy :size="12" weight="fill" />
+              {{ pluralizePlayers(achievementHoldersTotal) }} з трофеями
+            </span>
+          </template>
+          <AnalyticsAchievements
+            :achievements="achievementsData?.achievements ?? []"
+            :is-pending="achievementsPending"
+            :is-error="!!achievementsError && !achievementsData"
+          />
+        </AnalyticsPanel>
       </template>
     </div>
   </div>
@@ -207,7 +227,8 @@ import {
   PhUsersThree,
   PhWarningOctagon
 } from '@phosphor-icons/vue'
-import { useGetAnalyticsOverview } from '@/views/analytics/analytics.queries'
+import { useGetAnalyticsAchievements, useGetAnalyticsOverview } from '@/views/analytics/analytics.queries'
+import { pluralizePlayers } from '@/views/players/player-achievements.utils'
 import {
   ANALYTICS_RANK_RAMP,
   ANALYTICS_SERIES,
@@ -224,11 +245,32 @@ import AnalyticsSocialCard from './components/AnalyticsSocialCard.vue'
 import AnalyticsColumnChart from './components/AnalyticsColumnChart.vue'
 import AnalyticsBarList from './components/AnalyticsBarList.vue'
 import AnalyticsStackedBar from './components/AnalyticsStackedBar.vue'
+import AnalyticsAchievements from './components/AnalyticsAchievements.vue'
 
 const TOURNAMENTS_LIMIT = 12
 const CITIES_LIMIT = 10
 
-const { data, error, isPending, isLoading, refetch } = useGetAnalyticsOverview()
+const { data, error, isPending, isLoading, refetch: refetchOverview } = useGetAnalyticsOverview()
+const {
+  data: achievementsData,
+  error: achievementsError,
+  isPending: achievementsPending,
+  refetch: refetchAchievements
+} = useGetAnalyticsAchievements()
+
+/** Кнопка «Оновити» та повтор після помилки перечитують обидва запити дошки. */
+function refetch () {
+  return Promise.all([refetchOverview(), refetchAchievements()])
+}
+
+// ─── 08 · Досягнення ────────────────────────────────────────────────────────
+const achievementHoldersTotal = computed(() => {
+  const ids = new Set<string>()
+  for (const a of achievementsData.value?.achievements ?? []) {
+    for (const h of a.holders) ids.add(h.playerId)
+  }
+  return ids.size
+})
 
 const generatedAt = computed(() => formatAnalyticsTime(data.value?.generatedAt))
 const errorMessage = computed(() =>
