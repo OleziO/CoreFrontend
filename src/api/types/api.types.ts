@@ -46,6 +46,10 @@ export type TCitiesResponse = components['schemas']['CitiesResponseDto']
 export type TLanRoleSyncReport = components['schemas']['LanRoleSyncReportDto']
 /** Відповідь GET /players/:id/match-stats — зіграні мапи гравця у турнірах платформи. */
 export type TPlayerMatchStats = components['schemas']['PlayerMatchStatsDto']
+/** Відповідь GET /players/:id/achievements — трофеї гравця: місця в турнірах і рекорди платформи. */
+export type TPlayerAchievements = components['schemas']['PlayerAchievementsDto']
+export type TPlayerAchievement = components['schemas']['PlayerAchievementDto']
+export type TPlayerAchievementKind = components['schemas']['PlayerAchievementKind']
 /**
  * OpenAPI кладе `positions` / `wantToPlay` як одиничний enum `|null`; фактично PATCH приймає масиви
  * (як і `positions`).

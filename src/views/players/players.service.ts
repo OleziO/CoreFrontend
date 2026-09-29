@@ -8,6 +8,7 @@ import type { components } from '@/api/types/schema'
 import type {
   TAdminPlayerRoleItem,
   TLanRoleSyncReport,
+  TPlayerAchievements,
   TPlayerMatchStats,
   TUpdatePlayerDto
 } from '@/api/types/api.types'
@@ -45,6 +46,13 @@ class PlayersService {
   /** Статистика матчів у турнірах платформи. Без тостів — блок сам показує стан помилки. */
   async fetchPlayerMatchStats (id: string): Promise<TPlayerMatchStats> {
     return await apiClient.get('/players/{id}/match-stats', {
+      dynamicKeys: { id }
+    })
+  }
+
+  /** Досягнення гравця (місця в турнірах, рекорди платформи). Без тостів — блок сам показує стан помилки. */
+  async fetchPlayerAchievements (id: string): Promise<TPlayerAchievements> {
+    return await apiClient.get('/players/{id}/achievements', {
       dynamicKeys: { id }
     })
   }

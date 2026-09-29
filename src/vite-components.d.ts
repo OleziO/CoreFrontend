@@ -8,6 +8,12 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AgeGate: typeof import('./components/AgeGate.vue')['default']
+    AnalyticsBarList: typeof import('./views/analytics/components/AnalyticsBarList.vue')['default']
+    AnalyticsColumnChart: typeof import('./views/analytics/components/AnalyticsColumnChart.vue')['default']
+    AnalyticsPanel: typeof import('./views/analytics/components/AnalyticsPanel.vue')['default']
+    AnalyticsSocialCard: typeof import('./views/analytics/components/AnalyticsSocialCard.vue')['default']
+    AnalyticsStackedBar: typeof import('./views/analytics/components/AnalyticsStackedBar.vue')['default']
+    AnalyticsStatTile: typeof import('./views/analytics/components/AnalyticsStatTile.vue')['default']
     AppBackButton: typeof import('./components/AppBackButton.vue')['default']
     BalanceCard: typeof import('./views/finance-monitor/components/BalanceCard.vue')['default']
     BankSyncButton: typeof import('./views/finance-monitor/components/BankSyncButton.vue')['default']
@@ -78,6 +84,7 @@ declare module 'vue' {
     PhHandHeart: typeof import('~icons/ph/hand-heart')['default']
     PhTwitchLogo: typeof import('~icons/ph/twitch-logo')['default']
     PhUser: typeof import('~icons/ph/user')['default']
+    PlayerAchievements: typeof import('./views/players/components/PlayerAchievements.vue')['default']
     PlayerAddToTeamModal: typeof import('./components/modals/PlayerAddToTeamModal.vue')['default']
     PlayerCard: typeof import('./components/PlayerCard.vue')['default']
     PlayerFavoriteHeroes: typeof import('./views/players/components/PlayerFavoriteHeroes.vue')['default']

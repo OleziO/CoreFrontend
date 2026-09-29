@@ -41,6 +41,16 @@
           />
         </div>
 
+        <!-- Досягнення: місця в турнірах і рекорди платформи — на всю ширину, над локацією -->
+        <PlayerAchievements
+          v-if="player"
+          :class="roleAccentClass"
+          :achievements="achievements"
+          :is-pending="achievementsPending"
+          :is-error="achievementsError"
+          :is-empty="achievementsEmpty"
+        />
+
         <!-- Локація + «Хочу грати» — на обох профілях, над улюбленими героями -->
         <PlayerPlayPreferences
           v-if="player"
@@ -318,6 +328,7 @@ import type { TTag } from '@/services/tags.types'
 import type { TCreateTeamPayload } from '@/views/teams/teams.service'
 import { usePlayerFavoriteHeroes } from '@/views/players/composables/use-player-heroes'
 import { usePlayerMatchStats } from '@/views/players/composables/use-player-match-stats'
+import { usePlayerAchievements } from '@/views/players/composables/use-player-achievements'
 import { useSeo } from '@/composables/use-seo'
 
 const route = useRoute()
@@ -371,6 +382,14 @@ const {
   isPending: matchStatsPending,
   isError: matchStatsError
 } = usePlayerMatchStats(() => player.value?.id)
+
+/** Трофеї профілю — окремий запит, обчислюється на беку з результатів турнірів. */
+const {
+  achievements,
+  isPending: achievementsPending,
+  isError: achievementsError,
+  isEmpty: achievementsEmpty
+} = usePlayerAchievements(() => player.value?.id)
 
 const {
   hasAccount: favoriteHeroesHasAccount,

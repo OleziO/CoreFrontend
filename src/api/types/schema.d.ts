@@ -68,6 +68,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/players/{id}/achievements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlayersController_getAchievements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/players/me/avatar": {
         parameters: {
             query?: never;
@@ -2165,6 +2181,27 @@ export interface components {
             qualification: components["schemas"]["PlayerMatchStageStatsDto"];
             playoff: components["schemas"]["PlayerMatchStageStatsDto"];
         };
+        PlayerAchievementTournamentDto: {
+            id: string;
+            name: string;
+        };
+        /** @enum {string} */
+        PlayerAchievementKind: "TOURNAMENT_FIRST_PLACE" | "TOURNAMENT_SECOND_PLACE" | "TOURNAMENT_THIRD_PLACE" | "MOST_MATCHES_PLAYED" | "MOST_MATCHES_WON" | "MOST_MATCHES_LOST" | "HIGHEST_RATING";
+        PlayerAchievementDto: {
+            kind: components["schemas"]["PlayerAchievementKind"];
+            /** @description How many times the trophy was earned: tournaments for placements, 1 for platform records */
+            count: number;
+            /**
+             * @description The record value behind a platform trophy (maps played / won / lost, or rating); null for placements
+             * @example 42
+             */
+            value?: number | null;
+            /** @description Tournaments the placement was earned in; empty for platform records */
+            tournaments: components["schemas"]["PlayerAchievementTournamentDto"][];
+        };
+        PlayerAchievementsDto: {
+            achievements: components["schemas"]["PlayerAchievementDto"][];
+        };
         CitiesResponseDto: {
             /** @example UA */
             countryCode: string;
@@ -2324,6 +2361,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlayerMatchStatsDto"];
+                };
+            };
+        };
+    };
+    PlayersController_getAchievements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayerAchievementsDto"];
                 };
             };
         };
