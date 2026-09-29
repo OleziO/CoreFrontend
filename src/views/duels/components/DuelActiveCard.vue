@@ -42,6 +42,15 @@
       <DuelPlayerTile :player="opponent" :side="sideOf(opponent?.id)" label="Суперник" />
     </div>
 
+    <!-- Випадкові герої: кожен грає рівно того, кого йому випало -->
+    <div v-if="duel.heroes?.length" class="active-card__heroes">
+      <DuelHeroTile :hero="myHero" label="Ваш герой" highlighted />
+      <DuelHeroTile :hero="opponentHero" label="Герой суперника" />
+      <p class="active-card__hint active-card__heroes-hint">
+        Герої випадкові. Оберіть на стадії піку саме свого героя — інший герой означає технічну поразку.
+      </p>
+    </div>
+
     <!-- Лобі -->
     <div v-if="duel.lobbyPassword" class="active-card__lobby">
       <div class="active-card__lobby-row">
@@ -112,6 +121,7 @@ import { PhCheck, PhCopy, PhShieldCheck, PhTimer, PhXCircle } from '@phosphor-ic
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   DUEL_CANCEL_PENALTY,
+  duelHeroFor,
   duelOpponentOf,
   duelPlayerName,
   duelSideLabels,
@@ -122,6 +132,7 @@ import {
   isDuelCancellable,
   secondsUntil
 } from '@/views/duels/duels.utils'
+import DuelHeroTile from '@/views/duels/components/DuelHeroTile.vue'
 import DuelPlayerTile from '@/views/duels/components/DuelPlayerTile.vue'
 import type { TDuel, TDuelLobbySide, TDuelPlayer } from '@/api/types/api.types'
 
@@ -155,6 +166,8 @@ const me = computed<TDuelPlayer | null>(() => {
   return null
 })
 const opponent = computed(() => duelOpponentOf(props.duel, props.meId))
+const myHero = computed(() => duelHeroFor(props.duel, props.meId))
+const opponentHero = computed(() => duelHeroFor(props.duel, opponent.value?.id))
 
 function sideOf (playerId: string | null | undefined): TDuelLobbySide | null {
   if (!playerId) return null
@@ -359,6 +372,17 @@ async function copyText (text: string) {
   font-size: 18px;
   letter-spacing: 0.1em;
   color: var(--ds-text-faint);
+}
+
+.active-card__heroes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.active-card__heroes-hint {
+  grid-column: 1 / -1;
+  font-size: 12px;
 }
 
 .active-card__lobby {

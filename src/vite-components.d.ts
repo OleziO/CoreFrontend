@@ -29,6 +29,7 @@ declare module 'vue' {
     DuelAcceptOverlay: typeof import('./views/duels/components/DuelAcceptOverlay.vue')['default']
     DuelActiveCard: typeof import('./views/duels/components/DuelActiveCard.vue')['default']
     DuelBotsStatusStrip: typeof import('./views/duels/components/DuelBotsStatusStrip.vue')['default']
+    DuelHeroTile: typeof import('./views/duels/components/DuelHeroTile.vue')['default']
     DuelHistoryList: typeof import('./views/duels/components/DuelHistoryList.vue')['default']
     DuelLeaderboardTable: typeof import('./views/duels/components/DuelLeaderboardTable.vue')['default']
     DuelPlayerTile: typeof import('./views/duels/components/DuelPlayerTile.vue')['default']

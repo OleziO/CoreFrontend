@@ -2637,6 +2637,16 @@ export interface components {
              */
             side: "radiant" | "dire" | "unassigned" | null;
         };
+        /** @description Hero assigned to a player of the duel (drawn at random when they were paired). */
+        DuelHeroDto: {
+            playerId: string;
+            /** @description Valve hero id */
+            heroId: number;
+            /** @description Valve internal name, e.g. npc_dota_hero_axe */
+            name: string;
+            /** @description Display name, e.g. Axe */
+            localizedName: string;
+        };
         DuelStatsPlayerDto: {
             playerId: string | null;
             steamId64: string;
@@ -2689,6 +2699,8 @@ export interface components {
             lobbyName: string;
             /** @description Only for the two participants while the lobby is open; null for everyone else */
             lobbyPassword: string | null;
+            /** @description Random hero per player, drawn at pairing time; picking another hero forfeits the duel */
+            heroes: components["schemas"]["DuelHeroDto"][] | null;
             lobbyPlayers: components["schemas"]["DuelLobbyPlayerDto"][] | null;
             radiantPlayerId: string | null;
             direPlayerId: string | null;
@@ -2703,7 +2715,7 @@ export interface components {
             /** @description Who cancelled the duel (player or admin); null for automatic cancels */
             cancelledById: string | null;
             /** @enum {string|null} */
-            failReason: "lobby_lost" | "game_timeout" | "undetermined_outcome" | null;
+            failReason: "lobby_lost" | "game_timeout" | "undetermined_outcome" | "wrong_heroes" | null;
             adminReviewRequired: boolean;
             stats: components["schemas"]["DuelStatsDto"] | null;
         };

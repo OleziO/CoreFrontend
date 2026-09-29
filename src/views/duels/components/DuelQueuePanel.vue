@@ -131,13 +131,24 @@ const emit = defineEmits<{
 
 const now = useNow({ interval: 1000 })
 
-/** Секунди в черзі з локального годинника — між полінгами лічильник не завмирає. */
+/**
+ * Секунди в черзі: беремо `waitSeconds` бекенду і дораховуємо локально час від
+ * моменту, коли отримали відповідь. Так лічильник не завмирає між полінгами і
+ * не залежить від розбіжності годинників клієнта й сервера (порівняння
+ * `joinedAt` з локальним `Date.now()` давало вічний «0», коли сервер попереду).
+ */
+const waitBase = ref<{ seconds: number; receivedAt: number } | null>(null)
+watch(
+  () => props.status?.queue ?? null,
+  (queue) => {
+    waitBase.value = queue ? { seconds: queue.waitSeconds, receivedAt: Date.now() } : null
+  },
+  { immediate: true }
+)
 const liveWaitSeconds = computed(() => {
-  const joinedAt = props.status?.queue?.joinedAt
-  if (!joinedAt) return 0
-  const at = new Date(joinedAt).getTime()
-  if (Number.isNaN(at)) return props.status?.queue?.waitSeconds ?? 0
-  return Math.max(0, Math.floor((now.value.getTime() - at) / 1000))
+  const base = waitBase.value
+  if (!base) return 0
+  return Math.max(0, base.seconds + Math.floor((now.value.getTime() - base.receivedAt) / 1000))
 })
 
 /** Дзеркало формули бекенду: ±50 на старті, +50 кожні 30 с. */

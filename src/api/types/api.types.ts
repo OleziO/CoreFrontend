@@ -98,6 +98,7 @@ export type TDuelLobbyPlayer = components['schemas']['DuelLobbyPlayerDto']
 export type TDuelLobbySide = NonNullable<TDuelLobbyPlayer['side']>
 export type TDuelStats = components['schemas']['DuelStatsDto']
 export type TDuelStatsPlayer = components['schemas']['DuelStatsPlayerDto']
+export type TDuelHero = components['schemas']['DuelHeroDto']
 export type THostBot = components['schemas']['HostBotDto']
 export type THostBotStatus = THostBot['status']
 export type TCreateHostBotDto = components['schemas']['CreateHostBotDto']

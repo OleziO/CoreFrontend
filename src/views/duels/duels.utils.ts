@@ -3,6 +3,7 @@ import type {
   TDuel,
   TDuelCancelReason,
   TDuelFailReason,
+  TDuelHero,
   TDuelLobbySide,
   TDuelPlayer,
   TDuelQueueBlockedReason,
@@ -69,7 +70,8 @@ export const duelCancelReasonLabels: Record<TDuelCancelReason, string> = {
 export const duelFailReasonLabels: Record<TDuelFailReason, string> = {
   lobby_lost: 'Лобі втрачено',
   game_timeout: 'Гра не завершилася вчасно',
-  undetermined_outcome: 'Не вдалося визначити переможця'
+  undetermined_outcome: 'Не вдалося визначити переможця',
+  wrong_heroes: 'Обидва гравці взяли не своїх героїв'
 }
 
 export const duelQueueBlockedLabels: Record<TDuelQueueBlockedReason, string> = {
@@ -117,6 +119,19 @@ export function duelEndReasonLabel (duel: TDuel): string {
   if (duel.state === 'CANCELLED' && duel.cancelReason) return duelCancelReasonLabels[duel.cancelReason]
   if (duel.state === 'FAILED' && duel.failReason) return duelFailReasonLabels[duel.failReason]
   return ''
+}
+
+/** Герой, випадково призначений гравцю на цю дуель; null, коли героїв ще не роздали. */
+export function duelHeroFor (duel: TDuel, playerId: string | null | undefined): TDuelHero | null {
+  if (!playerId || !duel.heroes) return null
+  return duel.heroes.find((h) => h.playerId === playerId) ?? null
+}
+
+/** Портрет героя зі Steam CDN за внутрішнім іменем (`npc_dota_hero_axe` → axe.png). */
+export function duelHeroImageUrl (hero: TDuelHero | null | undefined): string {
+  if (!hero?.name) return ''
+  const slug = hero.name.replace(/^npc_dota_hero_/, '')
+  return `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${slug}.png`
 }
 
 export function duelOpponentOf (duel: TDuel, playerId: string | null | undefined): TDuelPlayer | null {
