@@ -44,6 +44,15 @@ export const useDuelsAdminStore = defineStore('duelsAdmin', () => {
     bots.value = [...bots.value, created]
   }
 
+  /** Перезапуск одного бота або всіх (id не передано); список перечитуємо, щоб побачити скинутий lastError. */
+  async function reloadBots (id?: number): Promise<number> {
+    const count = id == null
+      ? await duelsService.adminReloadBots()
+      : await duelsService.adminReloadBot(id)
+    await fetchBots()
+    return count
+  }
+
   async function setBotEnabled (id: number, enabled: boolean): Promise<void> {
     const updated = await duelsService.adminUpdateBot(id, { enabled })
     bots.value = bots.value.map((b) => (b.id === id ? updated : b))
@@ -65,6 +74,7 @@ export const useDuelsAdminStore = defineStore('duelsAdmin', () => {
     resolveDuel,
     addBot,
     setBotEnabled,
+    reloadBots,
     removeBot
   }
 })

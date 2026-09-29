@@ -27,7 +27,13 @@
         </el-button>
       </div>
 
-      <DuelBotsStatusStrip v-else :bots="bots" :is-error="botsError" compact />
+      <div v-else class="flex flex-wrap items-center gap-8">
+        <DuelBotsStatusStrip :bots="bots" :is-error="botsError" compact />
+        <el-button :loading="reloadingAll" @click="reloadAllBots">
+          <PhArrowsClockwise v-if="!reloadingAll" :size="14" weight="bold" class="mr-6" />
+          Перезапустити всіх
+        </el-button>
+      </div>
     </div>
 
     <!-- ─── Дуелі ──────────────────────────────────────────────────────── -->
@@ -200,6 +206,16 @@
                 @change="toggleBot(bot, $event as boolean)"
               />
               <el-button
+                size="small"
+                plain
+                :loading="processingBotId === bot.id"
+                title="Перезапустити бота"
+                aria-label="Перезапустити бота"
+                @click="reloadBot(bot)"
+              >
+                <PhArrowsClockwise :size="14" weight="bold" />
+              </el-button>
+              <el-button
                 type="danger"
                 size="small"
                 plain
@@ -257,6 +273,7 @@ const section = ref<TSection>('duels')
 const stateFilter = ref<TDuelState | ''>('')
 const processingId = ref<string | null>(null)
 const processingBotId = ref<number | null>(null)
+const reloadingAll = ref(false)
 const addingBot = ref(false)
 
 const newBot = reactive({ accountName: '', password: '', region: 3 })
@@ -380,6 +397,26 @@ async function addBot () {
     ElMessage.success('Бота додано — воркер підхопить його протягом 30 с')
   } catch { /* тост показав сервіс */ } finally {
     addingBot.value = false
+  }
+}
+
+async function reloadAllBots () {
+  reloadingAll.value = true
+  try {
+    const count = await store.reloadBots()
+    ElMessage.success(`Перезапуск запитано для ${count} ботів — воркер перелогінить їх протягом ~30 с`)
+  } catch { /* тост показав сервіс */ } finally {
+    reloadingAll.value = false
+  }
+}
+
+async function reloadBot (bot: THostBot) {
+  processingBotId.value = bot.id
+  try {
+    await store.reloadBots(bot.id)
+    ElMessage.success(`Бот ${bot.accountName} перезапуститься протягом ~30 с`)
+  } catch { /* тост показав сервіс */ } finally {
+    processingBotId.value = null
   }
 }
 

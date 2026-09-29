@@ -1425,6 +1425,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/duels/bots/reload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restart every enabled bot */
+        post: operations["DuelsAdminController_reloadBots"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/duels/bots/{id}/reload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restart one bot */
+        post: operations["DuelsAdminController_reloadBot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/duels/bots/{id}": {
         parameters: {
             query?: never;
@@ -5110,6 +5144,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HostBotDto"];
+                };
+            };
+        };
+    };
+    DuelsAdminController_reloadBots: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": number;
+                };
+            };
+        };
+    };
+    DuelsAdminController_reloadBot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": number;
                 };
             };
         };

@@ -124,6 +124,25 @@ class DuelsService {
     }
   }
 
+  /** Перезапустити всіх увімкнених ботів (воркер перелогінить їх протягом ~30 с). Повертає кількість. */
+  async adminReloadBots (): Promise<number> {
+    try {
+      return await apiClient.post('/admin/duels/bots/reload')
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося перезапустити ботів'))
+      throw e
+    }
+  }
+
+  async adminReloadBot (id: number): Promise<number> {
+    try {
+      return await apiClient.post('/admin/duels/bots/{id}/reload', undefined, { dynamicKeys: { id } })
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося перезапустити бота'))
+      throw e
+    }
+  }
+
   async adminUpdateBot (id: number, dto: TUpdateHostBotDto): Promise<THostBot> {
     try {
       return await apiClient.patch('/admin/duels/bots/{id}', dto, { dynamicKeys: { id } })
