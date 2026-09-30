@@ -94,83 +94,9 @@
 
     <!-- ACTIONS: усі кнопки в одному рядку, ділять ширину картки порівну -->
     <div
-      v-if="
-        showAdminVerificationActions || showAdditionalInfo || (isProfilePage && !player.steamId) || showFriendActions
-      "
+      v-if="hasOtherActions"
       class="mt-24 flex w-full flex-wrap items-center gap-10"
     >
-      <!-- Друзі: стан залежить від зв'язку з гравцем (нема / запит надіслано / запит до мене / друзі) -->
-      <template v-if="showFriendActions && friendRelation">
-        <el-button
-          v-if="friendRelation.relation === 'none'"
-          type="primary"
-          plain
-          class="min-w-0 flex-1 max-sm:!px-8"
-          :loading="friendBusy"
-          :disabled="friendBusy"
-          @click="emit('addFriend')"
-        >
-          <PhUserPlus v-if="!friendBusy" :size="16" weight="bold" class="mr-10 shrink-0" />
-          Додати в друзі
-        </el-button>
-
-        <el-button
-          v-else-if="friendRelation.relation === 'outgoing'"
-          plain
-          class="min-w-0 flex-1 max-sm:!px-8"
-          :loading="friendBusy"
-          :disabled="friendBusy"
-          title="Скасувати запит"
-          @click="emit('cancelFriendRequest')"
-        >
-          <PhClockCountdown v-if="!friendBusy" :size="16" weight="bold" class="mr-10 shrink-0" />
-          Запит надіслано
-        </el-button>
-
-        <el-button
-          v-else-if="friendRelation.relation === 'incoming'"
-          type="success"
-          class="min-w-0 flex-1 max-sm:!px-8"
-          :loading="friendBusy"
-          :disabled="friendBusy"
-          @click="emit('acceptFriend')"
-        >
-          <PhCheck v-if="!friendBusy" :size="16" weight="bold" class="mr-10 shrink-0" />
-          Прийняти запит у друзі
-        </el-button>
-
-        <template v-else>
-          <el-tooltip
-            :content="player.steamId ? 'Дружня дуель Solo Mid: ±10 рейтингу' : 'У гравця не прив’язаний Steam'"
-            placement="top"
-            effect="dark"
-            :show-after="180"
-          >
-            <el-button
-              type="primary"
-              class="min-w-0 flex-1 max-sm:!px-8"
-              :loading="challenging"
-              :disabled="challenging || !player.steamId"
-              @click="emit('challenge')"
-            >
-              <PhSword v-if="!challenging" :size="16" weight="fill" class="mr-10 shrink-0" />
-              Викликати на дуель
-            </el-button>
-          </el-tooltip>
-          <el-button
-            plain
-            class="min-w-0 max-sm:!px-8"
-            :loading="friendBusy"
-            :disabled="friendBusy"
-            title="Видалити з друзів"
-            @click="emit('removeFriend')"
-          >
-            <PhUserMinus v-if="!friendBusy" :size="16" weight="bold" class="shrink-0" />
-            <span class="ml-8 hidden sm:inline">Друзі</span>
-          </el-button>
-        </template>
-      </template>
-
       <el-button
         v-if="showAdminVerificationActions"
         :loading="verifyLoading"
@@ -234,6 +160,89 @@
         <Icon :size="20" name="steam" class="shrink-0" />
         <span class="ml-8">{{ linkingSteam ? 'Переходимо у Steam…' : "Прив'язати Steam" }}</span>
       </el-button>
+    </div>
+
+    <!-- FRIEND ACTIONS: окремий рядок на всю ширину під рештою кнопок.
+         Стан залежить від зв'язку з гравцем (нема / запит надіслано / запит до мене / друзі) -->
+    <div
+      v-if="showFriendActions && friendRelation"
+      class="flex w-full flex-wrap items-center gap-10"
+      :class="hasOtherActions ? 'mt-10' : 'mt-24'"
+    >
+      <el-button
+        v-if="friendRelation.relation === 'none'"
+        type="primary"
+        plain
+        class="min-w-0 flex-1 max-sm:!px-8"
+        :loading="friendBusy"
+        :disabled="friendBusy"
+        @click="emit('addFriend')"
+      >
+        <PhUserPlus v-if="!friendBusy" :size="16" weight="bold" class="mr-10 shrink-0" />
+        Додати в друзі
+      </el-button>
+
+      <el-button
+        v-else-if="friendRelation.relation === 'outgoing'"
+        plain
+        class="min-w-0 flex-1 max-sm:!px-8"
+        :loading="friendBusy"
+        :disabled="friendBusy"
+        title="Скасувати запит"
+        @click="emit('cancelFriendRequest')"
+      >
+        <PhClockCountdown v-if="!friendBusy" :size="16" weight="bold" class="mr-10 shrink-0" />
+        Запит надіслано
+      </el-button>
+
+      <el-button
+        v-else-if="friendRelation.relation === 'incoming'"
+        type="success"
+        class="min-w-0 flex-1 max-sm:!px-8"
+        :loading="friendBusy"
+        :disabled="friendBusy"
+        @click="emit('acceptFriend')"
+      >
+        <PhCheck v-if="!friendBusy" :size="16" weight="bold" class="mr-10 shrink-0" />
+        Прийняти запит у друзі
+      </el-button>
+
+      <el-button
+        v-else
+        plain
+        class="min-w-0 flex-1 max-sm:!px-8"
+        :loading="friendBusy"
+        :disabled="friendBusy"
+        title="Видалити з друзів"
+        @click="emit('removeFriend')"
+      >
+        <PhUserMinus v-if="!friendBusy" :size="16" weight="bold" class="mr-10 shrink-0" />
+        Видалити з друзів
+      </el-button>
+    </div>
+
+    <!-- DUEL: третій рядок, лише для друзів — виклик на дружню дуель на всю ширину -->
+    <div
+      v-if="showFriendActions && friendRelation?.relation === 'friends'"
+      class="mt-10 flex w-full items-center"
+    >
+      <el-tooltip
+        :content="player.steamId ? 'Дружня дуель Solo Mid: ±10 рейтингу' : 'У гравця не прив’язаний Steam'"
+        placement="top"
+        effect="dark"
+        :show-after="180"
+      >
+        <el-button
+          type="primary"
+          class="min-w-0 w-full max-sm:!px-8"
+          :loading="challenging"
+          :disabled="challenging || !player.steamId"
+          @click="emit('challenge')"
+        >
+          <PhSword v-if="!challenging" :size="16" weight="fill" class="mr-10 shrink-0" />
+          Викликати на дуель
+        </el-button>
+      </el-tooltip>
     </div>
 
     <!-- Розпірка: притискає рядок ролей до низу, коли картку розтягує сусідня статистика -->
@@ -342,6 +351,11 @@ const emit = defineEmits<{
 
 const windowSize = useWindowSize()
 const showFullLabel = computed(() => windowSize.width.value > 650)
+
+/** Чи є рядок «звичайних» дій (верифікація / редагування / Steam) — рядок друзів іде під ним. */
+const hasOtherActions = computed(() =>
+  props.showAdminVerificationActions || props.showAdditionalInfo || (props.isProfilePage && !props.player.steamId)
+)
 
 interface IProfileLink {
   name: string
