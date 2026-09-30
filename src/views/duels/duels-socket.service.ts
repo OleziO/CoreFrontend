@@ -9,6 +9,11 @@ interface IDuelSocketServerEvents {
 
 type TDuelSocket = Socket<IDuelSocketServerEvents>
 
+/** Діагностика сокета лише в dev-збірці (`npm run dev`): у проді консоль мовчить. */
+const debug = (...args: unknown[]): void => {
+  if (import.meta.env.DEV) console.debug('[duels-socket]', ...args)
+}
+
 type TDuelSocketListeners = {
   status: Set<(status: TDuelStatus) => void>
   connection: Set<(connected: boolean) => void>
@@ -51,12 +56,30 @@ class DuelsSocketService {
       reconnectionDelayMax: 10_000
     })
 
-    socket.on('connect', () => this.emitConnection(true))
-    socket.on('disconnect', () => this.emitConnection(false))
+    socket.on('connect', () => {
+      debug('connected', socket.id, 'via', socket.io.engine.transport.name)
+      socket.io.engine.once('upgrade', () => debug('transport upgraded to', socket.io.engine.transport.name))
+      this.emitConnection(true)
+    })
+    socket.on('disconnect', (reason) => {
+      debug('disconnected:', reason)
+      this.emitConnection(false)
+    })
+    socket.on('connect_error', (err) => {
+      debug('connect_error:', err.message)
+    })
     socket.on('duel:status', (status) => {
+      debug('duel:status', {
+        rating: status.rating.rating,
+        inQueue: !!status.queue,
+        playersInQueue: status.queue?.playersInQueue ?? null,
+        activeDuel: status.activeDuel ? `${status.activeDuel.id} ${status.activeDuel.state}` : null,
+        bots: `${status.bots.online}/${status.bots.total}`
+      })
       this.listeners.status.forEach((cb) => cb(status))
     })
     socket.on('duel:error', ({ error }) => {
+      debug('duel:error', error)
       // Невалідний/протухлий токен: сервер сам розриває з'єднання, не намагаємось знову.
       if (error === 'unauthorized') this.disconnect()
     })
