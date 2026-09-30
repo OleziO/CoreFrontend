@@ -8,7 +8,8 @@
             placement="top"
             effect="dark"
             :show-after="180"
-            content="Дуелі Solo Mid із випадковими героями, хостить бот ліги: +25 за перемогу, −25 за поразку."
+            content="Дуелі Solo Mid із випадковими героями, хостить бот ліги: +25 за перемогу, −25 за поразку
+              (дружні дуелі з друзями — ±10)."
           >
             <PhQuestion
               class="cursor-help text-white/40 transition-colors hover:text-primary"

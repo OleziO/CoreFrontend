@@ -372,6 +372,11 @@
     "leaderboardService": true,
     "duelsService": true,
     "useDuelsAdminStore": true,
-    "duelsSocketService": true
+    "duelsSocketService": true,
+    "friendsService": true,
+    "notificationsService": true,
+    "notificationsSocketService": true,
+    "useFriendsStore": true,
+    "useNotificationsStore": true
   }
 }

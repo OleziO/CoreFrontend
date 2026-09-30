@@ -3,6 +3,7 @@ import { ElMessage } from 'element-plus'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import type {
   TAdminResolveDuelDto,
+  TCreateDuelChallengeDto,
   TCreateHostBotDto,
   TDuel,
   TDuelBotsStatus,
@@ -73,6 +74,50 @@ class DuelsService {
       return status
     } catch (e) {
       ElMessage.error(getApiErrorMessage(e, 'Не вдалося надіслати інвайт'))
+      throw e
+    }
+  }
+
+  // ─── дружні дуелі (виклики друзів) ────────────────────────────────────────
+
+  /** Викликати друга на дружню дуель (±10): виклик живе 5 хвилин, один відкритий виклик за раз. */
+  async createChallenge (playerId: string): Promise<TDuelStatus> {
+    const body: TCreateDuelChallengeDto = { playerId }
+    try {
+      const status = await apiClient.post('/duels/challenges', body)
+      ElMessage.success('Виклик надіслано — друг отримає сповіщення')
+      return status
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося надіслати виклик'))
+      throw e
+    }
+  }
+
+  /** Прийняти виклик: обидва виходять із черги, дуель створюється одразу (без 30 с на прийняття). */
+  async acceptChallenge (id: string): Promise<TDuelStatus> {
+    try {
+      return await apiClient.post('/duels/challenges/{id}/accept', undefined, { dynamicKeys: { id } })
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося прийняти виклик'))
+      throw e
+    }
+  }
+
+  async declineChallenge (id: string): Promise<TDuelStatus> {
+    try {
+      return await apiClient.post('/duels/challenges/{id}/decline', undefined, { dynamicKeys: { id } })
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося відхилити виклик'))
+      throw e
+    }
+  }
+
+  /** Відкликати свій виклик. */
+  async cancelChallenge (id: string): Promise<TDuelStatus> {
+    try {
+      return await apiClient.delete('/duels/challenges/{id}', { dynamicKeys: { id } })
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося скасувати виклик'))
       throw e
     }
   }

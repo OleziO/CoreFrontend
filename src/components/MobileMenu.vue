@@ -35,6 +35,17 @@
           <span>Профіль</span>
         </RouterLink>
 
+        <!-- Друзі — під профілем: на мобільному дропдауна «Гравці» немає -->
+        <RouterLink
+          v-if="authStore.token"
+          :to="{ name: routeNames.friends }"
+          class="mobile-menu-link no-underline"
+          @click="close"
+        >
+          <PhUsersThree :size="20" />
+          <span>Друзі</span>
+        </RouterLink>
+
         <RouterLink
           :to="{ name: routeNames.duels }"
           class="mobile-menu-link no-underline"
@@ -117,7 +128,9 @@
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
 import Icon, { type TIconName } from '@/components/Icon.vue'
-import { PhDiscordLogo, PhUser, PhChartLineUp, PhGauge, PhSignOut, PhSword, PhX } from '@phosphor-icons/vue'
+import {
+  PhDiscordLogo, PhUser, PhUsersThree, PhChartLineUp, PhGauge, PhSignOut, PhSword, PhX
+} from '@phosphor-icons/vue'
 import { hasAdminRole } from '@/core/helpers'
 
 const togglerStore = useTogglerStore()

@@ -1424,6 +1424,245 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/duels/challenges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Challenge a friend to a friendly duel (±10)
+         * @description Friends only; both need a linked Steam account and no active duel, a host bot must be online, and each may accept at most 3 friendly duels per day. One open challenge per challenger at a time; challenging a friend who already challenged you accepts their challenge. Expires after 5 minutes.
+         */
+        post: operations["DuelsController_createChallenge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duels/challenges/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept a friendly-duel challenge
+         * @description Challenged player only. Both leave the queue (if there) and a `friend` duel is created straight in PENDING for the next free host bot. 429 once the daily limit is reached.
+         */
+        post: operations["DuelsController_acceptChallenge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duels/challenges/{id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline a friendly-duel challenge (challenged player only) */
+        post: operations["DuelsController_declineChallenge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duels/challenges/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Withdraw my friendly-duel challenge (challenger only) */
+        delete: operations["DuelsController_cancelChallenge"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/friends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My friends and open requests
+         * @description Friends (with 1v1 rating), requests waiting for me and requests I sent.
+         */
+        get: operations["FriendsController_getMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/friends/relation/{playerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How I relate to a player (none / friends / incoming / outgoing) */
+        get: operations["FriendsController_getRelation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/friends/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a friend request
+         * @description 409 when already friends or a request is already open. Answering an incoming request with a request of your own accepts it.
+         */
+        post: operations["FriendsController_sendRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/friends/requests/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept a friend request (addressee only) */
+        post: operations["FriendsController_accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/friends/requests/{id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline a friend request (addressee only) */
+        post: operations["FriendsController_decline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/friends/requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Withdraw my friend request (requester only) */
+        delete: operations["FriendsController_cancel"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/friends/{playerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a player from my friends */
+        delete: operations["FriendsController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My notifications
+         * @description Newest 30 entries and the unread counter. The same snapshot is pushed over the `/notifications` socket namespace (`notification:snapshot`) whenever it changes.
+         */
+        get: operations["NotificationsController_getMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark notifications as read
+         * @description Given ids, or everything unread when `ids` is omitted.
+         */
+        post: operations["NotificationsController_markRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/duels/bots": {
         parameters: {
             query?: never;
@@ -2765,6 +3004,11 @@ export interface components {
             number: number;
             /** @enum {string} */
             state: "ACCEPTING" | "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "PROCESSING" | "RESOLVED" | "CANCELLED" | "FAILED";
+            /**
+             * @description `ranked` — paired from the queue (±25); `friend` — created from an accepted friend challenge (±10)
+             * @enum {string}
+             */
+            kind: "ranked" | "friend";
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -2857,6 +3101,141 @@ export interface components {
             playersInQueue: number;
             /** @description Host bot pool snapshot; queueing is blocked while `online` is 0 */
             bots: components["schemas"]["DuelBotsStatusDto"];
+            /** @description Friendly-duel challenges: open ones and the daily counter */
+            challenges: components["schemas"]["DuelChallengesStateDto"];
+        };
+        /** @description A friendly-duel invitation between two friends. */
+        DuelChallengeDto: {
+            id: string;
+            /** @enum {string} */
+            status: "PENDING" | "ACCEPTED" | "DECLINED" | "CANCELLED" | "EXPIRED";
+            /** @description Who sent the challenge */
+            challenger: components["schemas"]["DuelPlayerDto"];
+            /** @description Who was challenged */
+            challenged: components["schemas"]["DuelPlayerDto"];
+            /** Format: date-time */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description A PENDING challenge nobody answered by then expires
+             */
+            expiresAt: string;
+            /** Format: date-time */
+            respondedAt: string | null;
+            /** @description The friendly duel created once the challenge was accepted */
+            duelId: string | null;
+        };
+        /** @description My open challenges plus how many friendly duels I may still accept today. */
+        DuelChallengesStateDto: {
+            /** @description Challenges waiting for my answer */
+            incoming: components["schemas"]["DuelChallengeDto"][];
+            /** @description The challenge I sent that is still open (one at a time) */
+            outgoing: components["schemas"]["DuelChallengeDto"] | null;
+            /** @description Friendly duels I accepted (either side) today, Kyiv time */
+            acceptedToday: number;
+            /** @description Friendly duels a player may accept per day */
+            dailyLimit: number;
+            /** @description Points a friendly duel moves (10) */
+            ratingDelta: number;
+        };
+        CreateDuelChallengeDto: {
+            /** @description Friend to challenge */
+            playerId: string;
+        };
+        /** @description Player card on the friends page / in a request row. */
+        FriendPlayerDto: {
+            id: string;
+            discordName: string | null;
+            discordUsername: string | null;
+            avatarUrl: string | null;
+            /** @description SteamID64; duels need it */
+            steamId: string | null;
+            countryCode: string | null;
+            /** @description Tournament rating (MMR-like) of the player */
+            rating: number;
+            /** @description Current 1v1 ladder rating (0 before the first duel) */
+            duelRating: number;
+        };
+        FriendDto: {
+            /** @description friendship.id (unfriend goes by player id) */
+            friendshipId: string;
+            player: components["schemas"]["FriendPlayerDto"];
+            /**
+             * Format: date-time
+             * @description Friends since
+             */
+            since: string;
+        };
+        FriendRequestDto: {
+            /** @description friendship.id — the id to accept / decline / cancel */
+            id: string;
+            /** @enum {string} */
+            status: "PENDING" | "ACCEPTED";
+            /** @description Who asked */
+            requester: components["schemas"]["FriendPlayerDto"];
+            /** @description Who was asked */
+            addressee: components["schemas"]["FriendPlayerDto"];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description Everything the friends page needs, from the caller's point of view. */
+        FriendsOverviewDto: {
+            friends: components["schemas"]["FriendDto"][];
+            /** @description Requests waiting for my answer */
+            incoming: components["schemas"]["FriendRequestDto"][];
+            /** @description Requests I sent that are still open */
+            outgoing: components["schemas"]["FriendRequestDto"][];
+        };
+        FriendRelationDto: {
+            /** @enum {string} */
+            relation: "none" | "friends" | "incoming" | "outgoing";
+            /** @description friendship.id of the open request (incoming / outgoing); null otherwise */
+            requestId: string | null;
+        };
+        CreateFriendRequestDto: {
+            /** @description Player to befriend */
+            playerId: string;
+        };
+        /** @description Compact card of the player who triggered the notification. */
+        NotificationActorDto: {
+            id: string;
+            discordName: string | null;
+            discordUsername: string | null;
+            avatarUrl: string | null;
+        };
+        NotificationDto: {
+            id: string;
+            /** @enum {string} */
+            type: "friend_request" | "friend_request_accepted" | "duel_challenge" | "duel_challenge_accepted" | "duel_challenge_declined" | "duel_challenge_expired";
+            /**
+             * @description Outcome of the request / challenge the entry is about; `pending` means the buttons are still live
+             * @enum {string|null}
+             */
+            status: "pending" | "accepted" | "declined" | "cancelled" | "expired" | null;
+            /** @description friendship.id (friend_request*) or duel_challenge.id (duel_challenge*) */
+            refId: string | null;
+            actor: components["schemas"]["NotificationActorDto"] | null;
+            /** @description Friendly duel created from an accepted challenge */
+            duelId: string | null;
+            /**
+             * Format: date-time
+             * @description Until when a duel challenge can be answered
+             */
+            expiresAt: string | null;
+            /** Format: date-time */
+            readAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description What the bell shows: newest entries first plus the unread counter. */
+        NotificationsSnapshotDto: {
+            items: components["schemas"]["NotificationDto"][];
+            /** @description Entries without `readAt` (all of them, not only the listed ones) */
+            unreadCount: number;
+        };
+        MarkNotificationsReadDto: {
+            /** @description Entries to mark as read; omitted or empty = everything */
+            ids?: string[];
         };
         /** @description Public host-bot pool summary shown next to the queue. */
         DuelBotsStatusDto: {
@@ -5430,6 +5809,281 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DuelDto"];
+                };
+            };
+        };
+    };
+    DuelsController_createChallenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDuelChallengeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelStatusDto"];
+                };
+            };
+        };
+    };
+    DuelsController_acceptChallenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelStatusDto"];
+                };
+            };
+        };
+    };
+    DuelsController_declineChallenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelStatusDto"];
+                };
+            };
+        };
+    };
+    DuelsController_cancelChallenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelStatusDto"];
+                };
+            };
+        };
+    };
+    FriendsController_getMine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendsOverviewDto"];
+                };
+            };
+        };
+    };
+    FriendsController_getRelation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                playerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendRelationDto"];
+                };
+            };
+        };
+    };
+    FriendsController_sendRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFriendRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendsOverviewDto"];
+                };
+            };
+        };
+    };
+    FriendsController_accept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendsOverviewDto"];
+                };
+            };
+        };
+    };
+    FriendsController_decline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendsOverviewDto"];
+                };
+            };
+        };
+    };
+    FriendsController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendsOverviewDto"];
+                };
+            };
+        };
+    };
+    FriendsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                playerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendsOverviewDto"];
+                };
+            };
+        };
+    };
+    NotificationsController_getMine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationsSnapshotDto"];
+                };
+            };
+        };
+    };
+    NotificationsController_markRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkNotificationsReadDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationsSnapshotDto"];
                 };
             };
         };

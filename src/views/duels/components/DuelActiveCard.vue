@@ -2,7 +2,10 @@
   <section class="active-card neon-card hud-corners rounded-2xl" aria-labelledby="duel-active-title">
     <header class="flex flex-wrap items-start justify-between gap-12">
       <div class="flex min-w-0 flex-col gap-4">
-        <span class="sys-label sys-label--gold">// Дуель #{{ duel.number }}</span>
+        <span class="sys-label sys-label--gold">
+          // Дуель #{{ duel.number }}
+          <template v-if="isFriendDuel(duel)"> · дружня · ±{{ duelStakeOf(duel) }}</template>
+        </span>
         <h2 id="duel-active-title" class="active-card__title">{{ duelStateLabels[duel.state] }}</h2>
       </div>
       <span v-if="duel.state === 'WAITING_PLAYERS' && joinLeft > 0" class="active-card__deadline">
@@ -183,11 +186,13 @@ import {
   duelOpponentOf,
   duelPlayerName,
   duelSideLabels,
+  duelStakeOf,
   duelStateLabels,
   duelStepIndex,
   duelSteps,
   formatDuelCountdown,
   isDuelCancellable,
+  isFriendDuel,
   secondsUntil
 } from '@/views/duels/duels.utils'
 import DuelHeroTile from '@/views/duels/components/DuelHeroTile.vue'

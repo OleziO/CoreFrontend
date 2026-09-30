@@ -7,7 +7,7 @@
     <div
       class="
         app-header__bar
-        grid h-60 w-full items-center justify-items-center
+        relative grid h-60 w-full items-center justify-items-center
         px-20 lg:px-40
         lg:grid-cols-[1fr_auto_1fr]
       "
@@ -51,14 +51,19 @@
         </span>
       </div>
 
-      <!-- RIGHT SIDE -->
-      <div class="app-header__actions hidden items-center lg:flex lg:justify-self-end">
+      <!-- RIGHT SIDE. Дзвіночок видно на всіх екранах (на мобільному — абсолютно
+           праворуч у смузі); пігулка користувача та кнопка входу — лише на lg+. -->
+      <div class="app-header__actions flex items-center gap-10 lg:justify-self-end">
+        <!-- NOTIFICATIONS -->
+        <NotificationCenter v-if="authStore.token" />
+
         <!-- USER -->
         <el-dropdown
           v-if="authStore.token"
           trigger="click"
           placement="bottom-end"
           popper-class="header-dropdown"
+          class="hidden lg:flex"
           @visible-change="onMenuVisibleChange"
         >
           <div
@@ -190,7 +195,7 @@
         <el-button
           v-else
           type="primary"
-          class="flex items-center justify-center"
+          class="!hidden items-center justify-center lg:!flex"
           :loading="authStore.loginLoading"
           @click="authStore.startDiscordLogin()"
         >
@@ -225,6 +230,7 @@ import {
   PhDiscordLogo, PhSignOut, PhUser, PhTrophy, PhCaretDown, PhGauge, PhChartLineUp, PhClock, PhSword
 } from '@phosphor-icons/vue'
 import CreateTournamentDrawer from '@/views/admin-panel/components/drawers/CreateTournamentDrawer.vue'
+import NotificationCenter from '@/components/NotificationCenter.vue'
 import { hasAdminRole } from '@/core/helpers'
 import { roleLabelMap } from '@/components/player-tags/player.enums'
 
@@ -300,6 +306,21 @@ const router = useRouter()
   backdrop-filter: blur(20px) saturate(130%);
   -webkit-backdrop-filter: blur(20px) saturate(130%);
   box-shadow: var(--ds-elevation-3);
+}
+
+/* ─── Actions — нижче lg лише дзвіночок, притиснутий до правого краю смуги ── */
+.app-header__actions {
+  position: absolute;
+  top: 0;
+  right: 20px;
+  height: 60px;
+}
+
+@media (min-width: 1024px) {
+  .app-header__actions {
+    position: static;
+    height: auto;
+  }
 }
 
 /* ─── Logo — the header's one lit element ────────────────────────────────── */

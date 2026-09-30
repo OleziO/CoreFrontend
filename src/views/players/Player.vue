@@ -28,10 +28,19 @@
             :links="links"
             :can-request-mmr="canRequestMmr"
             :pending-mmr-request="pendingMmrRequest"
+            :show-friend-actions="showFriendActions"
+            :friend-relation="friendRelation"
+            :friend-busy="friendBusy"
+            :challenging="challenging"
             @toggle-verification="togglePlayerVerification"
             @edit-profile="openEditProfileModal"
             @link-steam="handleSteamLink"
             @request-mmr="openRequestMmrModal"
+            @add-friend="friendsStore.sendRequest(player.id)"
+            @accept-friend="friendRelation.requestId && friendsStore.acceptRequest(friendRelation.requestId)"
+            @cancel-friend-request="friendRelation.requestId && friendsStore.cancelRequest(friendRelation.requestId)"
+            @remove-friend="confirmRemoveFriend"
+            @challenge="challengeFriend"
           />
           <PlayerMatchStats
             :class="roleAccentClass"
@@ -336,7 +345,9 @@ import type { TCreateTeamPayload } from '@/views/teams/teams.service'
 import { usePlayerFavoriteHeroes } from '@/views/players/composables/use-player-heroes'
 import { usePlayerMatchStats } from '@/views/players/composables/use-player-match-stats'
 import { usePlayerAchievements } from '@/views/players/composables/use-player-achievements'
+import { useDuelChallenges } from '@/views/duels/composables/use-duel-challenges'
 import { useSeo } from '@/composables/use-seo'
+import { ElMessageBox } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
@@ -428,6 +439,50 @@ const canRequestMmr = computed(() =>
   isProfilePage.value &&
   isVerified.value
 )
+
+// ─── Друзі та виклик на дуель: лише на чужому профілі залогіненого користувача ──
+const friendsStore = useFriendsStore()
+const { isBusy: isChallengeBusy, challenge } = useDuelChallenges()
+
+const showFriendActions = computed(() =>
+  !!me.token && !isProfilePage.value && !!player.value && player.value.id !== me.user?.id
+)
+const friendRelation = computed<TFriendRelationState>(() => friendsStore.relationWith(player.value?.id))
+const friendBusy = computed(() => {
+  const id = player.value?.id
+  if (!id) return false
+  const requestId = friendRelation.value.requestId
+  return friendsStore.isBusy(id) || (!!requestId && friendsStore.isBusy(requestId))
+})
+const challenging = computed(() => !!player.value && isChallengeBusy(player.value.id))
+
+watch(
+  showFriendActions,
+  (show) => {
+    if (show) friendsStore.fetchOverview().catch(() => { /* кнопки покажуть стан «нема зв'язку» */ })
+  },
+  { immediate: true }
+)
+
+async function challengeFriend () {
+  if (!player.value) return
+  if (await challenge(player.value.id)) router.push({ name: routeNames.duels })
+}
+
+async function confirmRemoveFriend () {
+  if (!player.value) return
+  const name = player.value.discordName || 'гравця'
+  try {
+    await ElMessageBox.confirm(
+      `Видалити ${name} з друзів? Дружні дуелі з цим гравцем стануть недоступні.`,
+      'Видалити з друзів',
+      { confirmButtonText: 'Видалити', cancelButtonText: 'Скасувати', type: 'warning' }
+    )
+  } catch {
+    return
+  }
+  await friendsStore.removeFriend(player.value.id)
+}
 
 const pendingMmrRequest = ref<TMmrUpdateRequest | null>(null)
 const mmrNotificationDismissed = ref(false)

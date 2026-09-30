@@ -12,6 +12,7 @@ import { financeMonitorRouteNames, financeMonitorRoutes } from '@/views/finance-
 import { analyticsRouteNames, analyticsRoutes } from '@/views/analytics/analytics.route'
 import { leaderboardRouteNames, leaderboardRoutes } from '@/views/leaderboard/leaderboard.route'
 import { duelsRouteNames, duelsRoutes } from '@/views/duels/duels.route'
+import { friendsRouteNames, friendsRoutes } from '@/views/friends/friends.route'
 
 export const routeNames = {
   ...playersRouteNames,
@@ -26,7 +27,8 @@ export const routeNames = {
   ...financeMonitorRouteNames,
   ...analyticsRouteNames,
   ...leaderboardRouteNames,
-  ...duelsRouteNames
+  ...duelsRouteNames,
+  ...friendsRouteNames
 }
 
 export const routes = [
@@ -46,7 +48,8 @@ export const routes = [
       ...financeMonitorRoutes,
       ...analyticsRoutes,
       ...leaderboardRoutes,
-      ...duelsRoutes
+      ...duelsRoutes,
+      ...friendsRoutes
     ]
   }
 ]

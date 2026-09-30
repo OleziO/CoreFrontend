@@ -18,24 +18,81 @@
 
     <!-- NAV — desktop bar only, app-tab style -->
     <nav class="footer__nav" aria-label="Навігація у футері">
-      <RouterLink
-        v-for="item in navItems"
-        :key="item.name"
-        :to="{ name: item.name }"
-        class="footer__nav-link"
-        :class="{ 'is-active': isActive(item.name) }"
-        :aria-current="isActive(item.name) ? 'page' : undefined"
-        active-class=""
-        exact-active-class=""
-      >
-        <component
-          :is="item.icon"
-          :size="24"
-          :weight="isActive(item.name) ? 'fill' : 'regular'"
-          class="shrink-0"
-        />
-        <span>{{ item.label }}</span>
-      </RouterLink>
+      <template v-for="item in navItems" :key="item.name">
+        <!-- Пункт із підменю: наведення відкриває список угору (смуга внизу екрана) -->
+        <div
+          v-if="item.children"
+          class="footer__nav-group"
+          @mouseenter="openGroup = item.name"
+          @mouseleave="openGroup = null"
+          @focusin="openGroup = item.name"
+          @focusout="onGroupFocusOut"
+        >
+          <RouterLink
+            :to="{ name: item.name }"
+            class="footer__nav-link"
+            :class="{ 'is-active': isActive(item.name) }"
+            :aria-current="isActive(item.name) ? 'page' : undefined"
+            aria-haspopup="menu"
+            :aria-expanded="openGroup === item.name"
+            active-class=""
+            exact-active-class=""
+          >
+            <component
+              :is="item.icon"
+              :size="24"
+              :weight="isActive(item.name) ? 'fill' : 'regular'"
+              class="shrink-0"
+            />
+            <span class="inline-flex items-center gap-4">
+              {{ item.label }}
+              <PhCaretUp :size="10" weight="bold" class="footer__nav-caret" />
+            </span>
+          </RouterLink>
+
+          <transition name="footer-menu">
+            <ul
+              v-show="openGroup === item.name"
+              class="footer__menu"
+              role="menu"
+              :aria-label="`Підменю: ${item.label}`"
+            >
+              <li v-for="child in item.children" :key="child.name" role="none">
+                <RouterLink
+                  :to="{ name: child.name }"
+                  class="footer__menu-link"
+                  :class="{ 'is-active': route.name === child.name }"
+                  role="menuitem"
+                  active-class=""
+                  exact-active-class=""
+                  @click="openGroup = null"
+                >
+                  <component :is="child.icon" :size="16" weight="bold" class="shrink-0" />
+                  <span>{{ child.label }}</span>
+                </RouterLink>
+              </li>
+            </ul>
+          </transition>
+        </div>
+
+        <RouterLink
+          v-else
+          :to="{ name: item.name }"
+          class="footer__nav-link"
+          :class="{ 'is-active': isActive(item.name) }"
+          :aria-current="isActive(item.name) ? 'page' : undefined"
+          active-class=""
+          exact-active-class=""
+        >
+          <component
+            :is="item.icon"
+            :size="24"
+            :weight="isActive(item.name) ? 'fill' : 'regular'"
+            class="shrink-0"
+          />
+          <span>{{ item.label }}</span>
+        </RouterLink>
+      </template>
     </nav>
 
     <!-- SOCIALS -->
@@ -63,6 +120,8 @@ import {
   PhTrophy,
   PhUsersThree,
   PhUser,
+  PhUserPlus,
+  PhCaretUp,
   PhRanking, PhSword,
   PhFileText,
   PhYoutubeLogo,
@@ -81,24 +140,49 @@ import {
 const route = useRoute()
 const year = new Date().getFullYear()
 
-const navItems: Array<{ name: string; label: string; icon: Component }> = [
+interface INavItem {
+  name: string
+  label: string
+  icon: Component
+  /** Підменю на наведення: «Гравці» → «Гравці», «Друзі». */
+  children?: Array<{ name: string; label: string; icon: Component }>
+}
+
+const navItems: INavItem[] = [
   { name: routeNames.rootPage, label: 'Головна', icon: PhHouse },
   { name: routeNames.tournaments, label: 'Турніри', icon: PhTrophy },
   { name: routeNames.teams, label: 'Команди', icon: PhUsersThree },
-  { name: routeNames.players, label: 'Гравці', icon: PhUser },
+  {
+    name: routeNames.players,
+    label: 'Гравці',
+    icon: PhUser,
+    children: [
+      { name: routeNames.players, label: 'Гравці', icon: PhUser },
+      { name: routeNames.friends, label: 'Друзі', icon: PhUserPlus }
+    ]
+  },
   { name: routeNames.leaderboard, label: 'Лідери', icon: PhRanking },
   { name: routeNames.duels, label: 'Дуелі', icon: PhSword }
 ]
 
-// Сторінка деталей підсвічує свій розділ (як у мобільному таббарі).
-const detailOf: Record<string, string> = {
-  [routeNames.tournaments]: routeNames.tournament,
-  [routeNames.teams]: routeNames.team,
-  [routeNames.players]: routeNames.player
+/** Яка група зараз розкрита (наведення чи фокус усередині). */
+const openGroup = ref<string | null>(null)
+
+function onGroupFocusOut (event: FocusEvent) {
+  const next = event.relatedTarget as Node | null
+  const group = event.currentTarget as HTMLElement | null
+  if (!group || !next || !group.contains(next)) openGroup.value = null
+}
+
+// Сторінка деталей підсвічує свій розділ (як у мобільному таббарі); «Друзі» живуть під «Гравцями».
+const detailOf: Record<string, string[]> = {
+  [routeNames.tournaments]: [routeNames.tournament],
+  [routeNames.teams]: [routeNames.team],
+  [routeNames.players]: [routeNames.player, routeNames.friends]
 }
 
 function isActive (name: string): boolean {
-  return route.name === name || route.name === detailOf[name]
+  return route.name === name || (detailOf[name] ?? []).includes(String(route.name))
 }
 
 const socialLinks: Array<{ name: string; url: string; icon: Component }> = [
@@ -140,6 +224,68 @@ const socialLinks: Array<{ name: string; url: string; icon: Component }> = [
 // «пігулка» в кольорі бренду.
 .footer__nav {
   @apply flex items-center justify-center gap-8;
+}
+
+// Група з підменю: відносний контейнер, список випливає вгору над смугою.
+.footer__nav-group {
+  position: relative;
+}
+
+.footer__nav-caret {
+  opacity: 0.6;
+  transition: transform var(--ds-duration-fast) ease;
+}
+
+.footer__nav-group:hover .footer__nav-caret,
+.footer__nav-group:focus-within .footer__nav-caret {
+  transform: translateY(-1px);
+}
+
+.footer__menu {
+  @apply absolute left-1/2 m-0 flex min-w-[180px] list-none flex-col gap-2 rounded-2xl p-6;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  border: 1px solid rgba(46, 229, 255, 0.22);
+  background: rgba(16, 19, 36, 0.92);
+  backdrop-filter: blur(20px) saturate(130%);
+  box-shadow: var(--ds-elevation-4), var(--ds-glow-primary-soft);
+  z-index: 60;
+
+  // Невидимий «місток» між пунктом і меню, щоб курсор не губив hover у щілині.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 -8px 0;
+    height: 8px;
+  }
+}
+
+.footer__menu-link {
+  @apply flex items-center gap-10 rounded-xl px-12 py-10 text-sm font-medium text-white/70 no-underline;
+  transition:
+    color var(--ds-duration-fast) ease,
+    background-color var(--ds-duration-fast) ease;
+
+  &:focus-visible {
+    outline: 2px solid rgba(46, 229, 255, 0.55);
+    outline-offset: -2px;
+  }
+
+  &.is-active {
+    @apply text-primary;
+    background-color: rgba(46, 229, 255, 0.1);
+  }
+}
+
+.footer-menu-enter-active,
+.footer-menu-leave-active {
+  transition: opacity var(--ds-duration-fast) ease, transform var(--ds-duration-fast) var(--ds-ease-out);
+}
+
+.footer-menu-enter-from,
+.footer-menu-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 6px);
 }
 
 .footer__nav-link {
@@ -235,6 +381,11 @@ const socialLinks: Array<{ name: string; url: string; icon: Component }> = [
   .footer__nav-link:hover:not(.is-active) {
     @apply text-white;
     background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .footer__menu-link:hover:not(.is-active) {
+    @apply text-white;
+    background-color: rgba(255, 255, 255, 0.06);
   }
 
   .footer__social:hover {

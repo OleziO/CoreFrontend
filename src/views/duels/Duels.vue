@@ -13,7 +13,8 @@
           <span class="sys-label">// Рейтингові дуелі</span>
           <h1 class="duels-head__title">Дуелі</h1>
           <p class="duels-head__subtitle">
-            Solo Mid, бот-хост ліги, підбір за рейтингом. +25 за перемогу, −25 за поразку.
+            Solo Mid, бот-хост ліги, підбір за рейтингом. +25 за перемогу, −25 за поразку;
+            дружня дуель із другом — ±{{ DUEL_FRIEND_RATING_DELTA }}.
           </p>
           <!-- Ключове правило ліги — герой кожному випадає випадково, вибору немає -->
           <span class="duels-head__note">
@@ -82,6 +83,19 @@
             @login="openLogin"
           />
 
+          <!-- Дружні дуелі: виклики друзів поза чергою, ±10, до 3 прийнятих на день -->
+          <DuelChallengesPanel
+            v-if="status?.challenges"
+            :challenges="status.challenges"
+            :active-duel="status.activeDuel"
+            :is-busy="isChallengeBusy"
+            :bots-offline="botsOffline"
+            @open="open('DuelChallengeFriendModal')"
+            @accept="acceptChallenge"
+            @decline="declineChallenge"
+            @cancel="cancelChallenge"
+          />
+
           <!-- Як це працює -->
           <section class="duels-how neon-card hud-corners rounded-2xl">
             <h2 class="sys-label sys-label--muted">// Як це працює</h2>
@@ -104,6 +118,11 @@
                 Результат зчитується з Dota автоматично: +25 переможцю, −25 переможеному.
               </li>
               <li>Скасувати матч можна до старту гри — це коштує −{{ DUEL_CANCEL_PENALTY }}.</li>
+              <li>
+                Дружня дуель: викличте друга зі сторінки «Друзі» або звідси — без черги й без 30 с на прийняття,
+                той самий бот і випадкові герої, але на кону ±{{ DUEL_FRIEND_RATING_DELTA }}.
+                Прийняти можна до {{ DUEL_CHALLENGE_DAILY_LIMIT }} таких дуелей на день.
+              </li>
             </ol>
           </section>
         </div>
@@ -157,11 +176,14 @@
 import { PhRanking, PhShuffle } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-status'
+import { useDuelChallenges } from '@/views/duels/composables/use-duel-challenges'
 import { useDuelSounds } from '@/views/duels/composables/use-duel-sounds'
 import { useDuelStatus } from '@/views/duels/composables/use-duel-status'
 import { useGetDuelLeaderboard, useGetDuelPlayerProfile } from '@/views/duels/duels.queries'
 import {
   DUEL_CANCEL_PENALTY,
+  DUEL_CHALLENGE_DAILY_LIMIT,
+  DUEL_FRIEND_RATING_DELTA,
   DUEL_RESULT_BANNER_TTL_MS,
   formatDuelPercent,
   isDuelProcessing,
@@ -171,6 +193,7 @@ import {
 import DuelAcceptOverlay from '@/views/duels/components/DuelAcceptOverlay.vue'
 import DuelActiveCard from '@/views/duels/components/DuelActiveCard.vue'
 import DuelBotsStatusStrip from '@/views/duels/components/DuelBotsStatusStrip.vue'
+import DuelChallengesPanel from '@/views/duels/components/DuelChallengesPanel.vue'
 import DuelHistoryList from '@/views/duels/components/DuelHistoryList.vue'
 import DuelLeaderboardTable from '@/views/duels/components/DuelLeaderboardTable.vue'
 import DuelQueuePanel from '@/views/duels/components/DuelQueuePanel.vue'
@@ -206,6 +229,14 @@ const {
 } = useDuelStatus()
 
 const { bots, isError: botsError, isOffline: botsOffline } = useDuelBotsStatus()
+
+/** Виклики друзів: відповідь бекенду — той самий статус, тож панель оновлюється без перезапиту. */
+const {
+  isBusy: isChallengeBusy,
+  accept: acceptChallenge,
+  decline: declineChallenge,
+  cancel: cancelChallenge
+} = useDuelChallenges()
 
 // Клік «Стати в чергу» — жест користувача: розблоковуємо звук, щоб «Матч знайдено» точно пролунав.
 const { unlock: unlockSounds } = useDuelSounds()

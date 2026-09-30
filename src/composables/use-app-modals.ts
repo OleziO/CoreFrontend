@@ -38,7 +38,9 @@ export const appModals = useModals({
     defineAsyncComponent(() => import('@/views/finance-monitor/modals/CreateCustomCategoryModal.vue')) as Component,
   MmrProofsLightboxModal:
     defineAsyncComponent(() => import('@/views/admin-panel/modals/MmrProofsLightboxModal.vue')) as Component,
-  LoginModal: defineAsyncComponent(() => import('@/components/modals/LoginModal.vue')) as Component
+  LoginModal: defineAsyncComponent(() => import('@/components/modals/LoginModal.vue')) as Component,
+  DuelChallengeFriendModal:
+    defineAsyncComponent(() => import('@/views/duels/modals/DuelChallengeFriendModal.vue')) as Component
 })
 
 export function useAppModals () {

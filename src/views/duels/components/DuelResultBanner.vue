@@ -38,6 +38,7 @@ import {
   duelOpponentOf,
   duelOutcomeFor,
   duelPlayerName,
+  duelStakeOf,
   formatDuelDelta
 } from '@/views/duels/duels.utils'
 import type { TDuel } from '@/api/types/api.types'
@@ -84,7 +85,7 @@ const meta = computed(() => {
     return reason || 'Рейтинг не змінився.'
   }
   if (outcome.value === 'loss' && props.duel.cancelReason === 'players_no_show') {
-    return 'Неявка в лобі: −25 і коротка пауза перед наступною чергою.'
+    return `Неявка в лобі: −${duelStakeOf(props.duel)} і коротка пауза перед наступною чергою.`
   }
   return props.duel.dotaMatchId ? `Матч ${props.duel.dotaMatchId}` : 'Результат зараховано.'
 })

@@ -7,7 +7,9 @@
       :class="`is-${row.outcome}`"
       :style="{ '--i': Math.min(index, 12) }"
     >
-      <span class="dhistory__badge">{{ duelOutcomeLabels[row.outcome] }}</span>
+      <span class="dhistory__badge" :title="isFriendDuel(row.duel) ? 'Дружня дуель (±10)' : undefined">
+        {{ duelOutcomeLabels[row.outcome] }}<template v-if="isFriendDuel(row.duel)"> · дружня</template>
+      </span>
 
       <RouterLink
         v-if="row.opponent"
@@ -59,6 +61,7 @@ import {
   duelPlayerName,
   formatDuelDelta,
   formatDuelKda,
+  isFriendDuel,
   toDuelHistoryRow
 } from '@/views/duels/duels.utils'
 import type { TDuel } from '@/api/types/api.types'

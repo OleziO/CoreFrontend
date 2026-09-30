@@ -2,6 +2,7 @@ import { pluralizeUk } from '@/views/players/player-achievements.utils'
 import type {
   TDuel,
   TDuelCancelReason,
+  TDuelChallengeStatus,
   TDuelFailReason,
   TDuelHero,
   TDuelLobbySide,
@@ -14,6 +15,10 @@ import type {
 
 /** Скільки очок переходить за дуель (дзеркало `DUEL_RATING_DELTA` на бекенді). */
 export const DUEL_RATING_DELTA = 25
+/** Скільки очок переходить за дружню дуель між друзями (дзеркало `DUEL_FRIEND_RATING_DELTA`). */
+export const DUEL_FRIEND_RATING_DELTA = 10
+/** Скільки дружніх дуелей гравець може прийняти за день (дзеркало `DUEL_CHALLENGE_DAILY_LIMIT`). */
+export const DUEL_CHALLENGE_DAILY_LIMIT = 3
 /** Штраф за самостійне скасування дуелі чи неприйняття матчу (дзеркало `DUEL_CANCEL_PENALTY`). */
 export const DUEL_CANCEL_PENALTY = 10
 /** Скільки секунд дається на «Прийняти» після знаходження пари. */
@@ -48,6 +53,24 @@ export const duelStateLabels: Record<TDuelState, string> = {
   RESOLVED: 'Завершено',
   CANCELLED: 'Скасовано',
   FAILED: 'Збій'
+}
+
+export const duelChallengeStatusLabels: Record<TDuelChallengeStatus, string> = {
+  PENDING: 'Чекає на відповідь',
+  ACCEPTED: 'Прийнято',
+  DECLINED: 'Відхилено',
+  CANCELLED: 'Скасовано',
+  EXPIRED: 'Прострочено'
+}
+
+/** Дружня дуель — з виклику друга, ±10 замість ±25. */
+export function isFriendDuel (duel: TDuel | null | undefined): boolean {
+  return duel?.kind === 'friend'
+}
+
+/** Скільки очок на кону в цій дуелі (за її видом). */
+export function duelStakeOf (duel: TDuel | null | undefined): number {
+  return isFriendDuel(duel) ? DUEL_FRIEND_RATING_DELTA : DUEL_RATING_DELTA
 }
 
 /** Кроки степпера активної дуелі — у порядку проходження. */
