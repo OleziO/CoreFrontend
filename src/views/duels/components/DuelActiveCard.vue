@@ -2,7 +2,7 @@
   <section class="active-card neon-card hud-corners rounded-2xl" aria-labelledby="duel-active-title">
     <header class="flex flex-wrap items-start justify-between gap-12">
       <div class="flex min-w-0 flex-col gap-4">
-        <span class="sys-label sys-label--gold">// Активна дуель</span>
+        <span class="sys-label sys-label--gold">// Дуель #{{ duel.number }}</span>
         <h2 id="duel-active-title" class="active-card__title">{{ duelStateLabels[duel.state] }}</h2>
       </div>
       <span v-if="duel.state === 'WAITING_PLAYERS' && joinLeft > 0" class="active-card__deadline">
@@ -58,6 +58,28 @@
       <p class="active-card__hint active-card__heroes-hint">
         Герої випадкові. Оберіть на стадії піку саме свого героя — інший герой означає технічну поразку.
       </p>
+    </div>
+
+    <!-- Голосовий канал у Discord: приватний «Duel #N», створюється щойно обидва прийняли матч -->
+    <div v-if="duel.discordVoiceChannelUrl" class="active-card__voice">
+      <span class="active-card__voice-icon" aria-hidden="true">
+        <PhDiscordLogo :size="20" weight="fill" />
+      </span>
+      <span class="flex min-w-0 flex-col gap-2">
+        <span class="active-card__voice-title">Голосовий канал Duel #{{ duel.number }}</span>
+        <span class="active-card__voice-hint">Приватний канал у Discord лише для вас двох — на час дуелі.</span>
+      </span>
+      <a
+        :href="duel.discordVoiceChannelUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="active-card__voice-link no-underline"
+      >
+        <el-button type="primary" size="small">
+          <PhHeadset :size="14" weight="bold" class="mr-6" />
+          Зайти в голосовий канал
+        </el-button>
+      </a>
     </div>
 
     <!-- Лобі -->
@@ -147,6 +169,8 @@ import {
   PhArrowsClockwise,
   PhCheck,
   PhCopy,
+  PhDiscordLogo,
+  PhHeadset,
   PhPaperPlaneTilt,
   PhShieldCheck,
   PhTimer,
@@ -459,6 +483,55 @@ async function copyText (text: string) {
 .active-card__heroes-hint {
   grid-column: 1 / -1;
   font-size: 12px;
+}
+
+.active-card__voice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(88, 101, 242, 0.45);
+  background: rgba(88, 101, 242, 0.1);
+}
+
+@media (max-width: 480px) {
+  .active-card__voice {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .active-card__voice-link {
+    grid-column: 1 / -1;
+  }
+
+  .active-card__voice-link :deep(.el-button) {
+    width: 100%;
+  }
+}
+
+.active-card__voice-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #5865f2;
+  color: #fff;
+  box-shadow: 0 0 14px rgba(88, 101, 242, 0.5);
+}
+
+.active-card__voice-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ds-text-strong);
+}
+
+.active-card__voice-hint {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ds-text-muted);
 }
 
 .active-card__lobby {

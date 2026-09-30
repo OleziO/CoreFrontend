@@ -9,6 +9,19 @@
             <h2 class="accept-dialog__title">Матч знайдено</h2>
           </header>
 
+          <!-- Звук: фанфара + тікання; вимкнення запам'ятовується -->
+          <button
+            type="button"
+            class="accept-dialog__sound"
+            :aria-label="muted ? 'Увімкнути звук' : 'Вимкнути звук'"
+            :aria-pressed="muted"
+            :title="muted ? 'Увімкнути звук' : 'Вимкнути звук'"
+            @click="toggleMuted"
+          >
+            <PhSpeakerSlash v-if="muted" :size="16" weight="bold" />
+            <PhSpeakerHigh v-else :size="16" weight="bold" />
+          </button>
+
           <!-- Хто вже прийняв: два слоти, як індикатори гравців у Dota -->
           <ul class="accept-dialog__slots" aria-label="Готовність гравців">
             <li
@@ -62,7 +75,8 @@
 </template>
 
 <script setup lang="ts">
-import { PhCheck, PhCheckCircle } from '@phosphor-icons/vue'
+import { PhCheck, PhCheckCircle, PhSpeakerHigh, PhSpeakerSlash } from '@phosphor-icons/vue'
+import { useDuelSounds } from '@/views/duels/composables/use-duel-sounds'
 import {
   DUEL_ACCEPT_WINDOW_SECONDS,
   duelHeroFor,
@@ -83,6 +97,10 @@ const props = defineProps<{
 const emit = defineEmits<{ accept: [] }>()
 
 const now = useNow({ interval: 250 })
+const { muted, unlock, playMatchFound, playTick, toggleMuted } = useDuelSounds()
+
+// Звук дозволений лише після жесту користувача — будь-який клік/тап на сторінці розблоковує контекст.
+useEventListener(document, 'pointerdown', unlock, { passive: true })
 
 const visible = computed(() => props.duel?.state === 'ACCEPTING')
 const accepted = computed(() => !!props.duel && hasAcceptedDuel(props.duel, props.meId))
@@ -102,15 +120,24 @@ const slots = computed(() => {
 const secondsLeft = computed(() => secondsUntil(props.duel?.acceptDeadlineAt, now.value))
 const progress = computed(() => Math.min(1, secondsLeft.value / DUEL_ACCEPT_WINDOW_SECONDS))
 
-// Поки діалог відкритий — сторінка під ним не скролиться; на телефоні ще й вібрація як сигнал.
+// Поки діалог відкритий — сторінка під ним не скролиться; звук «Матч знайдено», на телефоні ще й вібрація.
 watch(visible, (open) => {
   document.body.style.overflow = open ? 'hidden' : ''
-  if (open && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+  if (!open) return
+  playMatchFound()
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
     try {
       navigator.vibrate([200, 100, 200])
     } catch { /* не критично */ }
   }
 }, { immediate: true })
+
+// Тік на кожну секунду таймера, поки діалог відкритий (і після «Прийняти» — час іде далі, як у Dota).
+// Стрибок 0 → 30 при відкритті — не тік, а поява діалогу (фанфара вже пролунала).
+watch(secondsLeft, (left, previous) => {
+  if (!visible.value || left <= 0 || !previous || left === previous) return
+  playTick(left)
+})
 
 onBeforeUnmount(() => {
   document.body.style.overflow = ''
@@ -156,6 +183,35 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 4px;
   text-align: center;
+}
+
+.accept-dialog__sound {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(230, 233, 239, 0.6);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.accept-dialog__sound:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.accept-dialog__sound[aria-pressed='true'] {
+  color: #fb7185;
 }
 
 .accept-dialog__eyebrow {

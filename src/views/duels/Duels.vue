@@ -77,7 +77,7 @@
             :leaving="leaving"
             :realtime="realtime"
             :bots-offline="botsOffline"
-            @join="join"
+            @join="onJoin"
             @leave="leave"
             @login="openLogin"
           />
@@ -90,6 +90,10 @@
               <li>Знайдемо суперника з рейтингом ±50 (вікно росте, поки ви чекаєте).</li>
               <li>Прийміть матч за 30 секунд. Хто не прийме — −{{ DUEL_CANCEL_PENALTY }} і пауза.</li>
               <li>Героїв роздає ліга випадково — свого ви побачите одразу після підбору.</li>
+              <li>
+                Щойно обидва прийняли — у Discord з’явиться приватний голосовий канал «Duel #N» лише для вас двох,
+                кнопка входу буде на картці дуелі.
+              </li>
               <li>Бот створить закрите лобі Solo Mid і надішле інвайт у Dota 2.</li>
               <li>
                 Зайдіть у лобі за 5 хвилин, станьте на сторону й на піку візьміть саме свого героя —
@@ -153,6 +157,7 @@
 import { PhRanking, PhShuffle } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-status'
+import { useDuelSounds } from '@/views/duels/composables/use-duel-sounds'
 import { useDuelStatus } from '@/views/duels/composables/use-duel-status'
 import { useGetDuelLeaderboard, useGetDuelPlayerProfile } from '@/views/duels/duels.queries'
 import {
@@ -201,6 +206,13 @@ const {
 } = useDuelStatus()
 
 const { bots, isError: botsError, isOffline: botsOffline } = useDuelBotsStatus()
+
+// Клік «Стати в чергу» — жест користувача: розблоковуємо звук, щоб «Матч знайдено» точно пролунав.
+const { unlock: unlockSounds } = useDuelSounds()
+function onJoin () {
+  unlockSounds()
+  return join()
+}
 
 const { data: leaderboard, isPending: leaderboardPending, error: leaderboardError } = useGetDuelLeaderboard()
 const topRows = computed(() => (leaderboard.value?.players ?? []).slice(0, TOP_SIZE))

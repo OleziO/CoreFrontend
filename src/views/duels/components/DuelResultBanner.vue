@@ -11,6 +11,19 @@
       <span class="result-banner__meta">{{ meta }}</span>
     </div>
     <span v-if="delta != null" class="result-banner__delta">{{ formatDuelDelta(delta) }}</span>
+    <!-- Гра ще триває («обробка»): голосовий канал дуелі досі живий -->
+    <a
+      v-if="outcome === 'processing' && duel.discordVoiceChannelUrl"
+      :href="duel.discordVoiceChannelUrl"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="no-underline"
+    >
+      <el-button size="small" plain>
+        <PhDiscordLogo :size="14" weight="fill" class="mr-6" />
+        Голосовий канал
+      </el-button>
+    </a>
     <el-button text size="small" class="btn-icon" aria-label="Закрити" @click="emit('dismiss')">
       <PhX :size="14" weight="bold" />
     </el-button>
@@ -18,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhHourglassHigh, PhSkull, PhTrophy, PhWarningOctagon, PhX } from '@phosphor-icons/vue'
+import { PhDiscordLogo, PhHourglassHigh, PhSkull, PhTrophy, PhWarningOctagon, PhX } from '@phosphor-icons/vue'
 import {
   duelDeltaFor,
   duelEndReasonLabel,

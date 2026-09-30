@@ -2761,6 +2761,8 @@ export interface components {
         };
         DuelDto: {
             id: string;
+            /** @description Human-readable duel number ("Duel #N") */
+            number: number;
             /** @enum {string} */
             state: "ACCEPTING" | "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "PROCESSING" | "RESOLVED" | "CANCELLED" | "FAILED";
             /** Format: date-time */
@@ -2794,6 +2796,8 @@ export interface components {
             lobbyPassword: string | null;
             /** @description Random hero per player, drawn at pairing time; picking another hero forfeits the duel */
             heroes: components["schemas"]["DuelHeroDto"][] | null;
+            /** @description Link to the private Discord voice channel of this duel ("Duel #N"). Only for the two participants from the moment both accepted until the duel ended; null for everyone else */
+            discordVoiceChannelUrl: string | null;
             lobbyPlayers: components["schemas"]["DuelLobbyPlayerDto"][] | null;
             radiantPlayerId: string | null;
             direPlayerId: string | null;
