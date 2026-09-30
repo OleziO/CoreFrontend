@@ -11,6 +11,8 @@ type TAnalyticsTeams = TAnalyticsOverview['teams']
 type TAnalyticsTournament = TAnalyticsOverview['tournaments'][number]
 type TAnalyticsWantToPlay = TAnalyticsOverview['wantToPlay']
 type TAnalyticsCity = TAnalyticsOverview['cities'][number]
+/** Дуелі 1v1: лічильники за станом, черга та зріз пулу ботів-хостів. */
+type TAnalyticsDuels = TAnalyticsOverview['duels']
 
 /** Дошка трофеїв (GET /admin/analytics/achievements): кожен вид досягнення з його володарями. */
 type TAnalyticsAchievements = TResponse<'/admin/analytics/achievements', 'get'>

@@ -926,7 +926,7 @@ export interface paths {
         };
         /**
          * Admin analytics overview
-         * @description Aggregated dashboard data: social followers (live where a platform API is configured, otherwise the admin-entered value), totals, rank distribution, team verification split, tournament participants, wantToPlay breakdown and player cities. Live follower counts are cached for 10 minutes.
+         * @description Aggregated dashboard data: social followers (live where a platform API is configured, otherwise the admin-entered value), totals, rank distribution, team verification split, tournament participants, wantToPlay breakdown, player cities and the 1v1 ladder (duel counts by outcome, duels in progress, queue length, host-bot pool). Live follower counts are cached for 10 minutes.
          */
         get: operations["AnalyticsController_getOverview"];
         put?: never;
@@ -1661,6 +1661,25 @@ export interface components {
             wantToPlay: components["schemas"]["WantToPlayDto"];
             /** @description Sorted by players, descending. */
             cities: components["schemas"]["CityBucketDto"][];
+            duels: components["schemas"]["AnalyticsDuelsDto"];
+        };
+        AnalyticsDuelsDto: {
+            /** @description Every 1v1 duel ever created, any state. */
+            total: number;
+            /** @description Duels that finished with a result and had the rating applied (RESOLVED). */
+            played: number;
+            /** @description Duels that ended without a game: no-show, accept timeout, no free bot, admin cancel (CANCELLED). */
+            cancelled: number;
+            /** @description Duels that broke mid-way and need an admin decision (FAILED). */
+            failed: number;
+            /** @description Duels in progress right now: ACCEPTING, PENDING, LOBBY_CREATING, WAITING_PLAYERS or LIVE. */
+            active: number;
+            /** @description Duels whose game is running right now (LIVE). */
+            live: number;
+            /** @description Players waiting in the 1v1 queue right now. */
+            inQueue: number;
+            /** @description Host bot pool snapshot — same numbers as GET /duels/bots/status. */
+            bots: components["schemas"]["DuelBotsStatusDto"];
         };
         PlatformAchievementHolderDto: {
             playerId: string;

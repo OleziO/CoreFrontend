@@ -14,7 +14,7 @@
           <span class="sys-label">// Панель керування · Аналітика</span>
           <h1 class="analytics-head__title">Аналітика ліги</h1>
           <p class="analytics-head__subtitle">
-            Соцмережі, гравці, команди й турніри — одним поглядом.
+            Соцмережі, гравці, команди, турніри й дуелі 1v1 — одним поглядом.
           </p>
         </div>
 
@@ -71,6 +71,7 @@
           <span class="skeleton-bone block h-[220px] !rounded-2xl" />
           <span class="skeleton-bone block h-[220px] !rounded-2xl" />
         </div>
+        <span class="skeleton-bone block h-[300px] !rounded-2xl" />
       </template>
 
       <!-- ─── Dashboard ────────────────────────────────────────────────── -->
@@ -162,12 +163,43 @@
           </AnalyticsPanel>
         </div>
 
-        <!-- 06 · Турніри -->
+        <!-- 06 · Дуелі 1v1 (v-if — страховка на вікно між деплоями фронту й бекенду) -->
         <AnalyticsPanel
-          code="// 06 · Учасники турнірів"
+          v-if="data.duels"
+          code="// 06 · Дуелі 1v1"
+          title="Дуелі та боти-хости"
+          :subtitle="duelsSubtitle"
+          :delay="620"
+        >
+          <template #aside>
+            <DuelBotsStatusStrip :bots="data.duels.bots" compact />
+          </template>
+          <div class="analytics-duels">
+            <AnalyticsStatTile
+              v-for="(tile, index) in duelTiles"
+              :key="tile.key"
+              :label="tile.label"
+              :value="tile.value"
+              :icon="tile.icon"
+              :accent="tile.accent"
+              :hint="tile.hint"
+              :delay="620 + index * 60"
+            />
+          </div>
+          <div class="analytics-duels__outcomes">
+            <span class="analytics-duels__caption">
+              Результати завершених дуелей — {{ formatAnalyticsNumber(duelsFinished) }} усього
+            </span>
+            <AnalyticsStackedBar :segments="duelOutcomeSegments" />
+          </div>
+        </AnalyticsPanel>
+
+        <!-- 07 · Турніри -->
+        <AnalyticsPanel
+          code="// 07 · Учасники турнірів"
           title="Команди в турнірах"
           :subtitle="tournamentsSubtitle"
-          :delay="620"
+          :delay="700"
         >
           <AnalyticsBarList
             :items="tournamentItems"
@@ -176,12 +208,12 @@
           />
         </AnalyticsPanel>
 
-        <!-- 07 · Міста -->
+        <!-- 08 · Міста -->
         <AnalyticsPanel
-          code="// 07 · Географія"
+          code="// 08 · Географія"
           title="Гравці за містами"
           :subtitle="citiesSubtitle"
-          :delay="700"
+          :delay="780"
         >
           <AnalyticsBarList
             :items="cityItems"
@@ -190,12 +222,12 @@
           />
         </AnalyticsPanel>
 
-        <!-- 08 · Досягнення -->
+        <!-- 09 · Досягнення -->
         <AnalyticsPanel
-          code="// 08 · Досягнення"
+          code="// 09 · Досягнення"
           title="Дошка трофеїв"
           subtitle="Усі досягнення платформи — наведіть на трофей, щоб побачити, хто його здобув"
-          :delay="780"
+          :delay="860"
         >
           <template #aside>
             <span v-if="achievementHoldersTotal" class="analytics-chip">
@@ -224,8 +256,11 @@ import type { Component } from 'vue'
 import {
   PhArrowsClockwise,
   PhCrownSimple,
+  PhHourglassHigh,
   PhLightning,
   PhShieldCheck,
+  PhSword,
+  PhTimer,
   PhTrophy,
   PhUserCheck,
   PhUsersFour,
@@ -252,6 +287,7 @@ import AnalyticsBarList from './components/AnalyticsBarList.vue'
 import AnalyticsStackedBar from './components/AnalyticsStackedBar.vue'
 import AnalyticsAchievements from './components/AnalyticsAchievements.vue'
 import AnalyticsTopAchievers from './components/AnalyticsTopAchievers.vue'
+import DuelBotsStatusStrip from '@/views/duels/components/DuelBotsStatusStrip.vue'
 
 const TOURNAMENTS_LIMIT = 12
 const CITIES_LIMIT = 10
@@ -269,7 +305,7 @@ function refetch () {
   return Promise.all([refetchOverview(), refetchAchievements()])
 }
 
-// ─── 08 · Досягнення ────────────────────────────────────────────────────────
+// ─── 09 · Досягнення ────────────────────────────────────────────────────────
 const achievementHoldersTotal = computed(() => {
   const ids = new Set<string>()
   for (const a of achievementsData.value?.achievements ?? []) {
@@ -365,7 +401,62 @@ const wantToPlaySegments = computed<TAnalyticsStackedSegment[]>(() => {
   ]
 })
 
-// ─── 06 · Турніри ───────────────────────────────────────────────────────────
+// ─── 06 · Дуелі 1v1 ─────────────────────────────────────────────────────────
+const duelTiles = computed<TKpiTile[]>(() => {
+  const d = data.value?.duels
+  return [
+    {
+      key: 'played',
+      label: 'Зіграно дуелей',
+      value: d?.played ?? null,
+      icon: PhSword,
+      accent: 'pink',
+      hint: d ? `з ${formatAnalyticsNumber(d.total)} створених` : ''
+    },
+    {
+      key: 'active',
+      label: 'Дуелі зараз',
+      value: d?.active ?? null,
+      icon: PhTimer,
+      accent: 'primary',
+      hint: d ? `${formatAnalyticsNumber(d.live)} у грі` : ''
+    },
+    {
+      key: 'inQueue',
+      label: 'Гравців у черзі',
+      value: d?.inQueue ?? null,
+      icon: PhHourglassHigh,
+      accent: 'violet',
+      hint: d ? `${formatAnalyticsNumber(d.bots.free)} вільних ботів` : ''
+    }
+  ]
+})
+
+/** Завершені дуелі — з результатом, скасовані та зі збоєм; активні сюди не входять. */
+const duelsFinished = computed(() => {
+  const d = data.value?.duels
+  return d ? d.played + d.cancelled + d.failed : 0
+})
+
+const duelOutcomeSegments = computed<TAnalyticsStackedSegment[]>(() => {
+  const d = data.value?.duels
+  return [
+    { key: 'played', label: 'Зіграно', value: d?.played ?? 0, color: ANALYTICS_SERIES.primary },
+    { key: 'cancelled', label: 'Скасовано', value: d?.cancelled ?? 0, color: ANALYTICS_SERIES.muted },
+    { key: 'failed', label: 'Збій', value: d?.failed ?? 0, color: ANALYTICS_SERIES.pink }
+  ]
+})
+
+const duelsSubtitle = computed(() => {
+  const d = data.value?.duels
+  if (!d) return 'Рейтингові матчі 1v1 Solo Mid і пул ботів-хостів'
+  const bots = d.bots.online
+    ? `ботів онлайн ${formatAnalyticsNumber(d.bots.online)} з ${formatAnalyticsNumber(d.bots.total)}`
+    : 'жоден бот-хост не онлайн — черга заблокована'
+  return `${formatAnalyticsPercent(d.played, duelsFinished.value)} завершених дуелей дійшли до результату · ${bots}`
+})
+
+// ─── 07 · Турніри ───────────────────────────────────────────────────────────
 const tournamentItems = computed<TAnalyticsChartItem[]>(() =>
   (data.value?.tournaments ?? []).slice(0, TOURNAMENTS_LIMIT).map(t => ({
     key: t.id,
@@ -384,7 +475,7 @@ const tournamentsSubtitle = computed(() => {
   return total > shown ? `${base} · останні ${shown} з ${total}` : base
 })
 
-// ─── 07 · Міста ─────────────────────────────────────────────────────────────
+// ─── 08 · Міста ─────────────────────────────────────────────────────────────
 const cityItems = computed<TAnalyticsChartItem[]>(() => {
   const cities = data.value?.cities ?? []
   const top = cities.slice(0, CITIES_LIMIT).map(c => ({
@@ -520,6 +611,32 @@ const citiesSubtitle = computed(() => {
 }
 
 .analytics-hero__label {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ds-text-muted);
+}
+
+/* Плитки дуелей: три в ряд від планшета, стовпчиком на телефоні. */
+.analytics-duels {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: 18px;
+}
+
+@media (min-width: 640px) {
+  .analytics-duels {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.analytics-duels__outcomes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.analytics-duels__caption {
   font-size: 13px;
   line-height: 1.4;
   color: var(--ds-text-muted);
