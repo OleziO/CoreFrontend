@@ -25,30 +25,48 @@
           </button>
         </div>
 
+        <!-- Акаунт: профіль і друзі — лише для авторизованих -->
         <RouterLink
           v-if="authStore.token"
           :to="{ name: routeNames.profile }"
           class="mobile-menu-link no-underline"
+          :class="{ 'mobile-menu-link--active': isActive(routeNames.profile) }"
+          :aria-current="isActive(routeNames.profile) ? 'page' : undefined"
           @click="close"
         >
           <PhUser :size="20" />
           <span>Профіль</span>
         </RouterLink>
 
-        <!-- Друзі — під профілем: на мобільному дропдауна «Гравці» немає -->
         <RouterLink
           v-if="authStore.token"
           :to="{ name: routeNames.friends }"
           class="mobile-menu-link no-underline"
+          :class="{ 'mobile-menu-link--active': isActive(routeNames.friends) }"
+          :aria-current="isActive(routeNames.friends) ? 'page' : undefined"
+          @click="close"
+        >
+          <PhUserPlus :size="20" />
+          <span>Друзі</span>
+        </RouterLink>
+
+        <!-- Розділи, яких немає в нижньому таббарі (там лише Головна, Турніри, Команди, Лідери) -->
+        <RouterLink
+          :to="{ name: routeNames.players }"
+          class="mobile-menu-link no-underline"
+          :class="{ 'mobile-menu-link--active': isActive(routeNames.players, routeNames.player) }"
+          :aria-current="isActive(routeNames.players, routeNames.player) ? 'page' : undefined"
           @click="close"
         >
           <PhUsersThree :size="20" />
-          <span>Друзі</span>
+          <span>Гравці</span>
         </RouterLink>
 
         <RouterLink
           :to="{ name: routeNames.duels }"
           class="mobile-menu-link no-underline"
+          :class="{ 'mobile-menu-link--active': isActive(routeNames.duels) }"
+          :aria-current="isActive(routeNames.duels) ? 'page' : undefined"
           @click="close"
         >
           <PhSword :size="20" />
@@ -58,6 +76,8 @@
         <RouterLink
           v-if="hasAdminUaRole"
           class="mobile-menu-link no-underline"
+          :class="{ 'mobile-menu-link--active': isActive(routeNames.adminPanel) }"
+          :aria-current="isActive(routeNames.adminPanel) ? 'page' : undefined"
           :to="{ name: routeNames.adminPanel }"
           @click="close"
         >
@@ -68,6 +88,8 @@
         <RouterLink
           v-if="hasAdminUaRole"
           class="mobile-menu-link no-underline"
+          :class="{ 'mobile-menu-link--active': isActive(routeNames.analytics) }"
+          :aria-current="isActive(routeNames.analytics) ? 'page' : undefined"
           :to="{ name: routeNames.analytics }"
           @click="close"
         >
@@ -129,12 +151,18 @@
 import { routeNames } from '@/router/route-names'
 import Icon, { type TIconName } from '@/components/Icon.vue'
 import {
-  PhDiscordLogo, PhUser, PhUsersThree, PhChartLineUp, PhGauge, PhSignOut, PhSword, PhX
+  PhDiscordLogo, PhUser, PhUserPlus, PhUsersThree, PhChartLineUp, PhGauge, PhSignOut, PhSword, PhX
 } from '@phosphor-icons/vue'
 import { hasAdminRole } from '@/core/helpers'
 
 const togglerStore = useTogglerStore()
 const authStore = useAuthStore()
+const route = useRoute()
+
+/** Поточний розділ у меню: сам роут або його сторінка деталей (напр. «Гравці» → гравець). */
+function isActive (...names: string[]): boolean {
+  return names.includes(String(route.name))
+}
 
 /** Єдиний предикат адмінського доступу — за прапором `isAdminRole`, спільний із гардом /finance. */
 const hasAdminUaRole = computed(() => hasAdminRole(authStore.user?.roles))
@@ -263,6 +291,11 @@ function handleLogout () {
     transition-colors duration-200 ease-out
     hover:text-primary hover:border-primary/40;
   border-color: var(--ds-border);
+}
+
+.mobile-menu-link--active {
+  @apply text-primary border-primary/40;
+  background-color: rgba(46, 229, 255, 0.08);
 }
 
 .mobile-menu-link--danger {

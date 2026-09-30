@@ -216,6 +216,11 @@ async function onDecline () {
 </script>
 
 <style scoped>
+/*
+  Рядок на всю ширину панелі, між рядками — волосинка. Без «карток» із заокругленням:
+  межа між сповіщеннями має читатися одразу, а не вгадуватися за відступами.
+  `--notif-*` приходять з попперу (NotificationCenter.vue).
+*/
 .notif-item {
   --tone: var(--ds-primary-rgb);
 
@@ -223,10 +228,13 @@ async function onDecline () {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: start;
-  gap: 10px;
-  padding: 9px 10px;
-  border-radius: 10px;
+  gap: 12px;
+  padding: 11px var(--notif-inset, 16px);
   transition: background-color var(--ds-duration-fast) ease;
+}
+
+.notif-item + .notif-item {
+  border-top: 1px solid var(--notif-hairline, rgba(255, 255, 255, 0.07));
 }
 
 .notif-item.tone-success {
@@ -241,18 +249,23 @@ async function onDecline () {
   --tone: 148, 163, 184;
 }
 
-/* Відкритий запит — ледь помітна ціанова підкладка; кнопки самі кажуть, що тут треба відповісти */
+/* Непрочитане — ледь тепліша підкладка; гасне разом із крапкою після відкриття панелі */
+.notif-item.is-unread {
+  background: rgba(var(--ds-primary-rgb), 0.035);
+}
+
+/* Відкритий запит — помітніша ціанова підкладка; кнопки самі кажуть, що тут треба відповісти */
 .notif-item.is-actionable {
-  background: rgba(var(--ds-primary-rgb), 0.05);
+  background: rgba(var(--ds-primary-rgb), 0.06);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .notif-item:hover {
-    background: rgba(255, 255, 255, 0.035);
+    background: rgba(255, 255, 255, 0.04);
   }
 
   .notif-item.is-actionable:hover {
-    background: rgba(var(--ds-primary-rgb), 0.08);
+    background: rgba(var(--ds-primary-rgb), 0.09);
   }
 }
 
@@ -284,7 +297,7 @@ async function onDecline () {
   border-radius: 9999px;
   background: rgb(var(--tone));
   color: #07080f;
-  box-shadow: 0 0 0 2px rgb(15, 18, 33);
+  box-shadow: 0 0 0 2px rgb(var(--notif-surface, 11, 13, 25));
 }
 
 .notif-item.tone-muted .notif-item__type {
@@ -296,14 +309,14 @@ async function onDecline () {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 3px;
-  padding-top: 1px;
+  gap: 4px;
+  padding-top: 2px;
 }
 
 .notif-item__text {
   margin: 0;
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 1.45;
   color: var(--ds-text-muted);
   text-wrap: pretty;
   transition: color 500ms ease;
@@ -377,7 +390,7 @@ async function onDecline () {
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-  margin-top: 5px;
+  margin-top: 6px;
 }
 
 .notif-item__actions :deep(.el-button + .el-button) {
@@ -389,7 +402,7 @@ async function onDecline () {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding-top: 3px;
+  padding-top: 5px;
   font-family: var(--ds-font-mono);
   font-size: 10px;
   line-height: 1;

@@ -7,7 +7,7 @@
     :show-arrow="false"
     :persistent="false"
     popper-class="notif-popover"
-    transition="el-zoom-in-top"
+    transition="notif-pop"
   >
     <template #reference>
       <button
@@ -292,17 +292,41 @@ watch(() => store.unreadCount, (count, previous) => {
 
 <!-- Not scoped: el-popover is teleported to <body>. -->
 <style lang="scss">
-.el-popover.el-popper.notif-popover {
-  // Один непрозорий колір поверхні: липкі підписи груп перекривають список без «просвітів»
-  --notif-surface: 15, 18, 33;
+/*
+  Селектор навмисно важкий (body + 4 класи). Глобальні ресети попперів —
+  `.el-tooltip.el-popper.el-popover:not(:has(...))` у _tooltip.scss (flex + p-15) та
+  `.el-popper.is-light.el-tooltip` у _select.scss (скляна підкладка з блюром) — мають
+  специфічність 0,4,0 / 0,3,0 і інакше перекривають padding, фон і display панелі:
+  вона рендерилась як напівпрозоре скло з 15px рамкою, а непрозорі підписи груп
+  читалися як світлі «коробки».
+*/
+body .el-popper.el-tooltip.el-popover.notif-popover {
+  // Одна непрозора поверхня, темніша за картки сторінки: панель — верхній шар, а не скло.
+  --notif-surface: 11, 13, 25;
+  // Підписи груп «втоплені» — трохи темніші за поверхню, ніколи не світліші.
+  --notif-well: 7, 8, 16;
+  --notif-hairline: rgba(255, 255, 255, 0.07);
+  --notif-inset: 16px;
 
+  display: block;
   padding: 0;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  max-width: calc(100vw - 24px);
+  border: 1px solid rgba(var(--ds-primary-rgb), 0.16);
   border-radius: 14px;
   background: rgb(var(--notif-surface));
-  box-shadow: var(--ds-elevation-4);
-  max-width: calc(100vw - 24px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(7, 8, 15, 0.8),
+    var(--ds-glow-primary-soft);
+  // Поппер відкривається з кута дзвіночка, а не з центру
+  transform-origin: top right;
+
+  &[data-popper-placement^='top'] {
+    transform-origin: bottom right;
+  }
 
   .notif-panel {
     position: relative;
@@ -316,8 +340,9 @@ watch(() => store.unreadCount, (count, previous) => {
     content: '';
     position: absolute;
     inset: 0 24px auto;
+    z-index: 2;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(var(--ds-primary-rgb), 0.55), transparent);
+    background: linear-gradient(90deg, transparent, rgba(var(--ds-primary-rgb), 0.6), transparent);
     pointer-events: none;
   }
 
@@ -326,8 +351,8 @@ watch(() => store.unreadCount, (count, previous) => {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 14px 16px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 14px var(--notif-inset) 12px;
+    border-bottom: 1px solid var(--notif-hairline);
   }
 
   .notif-panel__title {
@@ -338,6 +363,7 @@ watch(() => store.unreadCount, (count, previous) => {
     font-family: var(--ds-font-display);
     font-size: 14px;
     font-weight: 400;
+    line-height: 1;
     letter-spacing: 0.02em;
     color: var(--ds-text-strong);
   }
@@ -380,10 +406,13 @@ watch(() => store.unreadCount, (count, previous) => {
     color: var(--ds-success);
   }
 
+  .notif-panel__live.is-on .notif-panel__live-dot {
+    box-shadow: 0 0 6px currentcolor;
+  }
+
   .notif-panel__scroll {
     display: flex;
     flex-direction: column;
-    padding: 0 0 6px;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
@@ -391,49 +420,68 @@ watch(() => store.unreadCount, (count, previous) => {
   }
 
   .notif-group + .notif-group {
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid var(--notif-hairline);
   }
 
-  // Підпис групи липне до верху під час прокрутки — завжди видно, який це день
+  // Підпис групи — втоплена смужка, липне до верху під час прокрутки.
+  // Непрозорий фон, щоб рядки ховалися під нею без «просвітів».
   .notif-group__label {
     position: sticky;
     top: 0;
     z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin: 0;
-    padding: 10px 16px 4px;
-    background: rgb(var(--notif-surface));
+    padding: 7px var(--notif-inset) 6px;
+    background: rgb(var(--notif-well));
+    box-shadow: inset 0 -1px 0 var(--notif-hairline);
     font-family: var(--ds-font-mono);
     font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.16em;
+    line-height: 1.2;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--ds-text-faint);
   }
 
+  // Те, що чекає на відповідь — з брендовою крапкою, щоб око йшло сюди першим
   .notif-group.is-pending .notif-group__label {
     color: var(--ds-primary);
+  }
+
+  .notif-group.is-pending .notif-group__label::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 9999px;
+    background: currentcolor;
+    box-shadow: 0 0 6px currentcolor;
   }
 
   .notif-group__list {
     display: flex;
     flex-direction: column;
     margin: 0;
-    padding: 0 6px;
+    padding: 0;
     list-style: none;
   }
 
   .notif-panel__skeleton {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 12px 16px;
+    padding: 4px 0;
   }
 
   .notif-panel__skeleton-row {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 6px 0;
+    padding: 12px var(--notif-inset);
+  }
+
+  .notif-panel__skeleton-row + .notif-panel__skeleton-row {
+    border-top: 1px solid var(--notif-hairline);
   }
 
   .notif-panel__empty {
@@ -458,5 +506,25 @@ watch(() => store.unreadCount, (count, previous) => {
     font-size: 12px;
     line-height: 1.5;
   }
+}
+
+// Поява/зникнення панелі: масштаб від кута тригера + прозорість, вхід 180ms, вихід швидший.
+// Класи глобальні, бо transition застосовується до телепортованого поппера.
+.notif-pop-enter-active {
+  transition:
+    opacity 180ms var(--ds-ease-out),
+    transform 180ms var(--ds-ease-out);
+}
+
+.notif-pop-leave-active {
+  transition:
+    opacity 120ms ease,
+    transform 120ms var(--ds-ease-in-out);
+}
+
+.notif-pop-enter-from,
+.notif-pop-leave-to {
+  opacity: 0;
+  transform: scale(0.96) translateY(-6px);
 }
 </style>

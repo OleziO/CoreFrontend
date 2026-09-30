@@ -16,87 +16,8 @@
       <span class="footer__copy">© {{ year }} Core League</span>
     </div>
 
-    <!-- NAV — desktop bar only, app-tab style -->
-    <nav class="footer__nav" aria-label="Навігація у футері">
-      <template v-for="item in navItems" :key="item.name">
-        <!-- Пункт із підменю: наведення відкриває список угору (смуга внизу екрана) -->
-        <div
-          v-if="item.children"
-          class="footer__nav-group"
-          @mouseenter="openGroup = item.name"
-          @mouseleave="openGroup = null"
-          @focusin="openGroup = item.name"
-          @focusout="onGroupFocusOut"
-        >
-          <RouterLink
-            :to="{ name: item.name }"
-            class="footer__nav-link"
-            :class="{ 'is-active': isActive(item.name) }"
-            :aria-current="isActive(item.name) ? 'page' : undefined"
-            aria-haspopup="menu"
-            :aria-expanded="openGroup === item.name"
-            active-class=""
-            exact-active-class=""
-          >
-            <component
-              :is="item.icon"
-              :size="24"
-              :weight="isActive(item.name) ? 'fill' : 'regular'"
-              class="shrink-0"
-            />
-            <span class="inline-flex items-center gap-4">
-              {{ item.label }}
-              <PhCaretUp :size="10" weight="bold" class="footer__nav-caret" />
-            </span>
-          </RouterLink>
-
-          <transition name="footer-menu">
-            <ul
-              v-show="openGroup === item.name"
-              class="footer__menu"
-              role="menu"
-              :aria-label="`Підменю: ${item.label}`"
-            >
-              <li v-for="child in item.children" :key="child.name" role="none">
-                <RouterLink
-                  :to="{ name: child.name }"
-                  class="footer__menu-link"
-                  :class="{ 'is-active': route.name === child.name }"
-                  role="menuitem"
-                  active-class=""
-                  exact-active-class=""
-                  @click="openGroup = null"
-                >
-                  <component :is="child.icon" :size="16" weight="bold" class="shrink-0" />
-                  <span>{{ child.label }}</span>
-                </RouterLink>
-              </li>
-            </ul>
-          </transition>
-        </div>
-
-        <RouterLink
-          v-else
-          :to="{ name: item.name }"
-          class="footer__nav-link"
-          :class="{ 'is-active': isActive(item.name) }"
-          :aria-current="isActive(item.name) ? 'page' : undefined"
-          active-class=""
-          exact-active-class=""
-        >
-          <component
-            :is="item.icon"
-            :size="24"
-            :weight="isActive(item.name) ? 'fill' : 'regular'"
-            class="shrink-0"
-          />
-          <span>{{ item.label }}</span>
-        </RouterLink>
-      </template>
-    </nav>
-
     <!-- SOCIALS -->
-    <ul class="footer__socials">
+    <ul class="footer__socials" aria-label="Соцмережі">
       <li v-for="social in socialLinks" :key="social.name">
         <a
           :href="social.url"
@@ -106,7 +27,7 @@
           :aria-label="social.name"
           :title="social.name"
         >
-          <component :is="social.icon" :size="20" />
+          <component :is="social.icon" :size="18" />
         </a>
       </li>
     </ul>
@@ -114,15 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { routeNames } from '@/router/route-names'
 import {
-  PhHouse,
-  PhTrophy,
-  PhUsersThree,
-  PhUser,
-  PhUserPlus,
-  PhCaretUp,
-  PhRanking, PhSword,
   PhFileText,
   PhYoutubeLogo,
   PhTelegramLogo,
@@ -133,57 +46,12 @@ import {
 } from '@phosphor-icons/vue'
 
 /**
- * Липка смуга внизу екрана лише для lg+: оферта | навігація | соцмережі.
- * На мобільному й планшеті футер не рендериться: навігація живе в
- * MobileBottomTabBar, соцмережі та оферта — в MobileMenu.
+ * Тонка смуга внизу екрана лише для lg+: оферта й копірайт | соцмережі.
+ * Навігації тут немає — на десктопі вона в хедері (Header), на мобільному
+ * й планшеті футер не рендериться: навігація живе в MobileBottomTabBar,
+ * соцмережі та оферта — в MobileMenu.
  */
-const route = useRoute()
 const year = new Date().getFullYear()
-
-interface INavItem {
-  name: string
-  label: string
-  icon: Component
-  /** Підменю на наведення: «Гравці» → «Гравці», «Друзі». */
-  children?: Array<{ name: string; label: string; icon: Component }>
-}
-
-const navItems: INavItem[] = [
-  { name: routeNames.rootPage, label: 'Головна', icon: PhHouse },
-  { name: routeNames.tournaments, label: 'Турніри', icon: PhTrophy },
-  { name: routeNames.teams, label: 'Команди', icon: PhUsersThree },
-  {
-    name: routeNames.players,
-    label: 'Гравці',
-    icon: PhUser,
-    children: [
-      { name: routeNames.players, label: 'Гравці', icon: PhUser },
-      { name: routeNames.friends, label: 'Друзі', icon: PhUserPlus }
-    ]
-  },
-  { name: routeNames.leaderboard, label: 'Лідери', icon: PhRanking },
-  { name: routeNames.duels, label: 'Дуелі', icon: PhSword }
-]
-
-/** Яка група зараз розкрита (наведення чи фокус усередині). */
-const openGroup = ref<string | null>(null)
-
-function onGroupFocusOut (event: FocusEvent) {
-  const next = event.relatedTarget as Node | null
-  const group = event.currentTarget as HTMLElement | null
-  if (!group || !next || !group.contains(next)) openGroup.value = null
-}
-
-// Сторінка деталей підсвічує свій розділ (як у мобільному таббарі); «Друзі» живуть під «Гравцями».
-const detailOf: Record<string, string[]> = {
-  [routeNames.tournaments]: [routeNames.tournament],
-  [routeNames.teams]: [routeNames.team],
-  [routeNames.players]: [routeNames.player, routeNames.friends]
-}
-
-function isActive (name: string): boolean {
-  return route.name === name || (detailOf[name] ?? []).includes(String(route.name))
-}
 
 const socialLinks: Array<{ name: string; url: string; icon: Component }> = [
   { name: 'YouTube', url: 'https://www.youtube.com/@Core_League', icon: PhYoutubeLogo },
@@ -198,128 +66,35 @@ const socialLinks: Array<{ name: string; url: string; icon: Component }> = [
 <style scoped lang="scss">
 // Видимість керується тут, а не утилітою в шаблоні: scoped-селектор
 // специфічніший за `.lg\:hidden` і переміг би її. Нижче lg футер прихований.
+// `.app-main` прокручується всередині (див. _base.scss), тож смуга завжди
+// внизу вікна без sticky.
 .footer {
   display: none;
   border-top: 1px solid var(--ds-border);
 
   @screen lg {
-    @apply sticky bottom-0 z-50 grid h-72 w-full items-center gap-24 bg-surface/85 px-40 backdrop-blur-xl;
-    grid-template-columns: 1fr auto 1fr;
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.3);
+    @apply relative flex h-44 w-full items-center justify-between gap-24 bg-surface/85 px-40 backdrop-blur-xl;
   }
 }
 
-// Neon hairline on the top edge (mirrors the header's bottom line).
+// Neon hairline on the top edge (mirrors the header's bottom line), dimmer
+// than before so the strip reads as a footer, not a second toolbar.
 .footer::before {
   content: '';
   position: absolute;
   inset: 0 0 auto 0;
   height: 1px;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent 0%, rgba(46, 229, 255, 0.55) 50%, transparent 100%);
-}
-
-// ─── Nav — як таби мобільного застосунку ────────────────────────────────────
-// Іконка над підписом, велика зона натискання, активний розділ — м'яка
-// «пігулка» в кольорі бренду.
-.footer__nav {
-  @apply flex items-center justify-center gap-8;
-}
-
-// Група з підменю: відносний контейнер, список випливає вгору над смугою.
-.footer__nav-group {
-  position: relative;
-}
-
-.footer__nav-caret {
-  opacity: 0.6;
-  transition: transform var(--ds-duration-fast) ease;
-}
-
-.footer__nav-group:hover .footer__nav-caret,
-.footer__nav-group:focus-within .footer__nav-caret {
-  transform: translateY(-1px);
-}
-
-.footer__menu {
-  @apply absolute left-1/2 m-0 flex min-w-[180px] list-none flex-col gap-2 rounded-2xl p-6;
-  bottom: calc(100% + 6px);
-  transform: translateX(-50%);
-  border: 1px solid rgba(46, 229, 255, 0.22);
-  background: rgba(16, 19, 36, 0.92);
-  backdrop-filter: blur(20px) saturate(130%);
-  box-shadow: var(--ds-elevation-4), var(--ds-glow-primary-soft);
-  z-index: 60;
-
-  // Невидимий «місток» між пунктом і меню, щоб курсор не губив hover у щілині.
-  &::after {
-    content: '';
-    position: absolute;
-    inset: auto 0 -8px 0;
-    height: 8px;
-  }
-}
-
-.footer__menu-link {
-  @apply flex items-center gap-10 rounded-xl px-12 py-10 text-sm font-medium text-white/70 no-underline;
-  transition:
-    color var(--ds-duration-fast) ease,
-    background-color var(--ds-duration-fast) ease;
-
-  &:focus-visible {
-    outline: 2px solid rgba(46, 229, 255, 0.55);
-    outline-offset: -2px;
-  }
-
-  &.is-active {
-    @apply text-primary;
-    background-color: rgba(46, 229, 255, 0.1);
-  }
-}
-
-.footer-menu-enter-active,
-.footer-menu-leave-active {
-  transition: opacity var(--ds-duration-fast) ease, transform var(--ds-duration-fast) var(--ds-ease-out);
-}
-
-.footer-menu-enter-from,
-.footer-menu-leave-to {
-  opacity: 0;
-  transform: translate(-50%, 6px);
-}
-
-.footer__nav-link {
-  @apply inline-flex h-60 min-w-[120px] flex-col items-center justify-center gap-4
-    rounded-2xl px-20 no-underline text-caption font-medium text-white/55;
-  transition:
-    color var(--ds-duration-fast) ease,
-    background-color var(--ds-duration-fast) ease,
-    transform var(--ds-duration-press) var(--ds-ease-out);
-
-  &:active {
-    transform: scale(0.96);
-  }
-
-  &:focus-visible {
-    outline: 2px solid rgba(46, 229, 255, 0.55);
-    outline-offset: 2px;
-  }
-
-  &.is-active {
-    @apply text-primary;
-    background-color: rgba(46, 229, 255, 0.1);
-    box-shadow: inset 0 0 0 1px rgba(46, 229, 255, 0.22), var(--ds-glow-primary-soft);
-    text-shadow: var(--ds-neon-text-subtle);
-  }
+  background: linear-gradient(90deg, transparent 0%, rgba(46, 229, 255, 0.35) 50%, transparent 100%);
 }
 
 // ─── Socials ────────────────────────────────────────────────────────────────
 .footer__socials {
-  @apply m-0 flex list-none flex-wrap items-center justify-end gap-4 p-0;
+  @apply m-0 flex list-none items-center justify-end gap-2 p-0;
 }
 
 .footer__social {
-  @apply inline-flex size-40 items-center justify-center rounded-full text-white/60 no-underline;
+  @apply inline-flex size-32 items-center justify-center rounded-full text-white/55 no-underline;
   transition:
     color var(--ds-duration-fast) ease,
     background-color var(--ds-duration-fast) ease,
@@ -350,8 +125,7 @@ const socialLinks: Array<{ name: string; url: string; icon: Component }> = [
   }
 }
 
-// Повна назва документа на мобільному та на широких екранах; коротка — коли
-// у смузі стає тісно (lg…xl).
+// Коротка назва документа, коли у смузі тісно (lg…xl); повна — на xl+.
 .footer__legal-label--short {
   display: none;
 }
@@ -378,16 +152,6 @@ const socialLinks: Array<{ name: string; url: string; icon: Component }> = [
 
 // ─── Hover — лише для справжнього курсора, без «залипання» на тачі ──────────
 @media (hover: hover) and (pointer: fine) {
-  .footer__nav-link:hover:not(.is-active) {
-    @apply text-white;
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-
-  .footer__menu-link:hover:not(.is-active) {
-    @apply text-white;
-    background-color: rgba(255, 255, 255, 0.06);
-  }
-
   .footer__social:hover {
     @apply text-primary;
     background-color: rgba(46, 229, 255, 0.08);

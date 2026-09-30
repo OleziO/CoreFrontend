@@ -1,15 +1,16 @@
 <template>
   <header class="app-header sticky left-0 top-0 z-50 w-full">
     <!-- ─── Bar ────────────────────────────────────────────────────────────
-         Three true columns on lg+ (logo | HUD readout | user), so the readout
-         is centred on the viewport instead of between two unequal sides.
-         Below lg the side columns collapse and the logo is centred alone. -->
+         Three columns on lg+ (logo | primary nav | user): the side columns
+         hug their content so all six links fit already at 992px, and the nav
+         is centred between them. Below lg the logo is centred alone and the
+         nav lives in MobileBottomTabBar + MobileMenu. -->
     <div
       class="
         app-header__bar
         relative grid h-60 w-full items-center justify-items-center
         px-20 lg:px-40
-        lg:grid-cols-[1fr_auto_1fr]
+        lg:grid-cols-[auto_1fr_auto]
       "
     >
       <!-- LOGO -->
@@ -26,30 +27,21 @@
         />
       </RouterLink>
 
-      <!-- HUD READOUT — decorative system strip, desktop only -->
-      <div
-        class="app-header__hud hud-corners hud-corners--fade hidden lg:flex"
-        aria-hidden="true"
-      >
-        <span class="app-header__seg app-header__seg--sys">
-          <span class="app-header__dot" />
-          SYS://CORE LEAGUE
-        </span>
-
-        <span class="app-header__tick" />
-
-        <span class="app-header__seg app-header__seg--muted">DOTA 2</span>
-
-        <span class="app-header__tick app-header__tick--clock" />
-
-        <span class="app-header__seg app-header__seg--clock">
-          <PhClock :size="11" weight="bold" class="shrink-0" />
-          KYIV
-          <span class="app-header__time">
-            {{ kyivTime.hm }}<span class="app-header__time-sec">:{{ kyivTime.s }}</span>
-          </span>
-        </span>
-      </div>
+      <!-- PRIMARY NAV — desktop only (visibility is set in scoped CSS, see .app-header__nav) -->
+      <nav class="app-header__nav" aria-label="Основна навігація">
+        <RouterLink
+          v-for="item in navItems"
+          :key="item.name"
+          :to="{ name: item.name }"
+          class="app-header__nav-link"
+          :class="{ 'is-active': isNavActive(item.name) }"
+          :aria-current="isNavActive(item.name) ? 'page' : undefined"
+          active-class=""
+          exact-active-class=""
+        >
+          {{ item.label }}
+        </RouterLink>
+      </nav>
 
       <!-- RIGHT SIDE. Дзвіночок видно на всіх екранах (на мобільному — абсолютно
            праворуч у смузі); пігулка користувача та кнопка входу — лише на lg+. -->
@@ -128,19 +120,20 @@
                 </RouterLink>
               </el-dropdown-item>
 
+              <!-- Друзі — лише для авторизованих, тому живуть тут, а не в головній навігації -->
               <el-dropdown-item
                 :class="{
-                  'header-user-menu__item--active': route.name === routeNames.duels
+                  'header-user-menu__item--active': route.name === routeNames.friends
                 }"
               >
                 <RouterLink
-                  :to="{ name: routeNames.duels }"
+                  :to="{ name: routeNames.friends }"
                   active-class=""
                   exact-active-class=""
                   class="flex w-full items-center gap-10 no-underline text-inherit"
                 >
-                  <span class="header-menu__icon"><PhSword :size="16" weight="bold" /></span>
-                  <span>Дуелі</span>
+                  <span class="header-menu__icon"><PhUserPlus :size="16" weight="bold" /></span>
+                  <span>Друзі</span>
                 </RouterLink>
               </el-dropdown-item>
 
@@ -227,7 +220,7 @@
 import { routeNames } from '@/router/route-names'
 import logo from '@/assets/images/core-league-logo-full.png'
 import {
-  PhDiscordLogo, PhSignOut, PhUser, PhTrophy, PhCaretDown, PhGauge, PhChartLineUp, PhClock, PhSword
+  PhDiscordLogo, PhSignOut, PhUser, PhUserPlus, PhTrophy, PhCaretDown, PhGauge, PhChartLineUp
 } from '@phosphor-icons/vue'
 import CreateTournamentDrawer from '@/views/admin-panel/components/drawers/CreateTournamentDrawer.vue'
 import NotificationCenter from '@/components/NotificationCenter.vue'
@@ -270,27 +263,35 @@ const ratingLabel = computed(() => {
   return typeof rating === 'number' ? ratingFormat.format(rating) : ''
 })
 
-// ─── HUD clock — Kyiv time, ticks once a second ─────────────────────────────
-const now = useNow({ interval: 1000 })
-const kyivFormatter = new Intl.DateTimeFormat('uk-UA', {
-  timeZone: 'Europe/Kyiv',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false
-})
-
-const kyivTime = computed(() => {
-  const [h = '00', m = '00', s = '00'] = kyivFormatter.format(now.value).split(':')
-  return { hm: `${h}:${m}`, s }
-})
-
 function onMenuVisibleChange (visible: boolean) {
   menuOpen.value = visible
 }
 
 const route = useRoute()
 const router = useRouter()
+
+// ─── Primary nav (lg+) ──────────────────────────────────────────────────────
+// Ті самі шість розділів, що й на мобільному (таббар + меню). «Друзі» — в
+// меню користувача, бо доступні лише авторизованим.
+const navItems: Array<{ name: string; label: string }> = [
+  { name: routeNames.rootPage, label: 'Головна' },
+  { name: routeNames.tournaments, label: 'Турніри' },
+  { name: routeNames.teams, label: 'Команди' },
+  { name: routeNames.players, label: 'Гравці' },
+  { name: routeNames.leaderboard, label: 'Лідери' },
+  { name: routeNames.duels, label: 'Дуелі' }
+]
+
+/** Сторінка деталей підсвічує свій розділ; «Друзі» живуть під «Гравцями». */
+const navDetailOf: Record<string, string[]> = {
+  [routeNames.tournaments]: [routeNames.tournament],
+  [routeNames.teams]: [routeNames.team],
+  [routeNames.players]: [routeNames.player, routeNames.friends]
+}
+
+function isNavActive (name: string): boolean {
+  return route.name === name || (navDetailOf[name] ?? []).includes(String(route.name))
+}
 </script>
 
 <style scoped>
@@ -316,7 +317,7 @@ const router = useRouter()
   height: 60px;
 }
 
-@media (min-width: 1024px) {
+@screen lg {
   .app-header__actions {
     position: static;
     height: auto;
@@ -335,97 +336,87 @@ const router = useRouter()
   border-radius: 6px;
 }
 
-/* ─── HUD readout ────────────────────────────────────────────────────────── */
-.app-header__hud {
-  --hud-corner-size: 8px;
-  --hud-corner-inset: 0px;
-  --hud-corner-color: rgba(var(--ds-primary-rgb), 0.55);
-
-  align-items: center;
-  gap: 14px;
-  height: 30px;
-  padding: 0 16px;
-  font-family: var(--ds-font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  line-height: 1;
-  text-transform: uppercase;
-  white-space: nowrap;
+/* ─── Primary nav ────────────────────────────────────────────────────────── */
+/* Видимість керується тут, а не утилітою `hidden lg:flex`: scoped-селектор
+   специфічніший за утиліту й переміг би її. Нижче lg навігації в хедері немає. */
+.app-header__nav {
+  display: none;
 }
 
-.app-header__seg {
+@screen lg {
+  .app-header__nav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+}
+
+/* Mono uppercase, the header's HUD voice. The active link is lit in the
+   brand colour with a short neon underline; hover only tints the surface. */
+.app-header__nav-link {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--ds-control-radius);
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
   color: var(--ds-text-muted);
+  transition:
+    color var(--ds-duration-fast) ease,
+    background-color var(--ds-duration-fast) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
 }
 
-.app-header__seg--sys {
+.app-header__nav-link::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 5px;
+  height: 1px;
+  border-radius: 9999px;
+  background: var(--ds-primary);
+  box-shadow: 0 0 8px rgba(var(--ds-primary-rgb), 0.8);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform var(--ds-duration-base) var(--ds-ease-out);
+}
+
+.app-header__nav-link:active {
+  transform: scale(0.97);
+}
+
+.app-header__nav-link:focus-visible {
+  outline: 2px solid rgba(var(--ds-primary-rgb), 0.55);
+  outline-offset: 2px;
+}
+
+.app-header__nav-link.is-active {
   color: var(--ds-primary);
   text-shadow: var(--ds-neon-text-subtle);
 }
 
-.app-header__seg--muted {
-  color: var(--ds-text-faint);
+.app-header__nav-link.is-active::after {
+  transform: scaleX(1);
 }
 
-/* The clock only fits once the side columns have room (≥ xl); between lg and
-   xl the readout stops after "DOTA 2" so it never crowds the user pill. */
-.app-header__seg--clock,
-.app-header__tick--clock {
-  display: none;
-}
-
-.app-header__seg--clock {
-  color: var(--ds-text-faint);
-}
-
-@media (min-width: 1280px) {
-  .app-header__seg--clock {
-    display: inline-flex;
+/* Between lg and xl the pill's name column is narrower so six links, the
+   bell and the pill never fight for the bar. */
+@screen xl {
+  .app-header__nav {
+    gap: 6px;
   }
 
-  .app-header__tick--clock {
-    display: block;
-  }
-}
-
-.app-header__time {
-  color: var(--ds-text-muted);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.12em;
-}
-
-.app-header__time-sec {
-  opacity: 0.5;
-}
-
-.app-header__tick {
-  width: 1px;
-  height: 12px;
-  background: rgba(var(--ds-primary-rgb), 0.3);
-}
-
-/* "System online" dot. */
-.app-header__dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background: var(--ds-primary);
-  box-shadow: 0 0 8px rgba(var(--ds-primary-rgb), 0.9);
-  animation: header-dot-blink 2.4s ease-in-out infinite;
-}
-
-@keyframes header-dot-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.35;
+  .app-header__nav-link {
+    padding: 0 16px;
   }
 }
 
@@ -471,8 +462,14 @@ const router = useRouter()
   align-items: flex-end;
   gap: 3px;
   min-width: 0;
-  max-width: 150px;
+  max-width: 100px;
   text-align: right;
+}
+
+@screen xl {
+  .app-header__identity {
+    max-width: 150px;
+  }
 }
 
 .app-header__name {
@@ -610,6 +607,11 @@ const router = useRouter()
 
   .app-header__user:hover .app-header__caret {
     color: rgba(255, 255, 255, 0.85);
+  }
+
+  .app-header__nav-link:hover:not(.is-active) {
+    color: rgba(255, 255, 255, 0.92);
+    background-color: rgba(255, 255, 255, 0.05);
   }
 }
 

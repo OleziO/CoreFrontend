@@ -107,6 +107,7 @@ declare module 'vue' {
     PhHandHeart: typeof import('~icons/ph/hand-heart')['default']
     PhTwitchLogo: typeof import('~icons/ph/twitch-logo')['default']
     PhUser: typeof import('~icons/ph/user')['default']
+    PhUserPlus: typeof import('~icons/ph/user-plus')['default']
     PlayerAchievements: typeof import('./views/players/components/PlayerAchievements.vue')['default']
     PlayerAddToTeamModal: typeof import('./components/modals/PlayerAddToTeamModal.vue')['default']
     PlayerCard: typeof import('./components/PlayerCard.vue')['default']

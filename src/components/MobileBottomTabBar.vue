@@ -19,16 +19,18 @@
       <span class="mobile-tab__label">{{ tab.label }}</span>
     </RouterLink>
 
+    <!-- Меню: підсвічується і коли відкрите, і коли поточний розділ живе лише в ньому
+         (гравці, дуелі, друзі, профіль) — щоб користувач не втрачав орієнтацію. -->
     <button
       type="button"
       class="mobile-tab"
-      :class="{ 'mobile-tab--active': togglerStore.showMobileMenu }"
+      :class="{ 'mobile-tab--active': togglerStore.showMobileMenu || isMenuRoute }"
       aria-haspopup="dialog"
       :aria-expanded="togglerStore.showMobileMenu"
       aria-label="Відкрити меню"
       @click="togglerStore.showMobileMenu = !togglerStore.showMobileMenu"
     >
-      <PhList :size="22" :weight="togglerStore.showMobileMenu ? 'fill' : 'regular'" />
+      <PhList :size="22" :weight="togglerStore.showMobileMenu || isMenuRoute ? 'fill' : 'regular'" />
       <span class="mobile-tab__label">Меню</span>
     </button>
   </nav>
@@ -36,36 +38,45 @@
 
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
-import { PhHouse, PhTrophy, PhUsersThree, PhUser, PhRanking, PhSword, PhList } from '@phosphor-icons/vue'
+import { PhHouse, PhTrophy, PhUsersThree, PhRanking, PhList } from '@phosphor-icons/vue'
 
 const route = useRoute()
 const togglerStore = useTogglerStore()
 
+/** Чотири головні розділи; решта (гравці, дуелі, друзі, профіль, адмінка) — у MobileMenu. */
 const tabs: { name: string; label: string; icon: Component }[] = [
   { name: routeNames.rootPage, label: 'Головна', icon: PhHouse },
   { name: routeNames.tournaments, label: 'Турніри', icon: PhTrophy },
   { name: routeNames.teams, label: 'Команди', icon: PhUsersThree },
-  { name: routeNames.players, label: 'Гравці', icon: PhUser },
-  { name: routeNames.leaderboard, label: 'Лідери', icon: PhRanking },
-  { name: routeNames.duels, label: 'Дуелі', icon: PhSword }
+  { name: routeNames.leaderboard, label: 'Лідери', icon: PhRanking }
 ]
 
 const detailOf: Record<string, string> = {
   [routeNames.tournaments]: routeNames.tournament,
-  [routeNames.teams]: routeNames.team,
-  [routeNames.players]: routeNames.player
+  [routeNames.teams]: routeNames.team
 }
 
 function isTabActive (name: string): boolean {
   if (route.name === name) return true
   return detailOf[name] !== undefined && route.name === detailOf[name]
 }
+
+/** Роути, до яких на мобільному можна дістатися лише через меню. */
+const menuRoutes = new Set<string>([
+  routeNames.players,
+  routeNames.player,
+  routeNames.duels,
+  routeNames.friends,
+  routeNames.profile
+])
+
+const isMenuRoute = computed(() => menuRoutes.has(String(route.name)))
 </script>
 
 <style scoped>
 .mobile-tabbar {
   @apply fixed bottom-0 left-0 right-0 z-50
-         grid grid-cols-7
+         grid grid-cols-5
          bg-surface/95 backdrop-blur-xl
          shadow-elevation-4;
   border-top: 1px solid var(--ds-border);
