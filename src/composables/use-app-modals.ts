@@ -40,7 +40,9 @@ export const appModals = useModals({
     defineAsyncComponent(() => import('@/views/admin-panel/modals/MmrProofsLightboxModal.vue')) as Component,
   LoginModal: defineAsyncComponent(() => import('@/components/modals/LoginModal.vue')) as Component,
   DuelChallengeFriendModal:
-    defineAsyncComponent(() => import('@/views/duels/modals/DuelChallengeFriendModal.vue')) as Component
+    defineAsyncComponent(() => import('@/views/duels/modals/DuelChallengeFriendModal.vue')) as Component,
+  DuelHowItWorksModal:
+    defineAsyncComponent(() => import('@/views/duels/modals/DuelHowItWorksModal.vue')) as Component
 })
 
 export function useAppModals () {

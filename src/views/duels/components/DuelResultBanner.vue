@@ -1,5 +1,7 @@
 <template>
   <section class="result-banner neon-card hud-corners rounded-2xl" :class="`is-${outcome}`" role="status">
+    <!-- Одноразовий відблиск по картці після появи — перемога сяє золотом, поразка не сяє -->
+    <span v-if="outcome === 'win'" class="result-banner__shine" aria-hidden="true" />
     <span class="result-banner__icon" aria-hidden="true">
       <PhTrophy v-if="outcome === 'win'" :size="26" weight="duotone" />
       <PhSkull v-else-if="outcome === 'loss'" :size="26" weight="duotone" />
@@ -100,6 +102,7 @@ const meta = computed(() => {
   align-items: center;
   gap: 14px;
   padding: 14px 18px;
+  overflow: hidden;
   border-color: rgba(var(--tone), 0.4);
 }
 
@@ -120,6 +123,22 @@ const meta = computed(() => {
   --tone: var(--ds-primary-rgb);
 }
 
+.result-banner__shine {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(var(--tone), 0.18) 45%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(var(--tone), 0.18) 55%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+}
+
 .result-banner__spin {
   animation: result-banner-flip 2.4s ease-in-out infinite;
 }
@@ -129,13 +148,8 @@ const meta = computed(() => {
   60%, 100% { transform: rotate(180deg); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .result-banner__spin {
-    animation: none;
-  }
-}
-
 .result-banner__icon {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -148,23 +162,78 @@ const meta = computed(() => {
 }
 
 .result-banner__title {
+  position: relative;
   font-size: 15px;
   font-weight: 600;
   color: var(--ds-text-strong);
 }
 
 .result-banner__meta {
+  position: relative;
   font-size: 12px;
   line-height: 1.4;
   color: var(--ds-text-muted);
 }
 
 .result-banner__delta {
+  position: relative;
   font-family: var(--ds-font-mono);
   font-size: 22px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: rgb(var(--tone));
   text-shadow: 0 0 10px rgba(var(--tone), 0.5);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .result-banner__icon {
+    animation: result-icon-pop 520ms var(--ds-ease-out) 120ms both;
+  }
+
+  .result-banner__delta {
+    animation: result-delta-pop 560ms var(--ds-ease-out) 260ms both;
+  }
+
+  .result-banner__shine {
+    animation: result-shine 1.1s var(--ds-ease-in-out) 380ms both;
+  }
+
+  @keyframes result-icon-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6) rotate(-12deg);
+    }
+
+    60% {
+      transform: scale(1.08) rotate(2deg);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes result-delta-pop {
+    from {
+      opacity: 0;
+      transform: scale(1.6);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes result-shine {
+    from {
+      transform: translateX(-120%);
+    }
+
+    to {
+      transform: translateX(120%);
+    }
+  }
 }
 </style>

@@ -31,6 +31,8 @@ export const DUEL_STATUS_POLL_MS = 3000
 export const DUEL_ACCEPT_POLL_MS = 1500
 /** Банер результату показуємо ще стільки після завершення дуелі. */
 export const DUEL_RESULT_BANNER_TTL_MS = 10 * 60 * 1000
+/** localStorage: гравець натиснув «Зрозуміло» в «Як це працює» — вікно більше не відкривається саме. */
+export const DUEL_HOW_IT_WORKS_STORAGE_KEY = 'duels:how-it-works-confirmed'
 
 export const DUEL_ACTIVE_STATES: readonly TDuelState[] = [
   'ACCEPTING',

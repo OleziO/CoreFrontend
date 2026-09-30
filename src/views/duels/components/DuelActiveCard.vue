@@ -649,4 +649,66 @@ async function copyText (text: string) {
 .active-card__actions :deep(.el-button + .el-button) {
   margin-left: 0;
 }
+
+/* ─── Рух ────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  /* Блоки картки з'являються каскадом; нові блоки (лобі, голосовий канал) — теж, бо це нові вузли DOM */
+  .active-card > * {
+    animation: active-block-in 380ms var(--ds-ease-out) both;
+  }
+
+  .active-card > :nth-child(2) { animation-delay: 50ms; }
+  .active-card > :nth-child(3) { animation-delay: 100ms; }
+  .active-card > :nth-child(4) { animation-delay: 150ms; }
+  .active-card > :nth-child(5) { animation-delay: 200ms; }
+  .active-card > :nth-child(6) { animation-delay: 250ms; }
+  .active-card > :nth-child(7) { animation-delay: 300ms; }
+  .active-card > :nth-child(n + 8) { animation-delay: 350ms; }
+
+  /* Поточний етап «дихає» золотом, щоб око одразу знаходило, де ми */
+  .active-card__step.is-current {
+    animation: active-step-glow 2.4s ease-in-out infinite;
+  }
+
+  .active-card__step.is-done .active-card__step-index {
+    animation: active-step-done 360ms var(--ds-ease-out) both;
+  }
+
+  @keyframes active-block-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes active-step-glow {
+    0%,
+    100% {
+      box-shadow: 0 0 12px rgba(var(--ds-gold-rgb), 0.15);
+    }
+
+    50% {
+      box-shadow: 0 0 20px rgba(var(--ds-gold-rgb), 0.35);
+    }
+  }
+
+  @keyframes active-step-done {
+    from {
+      transform: scale(0.7);
+    }
+
+    60% {
+      transform: scale(1.15);
+    }
+
+    to {
+      transform: none;
+    }
+  }
+}
 </style>

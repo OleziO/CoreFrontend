@@ -8,33 +8,32 @@
 
     <div class="relative mx-auto flex w-full max-w-7xl flex-col gap-20 px-16 pb-40 lg:px-24">
       <!-- ─── Head ─────────────────────────────────────────────────────── -->
-      <header class="duels-head">
+      <header class="duels-head duels-reveal" style="--i: 0">
         <div class="flex min-w-0 flex-col gap-6">
           <span class="sys-label">// Рейтингові дуелі</span>
           <h1 class="duels-head__title">Дуелі</h1>
           <p class="duels-head__subtitle">
-            Solo Mid, бот-хост ліги, підбір за рейтингом. +25 за перемогу, −25 за поразку;
-            дружня дуель із другом — ±{{ DUEL_FRIEND_RATING_DELTA }}.
+            Solo Mid проти суперника свого рівня. Героя роздає ліга — випадково, на кожну дуель.
           </p>
-          <!-- Ключове правило ліги — герой кожному випадає випадково, вибору немає -->
-          <span class="duels-head__note">
-            <PhShuffle :size="14" weight="bold" aria-hidden="true" />
-            Ліга випадкових героїв: свого героя ви не обираєте — його роздає система на кожну дуель.
-          </span>
         </div>
-        <RouterLink
-          :to="{ name: routeNames.leaderboard, query: { board: 'duels' } }"
-          class="no-underline"
-        >
-          <el-button>
-            <PhRanking :size="16" weight="bold" />
-            <span class="ml-6">Повна таблиця</span>
+        <div class="duels-head__aside">
+          <!-- Стан пулу ботів: червона пігулка, коли жоден не онлайн; деталі — у tooltip -->
+          <DuelBotsStatusStrip :bots="bots" :is-error="botsError" minimal />
+          <el-button @click="open('DuelHowItWorksModal')">
+            <PhQuestion :size="16" weight="bold" />
+            <span class="ml-6">Як це працює</span>
           </el-button>
-        </RouterLink>
+          <RouterLink
+            :to="{ name: routeNames.leaderboard, query: { board: 'duels' } }"
+            class="no-underline"
+          >
+            <el-button>
+              <PhRanking :size="16" weight="bold" />
+              <span class="ml-6">Повна таблиця</span>
+            </el-button>
+          </RouterLink>
+        </div>
       </header>
-
-      <!-- Стан пулу ботів: червоний і без черги, коли жоден не онлайн -->
-      <DuelBotsStatusStrip :bots="bots" :is-error="botsError" />
 
       <!-- Знайдено пару — увесь екран стає зеленою кнопкою «Прийняти» -->
       <DuelAcceptOverlay
@@ -47,41 +46,49 @@
       <!-- ─── Main grid ────────────────────────────────────────────────── -->
       <div class="grid gap-16 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
         <!-- Ліва колонка: результат → активна дуель / черга -->
-        <div class="flex min-w-0 flex-col gap-16">
+        <div class="duels-reveal flex min-w-0 flex-col gap-16" style="--i: 1">
           <!-- Результат або «обробка»: зіграна дуель (PROCESSING) висить тут, поки не прийде результат -->
-          <DuelResultBanner
-            v-if="resultBannerDuel"
-            :duel="resultBannerDuel"
-            :me-id="meId"
-            @dismiss="dismissedBannerKey = bannerKeyOf(resultBannerDuel)"
-          />
+          <Transition name="duels-banner">
+            <DuelResultBanner
+              v-if="resultBannerDuel"
+              :key="bannerKeyOf(resultBannerDuel)"
+              :duel="resultBannerDuel"
+              :me-id="meId"
+              @dismiss="dismissedBannerKey = bannerKeyOf(resultBannerDuel)"
+            />
+          </Transition>
 
-          <DuelActiveCard
-            v-if="status?.activeDuel"
-            :duel="status.activeDuel"
-            :me-id="meId"
-            :is-admin="authStore.isAdmin.isAdmin"
-            :cancelling="cancelling"
-            :inviting="inviting"
-            @cancel="cancel"
-            @admin-cancel="adminCancel"
-            @invite="requestInvite"
-          />
+          <!-- Черга ↔ активна дуель: одна змінює іншу, не накладаючись -->
+          <Transition name="duels-swap" mode="out-in">
+            <DuelActiveCard
+              v-if="status?.activeDuel"
+              key="active"
+              :duel="status.activeDuel"
+              :me-id="meId"
+              :is-admin="authStore.isAdmin.isAdmin"
+              :cancelling="cancelling"
+              :inviting="inviting"
+              @cancel="cancel"
+              @admin-cancel="adminCancel"
+              @invite="requestInvite"
+            />
 
-          <DuelQueuePanel
-            v-else
-            :status="status"
-            :is-logged-in="isLoggedIn"
-            :is-pending="isPending"
-            :is-error="isError"
-            :joining="joining"
-            :leaving="leaving"
-            :realtime="realtime"
-            :bots-offline="botsOffline"
-            @join="onJoin"
-            @leave="leave"
-            @login="openLogin"
-          />
+            <DuelQueuePanel
+              v-else
+              key="queue"
+              :status="status"
+              :is-logged-in="isLoggedIn"
+              :is-pending="isPending"
+              :is-error="isError"
+              :joining="joining"
+              :leaving="leaving"
+              :realtime="realtime"
+              :bots-offline="botsOffline"
+              @join="onJoin"
+              @leave="leave"
+              @login="openLogin"
+            />
+          </Transition>
 
           <!-- Дружні дуелі: виклики друзів поза чергою, ±10, до 3 прийнятих на день -->
           <DuelChallengesPanel
@@ -95,40 +102,10 @@
             @decline="declineChallenge"
             @cancel="cancelChallenge"
           />
-
-          <!-- Як це працює -->
-          <section class="duels-how neon-card hud-corners rounded-2xl">
-            <h2 class="sys-label sys-label--muted">// Як це працює</h2>
-            <ol class="duels-how__list">
-              <li>Станьте в чергу — потрібен прив’язаний Steam-акаунт.</li>
-              <li>Знайдемо суперника з рейтингом ±50 (вікно росте, поки ви чекаєте).</li>
-              <li>Прийміть матч за 30 секунд. Хто не прийме — −{{ DUEL_CANCEL_PENALTY }} і пауза.</li>
-              <li>Героїв роздає ліга випадково — свого ви побачите одразу після підбору.</li>
-              <li>
-                Щойно обидва прийняли — у Discord з’явиться приватний голосовий канал «Duel #N» лише для вас двох,
-                кнопка входу буде на картці дуелі.
-              </li>
-              <li>Бот створить закрите лобі Solo Mid і надішле інвайт у Dota 2.</li>
-              <li>
-                Зайдіть у лобі за 5 хвилин, станьте на сторону й на піку візьміть саме свого героя —
-                інший герой означає технічну поразку.
-              </li>
-              <li>
-                Щойно гра стартувала, дуель переходить в «обробку» — можна одразу шукати наступного суперника.
-                Результат зчитується з Dota автоматично: +25 переможцю, −25 переможеному.
-              </li>
-              <li>Скасувати матч можна до старту гри — це коштує −{{ DUEL_CANCEL_PENALTY }}.</li>
-              <li>
-                Дружня дуель: викличте друга зі сторінки «Друзі» або звідси — без черги й без 30 с на прийняття,
-                той самий бот і випадкові герої, але на кону ±{{ DUEL_FRIEND_RATING_DELTA }}.
-                Прийняти можна до {{ DUEL_CHALLENGE_DAILY_LIMIT }} таких дуелей на день.
-              </li>
-            </ol>
-          </section>
         </div>
 
         <!-- Права колонка: мої дуелі + топ-10 -->
-        <div class="flex min-w-0 flex-col gap-16">
+        <div class="duels-reveal flex min-w-0 flex-col gap-16" style="--i: 2">
           <section v-if="isLoggedIn" class="duels-panel neon-card hud-corners rounded-2xl">
             <header class="flex items-center justify-between gap-10">
               <h2 class="sys-label sys-label--muted">// Мої дуелі</h2>
@@ -173,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhRanking, PhShuffle } from '@phosphor-icons/vue'
+import { PhQuestion, PhRanking } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-status'
 import { useDuelChallenges } from '@/views/duels/composables/use-duel-challenges'
@@ -181,9 +158,7 @@ import { useDuelSounds } from '@/views/duels/composables/use-duel-sounds'
 import { useDuelStatus } from '@/views/duels/composables/use-duel-status'
 import { useGetDuelLeaderboard, useGetDuelPlayerProfile } from '@/views/duels/duels.queries'
 import {
-  DUEL_CANCEL_PENALTY,
-  DUEL_CHALLENGE_DAILY_LIMIT,
-  DUEL_FRIEND_RATING_DELTA,
+  DUEL_HOW_IT_WORKS_STORAGE_KEY,
   DUEL_RESULT_BANNER_TTL_MS,
   formatDuelPercent,
   isDuelProcessing,
@@ -244,6 +219,13 @@ function onJoin () {
   unlockSounds()
   return join()
 }
+
+// «Як це працює» відкривається саме при вході на сторінку, поки гравець не натисне «Зрозуміло».
+// Далі — лише кнопкою в шапці. Прапорець живе в localStorage і ставиться в самій модалці.
+const howItWorksConfirmed = useLocalStorage<boolean>(DUEL_HOW_IT_WORKS_STORAGE_KEY, false)
+onMounted(() => {
+  if (!howItWorksConfirmed.value) open('DuelHowItWorksModal')
+})
 
 const { data: leaderboard, isPending: leaderboardPending, error: leaderboardError } = useGetDuelLeaderboard()
 const topRows = computed(() => (leaderboard.value?.players ?? []).slice(0, TOP_SIZE))
@@ -310,32 +292,20 @@ function openLogin () {
 }
 
 .duels-head__subtitle {
+  max-width: 560px;
   font-size: 14px;
+  line-height: 1.5;
   color: var(--ds-text-muted);
 }
 
-.duels-head__note {
-  display: inline-flex;
+.duels-head__aside {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  width: fit-content;
-  max-width: 100%;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(var(--ds-gold-rgb), 0.35);
-  background: rgba(var(--ds-gold-rgb), 0.08);
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--ds-text);
+  gap: 10px;
 }
 
-.duels-head__note svg {
-  flex-shrink: 0;
-  color: rgb(var(--ds-gold-rgb));
-}
-
-.duels-panel,
-.duels-how {
+.duels-panel {
   --hud-corner-inset: 8px;
 
   display: flex;
@@ -359,19 +329,60 @@ function openLogin () {
   color: var(--ds-text-faint);
 }
 
-.duels-how__list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding-left: 20px;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--ds-text-muted);
+/* ─── Переходи між блоками ───────────────────────────────────────────────── */
+.duels-banner-enter-active {
+  transition: opacity 320ms ease, transform 420ms var(--ds-ease-out);
 }
 
-.duels-how__list li::marker {
-  font-family: var(--ds-font-mono);
-  color: var(--ds-primary);
+.duels-banner-leave-active {
+  transition: opacity var(--ds-duration-base) ease, transform var(--ds-duration-base) var(--ds-ease-in-out);
+}
+
+.duels-banner-enter-from {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.98);
+}
+
+.duels-banner-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.duels-swap-enter-active {
+  transition: opacity 260ms ease, transform 360ms var(--ds-ease-out);
+}
+
+.duels-swap-leave-active {
+  transition: opacity 180ms ease, transform 180ms var(--ds-ease-in-out);
+}
+
+.duels-swap-enter-from {
+  opacity: 0;
+  transform: translateY(10px) scale(0.985);
+}
+
+.duels-swap-leave-to {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.99);
+}
+
+/* ─── Поява сторінки: шапка → ліва колонка → права ───────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .duels-reveal {
+    animation: duels-reveal 520ms var(--ds-ease-out) both;
+    animation-delay: calc(var(--i, 0) * 90ms);
+  }
+
+  @keyframes duels-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 </style>

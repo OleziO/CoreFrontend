@@ -1,17 +1,45 @@
 <template>
-  <section class="challenges neon-card hud-corners rounded-2xl" aria-labelledby="duel-challenges-title">
-    <header class="flex flex-wrap items-start justify-between gap-12">
+  <section
+    class="challenges neon-card hud-corners rounded-2xl"
+    :class="{ 'has-incoming': challenges.incoming.length > 0 }"
+    aria-labelledby="duel-challenges-title"
+  >
+    <!-- Тихий стан — один рядок: заголовок, ліміт на день і кнопка виклику -->
+    <header class="challenges__head">
       <div class="flex min-w-0 flex-col gap-4">
-        <span class="sys-label sys-label--muted">// Дружні дуелі</span>
-        <h2 id="duel-challenges-title" class="challenges__title">Виклик другу</h2>
+        <span id="duel-challenges-title" class="sys-label sys-label--muted">// Дружні дуелі</span>
+        <span class="challenges__lead">
+          Виклик другу поза чергою
+          <span class="challenges__meta">
+            · ±{{ challenges.ratingDelta }}
+            · <span :title="`Прийнятих дружніх дуелей сьогодні: ${challenges.acceptedToday}`">
+              {{ challenges.acceptedToday }}/{{ challenges.dailyLimit }} сьогодні
+            </span>
+          </span>
+        </span>
+        <span v-if="blockedReason" class="challenges__blocked">{{ blockedReason }}</span>
       </div>
-      <span class="challenges__meta" :title="`Прийнятих дружніх дуелей сьогодні: ${challenges.acceptedToday}`">
-        {{ challenges.acceptedToday }}/{{ challenges.dailyLimit }} сьогодні · ±{{ challenges.ratingDelta }}
-      </span>
+      <el-button
+        v-if="!challenges.outgoing"
+        type="primary"
+        plain
+        class="challenges__cta"
+        :disabled="!canChallenge"
+        @click="emit('open')"
+      >
+        <PhUsersThree :size="16" weight="bold" class="mr-6" />
+        Викликати друга
+      </el-button>
     </header>
 
     <!-- Вхідні виклики -->
-    <ul v-if="challenges.incoming.length" class="challenges__list" aria-label="Вхідні виклики">
+    <TransitionGroup
+      v-if="challenges.incoming.length"
+      name="challenges-row"
+      tag="ul"
+      class="challenges__list"
+      aria-label="Вхідні виклики"
+    >
       <li v-for="item in challenges.incoming" :key="item.id" class="challenges__row is-incoming">
         <el-avatar :src="resolvePublicOrApiUrl(item.challenger.avatarUrl)" :size="36" class="challenges__avatar">
           {{ duelPlayerInitial(item.challenger) }}
@@ -51,49 +79,31 @@
           </el-button>
         </div>
       </li>
-    </ul>
+    </TransitionGroup>
 
     <!-- Мій відкритий виклик -->
-    <div v-if="challenges.outgoing" class="challenges__row is-outgoing">
-      <span class="challenges__radar" aria-hidden="true" />
-      <div class="flex min-w-0 flex-1 flex-col gap-2">
-        <span class="challenges__name">
-          Чекаємо на {{ duelPlayerName(challenges.outgoing.challenged) }}
-        </span>
-        <span class="challenges__hint">
-          виклик згорить за {{ formatDuelCountdown(secondsUntil(challenges.outgoing.expiresAt, now)) }}
-        </span>
+    <Transition name="challenges-row">
+      <div v-if="challenges.outgoing" class="challenges__row is-outgoing">
+        <span class="challenges__radar" aria-hidden="true" />
+        <div class="flex min-w-0 flex-1 flex-col gap-2">
+          <span class="challenges__name">
+            Чекаємо на {{ duelPlayerName(challenges.outgoing.challenged) }}
+          </span>
+          <span class="challenges__hint">
+            виклик згорить за {{ formatDuelCountdown(secondsUntil(challenges.outgoing.expiresAt, now)) }}
+          </span>
+        </div>
+        <el-button
+          size="small"
+          plain
+          :loading="isBusy(challenges.outgoing.id)"
+          :disabled="isBusy(challenges.outgoing.id)"
+          @click="emit('cancel', challenges.outgoing.id)"
+        >
+          Скасувати
+        </el-button>
       </div>
-      <el-button
-        size="small"
-        plain
-        :loading="isBusy(challenges.outgoing.id)"
-        :disabled="isBusy(challenges.outgoing.id)"
-        @click="emit('cancel', challenges.outgoing.id)"
-      >
-        Скасувати
-      </el-button>
-    </div>
-
-    <!-- Кнопка виклику -->
-    <template v-else>
-      <p class="challenges__text">
-        Зіграйте з другом поза чергою: той самий бот, лобі та випадкові герої, але на кону
-        <span class="text-success">+{{ challenges.ratingDelta }}</span> /
-        <span class="text-error">−{{ challenges.ratingDelta }}</span>.
-        До {{ challenges.dailyLimit }} прийнятих дружніх дуелей на день.
-      </p>
-      <el-button
-        type="primary"
-        plain
-        class="w-full"
-        :disabled="!canChallenge"
-        @click="emit('open')"
-      >
-        <PhUsersThree :size="16" weight="bold" class="mr-8" />
-        {{ challengeLabel }}
-      </el-button>
-    </template>
+    </Transition>
   </section>
 </template>
 
@@ -126,11 +136,13 @@ const now = useNow({ interval: 1000 })
 const limitReached = computed(() => props.challenges.acceptedToday >= props.challenges.dailyLimit)
 const canChallenge = computed(() => !props.activeDuel && !limitReached.value && !props.botsOffline)
 
-const challengeLabel = computed(() => {
+/** Чому кнопка вимкнена — коротко, під заголовком, а не на самій кнопці. */
+const blockedReason = computed(() => {
+  if (props.challenges.outgoing) return ''
   if (props.activeDuel) return 'Спочатку завершіть активну дуель'
   if (limitReached.value) return 'Ліміт дружніх дуелей на сьогодні вичерпано'
   if (props.botsOffline) return 'Боти офлайн — виклики недоступні'
-  return 'Викликати друга'
+  return ''
 })
 </script>
 
@@ -140,29 +152,51 @@ const challengeLabel = computed(() => {
 
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 20px;
+  gap: 12px;
+  padding: 16px 20px;
+  transition: border-color var(--ds-duration-base) ease;
 }
 
-.challenges__title {
-  font-family: var(--ds-font-display);
-  font-size: 18px;
-  line-height: 1.2;
+.challenges.has-incoming {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.challenges__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.challenges__lead {
+  font-size: 14px;
+  font-weight: 600;
   color: var(--ds-text-strong);
 }
 
 .challenges__meta {
   font-family: var(--ds-font-mono);
   font-size: 11px;
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
   color: var(--ds-text-faint);
   white-space: nowrap;
 }
 
-.challenges__text {
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--ds-text-muted);
+.challenges__blocked {
+  font-size: 12px;
+  color: var(--ds-text-faint);
+}
+
+.challenges__cta {
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .challenges__cta {
+    width: 100%;
+  }
 }
 
 .challenges__list {
@@ -226,14 +260,28 @@ const challengeLabel = computed(() => {
   animation: challenges-pulse 1.6s ease-in-out infinite;
 }
 
+/* Рядки викликів з'являються/зникають з висоти, не стрибаючи */
+.challenges-row-enter-active,
+.challenges-row-leave-active {
+  transition: opacity var(--ds-duration-base) ease, transform 260ms var(--ds-ease-out);
+}
+
+.challenges-row-enter-from {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+}
+
+.challenges-row-leave-to {
+  opacity: 0;
+  transform: translateX(12px);
+}
+
+.challenges-row-move {
+  transition: transform 260ms var(--ds-ease-in-out);
+}
+
 @keyframes challenges-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.45; transform: scale(0.8); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .challenges__radar {
-    animation: none;
-  }
 }
 </style>
