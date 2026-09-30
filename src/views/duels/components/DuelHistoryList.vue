@@ -97,14 +97,14 @@ function formatDate (iso: string): string {
   --tone: 148, 163, 184;
 
   /*
-   * Телефон — два рядки з явними зонами: бейдж + суперник + дельта, під ними статистика + дата.
-   * Без зон авто-розкладка кидала дельту й дату на третій рядок.
+   * Телефон — два рядки з явними зонами: бейдж, суперник, дельта й дата в один рядок,
+   * під ними статистика. Без зон авто-розкладка кидала дельту й дату на третій рядок.
    */
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   grid-template-areas:
-    'badge opponent delta'
-    'stats stats date';
+    'badge opponent delta date'
+    'stats stats stats stats';
   align-items: center;
   gap: 6px 10px;
   padding: 10px 12px;

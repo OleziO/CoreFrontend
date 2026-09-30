@@ -26,7 +26,11 @@
           >
             <span :class="activeClass('maps')">Матчі</span>
           </th>
-          <th scope="col" class="board__th board__th--num board__th--winrate" :class="activeClass('winrate')">
+          <th
+            scope="col"
+            class="board__th board__th--num board__th--winrate hidden md:table-cell"
+            :class="activeClass('winrate')"
+          >
             Вінрейт
           </th>
           <th
@@ -42,6 +46,10 @@
             :class="activeClass('kills')"
           >
             K / D / A
+          </th>
+          <!-- Телефон: замість статистики — кнопка «Детальніше», що відкриває модалку (як у таблиці дуелей) -->
+          <th scope="col" class="board__th board__th--more md:hidden">
+            <span class="sr-only">Детальніше</span>
           </th>
         </tr>
       </thead>
@@ -138,7 +146,7 @@
             </span>
           </td>
 
-          <td class="board__td board__td--num" :class="activeClass('winrate')">
+          <td class="board__td board__td--num board__td--winrate hidden md:table-cell" :class="activeClass('winrate')">
             {{ formatLeaderboardPercent(row.winrate) }}
           </td>
 
@@ -149,6 +157,16 @@
           <td class="board__td board__td--num board__td--kda hidden xl:table-cell" :class="activeClass('kills')">
             {{ row.kills }} / {{ row.deaths }} / {{ row.assists }}
           </td>
+          <td class="board__td board__td--more md:hidden">
+            <button
+              type="button"
+              class="board__more"
+              :aria-label="`Детальніше про ${displayName(row)}`"
+              @click.stop="openRow(row)"
+            >
+              <PhCaretRight :size="14" weight="bold" />
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -156,7 +174,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhMedal, PhMedalMilitary, PhTrophy } from '@phosphor-icons/vue'
+import { PhCaretRight, PhMedal, PhMedalMilitary, PhTrophy } from '@phosphor-icons/vue'
 import { getPlayerRankImageSrc, resolvePublicOrApiUrl } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
 import { formatLeaderboardNumber, formatLeaderboardPercent } from '@/views/leaderboard/leaderboard.utils'
@@ -169,6 +187,12 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
+const { open } = useAppModals()
+
+/** На телефоні в рядку лише нік і рахунок — решта статистики в модалці. */
+function openRow (row: TLeaderboardRow) {
+  open('LeaderboardRowModal', { row, highlightId: props.highlightId })
+}
 
 const TONES: Record<number, string> = {
   1: 'var(--ds-gold-rgb)',
@@ -313,9 +337,72 @@ function goToPlayer (id: string) {
   border-radius: 10px 0 0 10px;
 }
 
-.board__td:last-child {
+/*
+ * Правий край рядка заокруглюємо на тій комірці, що реально остання видима: на телефоні це кнопка
+ * «Детальніше», від md — «Вінрейт», від xl — K/D/A. Решта ховається через display: none,
+ * тож `:last-child` сам по собі не підходить.
+ */
+.board__td--more {
   border-right: 1px solid transparent;
   border-radius: 0 10px 10px 0;
+}
+
+@media (min-width: 768px) {
+  .board__td--winrate {
+    border-right: 1px solid transparent;
+    border-radius: 0 10px 10px 0;
+  }
+}
+
+@media (min-width: 1280px) {
+  .board__td--winrate {
+    border-right: 0;
+    border-radius: 0;
+  }
+
+  .board__td--kda {
+    border-right: 1px solid transparent;
+    border-radius: 0 10px 10px 0;
+  }
+}
+
+.board__th--more {
+  width: 40px;
+}
+
+.board__td--more {
+  padding-left: 0 !important;
+  padding-right: 6px !important;
+  text-align: right;
+}
+
+.board__more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(var(--tile-tone), 0.3);
+  border-radius: 8px;
+  background: rgba(var(--tile-tone), 0.08);
+  color: rgb(var(--tile-tone));
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    border-color var(--ds-duration-fast) ease,
+    background-color var(--ds-duration-fast) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+}
+
+.board__more:active {
+  transform: scale(0.92);
+}
+
+.board__more:focus-visible {
+  outline: 2px solid rgba(var(--ds-primary-rgb), 0.6);
+  outline-offset: 2px;
 }
 
 /* Перша трійка — обводка в тоні місця; власний рядок — ціанова обводка й підсвітка. */
@@ -388,7 +475,7 @@ function goToPlayer (id: string) {
   min-width: 0;
 }
 
-/* На вузьких екранах видно лише #, гравця, рахунок і вінрейт — кожен піксель відступів іде на нік. */
+/* На телефоні видно лише #, гравця, рахунок і «Детальніше» — кожен піксель відступів іде на нік. */
 @media (max-width: 767px) {
   .board__th,
   .board__td {
@@ -404,8 +491,9 @@ function goToPlayer (id: string) {
     width: 72px;
   }
 
-  .board__th--winrate {
-    width: 64px;
+  /* Хендл на телефоні ховаємо — нік не ріжеться */
+  .board__handle {
+    display: none;
   }
 
   .board__player {

@@ -304,24 +304,27 @@ function openLogin () {
   gap: 8px;
 }
 
-/* Телефон: пігулка ботів і обидві кнопки — в один рядок на всю ширину, кнопки ділять решту порівну */
+/*
+ * Телефон: пігулка ботів і обидві кнопки — в один рядок на всю ширину. Сітка, а не flex:
+ * колонки не можуть вилізти за контейнер, тож горизонтального скролу не буде.
+ */
 @media (max-width: 767px) {
   .duels-head__aside {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
     width: 100%;
+    gap: 8px;
   }
 
-  .duels-head__aside > .bots-strip {
-    flex-shrink: 0;
+  .duels-head__aside > * {
+    min-width: 0;
   }
 
   .duels-head__aside > a {
     display: flex;
-    flex: 1 1 0;
-    min-width: 0;
   }
 
   .duels-head__aside :deep(.el-button) {
-    flex: 1 1 0;
     width: 100%;
     min-width: 0;
     padding-left: 10px;
@@ -330,14 +333,20 @@ function openLogin () {
   }
 }
 
-@media (max-width: 400px) {
-  /* Зовсім вузько: підписи кнопок ховаємо, лишаються іконки з tooltip */
+@media (max-width: 420px) {
+  /* Зовсім вузько: підписи кнопок ховаємо, лишаються іконки з tooltip; пігулка забирає решту */
+  .duels-head__aside {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
   .duels-head__aside :deep(.el-button .ml-6) {
     display: none;
   }
 
   .duels-head__aside :deep(.el-button) {
-    flex: 0 0 auto;
+    width: auto;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 }
 
