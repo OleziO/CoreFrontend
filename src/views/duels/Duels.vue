@@ -68,9 +68,11 @@
               :is-admin="authStore.isAdmin.isAdmin"
               :cancelling="cancelling"
               :inviting="inviting"
+              :restarting="restarting"
               @cancel="cancel"
               @admin-cancel="adminCancel"
               @invite="requestInvite"
+              @restart="requestRestart"
             />
 
             <DuelQueuePanel
@@ -194,11 +196,13 @@ const {
   accepting,
   cancelling,
   inviting,
+  restarting,
   join,
   leave,
   accept,
   cancel,
   requestInvite,
+  requestRestart,
   adminCancel,
   invalidateDuelQueries
 } = useDuelStatus()

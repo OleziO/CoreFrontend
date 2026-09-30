@@ -130,6 +130,33 @@
       </div>
     </div>
 
+    <!-- Гра запущена, але хтось не завантажився: гравець може попросити бота перезапустити лобі.
+         Вимкнено, щойно почався пік героїв або гра йде — бекенд перевіряє те саме. -->
+    <div v-if="duel.state === 'LIVE'" class="active-card__restart-box">
+      <div class="flex min-w-0 flex-col gap-2">
+        <span class="active-card__restart-title">
+          <PhArrowsClockwise :size="14" weight="bold" aria-hidden="true" />
+          Гра не стартувала?
+        </span>
+        <span class="active-card__restart-text">
+          {{ restartBlockedReason ?? restartHint }}
+        </span>
+      </div>
+      <el-button
+        plain
+        size="small"
+        class="active-card__restart-button"
+        :loading="restarting"
+        :disabled="restarting || !!restartBlockedReason || restartCooldownLeft > 0"
+        :title="restartBlockedReason ?? undefined"
+        @click="confirmRestart"
+      >
+        <PhArrowsClockwise v-if="!restarting" :size="14" weight="bold" class="mr-6" />
+        <template v-if="restartCooldownLeft > 0">Запит надіслано · {{ restartCooldownLeft }} с</template>
+        <template v-else>Перезапустити матч</template>
+      </el-button>
+    </div>
+
     <!-- Присутність -->
     <ul v-if="duel.lobbyPlayers?.length && duel.state === 'WAITING_PLAYERS'" class="active-card__presence">
       <li v-for="p in duel.lobbyPlayers" :key="p.playerId" class="active-card__presence-row">
@@ -182,7 +209,10 @@ import {
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   DUEL_CANCEL_PENALTY,
+  DUEL_MAX_LOBBY_RESTARTS,
+  DUEL_RESTART_REQUEST_COOLDOWN_SECONDS,
   duelHeroFor,
+  duelRestartBlockedReason,
   duelOpponentOf,
   duelPlayerName,
   duelSideLabels,
@@ -207,16 +237,20 @@ const props = withDefaults(defineProps<{
   cancelling?: boolean
   /** Запит «запросити мене ще раз» у польоті. */
   inviting?: boolean
+  /** Запит «перезапустити матч» у польоті. */
+  restarting?: boolean
 }>(), {
   isAdmin: false,
   cancelling: false,
-  inviting: false
+  inviting: false,
+  restarting: false
 })
 
 const emit = defineEmits<{
   cancel: []
   adminCancel: []
   invite: []
+  restart: []
 }>()
 
 /** Пауза між запитами інвайту — та сама, що `DUEL_INVITE_REQUEST_COOLDOWN_SECONDS` на бекенді. */
@@ -224,9 +258,6 @@ const INVITE_COOLDOWN_SECONDS = 15
 
 const now = useNow({ interval: 1000 })
 const { copy, isSupported } = useClipboard()
-
-/** Ліміт перезапусків лобі — той самий, що `DUEL_MAX_LOBBY_RESTARTS` на бекенді. */
-const DUEL_MAX_LOBBY_RESTARTS = 2
 
 const currentStep = computed(() => duelStepIndex(props.duel.state))
 const canCancel = computed(() => isDuelCancellable(props.duel))
@@ -245,6 +276,43 @@ const inviteCooldownLeft = computed(() => {
 function askInvite () {
   inviteAskedAt.value = Date.now()
   emit('invite')
+}
+
+// ─── Перезапуск матчу: гравець не завантажився в гру ─────────────────────────
+const restartBlockedReason = computed(() => duelRestartBlockedReason(props.duel, now.value))
+const restartHint = computed(() =>
+  `Якщо хтось завис на завантаженні — бот перезапустить лобі (лишилось ${
+    Math.max(0, DUEL_MAX_LOBBY_RESTARTS - props.duel.lobbyRestarts)
+  } із ${DUEL_MAX_LOBBY_RESTARTS}). Після старту піку кнопка вимикається.`
+)
+
+// Локальна пауза після кліку — бекенд і так відповість 429, але кнопка не має спокушати спамити.
+const restartAskedAt = ref<number | null>(null)
+const restartCooldownLeft = computed(() => {
+  if (restartAskedAt.value == null) return 0
+  return Math.max(
+    0,
+    DUEL_RESTART_REQUEST_COOLDOWN_SECONDS - Math.floor((now.value.getTime() - restartAskedAt.value) / 1000)
+  )
+})
+// Лобі перезапущено (стан повернувся з LIVE) — пауза більше не потрібна.
+watch(() => props.duel.state, (state) => {
+  if (state !== 'LIVE') restartAskedAt.value = null
+})
+
+async function confirmRestart () {
+  try {
+    await ElMessageBox.confirm(
+      'Бот закриє поточну гру й запустить лобі заново — обом гравцям треба буде знову прийняти інвайт. ' +
+        'Рейтинг не змінюється. Перезапуск можливий лише поки гра не стартувала.',
+      'Перезапустити матч?',
+      { confirmButtonText: 'Перезапустити', cancelButtonText: 'Залишитись', type: 'warning' }
+    )
+  } catch {
+    return
+  }
+  restartAskedAt.value = Date.now()
+  emit('restart')
 }
 
 const me = computed<TDuelPlayer | null>(() => {
@@ -587,6 +655,57 @@ async function copyText (text: string) {
   font-size: 12px;
   line-height: 1.4;
   color: var(--ds-text-faint);
+}
+
+.active-card__restart-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px dashed rgba(var(--ds-gold-rgb), 0.35);
+  background: rgba(var(--ds-gold-rgb), 0.05);
+}
+
+.active-card__restart-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ds-text-strong);
+}
+
+.active-card__restart-title svg {
+  color: var(--ds-gold);
+}
+
+.active-card__restart-text {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ds-text-muted);
+}
+
+.active-card__restart-button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .active-card__restart-button {
+    width: 100%;
+  }
+}
+
+/* Вимкнена кнопка — той самий контур, лише пригашений (EP ставить світлу заливку напряму) */
+.active-card .active-card__restart-button.is-disabled,
+.active-card .active-card__restart-button.is-disabled:hover {
+  color: var(--ds-text-faint);
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.12);
+  opacity: 1;
+  cursor: not-allowed;
 }
 
 .active-card__presence {

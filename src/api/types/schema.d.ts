@@ -1407,6 +1407,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/duels/{id}/restart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restart the match (a player failed to load)
+         * @description Participants only, while the duel is LIVE and the game has not started (no hero picks yet, launch not older than 10 min, restart budget not spent). The host bot re-checks the live scoreboard on its next tick and relaunches the lobby. 409 when the game is on or the duel is not in the lobby-launched stage, 429 within 60 s of the previous request.
+         */
+        post: operations["DuelsController_requestRestart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/duels/{id}": {
         parameters: {
             query?: never;
@@ -3060,6 +3080,8 @@ export interface components {
             adminReviewRequired: boolean;
             /** @description How many times the lobby was relaunched because the game never started (a player failed to load) */
             lobbyRestarts: number;
+            /** @description Dota game_state last seen on the live scoreboard while LIVE (0/1/10 = still loading, 2 = hero selection, 5 = in progress); null before the first snapshot or after a relaunch */
+            gameState: number | null;
             stats: components["schemas"]["DuelStatsDto"] | null;
         };
         DuelRatingDto: {
@@ -5553,6 +5575,27 @@ export interface operations {
         };
     };
     DuelsController_requestInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelStatusDto"];
+                };
+            };
+        };
+    };
+    DuelsController_requestRestart: {
         parameters: {
             query?: never;
             header?: never;

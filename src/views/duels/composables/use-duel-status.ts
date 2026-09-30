@@ -76,6 +76,7 @@ export const useDuelStatus = () => {
   const accepting = ref(false)
   const cancelling = ref(false)
   const inviting = ref(false)
+  const restarting = ref(false)
 
   async function join (): Promise<boolean> {
     if (joining.value) return false
@@ -149,6 +150,21 @@ export const useDuelStatus = () => {
     }
   }
 
+  /** Попросити бота перезапустити матч — гравець не завантажився в гру, пік ще не почався. */
+  async function requestRestart (): Promise<boolean> {
+    const duel = status.value?.activeDuel
+    if (!duel || restarting.value) return false
+    restarting.value = true
+    try {
+      applyStatus(await duelsService.requestRestart(duel.id))
+      return true
+    } catch {
+      return false
+    } finally {
+      restarting.value = false
+    }
+  }
+
   /** Адмін скасовує свою ж дуель без штрафу — адмінським ендпоінтом, після чого перечитуємо статус. */
   async function adminCancel (): Promise<boolean> {
     const duel = status.value?.activeDuel
@@ -177,11 +193,13 @@ export const useDuelStatus = () => {
     accepting,
     cancelling,
     inviting,
+    restarting,
     join,
     leave,
     accept,
     cancel,
     requestInvite,
+    requestRestart,
     adminCancel,
     refetch: () => query.refetch(),
     invalidateDuelQueries

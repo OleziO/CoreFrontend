@@ -78,6 +78,18 @@ class DuelsService {
     }
   }
 
+  /** Попросити бота перезапустити матч — гравець не завантажився в гру (лише поки пік не почався). */
+  async requestRestart (id: string): Promise<TDuelStatus> {
+    try {
+      const status = await apiClient.post('/duels/{id}/restart', undefined, { dynamicKeys: { id } })
+      ElMessage.success('Бот перезапустить лобі протягом кількох секунд — прийміть інвайт у Dota 2 ще раз')
+      return status
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося перезапустити матч'))
+      throw e
+    }
+  }
+
   // ─── дружні дуелі (виклики друзів) ────────────────────────────────────────
 
   /** Викликати друга на дружню дуель (±10): виклик живе 5 хвилин, один відкритий виклик за раз. */

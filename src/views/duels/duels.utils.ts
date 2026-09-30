@@ -33,6 +33,14 @@ export const DUEL_ACCEPT_POLL_MS = 1500
 export const DUEL_RESULT_BANNER_TTL_MS = 10 * 60 * 1000
 /** localStorage: гравець натиснув «Зрозуміло» в «Як це працює» — вікно більше не відкривається саме. */
 export const DUEL_HOW_IT_WORKS_STORAGE_KEY = 'duels:how-it-works-confirmed'
+/** Скільки разів бот перезапускає лобі, чия гра не стартувала (дзеркало `DUEL_MAX_LOBBY_RESTARTS`). */
+export const DUEL_MAX_LOBBY_RESTARTS = 2
+/** «Перезапустити матч» — не частіше ніж раз на стільки секунд (дзеркало `DUEL_RESTART_REQUEST_COOLDOWN_SECONDS`). */
+export const DUEL_RESTART_REQUEST_COOLDOWN_SECONDS = 60
+/** Перезапуск доступний лише стільки після запуску гри (дзеркало `DUEL_RESTART_REQUEST_WINDOW_SECONDS`). */
+export const DUEL_RESTART_REQUEST_WINDOW_SECONDS = 10 * 60
+/** Стани Dota `game_state`, у яких гра ще не почалась: INIT, WAIT_FOR_PLAYERS_TO_LOAD, WAIT_FOR_MAP_TO_LOAD. */
+export const DUEL_NEVER_STARTED_GAME_STATES: readonly number[] = [0, 1, 10]
 
 export const DUEL_ACTIVE_STATES: readonly TDuelState[] = [
   'ACCEPTING',
@@ -125,6 +133,28 @@ export const hostBotStatusLabels: Record<THostBotStatus, string> = {
 /** Дуель можна скасувати самому (−10), поки гра не запущена. */
 export function isDuelCancellable (duel: TDuel | null | undefined): boolean {
   return !!duel && DUEL_CANCELLABLE_STATES.includes(duel.state)
+}
+
+/**
+ * Чи можна попросити перезапустити матч (гравець не завантажився в гру): лише LIVE,
+ * поки не почався пік героїв, запуск не старший за 10 хв і ліміт перезапусків не вичерпано.
+ * Повертає причину відмови українською — вона йде під вимкнену кнопку.
+ */
+export function duelRestartBlockedReason (duel: TDuel, now: Date): string | null {
+  if (duel.state !== 'LIVE') return 'Перезапуск доступний лише після запуску гри'
+  if (duel.lobbyRestarts >= DUEL_MAX_LOBBY_RESTARTS) {
+    return `Ліміт перезапусків лобі (${DUEL_MAX_LOBBY_RESTARTS}) вичерпано`
+  }
+  if (duel.gameState != null && !DUEL_NEVER_STARTED_GAME_STATES.includes(duel.gameState)) {
+    return 'Гра вже стартувала — герої обрані, перезапуск неможливий'
+  }
+  if (duel.liveAt) {
+    const liveAt = new Date(duel.liveAt).getTime()
+    if (!Number.isNaN(liveAt) && now.getTime() - liveAt > DUEL_RESTART_REQUEST_WINDOW_SECONDS * 1000) {
+      return 'Гра запущена надто давно — перезапуск більше недоступний'
+    }
+  }
+  return null
 }
 
 export function hasAcceptedDuel (duel: TDuel, playerId: string | null | undefined): boolean {
