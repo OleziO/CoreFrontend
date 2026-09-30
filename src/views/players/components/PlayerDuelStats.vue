@@ -3,12 +3,12 @@
     <div class="flex flex-wrap items-center justify-between gap-10">
       <h3 class="section-title">
         <span class="inline-flex items-center gap-6">
-          1v1 Ліга
+          Дуелі
           <el-tooltip
             placement="top"
             effect="dark"
             :show-after="180"
-            content="Рейтингові дуелі Solo Mid, які хостить бот ліги: +25 за перемогу, −25 за поразку."
+            content="Дуелі Solo Mid із випадковими героями, хостить бот ліги: +25 за перемогу, −25 за поразку."
           >
             <PhQuestion
               class="cursor-help text-white/40 transition-colors hover:text-primary"
@@ -33,13 +33,13 @@
     </div>
 
     <p v-else-if="isError" class="py-10 text-center text-sm text-error">
-      Не вдалося завантажити 1v1 статистику. Спробуйте пізніше.
+      Не вдалося завантажити статистику дуелей. Спробуйте пізніше.
     </p>
 
     <!-- Ще не грав -->
     <el-empty
       v-else-if="!rating"
-      description="Гравець ще не виходив на 1v1 арену."
+      description="Гравець ще не виходив на арену дуелей."
       :image-size="100"
     />
 

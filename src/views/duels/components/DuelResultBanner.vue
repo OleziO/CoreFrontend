@@ -3,6 +3,7 @@
     <span class="result-banner__icon" aria-hidden="true">
       <PhTrophy v-if="outcome === 'win'" :size="26" weight="duotone" />
       <PhSkull v-else-if="outcome === 'loss'" :size="26" weight="duotone" />
+      <PhHourglassHigh v-else-if="outcome === 'processing'" :size="26" weight="duotone" class="result-banner__spin" />
       <PhWarningOctagon v-else :size="26" weight="duotone" />
     </span>
     <div class="flex min-w-0 flex-1 flex-col gap-4">
@@ -17,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhSkull, PhTrophy, PhWarningOctagon, PhX } from '@phosphor-icons/vue'
+import { PhHourglassHigh, PhSkull, PhTrophy, PhWarningOctagon, PhX } from '@phosphor-icons/vue'
 import {
   duelDeltaFor,
   duelEndReasonLabel,
@@ -43,6 +44,7 @@ const title = computed(() => {
   switch (outcome.value) {
     case 'win': return `Перемога над ${opponentName.value}!`
     case 'loss': return `Поразка від ${opponentName.value}`
+    case 'processing': return `Матч із ${opponentName.value} зіграно`
     case 'failed': return 'Дуель завершилась збоєм'
     default: return 'Дуель скасовано'
   }
@@ -50,6 +52,9 @@ const title = computed(() => {
 
 const meta = computed(() => {
   const reason = duelEndReasonLabel(props.duel)
+  if (outcome.value === 'processing') {
+    return 'Обробляємо результат — рейтинг оновиться автоматично. Уже можна шукати наступного суперника.'
+  }
   if (outcome.value === 'failed') return `${reason}. Адміністрація перегляне результат.`
   if (outcome.value === 'cancelled') {
     if (delta.value != null && delta.value < 0) {
@@ -91,6 +96,25 @@ const meta = computed(() => {
 .result-banner.is-cancelled,
 .result-banner.is-failed {
   --tone: 245, 158, 11;
+}
+
+.result-banner.is-processing {
+  --tone: var(--ds-primary-rgb);
+}
+
+.result-banner__spin {
+  animation: result-banner-flip 2.4s ease-in-out infinite;
+}
+
+@keyframes result-banner-flip {
+  0%, 40% { transform: rotate(0deg); }
+  60%, 100% { transform: rotate(180deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-banner__spin {
+    animation: none;
+  }
 }
 
 .result-banner__icon {

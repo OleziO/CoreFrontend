@@ -29,6 +29,9 @@
       <span v-else-if="row.outcome === 'cancelled' || row.outcome === 'failed'" class="dhistory__stats text-white/45">
         {{ duelEndReasonLabel(row.duel) }}
       </span>
+      <span v-else-if="row.outcome === 'processing'" class="dhistory__stats text-white/45">
+        збираємо результат
+      </span>
       <span v-else class="dhistory__stats text-white/35">без статистики</span>
 
       <span
@@ -118,6 +121,10 @@ function formatDate (iso: string): string {
 
 .dhistory__row.is-active {
   --tone: var(--ds-gold-rgb);
+}
+
+.dhistory__row.is-processing {
+  --tone: var(--ds-primary-rgb);
 }
 
 .dhistory__badge {

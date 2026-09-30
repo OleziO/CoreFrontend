@@ -318,6 +318,7 @@ onMounted(() => {
 function toneOf (state: TDuelState): TStatusTone {
   switch (state) {
     case 'LIVE': return 'success'
+    case 'PROCESSING': return 'info'
     case 'RESOLVED': return 'primary'
     case 'CANCELLED': return 'warning'
     case 'FAILED': return 'error'

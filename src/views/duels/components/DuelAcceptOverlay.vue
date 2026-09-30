@@ -5,7 +5,7 @@
         <!-- Діалог у стилі Dota 2 ready-check: тьмяний фон, вузька панель, велика зелена кнопка -->
         <div class="accept-dialog" :class="{ 'is-accepted': accepted }">
           <header class="accept-dialog__head">
-            <span class="accept-dialog__eyebrow">1v1 Solo Mid</span>
+            <span class="accept-dialog__eyebrow">Дуель · Solo Mid · випадковий герой</span>
             <h2 class="accept-dialog__title">Матч знайдено</h2>
           </header>
 

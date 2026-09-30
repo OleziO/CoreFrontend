@@ -47,7 +47,7 @@ const tabs: { name: string; label: string; icon: Component }[] = [
   { name: routeNames.teams, label: 'Команди', icon: PhUsersThree },
   { name: routeNames.players, label: 'Гравці', icon: PhUser },
   { name: routeNames.leaderboard, label: 'Лідери', icon: PhRanking },
-  { name: routeNames.duels, label: '1v1', icon: PhSword }
+  { name: routeNames.duels, label: 'Дуелі', icon: PhSword }
 ]
 
 const detailOf: Record<string, string> = {

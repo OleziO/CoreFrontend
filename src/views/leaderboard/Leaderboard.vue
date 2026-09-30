@@ -11,11 +11,11 @@
       <!-- ─── Head ─────────────────────────────────────────────────────── -->
       <header class="leaderboard-head">
         <div class="flex min-w-0 flex-col gap-6">
-          <span class="sys-label sys-label--gold">// {{ isDuelBoard ? 'Рейтинг 1v1' : 'Рейтинг платформи' }}</span>
+          <span class="sys-label sys-label--gold">// {{ isDuelBoard ? 'Рейтинг дуелей' : 'Рейтинг платформи' }}</span>
           <h1 class="leaderboard-head__title">Таблиця лідерів</h1>
           <p class="leaderboard-head__subtitle">
             <template v-if="isDuelBoard">
-              Рейтингові дуелі Solo Mid: +25 за перемогу, −25 за поразку. Хто найкращий на міді.
+              Рейтингові дуелі Solo Mid із випадковими героями: +25 за перемогу, −25 за поразку. Хто найкращий на міді.
             </template>
             <template v-else>
               Перемоги, п’єдестали, досягнення та турнірні очки — хто задає темп у лізі.
@@ -24,7 +24,7 @@
         </div>
 
         <div class="leaderboard-head__aside">
-          <!-- Перемикач дошки: турнірний рейтинг ↔ 1v1 (`?board=1v1`) -->
+          <!-- Перемикач дошки: турнірний рейтинг ↔ дуелі (`?board=duels`) -->
           <div class="board-switch" role="tablist" aria-label="Тип рейтингу">
             <button
               v-for="option in boardOptions"
@@ -58,14 +58,14 @@
         </div>
       </header>
 
-      <!-- ─── 1v1 board ────────────────────────────────────────────────── -->
+      <!-- ─── Duels board ──────────────────────────────────────────────── -->
       <template v-if="isDuelBoard">
         <DuelBotsStatusStrip :bots="bots" :is-error="botsError" />
 
         <section v-if="duelError && !duelData" class="leaderboard-error neon-card hud-corners rounded-2xl">
           <PhWarningOctagon :size="28" weight="duotone" class="text-pink-400" />
           <div class="flex flex-col gap-4">
-            <span class="text-base font-semibold text-white">Не вдалося завантажити рейтинг 1v1</span>
+            <span class="text-base font-semibold text-white">Не вдалося завантажити рейтинг дуелей</span>
             <span class="text-sm text-gray-400">{{ duelErrorMessage }}</span>
           </div>
           <el-button type="primary" class="ml-auto" @click="duelRefetch()">
@@ -80,7 +80,7 @@
           class="leaderboard-empty neon-card hud-corners rounded-2xl"
         >
           <PhSword :size="40" weight="duotone" class="text-primary" />
-          <span class="text-base font-semibold text-white">Таблиця 1v1 ще порожня</span>
+          <span class="text-base font-semibold text-white">Таблиця дуелей ще порожня</span>
           <span class="text-sm text-gray-400">Перші рядки з’являться після перших зіграних дуелей.</span>
           <RouterLink :to="{ name: routeNames.duels }" class="no-underline">
             <el-button type="primary" class="mt-8">Стати в чергу</el-button>
@@ -94,7 +94,7 @@
         >
           <header class="leaderboard-panel__head">
             <div class="flex min-w-0 flex-col gap-4">
-              <h2 id="duel-table" class="sys-label sys-label--muted">// Рейтинг 1v1</h2>
+              <h2 id="duel-table" class="sys-label sys-label--muted">// Рейтинг дуелей</h2>
               <p class="leaderboard-panel__subtitle">
                 {{ pluralizeDuelPlayers(duelData.players.length) }} із зіграними дуелями
                 <template v-if="duelSearch.trim()"> · знайдено {{ duelRows.length }}</template>
@@ -115,7 +115,7 @@
               <RouterLink :to="{ name: routeNames.duels }" class="no-underline">
                 <el-button type="primary">
                   <PhSword :size="16" weight="fill" />
-                  <span class="ml-6">Грати 1v1</span>
+                  <span class="ml-6">До дуелей</span>
                 </el-button>
               </RouterLink>
             </div>
@@ -290,26 +290,29 @@ const authStore = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 
-// ─── Перемикач дошки: `?board=1v1` → дуелі, інакше турнірний рейтинг ───────
+// ─── Перемикач дошки: `?board=duels` → дуелі, інакше турнірний рейтинг ─────
+// `?board=1v1` — стара адреса дошки, ще працює для збережених посилань.
 const boardOptions: { value: TLeaderboardBoard; label: string; icon: Component }[] = [
   { value: 'tournament', label: 'Турніри', icon: PhTrophy },
-  { value: '1v1', label: '1v1', icon: PhSword }
+  { value: 'duels', label: 'Дуелі', icon: PhSword }
 ]
 
-const board = computed<TLeaderboardBoard>(() => (route.query.board === '1v1' ? '1v1' : 'tournament'))
-const isDuelBoard = computed(() => board.value === '1v1')
+const board = computed<TLeaderboardBoard>(() =>
+  (route.query.board === 'duels' || route.query.board === '1v1' ? 'duels' : 'tournament')
+)
+const isDuelBoard = computed(() => board.value === 'duels')
 
 function setBoard (next: TLeaderboardBoard) {
   if (next === board.value) return
   const query = { ...route.query }
-  if (next === '1v1') query.board = '1v1'
+  if (next === 'duels') query.board = 'duels'
   else delete query.board
   router.replace({ query }).catch(() => { /* тихо */ })
 }
 
 const { data, error, isPending, isLoading, refetch } = useGetLeaderboard(() => !isDuelBoard.value)
 
-// ─── 1v1 ──────────────────────────────────────────────────────────────────
+// ─── Дуелі ────────────────────────────────────────────────────────────────
 const {
   data: duelData,
   error: duelError,

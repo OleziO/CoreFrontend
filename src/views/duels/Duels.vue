@@ -11,13 +11,18 @@
       <header class="duels-head">
         <div class="flex min-w-0 flex-col gap-6">
           <span class="sys-label">// Рейтингові дуелі</span>
-          <h1 class="duels-head__title">1v1 Ліга</h1>
+          <h1 class="duels-head__title">Дуелі</h1>
           <p class="duels-head__subtitle">
             Solo Mid, бот-хост ліги, підбір за рейтингом. +25 за перемогу, −25 за поразку.
           </p>
+          <!-- Ключове правило ліги — герой кожному випадає випадково, вибору немає -->
+          <span class="duels-head__note">
+            <PhShuffle :size="14" weight="bold" aria-hidden="true" />
+            Ліга випадкових героїв: свого героя ви не обираєте — його роздає система на кожну дуель.
+          </span>
         </div>
         <RouterLink
-          :to="{ name: routeNames.leaderboard, query: { board: '1v1' } }"
+          :to="{ name: routeNames.leaderboard, query: { board: 'duels' } }"
           class="no-underline"
         >
           <el-button>
@@ -42,11 +47,12 @@
       <div class="grid gap-16 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
         <!-- Ліва колонка: результат → активна дуель / черга -->
         <div class="flex min-w-0 flex-col gap-16">
+          <!-- Результат або «обробка»: зіграна дуель (PROCESSING) висить тут, поки не прийде результат -->
           <DuelResultBanner
             v-if="resultBannerDuel"
             :duel="resultBannerDuel"
             :me-id="meId"
-            @dismiss="dismissedDuelId = resultBannerDuel.id"
+            @dismiss="dismissedBannerKey = bannerKeyOf(resultBannerDuel)"
           />
 
           <DuelActiveCard
@@ -82,12 +88,15 @@
               <li>Знайдемо суперника з рейтингом ±50 (вікно росте, поки ви чекаєте).</li>
               <li>Прийміть матч за 30 секунд. Хто не прийме — −{{ DUEL_CANCEL_PENALTY }} і пауза.</li>
               <li>Героїв роздає ліга випадково — свого ви побачите одразу після підбору.</li>
-              <li>Бот створить закрите лобі 1v1 Mid і надішле інвайт у Dota 2.</li>
+              <li>Бот створить закрите лобі Solo Mid і надішле інвайт у Dota 2.</li>
               <li>
                 Зайдіть у лобі за 5 хвилин, станьте на сторону й на піку візьміть саме свого героя —
                 інший герой означає технічну поразку.
               </li>
-              <li>Результат зчитується з Dota автоматично: +25 переможцю, −25 переможеному.</li>
+              <li>
+                Щойно гра стартувала, дуель переходить в «обробку» — можна одразу шукати наступного суперника.
+                Результат зчитується з Dota автоматично: +25 переможцю, −25 переможеному.
+              </li>
               <li>Скасувати матч можна до старту гри — це коштує −{{ DUEL_CANCEL_PENALTY }}.</li>
             </ol>
           </section>
@@ -139,7 +148,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhRanking } from '@phosphor-icons/vue'
+import { PhRanking, PhShuffle } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-status'
 import { useDuelStatus } from '@/views/duels/composables/use-duel-status'
@@ -148,6 +157,7 @@ import {
   DUEL_CANCEL_PENALTY,
   DUEL_RESULT_BANNER_TTL_MS,
   formatDuelPercent,
+  isDuelProcessing,
   isWithinLast,
   pluralizeDuelPlayers
 } from '@/views/duels/duels.utils'
@@ -196,20 +206,29 @@ const profilePending = computed(() => !!meId.value && profile.isPending.value)
 const myDuels = computed<TDuel[]>(() => profile.data.value?.recent ?? [])
 const myRating = computed(() => status.value?.rating ?? profile.data.value?.rating ?? null)
 
-// ─── Банер результату: остання завершена дуель, не старша за 10 хв і не закрита ──
+// ─── Банер результату: остання зіграна дуель — «обробка», поки триває, або результат не старший за 10 хв ──
+// Ключ закриття включає стан: закритий банер «обробки» знову з’явиться вже з результатом.
 const now = useNow({ interval: 5000 })
-const dismissedDuelId = ref<string | null>(null)
+const dismissedBannerKey = ref<string | null>(null)
+const bannerKeyOf = (duel: TDuel) => `${duel.id}:${duel.state}`
 const resultBannerDuel = computed<TDuel | null>(() => {
   const duel = status.value?.lastFinishedDuel
-  if (!duel || duel.id === dismissedDuelId.value) return null
+  if (!duel || bannerKeyOf(duel) === dismissedBannerKey.value) return null
+  if (isDuelProcessing(duel)) return duel
   return isWithinLast(duel.finishedAt, DUEL_RESULT_BANNER_TTL_MS, now.value) ? duel : null
 })
 
-// Дуель завершилась (активна зникла) → історія, рейтинг і топ застаріли.
+// Дуель завершилась (активна зникла) або результат «обробки» прийшов → історія, рейтинг і топ застаріли.
 watch(
   () => status.value?.activeDuel?.id ?? null,
   (current, previous) => {
     if (previous && !current) invalidateDuelQueries()
+  }
+)
+watch(
+  () => status.value?.lastFinishedDuel?.state ?? null,
+  (current, previous) => {
+    if (previous === 'PROCESSING' && current && current !== 'PROCESSING') invalidateDuelQueries()
   }
 )
 
@@ -246,6 +265,26 @@ function openLogin () {
 .duels-head__subtitle {
   font-size: 14px;
   color: var(--ds-text-muted);
+}
+
+.duels-head__note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--ds-gold-rgb), 0.35);
+  background: rgba(var(--ds-gold-rgb), 0.08);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ds-text);
+}
+
+.duels-head__note svg {
+  flex-shrink: 0;
+  color: rgb(var(--ds-gold-rgb));
 }
 
 .duels-panel,

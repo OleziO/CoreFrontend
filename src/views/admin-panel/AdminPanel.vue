@@ -102,7 +102,7 @@ const tabs: {
   },
   {
     value: 'duels',
-    label: '1v1 дуелі',
+    label: 'Дуелі',
     icon: PhSword,
     component: DuelsTab
   }

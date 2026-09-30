@@ -6,7 +6,7 @@ import { DUEL_ACCEPT_POLL_MS, DUEL_STATUS_POLL_MS } from '@/views/duels/duels.ut
 import type { TDuelStatus } from '@/api/types/api.types'
 
 /**
- * Мій 1v1 статус. Основний канал — сокет `<API>/duels`: сервер сам шле свіжий
+ * Мій статус у дуелях. Основний канал — сокет `<API>/duels`: сервер сам шле свіжий
  * статус після кожної зміни, а живе з'єднання і є heartbeat черги. Полінг
  * `GET /duels/me` лишається запасним: працює лише поки сокет не підключений,
  * бо цей запит — теж heartbeat (без нього бекенд викидає з черги за 20 с).
@@ -36,7 +36,12 @@ export const useDuelStatus = () => {
       isLoggedIn.value &&
       !realtime.value &&
       !!status.value &&
-      (status.value.queue != null || status.value.activeDuel != null)
+      (
+        status.value.queue != null ||
+        status.value.activeDuel != null ||
+        // Гра зіграна, результат ще збирається — чекаємо на RESOLVED/FAILED.
+        status.value.lastFinishedDuel?.state === 'PROCESSING'
+      )
   )
 
   /** Поки матч чекає на «Прийняти», опитуємо частіше — дедлайн 30 с. */

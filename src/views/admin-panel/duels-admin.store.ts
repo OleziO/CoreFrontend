@@ -1,6 +1,6 @@
 import type { TDuel, TDuelState, THostBot, TCreateHostBotDto } from '@/api/types/api.types'
 
-/** Адмінка 1v1: список дуелей (з фільтром за станом) і пул ботів-хостів. */
+/** Адмінка дуелей: список дуелей (з фільтром за станом) і пул ботів-хостів. */
 export const useDuelsAdminStore = defineStore('duelsAdmin', () => {
   const duels = ref<TDuel[]>([])
   const bots = ref<THostBot[]>([])

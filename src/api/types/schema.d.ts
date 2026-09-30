@@ -2723,7 +2723,7 @@ export interface components {
         DuelDto: {
             id: string;
             /** @enum {string} */
-            state: "ACCEPTING" | "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "RESOLVED" | "CANCELLED" | "FAILED";
+            state: "ACCEPTING" | "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "PROCESSING" | "RESOLVED" | "CANCELLED" | "FAILED";
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -2802,7 +2802,7 @@ export interface components {
             rating: components["schemas"]["DuelRatingDto"];
             queue: components["schemas"]["DuelQueueStateDto"] | null;
             activeDuel: components["schemas"]["DuelDto"] | null;
-            /** @description Most recent duel in a terminal state — the UI shows it as a result banner */
+            /** @description Most recent finished duel — terminal, or PROCESSING (game over, result still being collected); the UI shows it as a result banner */
             lastFinishedDuel: components["schemas"]["DuelDto"] | null;
             /** @description Whether POST /duels/queue would succeed right now */
             canQueue: boolean;
@@ -5282,7 +5282,7 @@ export interface operations {
     DuelsAdminController_list: {
         parameters: {
             query?: {
-                state?: "ACCEPTING" | "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "RESOLVED" | "CANCELLED" | "FAILED";
+                state?: "ACCEPTING" | "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "PROCESSING" | "RESOLVED" | "CANCELLED" | "FAILED";
                 limit?: number;
             };
             header?: never;

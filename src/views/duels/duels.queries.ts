@@ -7,7 +7,7 @@ export const DUEL_LEADERBOARD_QUERY_KEY = ['duels', 'leaderboard'] as const
 export const DUEL_BOTS_STATUS_QUERY_KEY = ['duels', 'bots'] as const
 export const duelPlayerProfileQueryKey = (playerId: string) => ['duels', 'players', playerId] as const
 
-/** Мій 1v1 статус (GET /duels/me). Запит вимкнено без токена — ендпоінт лише для авторизованих. */
+/** Мій статус у дуелях (GET /duels/me). Запит вимкнено без токена — ендпоінт лише для авторизованих. */
 export const useGetDuelStatus = (enabled: () => boolean) => {
   return useQueryWrapper<TDuelStatus>({
     key: [...DUEL_STATUS_QUERY_KEY],

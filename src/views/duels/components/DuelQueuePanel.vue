@@ -11,8 +11,8 @@
     <!-- Не залогінений -->
     <div v-if="!isLoggedIn" class="queue-panel__body">
       <p class="queue-panel__text">
-        Увійдіть, щоб стати в чергу. Матчі 1v1 Solo Mid хостить бот ліги — усе, що треба, це
-        прив’язаний Steam-акаунт.
+        Увійдіть, щоб стати в чергу. Дуелі Solo Mid хостить бот ліги, героя кожному роздає випадково —
+        усе, що треба, це прив’язаний Steam-акаунт.
       </p>
       <el-button type="primary" size="large" class="w-full" @click="emit('login')">
         <PhDiscordLogo :size="18" weight="bold" class="mr-8" />
@@ -69,7 +69,8 @@
     <!-- Може стати в чергу -->
     <div v-else-if="status?.canQueue" class="queue-panel__body">
       <p class="queue-panel__text">
-        Суперника підбираємо за рейтингом. Перемога <span class="text-success">+{{ DUEL_RATING_DELTA }}</span>,
+        Суперника підбираємо за рейтингом, героя роздаємо випадково. Перемога
+        <span class="text-success">+{{ DUEL_RATING_DELTA }}</span>,
         поразка <span class="text-error">−{{ DUEL_RATING_DELTA }}</span>, старт з нуля.
       </p>
       <el-button type="primary" size="large" class="w-full" :loading="joining" @click="emit('join')">

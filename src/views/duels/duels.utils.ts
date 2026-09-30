@@ -44,6 +44,7 @@ export const duelStateLabels: Record<TDuelState, string> = {
   LOBBY_CREATING: 'Створюємо лобі',
   WAITING_PLAYERS: 'Чекаємо гравців',
   LIVE: 'Гра триває',
+  PROCESSING: 'Обробка результату',
   RESOLVED: 'Завершено',
   CANCELLED: 'Скасовано',
   FAILED: 'Збій'
@@ -75,7 +76,7 @@ export const duelFailReasonLabels: Record<TDuelFailReason, string> = {
 }
 
 export const duelQueueBlockedLabels: Record<TDuelQueueBlockedReason, string> = {
-  steam_not_linked: 'Щоб грати 1v1, прив’яжіть Steam-акаунт у профілі',
+  steam_not_linked: 'Щоб грати дуелі, прив’яжіть Steam-акаунт у профілі',
   cooldown: 'Пауза після неявки — спробуйте трохи пізніше',
   active_duel: 'У вас уже є активна дуель',
   already_queued: 'Ви вже в черзі',
@@ -141,8 +142,14 @@ export function duelOpponentOf (duel: TDuel, playerId: string | null | undefined
   return null
 }
 
+/** Гра закінчилась для гравців, а результат ще збирається (сервер / Web API). */
+export function isDuelProcessing (duel: TDuel | null | undefined): boolean {
+  return duel?.state === 'PROCESSING'
+}
+
 export function duelOutcomeFor (duel: TDuel, playerId: string | null | undefined): TDuelOutcome {
   if (isDuelActive(duel)) return 'active'
+  if (isDuelProcessing(duel)) return 'processing'
   if (duel.state === 'FAILED') return 'failed'
   // Скасування гравцем / неприйняття — «скасовано» з −10 у винного (дельта береться з loserId).
   const penaltyCancel = duel.cancelReason === 'player_cancelled' || duel.cancelReason === 'accept_timeout'
@@ -183,7 +190,8 @@ export const duelOutcomeLabels: Record<TDuelOutcome, string> = {
   loss: 'Поразка',
   cancelled: 'Скасовано',
   failed: 'Збій',
-  active: 'Триває'
+  active: 'Триває',
+  processing: 'Обробка'
 }
 
 export function duelPlayerName (player: TDuelPlayer | null | undefined): string {

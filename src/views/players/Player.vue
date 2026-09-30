@@ -51,7 +51,7 @@
           :is-empty="achievementsEmpty"
         />
 
-        <!-- 1v1 Ліга: рейтинг дуелей, W/L і останні матчі — під досягненнями -->
+        <!-- Дуелі: рейтинг, W/L і останні матчі — під досягненнями -->
         <PlayerDuelStats
           v-if="player"
           :class="roleAccentClass"

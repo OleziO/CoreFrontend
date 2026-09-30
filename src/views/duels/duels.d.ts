@@ -1,15 +1,15 @@
-// Типи 1v1 ліги виводяться з OpenAPI-схеми (GET /duels/*).
+// Типи ліги дуелей виводяться з OpenAPI-схеми (GET /duels/*).
 // Записи в `schema.d.ts` додано вручну за форматом openapi-typescript — `npm run api`
 // після деплою бекенду перегенерує їх один в один.
 type TDuelStatusResponse = TResponse<'/duels/me', 'get'>
 type TDuelLeaderboardResponse = TResponse<'/duels/leaderboard', 'get'>
 type TDuelPlayerProfileResponse = TResponse<'/duels/players/{id}', 'get'>
 
-/** Яку дошку показує `/leaderboard`: турнірний рейтинг (типово) або 1v1 (`?board=1v1`). */
-type TLeaderboardBoard = 'tournament' | '1v1'
+/** Яку дошку показує `/leaderboard`: турнірний рейтинг (типово) або дуелі (`?board=duels`). */
+type TLeaderboardBoard = 'tournament' | 'duels'
 
-/** Результат дуелі з погляду конкретного гравця. */
-type TDuelOutcome = 'win' | 'loss' | 'cancelled' | 'failed' | 'active'
+/** Результат дуелі з погляду конкретного гравця; `processing` — гра закінчилась, результат ще збирається. */
+type TDuelOutcome = 'win' | 'loss' | 'cancelled' | 'failed' | 'active' | 'processing'
 
 /** Крок степпера активної дуелі: PENDING → LOBBY_CREATING → WAITING_PLAYERS → LIVE. */
 type TDuelStep = {

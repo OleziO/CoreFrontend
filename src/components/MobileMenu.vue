@@ -41,7 +41,7 @@
           @click="close"
         >
           <PhSword :size="20" />
-          <span>1v1 Ліга</span>
+          <span>Дуелі</span>
         </RouterLink>
 
         <RouterLink

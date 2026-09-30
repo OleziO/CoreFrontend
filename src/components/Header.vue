@@ -135,7 +135,7 @@
                   class="flex w-full items-center gap-10 no-underline text-inherit"
                 >
                   <span class="header-menu__icon"><PhSword :size="16" weight="bold" /></span>
-                  <span>1v1 Ліга</span>
+                  <span>Дуелі</span>
                 </RouterLink>
               </el-dropdown-item>
 

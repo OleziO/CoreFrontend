@@ -16,7 +16,7 @@ import { PhUsersThree } from '@phosphor-icons/vue'
 import { pluralizeDuelPlayers } from '@/views/duels/duels.utils'
 
 defineProps<{
-  /** Скільки гравців зараз у черзі 1v1 (разом зі мною, якщо я в ній). Оновлюється сокетом. */
+  /** Скільки гравців зараз у черзі дуелей (разом зі мною, якщо я в ній). Оновлюється сокетом. */
   count: number
 }>()
 </script>
