@@ -35,6 +35,10 @@ export const useDuelsAdminStore = defineStore('duelsAdmin', () => {
     patchDuel(await duelsService.adminCancelDuel(id))
   }
 
+  async function recoverDuel (id: string): Promise<void> {
+    patchDuel(await duelsService.adminRecoverDuel(id))
+  }
+
   async function resolveDuel (id: string, winnerId: string | null): Promise<void> {
     patchDuel(await duelsService.adminResolveDuel(id, winnerId))
   }
@@ -72,6 +76,7 @@ export const useDuelsAdminStore = defineStore('duelsAdmin', () => {
     fetchBots,
     cancelDuel,
     resolveDuel,
+    recoverDuel,
     addBot,
     setBotEnabled,
     reloadBots,

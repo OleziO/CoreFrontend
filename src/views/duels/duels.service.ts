@@ -100,6 +100,16 @@ class DuelsService {
     }
   }
 
+  /** Підтягнути результат FAILED-дуелі з Steam Web API за match id. */
+  async adminRecoverDuel (id: string): Promise<TDuel> {
+    try {
+      return await apiClient.post('/admin/duels/{id}/recover', undefined, { dynamicKeys: { id } })
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося отримати результат від Valve'))
+      throw e
+    }
+  }
+
   /** `winnerId` — кому зарахувати перемогу (±25); null — анулювати без зміни рейтингу. */
   async adminResolveDuel (id: string, winnerId: string | null): Promise<TDuel> {
     const body: TAdminResolveDuelDto = { winnerId }

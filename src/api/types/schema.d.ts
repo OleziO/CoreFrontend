@@ -1531,6 +1531,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/duels/{id}/recover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fetch the result of a FAILED duel from the Steam Web API
+         * @description Uses the stored Valve match id (GetMatchDetails). 409 when there is no match id or Valve has no outcome yet.
+         */
+        post: operations["DuelsAdminController_recover"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/duels/{id}/resolve": {
         parameters: {
             query?: never;
@@ -5280,6 +5300,27 @@ export interface operations {
         };
     };
     DuelsAdminController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelDto"];
+                };
+            };
+        };
+    };
+    DuelsAdminController_recover: {
         parameters: {
             query?: never;
             header?: never;

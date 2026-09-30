@@ -95,6 +95,19 @@
             </el-button>
             <template v-else-if="duel.state === 'FAILED' || duel.state === 'CANCELLED'">
               <el-button
+                v-if="duel.state === 'FAILED' && duel.dotaMatchId"
+                type="primary"
+                size="small"
+                plain
+                :loading="processingId === duel.id"
+                :disabled="!!processingId && processingId !== duel.id"
+                title="Запитати результат матчу у Valve за match id"
+                @click="recover(duel)"
+              >
+                <PhCloudArrowDown v-if="processingId !== duel.id" :size="14" weight="bold" class="mr-6" />
+                Результат з Web API
+              </el-button>
+              <el-button
                 v-if="duel.player1"
                 type="success"
                 size="small"
@@ -244,7 +257,7 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import { PhArrowsClockwise, PhPlus, PhRobot, PhSword, PhTrash } from '@phosphor-icons/vue'
+import { PhArrowsClockwise, PhCloudArrowDown, PhPlus, PhRobot, PhSword, PhTrash } from '@phosphor-icons/vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { routeNames } from '@/router/route-names'
 import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-status'
@@ -336,6 +349,16 @@ async function cancel (duel: TDuel) {
   try {
     await store.cancelDuel(duel.id)
     ElMessage.success('Дуель скасовано')
+  } catch { /* тост показав сервіс */ } finally {
+    processingId.value = null
+  }
+}
+
+async function recover (duel: TDuel) {
+  processingId.value = duel.id
+  try {
+    await store.recoverDuel(duel.id)
+    ElMessage.success('Результат отримано від Valve і зараховано')
   } catch { /* тост показав сервіс */ } finally {
     processingId.value = null
   }
