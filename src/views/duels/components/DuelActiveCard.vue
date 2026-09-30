@@ -35,6 +35,15 @@
     </ol>
     <p class="active-card__hint">{{ duelSteps[Math.min(currentStep, duelSteps.length - 1)].hint }}</p>
 
+    <!-- Лобі перезапущено: гра не стартувала (гравець не завантажився), бот запускає матч заново -->
+    <p v-if="lobbyRestarted" class="active-card__restart" role="status">
+      <PhArrowsClockwise :size="14" weight="bold" class="shrink-0" />
+      <span>
+        Лобі перезапущено ({{ duel.lobbyRestarts }} з {{ DUEL_MAX_LOBBY_RESTARTS }}): один із гравців не
+        завантажився в гру. Прийміть інвайт ще раз і станьте на свою сторону — матч стартує автоматично.
+      </span>
+    </p>
+
     <!-- Суперники -->
     <div class="active-card__versus">
       <DuelPlayerTile :player="me" :side="sideOf(me?.id)" label="Ви" />
@@ -77,6 +86,23 @@
         Прийміть інвайт у Dota 2 (або знайдіть лобі за назвою і паролем) та станьте на сторону
         Radiant або Dire. Гра стартує автоматично, щойно обидва гравці на місцях.
       </p>
+      <!-- Інвайти в Dota час від часу губляться: бот повторює їх сам, а тут можна попросити ще раз -->
+      <div v-if="duel.state === 'WAITING_PLAYERS'" class="active-card__invite">
+        <el-button
+          size="small"
+          plain
+          :loading="inviting"
+          :disabled="inviting || inviteCooldownLeft > 0"
+          @click="askInvite"
+        >
+          <PhPaperPlaneTilt v-if="!inviting" :size="14" weight="bold" class="mr-6" />
+          <template v-if="inviteCooldownLeft > 0">Інвайт надіслано · {{ inviteCooldownLeft }} с</template>
+          <template v-else>Запросити мене в лобі</template>
+        </el-button>
+        <span class="active-card__invite-hint">
+          Не прийшов інвайт? Бот надішле його ще раз — переконайтеся, що Dota 2 запущена.
+        </span>
+      </div>
     </div>
 
     <!-- Присутність -->
@@ -117,7 +143,15 @@
 </template>
 
 <script setup lang="ts">
-import { PhCheck, PhCopy, PhShieldCheck, PhTimer, PhXCircle } from '@phosphor-icons/vue'
+import {
+  PhArrowsClockwise,
+  PhCheck,
+  PhCopy,
+  PhPaperPlaneTilt,
+  PhShieldCheck,
+  PhTimer,
+  PhXCircle
+} from '@phosphor-icons/vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   DUEL_CANCEL_PENALTY,
@@ -142,22 +176,47 @@ const props = withDefaults(defineProps<{
   /** Адмін бачить кнопку скасування без штрафу. */
   isAdmin?: boolean
   cancelling?: boolean
+  /** Запит «запросити мене ще раз» у польоті. */
+  inviting?: boolean
 }>(), {
   isAdmin: false,
-  cancelling: false
+  cancelling: false,
+  inviting: false
 })
 
 const emit = defineEmits<{
   cancel: []
   adminCancel: []
+  invite: []
 }>()
+
+/** Пауза між запитами інвайту — та сама, що `DUEL_INVITE_REQUEST_COOLDOWN_SECONDS` на бекенді. */
+const INVITE_COOLDOWN_SECONDS = 15
 
 const now = useNow({ interval: 1000 })
 const { copy, isSupported } = useClipboard()
 
+/** Ліміт перезапусків лобі — той самий, що `DUEL_MAX_LOBBY_RESTARTS` на бекенді. */
+const DUEL_MAX_LOBBY_RESTARTS = 2
+
 const currentStep = computed(() => duelStepIndex(props.duel.state))
 const canCancel = computed(() => isDuelCancellable(props.duel))
+const lobbyRestarted = computed(() =>
+  props.duel.lobbyRestarts > 0 && (props.duel.state === 'LOBBY_CREATING' || props.duel.state === 'WAITING_PLAYERS')
+)
 const joinLeft = computed(() => secondsUntil(props.duel.joinDeadlineAt, now.value))
+
+// Локальна пауза після кліку: бекенд і так відповість 429, але кнопка не має спокушати спамити.
+const inviteAskedAt = ref<number | null>(null)
+const inviteCooldownLeft = computed(() => {
+  if (inviteAskedAt.value == null) return 0
+  return Math.max(0, INVITE_COOLDOWN_SECONDS - Math.floor((now.value.getTime() - inviteAskedAt.value) / 1000))
+})
+
+function askInvite () {
+  inviteAskedAt.value = Date.now()
+  emit('invite')
+}
 
 const me = computed<TDuelPlayer | null>(() => {
   if (!props.meId) return null
@@ -360,6 +419,23 @@ async function copyText (text: string) {
   color: var(--ds-text-muted);
 }
 
+.active-card__restart {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--ds-gold-rgb), 0.4);
+  background: rgba(var(--ds-gold-rgb), 0.08);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ds-gold);
+}
+
+.active-card__restart svg {
+  margin-top: 3px;
+}
+
 .active-card__versus {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -418,6 +494,21 @@ async function copyText (text: string) {
   letter-spacing: 0.18em;
   color: var(--ds-primary);
   text-shadow: var(--ds-neon-text-subtle);
+}
+
+.active-card__invite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(var(--ds-primary-rgb), 0.25);
+}
+
+.active-card__invite-hint {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ds-text-faint);
 }
 
 .active-card__presence {

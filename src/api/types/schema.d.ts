@@ -1387,6 +1387,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/duels/{id}/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send me the lobby invite again
+         * @description Participants only, while the lobby is open (WAITING_PLAYERS). The host bot re-sends the Dota 2 lobby invite on its next tick (a few seconds). 409 when the lobby is not open, 429 within 15 s of the previous request.
+         */
+        post: operations["DuelsController_requestInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/duels/{id}": {
         parameters: {
             query?: never;
@@ -2784,12 +2804,14 @@ export interface components {
             /** @description Points moved once the result was applied (25) */
             ratingDelta: number | null;
             /** @enum {string|null} */
-            cancelReason: "players_no_show" | "lobby_not_created" | "no_bots_available" | "admin" | "accept_timeout" | "player_cancelled" | null;
+            cancelReason: "players_no_show" | "lobby_not_created" | "no_bots_available" | "admin" | "accept_timeout" | "player_cancelled" | "game_aborted" | null;
             /** @description Who cancelled the duel (player or admin); null for automatic cancels */
             cancelledById: string | null;
             /** @enum {string|null} */
             failReason: "lobby_lost" | "game_timeout" | "undetermined_outcome" | "wrong_heroes" | null;
             adminReviewRequired: boolean;
+            /** @description How many times the lobby was relaunched because the game never started (a player failed to load) */
+            lobbyRestarts: number;
             stats: components["schemas"]["DuelStatsDto"] | null;
         };
         DuelRatingDto: {
@@ -5127,6 +5149,27 @@ export interface operations {
         };
     };
     DuelsController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelStatusDto"];
+                };
+            };
+        };
+    };
+    DuelsController_requestInvite: {
         parameters: {
             query?: never;
             header?: never;

@@ -61,8 +61,10 @@
             :me-id="meId"
             :is-admin="authStore.isAdmin.isAdmin"
             :cancelling="cancelling"
+            :inviting="inviting"
             @cancel="cancel"
             @admin-cancel="adminCancel"
+            @invite="requestInvite"
           />
 
           <DuelQueuePanel
@@ -188,10 +190,12 @@ const {
   leaving,
   accepting,
   cancelling,
+  inviting,
   join,
   leave,
   accept,
   cancel,
+  requestInvite,
   adminCancel,
   invalidateDuelQueries
 } = useDuelStatus()

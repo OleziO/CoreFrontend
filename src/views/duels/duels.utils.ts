@@ -65,7 +65,8 @@ export const duelCancelReasonLabels: Record<TDuelCancelReason, string> = {
   no_bots_available: 'Не було вільного бота',
   admin: 'Скасовано адміністратором',
   accept_timeout: 'Матч не прийнято вчасно',
-  player_cancelled: 'Скасовано гравцем'
+  player_cancelled: 'Скасовано гравцем',
+  game_aborted: 'Гра не стартувала — гравець не завантажився в матч'
 }
 
 export const duelFailReasonLabels: Record<TDuelFailReason, string> = {

@@ -64,6 +64,10 @@ const meta = computed(() => {
     }
     if (props.duel.cancelReason === 'player_cancelled') return 'Суперник скасував матч. Ваш рейтинг не змінився.'
     if (props.duel.cancelReason === 'accept_timeout') return 'Суперник не прийняв матч. Ваш рейтинг не змінився.'
+    if (props.duel.cancelReason === 'game_aborted') {
+      return 'Гра так і не стартувала: гравець не завантажився в матч навіть після перезапуску лобі. ' +
+        'Рейтинг не змінився — можна ставати в чергу знову.'
+    }
     return reason || 'Рейтинг не змінився.'
   }
   if (outcome.value === 'loss' && props.duel.cancelReason === 'players_no_show') {

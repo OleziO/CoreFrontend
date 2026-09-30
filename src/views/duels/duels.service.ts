@@ -65,6 +65,18 @@ class DuelsService {
     }
   }
 
+  /** Попросити бота надіслати інвайт у лобі ще раз (поки лобі відкрите; не частіше ніж раз на 15 с). */
+  async requestInvite (id: string): Promise<TDuelStatus> {
+    try {
+      const status = await apiClient.post('/duels/{id}/invite', undefined, { dynamicKeys: { id } })
+      ElMessage.success('Бот надішле інвайт протягом кількох секунд — перевірте Dota 2')
+      return status
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося надіслати інвайт'))
+      throw e
+    }
+  }
+
   // ─── публічні ─────────────────────────────────────────────────────────────
 
   /** Стан пулу ботів-хостів: скільки онлайн, вільних, зайнятих. */

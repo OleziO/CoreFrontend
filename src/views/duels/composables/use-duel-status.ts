@@ -75,6 +75,7 @@ export const useDuelStatus = () => {
   const leaving = ref(false)
   const accepting = ref(false)
   const cancelling = ref(false)
+  const inviting = ref(false)
 
   async function join (): Promise<boolean> {
     if (joining.value) return false
@@ -133,6 +134,21 @@ export const useDuelStatus = () => {
     }
   }
 
+  /** Попросити бота надіслати інвайт у лобі ще раз (інвайти в Dota час від часу губляться). */
+  async function requestInvite (): Promise<boolean> {
+    const duel = status.value?.activeDuel
+    if (!duel || inviting.value) return false
+    inviting.value = true
+    try {
+      applyStatus(await duelsService.requestInvite(duel.id))
+      return true
+    } catch {
+      return false
+    } finally {
+      inviting.value = false
+    }
+  }
+
   /** Адмін скасовує свою ж дуель без штрафу — адмінським ендпоінтом, після чого перечитуємо статус. */
   async function adminCancel (): Promise<boolean> {
     const duel = status.value?.activeDuel
@@ -160,10 +176,12 @@ export const useDuelStatus = () => {
     leaving,
     accepting,
     cancelling,
+    inviting,
     join,
     leave,
     accept,
     cancel,
+    requestInvite,
     adminCancel,
     refetch: () => query.refetch(),
     invalidateDuelQueries
