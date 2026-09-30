@@ -640,14 +640,24 @@ async function copyText (text: string) {
 
 .active-card__actions {
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
   padding-top: 4px;
   border-top: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
-.active-card__actions :deep(.el-button + .el-button) {
+/* Обидві кнопки скасування — в один рядок, ділять ширину порівну і на телефоні */
+.active-card__actions :deep(.el-button) {
+  flex: 1 1 0;
+  min-width: 0;
   margin-left: 0;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+@media (max-width: 420px) {
+  .active-card__actions :deep(.el-button) {
+    font-size: 13px;
+  }
 }
 
 /* ─── Рух ────────────────────────────────────────────────────────────────── */

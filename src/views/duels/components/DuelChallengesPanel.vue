@@ -198,18 +198,19 @@ const blockedReason = computed(() => {
 }
 
 /*
- * Глобальний стиль вимкненої кнопки — блідий основний колір з opacity 0.45: на «primary plain»
- * це виглядає як зламана кнопка. Тут вимкнений стан — нейтральний, штрихова рамка, без ціану.
+ * Element Plus для `primary plain + disabled` ставить кольори напряму (світла заливка light-9),
+ * а не через змінні — тому перекриваємо самі властивості. Вимкнена кнопка — той самий контур,
+ * лише пригашений: прозора заливка, ціан на чверть яскравості, без світіння.
  */
 .challenges .challenges__cta.is-locked,
-.challenges .challenges__cta.is-locked:hover {
-  --el-button-disabled-text-color: var(--ds-text-faint);
-  --el-button-disabled-bg-color: rgba(255, 255, 255, 0.03);
-  --el-button-disabled-border-color: rgba(255, 255, 255, 0.14);
-
+.challenges .challenges__cta.is-locked:hover,
+.challenges .challenges__cta.is-locked:focus,
+.challenges .challenges__cta.is-locked:active {
+  color: rgba(var(--ds-primary-rgb), 0.45);
+  background-color: rgba(var(--ds-primary-rgb), 0.04);
+  border-color: rgba(var(--ds-primary-rgb), 0.22);
   opacity: 1;
-  border-style: dashed;
-  font-weight: 500;
+  box-shadow: none;
   cursor: not-allowed;
 }
 

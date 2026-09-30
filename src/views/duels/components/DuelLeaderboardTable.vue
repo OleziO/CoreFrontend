@@ -57,7 +57,7 @@
           </td>
           <td class="dboard__td dboard__td--num dboard__col--wide">{{ formatDuelPercent(row.winrate) }}</td>
           <td
-            class="dboard__td dboard__td--num dboard__col--wide"
+            class="dboard__td dboard__td--num dboard__td--streak dboard__col--wide"
             :class="row.streak > 0 ? 'text-success' : row.streak < 0 ? 'dboard__wl-loss' : ''"
           >
             {{ formatDuelStreak(row.streak) }}
@@ -289,9 +289,33 @@ function goToPlayer (id: string) {
   border-radius: 10px 0 0 10px;
 }
 
-.dboard__td:last-child {
+/*
+ * Правий край рядка заокруглюємо на тій комірці, що реально остання видима: на вузькому контейнері
+ * це кнопка «Детальніше» (last-child), далі — «Серія», а від 720px — «Остання гра». Решта колонок
+ * ховається через display: none, тож `:last-child` сам по собі не підходить.
+ */
+.dboard__td--more {
   border-right: 1px solid transparent;
   border-radius: 0 10px 10px 0;
+}
+
+@container (min-width: 500px) {
+  .dboard__td--streak {
+    border-right: 1px solid transparent;
+    border-radius: 0 10px 10px 0;
+  }
+}
+
+@container (min-width: 720px) {
+  .dboard__td--streak {
+    border-right: 0;
+    border-radius: 0;
+  }
+
+  .dboard__td--date {
+    border-right: 1px solid transparent;
+    border-radius: 0 10px 10px 0;
+  }
 }
 
 .dboard__row--top .dboard__td {

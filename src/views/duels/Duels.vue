@@ -19,7 +19,7 @@
         <div class="duels-head__aside">
           <!-- Стан пулу ботів: червона пігулка, коли жоден не онлайн; деталі — у tooltip -->
           <DuelBotsStatusStrip :bots="bots" :is-error="botsError" minimal />
-          <el-button @click="open('DuelHowItWorksModal')">
+          <el-button title="Як це працює" @click="open('DuelHowItWorksModal')">
             <PhQuestion :size="16" weight="bold" />
             <span class="ml-6">Як це працює</span>
           </el-button>
@@ -27,7 +27,7 @@
             :to="{ name: routeNames.leaderboard, query: { board: 'duels' } }"
             class="no-underline"
           >
-            <el-button>
+            <el-button title="Повна таблиця">
               <PhRanking :size="16" weight="bold" />
               <span class="ml-6">Повна таблиця</span>
             </el-button>
@@ -300,9 +300,45 @@ function openLogin () {
 
 .duels-head__aside {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+}
+
+/* Телефон: пігулка ботів і обидві кнопки — в один рядок на всю ширину, кнопки ділять решту порівну */
+@media (max-width: 767px) {
+  .duels-head__aside {
+    width: 100%;
+  }
+
+  .duels-head__aside > .bots-strip {
+    flex-shrink: 0;
+  }
+
+  .duels-head__aside > a {
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .duels-head__aside :deep(.el-button) {
+    flex: 1 1 0;
+    width: 100%;
+    min-width: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 400px) {
+  /* Зовсім вузько: підписи кнопок ховаємо, лишаються іконки з tooltip */
+  .duels-head__aside :deep(.el-button .ml-6) {
+    display: none;
+  }
+
+  .duels-head__aside :deep(.el-button) {
+    flex: 0 0 auto;
+  }
 }
 
 .duels-panel {

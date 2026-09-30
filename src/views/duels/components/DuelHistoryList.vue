@@ -96,11 +96,18 @@ function formatDate (iso: string): string {
 .dhistory__row {
   --tone: 148, 163, 184;
 
+  /*
+   * Телефон — два рядки з явними зонами: бейдж + суперник + дельта, під ними статистика + дата.
+   * Без зон авто-розкладка кидала дельту й дату на третій рядок.
+   */
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr) auto 52px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'badge opponent delta'
+    'stats stats date';
   align-items: center;
-  gap: 8px 10px;
-  padding: 8px 12px;
+  gap: 6px 10px;
+  padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid rgba(var(--tone), 0.2);
   background: rgba(var(--tone), 0.04);
@@ -108,9 +115,32 @@ function formatDate (iso: string): string {
   color: var(--ds-text);
 }
 
+.dhistory__badge {
+  grid-area: badge;
+}
+
+.dhistory__opponent {
+  grid-area: opponent;
+}
+
+.dhistory__stats {
+  grid-area: stats;
+}
+
+.dhistory__delta {
+  grid-area: delta;
+}
+
+.dhistory__date {
+  grid-area: date;
+}
+
 @media (min-width: 640px) {
   .dhistory__row {
     grid-template-columns: 82px minmax(0, 1fr) minmax(0, 1fr) 52px 84px;
+    grid-template-areas: 'badge opponent stats delta date';
+    gap: 8px 10px;
+    padding: 8px 12px;
   }
 }
 
@@ -177,13 +207,6 @@ function formatDate (iso: string): string {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   color: var(--ds-text-muted);
-  grid-column: 1 / -1;
-}
-
-@media (min-width: 640px) {
-  .dhistory__stats {
-    grid-column: auto;
-  }
 }
 
 .dhistory__stats-lh {
