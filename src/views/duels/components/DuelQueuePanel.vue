@@ -5,12 +5,7 @@
         <span class="sys-label sys-label--muted">// Черга</span>
         <h2 id="duel-queue-title" class="queue-panel__title">Пошук суперника</h2>
       </div>
-      <DuelRatingBadge
-        v-if="status"
-        :rating="status.rating.rating"
-        :streak="status.rating.streak"
-        size="lg"
-      />
+      <DuelQueueCountBadge v-if="status" :count="status.playersInQueue" />
     </header>
 
     <!-- Не залогінений -->
@@ -117,7 +112,7 @@ import {
   pluralizeDuelPlayers,
   secondsUntil
 } from '@/views/duels/duels.utils'
-import DuelRatingBadge from '@/views/duels/components/DuelRatingBadge.vue'
+import DuelQueueCountBadge from '@/views/duels/components/DuelQueueCountBadge.vue'
 import type { TDuelStatus } from '@/api/types/api.types'
 
 const props = defineProps<{

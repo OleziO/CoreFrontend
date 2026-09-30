@@ -105,10 +105,13 @@ function goToPlayer (id: string) {
 .dboard-scroll {
   width: 100%;
   min-width: 0;
+  /* Вузький контейнер (телефон, бічна колонка): таблиця прокручується, а не ріже аватар у колонці гравця. */
+  overflow-x: auto;
 }
 
 .dboard {
   width: 100%;
+  min-width: 340px;
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0 4px;

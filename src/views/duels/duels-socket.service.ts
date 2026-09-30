@@ -72,7 +72,7 @@ class DuelsSocketService {
       debug('duel:status', {
         rating: status.rating.rating,
         inQueue: !!status.queue,
-        playersInQueue: status.queue?.playersInQueue ?? null,
+        playersInQueue: status.playersInQueue,
         activeDuel: status.activeDuel ? `${status.activeDuel.id} ${status.activeDuel.state}` : null,
         bots: `${status.bots.online}/${status.bots.total}`
       })

@@ -2808,6 +2808,8 @@ export interface components {
             canQueue: boolean;
             /** @enum {string|null} */
             queueBlockedReason: "steam_not_linked" | "cooldown" | "active_duel" | "already_queued" | "no_bots_online" | null;
+            /** @description Players in the 1v1 queue right now (me included when queued) — shown even outside the queue */
+            playersInQueue: number;
             /** @description Host bot pool snapshot; queueing is blocked while `online` is 0 */
             bots: components["schemas"]["DuelBotsStatusDto"];
         };
