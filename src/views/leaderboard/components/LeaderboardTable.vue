@@ -84,13 +84,6 @@
                   >
                     {{ displayName(row) }}
                   </RouterLink>
-                  <StatusBadge
-                    v-if="row.verified"
-                    preset="verified"
-                    size="xs"
-                    icon-only
-                    class="shrink-0"
-                  />
                 </span>
                 <span v-if="row.discordUsername" class="board__handle truncate">@{{ row.discordUsername }}</span>
               </span>
@@ -261,6 +254,11 @@ function goToPlayer (id: string) {
 .board__th--num,
 .board__td--num {
   text-align: right;
+}
+
+/* Трекінг 0.14em додає «хвіст» після останньої літери — без компенсації підпис на 1–2px правіше за числа. */
+.board__th--num {
+  padding-right: calc(10px - 0.14em);
 }
 
 .board__th--pos,
@@ -485,6 +483,10 @@ function goToPlayer (id: string) {
 
   .board__th--pos {
     width: 34px;
+  }
+
+  .board__th--num {
+    padding-right: calc(5px - 0.14em);
   }
 
   .board__th--score {

@@ -237,6 +237,11 @@ function goToPlayer (id: string) {
   text-align: right;
 }
 
+/* Трекінг 0.14em додає «хвіст» після останньої літери — без компенсації підпис на 1–2px правіше за числа. */
+.dboard__th--num {
+  padding-right: calc(10px - 0.14em);
+}
+
 .dboard__th--pos,
 .dboard__td--pos {
   text-align: center;
@@ -446,6 +451,10 @@ function goToPlayer (id: string) {
   .dboard__td {
     padding-left: 5px;
     padding-right: 5px;
+  }
+
+  .dboard__th--num {
+    padding-right: calc(5px - 0.14em);
   }
 
   .dboard__th--pos {
