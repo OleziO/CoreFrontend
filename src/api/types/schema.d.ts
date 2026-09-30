@@ -1780,11 +1780,34 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List duels, newest first (optional state filter) */
+        /**
+         * List duels, newest first (optional state filter)
+         * @description Each row carries the processing bookkeeping on top of the public duel: the host bot following it, the Valve lobby / server / match ids, the outcome once known and the last error.
+         */
         get: operations["DuelsAdminController_list"];
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/duels/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete one duel
+         * @description Removes the duel row in any state. A bot still hosting it leaves the lobby on its next tick and its Discord voice channel is deleted. Rating changes the duel already applied are NOT rolled back. Irreversible.
+         */
+        delete: operations["DuelsAdminController_remove"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3083,6 +3106,28 @@ export interface components {
             /** @description Dota game_state last seen on the live scoreboard while LIVE (0/1/10 = still loading, 2 = hero selection, 5 = in progress); null before the first snapshot or after a relaunch */
             gameState: number | null;
             stats: components["schemas"]["DuelStatsDto"] | null;
+        };
+        /** @description A duel as the admin panel sees it: the public `DuelDto` plus the internal bookkeeping that explains what the platform is doing with the result (which bot follows it, what Valve ids it has, the last error). */
+        AdminDuelDto: components["schemas"]["DuelDto"] & {
+            /** @description `host_bot.id` of the bot that hosts / follows the duel; null while PENDING or once the bot let go */
+            hostBotId: number | null;
+            /** @description Dota lobby id from the Game Coordinator */
+            lobbyId: string | null;
+            /** @description Game server SteamID once the match launched — the live scoreboard the result is read from */
+            serverSteamId: string | null;
+            /** @description Valve `EMatchOutcome` once known (2 Radiant, 3 Dire) */
+            matchOutcome: number | null;
+            /**
+             * Format: date-time
+             * @description When the rating change was applied; null until the result is in
+             */
+            ratingAppliedAt: string | null;
+            /** @description Last technical note the bot / API left on the duel */
+            error: string | null;
+            /** @description Admin who resolved or voided the duel by hand */
+            resolvedByAdminId: string | null;
+            /** Format: date-time */
+            updatedAt: string;
         };
         DuelRatingDto: {
             playerId: string;
@@ -5784,8 +5829,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DuelDto"][];
+                    "application/json": components["schemas"]["AdminDuelDto"][];
                 };
+            };
+        };
+    };
+    DuelsAdminController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

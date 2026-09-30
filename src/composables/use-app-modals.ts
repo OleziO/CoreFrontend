@@ -45,6 +45,8 @@ export const appModals = useModals({
     defineAsyncComponent(() => import('@/views/duels/modals/DuelHowItWorksModal.vue')) as Component,
   DuelLeaderboardRowModal:
     defineAsyncComponent(() => import('@/views/duels/modals/DuelLeaderboardRowModal.vue')) as Component,
+  DuelAdminMatchesModal:
+    defineAsyncComponent(() => import('@/views/duels/modals/DuelAdminMatchesModal.vue')) as Component,
   LeaderboardRowModal:
     defineAsyncComponent(() => import('@/views/leaderboard/modals/LeaderboardRowModal.vue')) as Component
 })

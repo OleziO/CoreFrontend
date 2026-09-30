@@ -41,6 +41,8 @@ export const DUEL_RESTART_REQUEST_COOLDOWN_SECONDS = 60
 export const DUEL_RESTART_REQUEST_WINDOW_SECONDS = 10 * 60
 /** Стани Dota `game_state`, у яких гра ще не почалась: INIT, WAIT_FOR_PLAYERS_TO_LOAD, WAIT_FOR_MAP_TO_LOAD. */
 export const DUEL_NEVER_STARTED_GAME_STATES: readonly number[] = [0, 1, 10]
+/** Скільки бот чекає на результат після запуску гри, перш ніж дуель стане FAILED (дзеркало `DUEL_GAME_TIMEOUT_SECONDS`). */
+export const DUEL_GAME_TIMEOUT_SECONDS = 90 * 60
 
 export const DUEL_ACTIVE_STATES: readonly TDuelState[] = [
   'ACCEPTING',

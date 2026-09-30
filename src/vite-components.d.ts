@@ -28,6 +28,7 @@ declare module 'vue' {
     CreateTournamentDrawer: typeof import('./views/admin-panel/components/drawers/CreateTournamentDrawer.vue')['default']
     DuelAcceptOverlay: typeof import('./views/duels/components/DuelAcceptOverlay.vue')['default']
     DuelActiveCard: typeof import('./views/duels/components/DuelActiveCard.vue')['default']
+    DuelAdminList: typeof import('./views/duels/components/DuelAdminList.vue')['default']
     DuelBotsStatusStrip: typeof import('./views/duels/components/DuelBotsStatusStrip.vue')['default']
     DuelChallengesPanel: typeof import('./views/duels/components/DuelChallengesPanel.vue')['default']
     DuelHeroTile: typeof import('./views/duels/components/DuelHeroTile.vue')['default']

@@ -82,6 +82,8 @@ export type TLeaderboardPlayer = components['schemas']['LeaderboardPlayerDto']
 export type TLeaderboardWeights = components['schemas']['LeaderboardWeightsDto']
 /** 1v1 ліга (дуелі): записи в `schema.d.ts` додано вручну за форматом openapi-typescript. */
 export type TDuel = components['schemas']['DuelDto']
+/** Дуель у адмінці: публічний DTO + службові поля обробки результату (бот, id Valve, помилка). */
+export type TAdminDuel = components['schemas']['AdminDuelDto']
 export type TDuelState = TDuel['state']
 export type TDuelCancelReason = NonNullable<TDuel['cancelReason']>
 export type TDuelFailReason = NonNullable<TDuel['failReason']>

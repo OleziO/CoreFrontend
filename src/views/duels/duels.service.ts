@@ -2,6 +2,7 @@ import apiClient from '@/api/client'
 import { ElMessage } from 'element-plus'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import type {
+  TAdminDuel,
   TAdminResolveDuelDto,
   TCreateDuelChallengeDto,
   TCreateHostBotDto,
@@ -156,8 +157,18 @@ class DuelsService {
 
   // ─── адмін ────────────────────────────────────────────────────────────────
 
-  async adminListDuels (state?: TDuelState, limit = 50): Promise<TDuel[]> {
+  async adminListDuels (state?: TDuelState, limit = 50): Promise<TAdminDuel[]> {
     return await apiClient.get('/admin/duels', { params: { state, limit } })
+  }
+
+  /** Видалити одну дуель назавжди (будь-який стан; рейтинг не відкочується). */
+  async adminDeleteDuel (id: string): Promise<void> {
+    try {
+      await apiClient.delete('/admin/duels/{id}', { dynamicKeys: { id } })
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося видалити дуель'))
+      throw e
+    }
   }
 
   async adminCancelDuel (id: string): Promise<TDuel> {

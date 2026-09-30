@@ -1,6 +1,6 @@
 <template>
   <div class="flex h-full flex-col gap-12 overflow-hidden">
-    <!-- Toolbar: розділ + фільтр стану -->
+    <!-- Toolbar: розділ + дії пулу ботів (фільтри дуелей живуть у самому списку) -->
     <div class="flex shrink-0 flex-wrap items-center justify-between gap-x-16 gap-y-8">
       <div class="duels-filters" role="group" aria-label="Розділ">
         <button
@@ -17,17 +17,7 @@
         </button>
       </div>
 
-      <div v-if="section === 'duels'" class="flex flex-wrap items-center gap-8">
-        <el-select v-model="stateFilter" class="w-[190px]" aria-label="Стан дуелі" @change="loadDuels">
-          <el-option label="Усі стани" :value="''" />
-          <el-option v-for="(label, state) in duelStateLabels" :key="state" :label="label" :value="state" />
-        </el-select>
-        <el-button :loading="store.duelsLoading" @click="loadDuels">
-          <PhArrowsClockwise v-if="!store.duelsLoading" :size="14" weight="bold" />
-        </el-button>
-      </div>
-
-      <div v-else class="flex flex-wrap items-center gap-8">
+      <div v-if="section === 'bots'" class="flex flex-wrap items-center gap-8">
         <DuelBotsStatusStrip :bots="bots" :is-error="botsError" compact />
         <el-button :loading="reloadingAll" @click="reloadAllBots">
           <PhArrowsClockwise v-if="!reloadingAll" :size="14" weight="bold" class="mr-6" />
@@ -36,122 +26,8 @@
       </div>
     </div>
 
-    <!-- ─── Дуелі ──────────────────────────────────────────────────────── -->
-    <div
-      v-if="section === 'duels'"
-      v-loading="store.duelsLoading"
-      class="custom-scroll min-h-0 flex-1 overflow-y-auto"
-    >
-      <ul v-if="store.duels.length" class="duels-list">
-        <li v-for="duel in store.duels" :key="duel.id" class="duel-row hud-panel">
-          <div class="duel-row__head">
-            <StatusBadge size="sm" :tone="toneOf(duel.state)" :label="duelStateLabels[duel.state]" />
-            <span v-if="duel.adminReviewRequired" class="duel-row__flag">потребує перегляду</span>
-            <span class="duel-row__date">{{ formatDate(duel.createdAt) }}</span>
-          </div>
-
-          <div class="duel-row__versus">
-            <RouterLink
-              v-if="duel.player1"
-              :to="{ name: routeNames.player, params: { id: duel.player1.id } }"
-              class="duel-row__player no-underline"
-              :class="{ 'is-winner': duel.winnerId === duel.player1.id, 'is-loser': duel.loserId === duel.player1.id }"
-            >
-              {{ duelPlayerName(duel.player1) }}
-              <span class="duel-row__rating">{{ duel.player1Rating }}</span>
-            </RouterLink>
-            <span v-else class="duel-row__player text-white/40">—</span>
-            <span class="duel-row__vs">vs</span>
-            <RouterLink
-              v-if="duel.player2"
-              :to="{ name: routeNames.player, params: { id: duel.player2.id } }"
-              class="duel-row__player no-underline"
-              :class="{ 'is-winner': duel.winnerId === duel.player2.id, 'is-loser': duel.loserId === duel.player2.id }"
-            >
-              {{ duelPlayerName(duel.player2) }}
-              <span class="duel-row__rating">{{ duel.player2Rating }}</span>
-            </RouterLink>
-            <span v-else class="duel-row__player text-white/40">—</span>
-          </div>
-
-          <div class="duel-row__meta">
-            <span>{{ duel.lobbyName }}</span>
-            <span v-if="duel.dotaMatchId">матч {{ duel.dotaMatchId }}</span>
-            <span v-if="duelEndReasonLabel(duel)">{{ duelEndReasonLabel(duel) }}</span>
-            <span v-if="duel.ratingDelta != null">±{{ duel.ratingDelta }}</span>
-          </div>
-
-          <div class="duel-row__actions">
-            <el-button
-              v-if="isDuelActive(duel)"
-              type="danger"
-              size="small"
-              plain
-              :loading="processingId === duel.id"
-              :disabled="!!processingId && processingId !== duel.id"
-              @click="cancel(duel)"
-            >
-              Скасувати
-            </el-button>
-            <template v-else-if="duel.state === 'FAILED' || duel.state === 'CANCELLED'">
-              <el-button
-                v-if="duel.state === 'FAILED' && duel.dotaMatchId"
-                type="primary"
-                size="small"
-                plain
-                :loading="processingId === duel.id"
-                :disabled="!!processingId && processingId !== duel.id"
-                title="Запитати результат матчу у Valve за match id"
-                @click="recover(duel)"
-              >
-                <PhCloudArrowDown v-if="processingId !== duel.id" :size="14" weight="bold" class="mr-6" />
-                Результат з Web API
-              </el-button>
-              <el-button
-                v-if="duel.player1"
-                type="success"
-                size="small"
-                plain
-                :loading="processingId === duel.id"
-                :disabled="!!processingId && processingId !== duel.id"
-                @click="resolve(duel, duel.player1)"
-              >
-                Перемога: {{ duelPlayerName(duel.player1) }}
-              </el-button>
-              <el-button
-                v-if="duel.player2"
-                type="success"
-                size="small"
-                plain
-                :loading="processingId === duel.id"
-                :disabled="!!processingId && processingId !== duel.id"
-                @click="resolve(duel, duel.player2)"
-              >
-                Перемога: {{ duelPlayerName(duel.player2) }}
-              </el-button>
-              <el-button
-                v-if="duel.adminReviewRequired"
-                size="small"
-                :loading="processingId === duel.id"
-                :disabled="!!processingId && processingId !== duel.id"
-                @click="resolve(duel, null)"
-              >
-                Анулювати
-              </el-button>
-            </template>
-          </div>
-        </li>
-      </ul>
-
-      <div v-else-if="!store.duelsLoading" class="duels-empty hud-panel">
-        <el-empty :image-size="120">
-          <template #description>
-            <span class="sys-label !text-[9px]">// Порожньо</span>
-            <p class="duels-empty__text">Дуелей із таким станом немає.</p>
-          </template>
-        </el-empty>
-      </div>
-    </div>
+    <!-- ─── Дуелі: статус обробки, дії адміна, вибіркове видалення ───────── -->
+    <DuelAdminList v-if="section === 'duels'" class="min-h-0 flex-1" />
 
     <!-- ─── Боти ───────────────────────────────────────────────────────── -->
     <div
@@ -257,20 +133,14 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import { PhArrowsClockwise, PhCloudArrowDown, PhPlus, PhRobot, PhSword, PhTrash } from '@phosphor-icons/vue'
+import { PhArrowsClockwise, PhPlus, PhRobot, PhSword, PhTrash } from '@phosphor-icons/vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { routeNames } from '@/router/route-names'
 import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-status'
-import {
-  duelEndReasonLabel,
-  duelPlayerName,
-  duelStateLabels,
-  hostBotStatusLabels,
-  isDuelActive
-} from '@/views/duels/duels.utils'
+import { hostBotStatusLabels } from '@/views/duels/duels.utils'
+import DuelAdminList from '@/views/duels/components/DuelAdminList.vue'
 import DuelBotsStatusStrip from '@/views/duels/components/DuelBotsStatusStrip.vue'
 import type { TStatusTone } from '@/components/status/status.presets'
-import type { TDuel, TDuelPlayer, TDuelState, THostBot } from '@/api/types/api.types'
+import type { THostBot } from '@/api/types/api.types'
 
 type TSection = 'duels' | 'bots'
 
@@ -283,22 +153,12 @@ const store = useDuelsAdminStore()
 const { bots, isError: botsError } = useDuelBotsStatus()
 
 const section = ref<TSection>('duels')
-const stateFilter = ref<TDuelState | ''>('')
-const processingId = ref<string | null>(null)
 const processingBotId = ref<number | null>(null)
 const reloadingAll = ref(false)
 const addingBot = ref(false)
 
 const newBot = reactive({ accountName: '', password: '', region: 3 })
 const canAddBot = computed(() => !!newBot.accountName.trim() && !!newBot.password)
-
-async function loadDuels () {
-  try {
-    await store.fetchDuels(stateFilter.value || undefined)
-  } catch {
-    ElMessage.error('Не вдалося завантажити дуелі')
-  }
-}
 
 async function loadBots () {
   try {
@@ -308,86 +168,17 @@ async function loadBots () {
   }
 }
 
+// Дуелі підтягує сам DuelAdminList; пул ботів потрібен і йому (хто веде дуель), і вкладці ботів.
 onMounted(() => {
-  loadDuels()
   loadBots()
 })
 
-// ─── Дуелі ────────────────────────────────────────────────────────────────
-
-function toneOf (state: TDuelState): TStatusTone {
-  switch (state) {
-    case 'LIVE': return 'success'
-    case 'PROCESSING': return 'info'
-    case 'RESOLVED': return 'primary'
-    case 'CANCELLED': return 'warning'
-    case 'FAILED': return 'error'
-    default: return 'neutral'
-  }
-}
-
-function formatDate (iso: string): string {
-  const d = dayjs(iso)
-  return d.isValid() ? d.format('DD.MM.YYYY HH:mm') : ''
-}
+// ─── Боти ─────────────────────────────────────────────────────────────────
 
 function formatTime (iso: string): string {
   const d = dayjs(iso)
   return d.isValid() ? d.format('HH:mm:ss') : ''
 }
-
-async function cancel (duel: TDuel) {
-  try {
-    await ElMessageBox.confirm(
-      'Дуель буде скасовано без зміни рейтингу. Бот вийде з лобі на наступному тику.',
-      'Скасувати дуель?',
-      { confirmButtonText: 'Скасувати', cancelButtonText: 'Ні', type: 'warning' }
-    )
-  } catch {
-    return
-  }
-  processingId.value = duel.id
-  try {
-    await store.cancelDuel(duel.id)
-    ElMessage.success('Дуель скасовано')
-  } catch { /* тост показав сервіс */ } finally {
-    processingId.value = null
-  }
-}
-
-async function recover (duel: TDuel) {
-  processingId.value = duel.id
-  try {
-    await store.recoverDuel(duel.id)
-    ElMessage.success('Результат отримано від Valve і зараховано')
-  } catch { /* тост показав сервіс */ } finally {
-    processingId.value = null
-  }
-}
-
-async function resolve (duel: TDuel, winner: TDuelPlayer | null) {
-  const text = winner
-    ? `Зарахувати перемогу гравцю ${duelPlayerName(winner)} (±25)?`
-    : 'Анулювати дуель без зміни рейтингу?'
-  try {
-    await ElMessageBox.confirm(text, 'Вирішити дуель', {
-      confirmButtonText: 'Підтвердити',
-      cancelButtonText: 'Ні',
-      type: 'info'
-    })
-  } catch {
-    return
-  }
-  processingId.value = duel.id
-  try {
-    await store.resolveDuel(duel.id, winner?.id ?? null)
-    ElMessage.success('Дуель вирішено')
-  } catch { /* тост показав сервіс */ } finally {
-    processingId.value = null
-  }
-}
-
-// ─── Боти ─────────────────────────────────────────────────────────────────
 
 function botTone (bot: THostBot): TStatusTone {
   if (!bot.enabled) return 'neutral'
@@ -518,7 +309,6 @@ async function removeBot (bot: THostBot) {
   list-style: none;
 }
 
-.duel-row,
 .bot-row,
 .bot-form {
   display: flex;
@@ -529,13 +319,6 @@ async function removeBot (bot: THostBot) {
 }
 
 @media (min-width: 1024px) {
-  .duel-row {
-    display: grid;
-    grid-template-columns: 200px minmax(0, 1.4fr) minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 12px 16px;
-  }
-
   .bot-row {
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr) auto;
@@ -544,78 +327,12 @@ async function removeBot (bot: THostBot) {
   }
 }
 
-.duel-row__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-}
-
-.duel-row__flag {
-  font-family: var(--ds-font-mono);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ds-gold);
-}
-
-.duel-row__date,
-.duel-row__meta,
 .bot-row__meta {
   font-family: var(--ds-font-mono);
   font-size: 10px;
   color: var(--ds-text-faint);
 }
 
-.duel-row__versus {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-}
-
-.duel-row__player {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-  color: var(--ds-text-strong);
-
-  &:hover {
-    color: var(--ds-primary);
-  }
-
-  &.is-winner {
-    color: #22c55e;
-  }
-
-  &.is-loser {
-    color: var(--ds-text-muted);
-  }
-}
-
-.duel-row__rating {
-  font-family: var(--ds-font-mono);
-  font-size: 10px;
-  color: var(--ds-text-faint);
-}
-
-.duel-row__vs {
-  font-family: var(--ds-font-mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ds-text-faint);
-}
-
-.duel-row__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-}
-
-.duel-row__actions,
 .bot-row__actions {
   display: flex;
   flex-wrap: wrap;

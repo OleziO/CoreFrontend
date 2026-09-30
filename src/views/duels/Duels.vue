@@ -23,6 +23,15 @@
             <PhQuestion :size="16" weight="bold" />
             <span class="ml-6">Як це працює</span>
           </el-button>
+          <!-- Адмін: усі дуелі ліги зі статусом обробки та видаленням -->
+          <el-button
+            v-if="isAdmin"
+            title="Усі дуелі: статус обробки й видалення"
+            @click="open('DuelAdminMatchesModal', { onDeleted: invalidateDuelQueries })"
+          >
+            <PhListChecks :size="16" weight="bold" />
+            <span class="ml-6">Усі дуелі</span>
+          </el-button>
           <RouterLink
             :to="{ name: routeNames.leaderboard, query: { board: 'duels' } }"
             class="no-underline"
@@ -152,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhQuestion, PhRanking } from '@phosphor-icons/vue'
+import { PhListChecks, PhQuestion, PhRanking } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-status'
 import { useDuelChallenges } from '@/views/duels/composables/use-duel-challenges'
@@ -184,6 +193,7 @@ const { open } = useAppModals()
 const route = useRoute()
 
 const meId = computed(() => authStore.user?.id ?? null)
+const isAdmin = computed(() => authStore.isAdmin.isAdmin)
 
 const {
   status,

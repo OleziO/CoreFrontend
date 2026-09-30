@@ -1,8 +1,8 @@
-import type { TDuel, TDuelState, THostBot, TCreateHostBotDto } from '@/api/types/api.types'
+import type { TAdminDuel, TDuel, TDuelState, THostBot, TCreateHostBotDto } from '@/api/types/api.types'
 
 /** Адмінка дуелей: список дуелей (з фільтром за станом) і пул ботів-хостів. */
 export const useDuelsAdminStore = defineStore('duelsAdmin', () => {
-  const duels = ref<TDuel[]>([])
+  const duels = ref<TAdminDuel[]>([])
   const bots = ref<THostBot[]>([])
   const duelsLoading = ref(false)
   const botsLoading = ref(false)
@@ -25,10 +25,14 @@ export const useDuelsAdminStore = defineStore('duelsAdmin', () => {
     }
   }
 
+  /**
+   * Мутації (cancel / recover / resolve) повертають публічний `DuelDto` без службових полів —
+   * зливаємо його поверх наявного рядка, щоб не втратити hostBotId / error / serverSteamId.
+   */
   function patchDuel (updated: TDuel): void {
     const ix = duels.value.findIndex((d) => d.id === updated.id)
-    if (ix === -1) duels.value.unshift(updated)
-    else duels.value.splice(ix, 1, updated)
+    if (ix === -1) return
+    duels.value.splice(ix, 1, { ...duels.value[ix], ...updated })
   }
 
   async function cancelDuel (id: string): Promise<void> {
@@ -41,6 +45,24 @@ export const useDuelsAdminStore = defineStore('duelsAdmin', () => {
 
   async function resolveDuel (id: string, winnerId: string | null): Promise<void> {
     patchDuel(await duelsService.adminResolveDuel(id, winnerId))
+  }
+
+  async function deleteDuel (id: string): Promise<void> {
+    await duelsService.adminDeleteDuel(id)
+    duels.value = duels.value.filter((d) => d.id !== id)
+  }
+
+  /**
+   * Вибіркове видалення: по одній, послідовно — ендпоінт лише поштучний. Зупиняємось на першій
+   * помилці (тост показав сервіс); уже видалені зникають зі списку. Повертає кількість видалених.
+   */
+  async function deleteDuels (ids: readonly string[]): Promise<number> {
+    let deleted = 0
+    for (const id of ids) {
+      await deleteDuel(id)
+      deleted += 1
+    }
+    return deleted
   }
 
   async function addBot (dto: TCreateHostBotDto): Promise<void> {
@@ -77,6 +99,8 @@ export const useDuelsAdminStore = defineStore('duelsAdmin', () => {
     cancelDuel,
     resolveDuel,
     recoverDuel,
+    deleteDuel,
+    deleteDuels,
     addBot,
     setBotEnabled,
     reloadBots,
