@@ -44,8 +44,10 @@ class DuelsSocketService {
 
     const socket: TDuelSocket = io(`${import.meta.env.VITE_API_PUBLIC_URL}/duels`, {
       auth: { token },
-      // WebSocket, а якщо проксі його не пропускає — long-polling тим самим шляхом.
-      transports: ['websocket', 'polling'],
+      // Спершу long-polling, потім апгрейд до WebSocket. Саме в такому порядку: проксі перед API
+      // не пропускає Upgrade (400), а з `['websocket', 'polling']` клієнт 4.8 НЕ переходить на polling
+      // після невдалого WebSocket — з'єднання просто ніколи не встановлюється.
+      transports: ['polling', 'websocket'],
       reconnectionDelayMax: 10_000
     })
 
