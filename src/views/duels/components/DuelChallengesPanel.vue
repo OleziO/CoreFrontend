@@ -19,15 +19,19 @@
         </span>
         <span v-if="blockedReason" class="challenges__blocked">{{ blockedReason }}</span>
       </div>
+      <!-- Вимкнена кнопка — не «вицвіла» основна, а нейтральна пігулка із замком: причина під заголовком -->
       <el-button
         v-if="!challenges.outgoing"
         type="primary"
         plain
         class="challenges__cta"
+        :class="{ 'is-locked': !canChallenge }"
         :disabled="!canChallenge"
+        :title="blockedReason || undefined"
         @click="emit('open')"
       >
-        <PhUsersThree :size="16" weight="bold" class="mr-6" />
+        <PhLock v-if="!canChallenge" :size="15" weight="bold" class="mr-6" />
+        <PhUsersThree v-else :size="16" weight="bold" class="mr-6" />
         Викликати друга
       </el-button>
     </header>
@@ -108,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhCheck, PhUsersThree } from '@phosphor-icons/vue'
+import { PhCheck, PhLock, PhUsersThree } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 import { duelPlayerInitial, duelPlayerName, formatDuelCountdown, secondsUntil } from '@/views/duels/duels.utils'
@@ -191,6 +195,38 @@ const blockedReason = computed(() => {
 
 .challenges__cta {
   flex-shrink: 0;
+}
+
+/*
+ * Глобальний стиль вимкненої кнопки — блідий основний колір з opacity 0.45: на «primary plain»
+ * це виглядає як зламана кнопка. Тут вимкнений стан — нейтральний, штрихова рамка, без ціану.
+ */
+.challenges .challenges__cta.is-locked,
+.challenges .challenges__cta.is-locked:hover {
+  --el-button-disabled-text-color: var(--ds-text-faint);
+  --el-button-disabled-bg-color: rgba(255, 255, 255, 0.03);
+  --el-button-disabled-border-color: rgba(255, 255, 255, 0.14);
+
+  opacity: 1;
+  border-style: dashed;
+  font-weight: 500;
+  cursor: not-allowed;
+}
+
+.challenges__blocked {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.challenges__blocked::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--ds-gold);
+  box-shadow: 0 0 6px rgba(var(--ds-gold-rgb), 0.7);
 }
 
 @media (max-width: 480px) {

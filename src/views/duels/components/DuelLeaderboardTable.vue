@@ -7,9 +7,13 @@
           <th scope="col" class="dboard__th">Гравець</th>
           <th scope="col" class="dboard__th dboard__th--num dboard__th--rating">Рейтинг</th>
           <th scope="col" class="dboard__th dboard__th--num dboard__th--wl dboard__col--wide">W – L</th>
-          <th scope="col" class="dboard__th dboard__th--num dboard__th--winrate">Вінрейт</th>
+          <th scope="col" class="dboard__th dboard__th--num dboard__th--winrate dboard__col--wide">Вінрейт</th>
           <th scope="col" class="dboard__th dboard__th--num dboard__th--streak dboard__col--wide">Серія</th>
           <th scope="col" class="dboard__th dboard__th--date dboard__col--full">Остання гра</th>
+          <!-- Вузький контейнер: замість статистики — кнопка «Детальніше», що відкриває модалку -->
+          <th scope="col" class="dboard__th dboard__th--more dboard__col--narrow">
+            <span class="sr-only">Детальніше</span>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -51,7 +55,7 @@
               <span class="dboard__wl-loss">{{ row.losses }}</span>
             </span>
           </td>
-          <td class="dboard__td dboard__td--num">{{ formatDuelPercent(row.winrate) }}</td>
+          <td class="dboard__td dboard__td--num dboard__col--wide">{{ formatDuelPercent(row.winrate) }}</td>
           <td
             class="dboard__td dboard__td--num dboard__col--wide"
             :class="row.streak > 0 ? 'text-success' : row.streak < 0 ? 'dboard__wl-loss' : ''"
@@ -61,6 +65,16 @@
           <td class="dboard__td dboard__td--date dboard__col--full">
             {{ row.lastPlayedAt ? dayjs(row.lastPlayedAt).format('DD.MM.YYYY HH:mm') : '—' }}
           </td>
+          <td class="dboard__td dboard__td--more dboard__col--narrow">
+            <button
+              type="button"
+              class="dboard__more"
+              :aria-label="`Детальніше про ${duelPlayerName(row.player)}`"
+              @click.stop="openRow(row)"
+            >
+              <PhCaretRight :size="14" weight="bold" />
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -69,6 +83,7 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs'
+import { PhCaretRight } from '@phosphor-icons/vue'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
 import {
@@ -80,13 +95,19 @@ import {
 } from '@/views/duels/duels.utils'
 import type { TDuelLeaderboardRow } from '@/api/types/api.types'
 
-defineProps<{
+const props = defineProps<{
   rows: TDuelLeaderboardRow[]
   /** id залогіненого гравця — його рядок підсвічується. */
   highlightId: string | null
 }>()
 
 const router = useRouter()
+const { open } = useAppModals()
+
+/** На телефоні в рядку лише нік і рейтинг — решта статистики в модалці. */
+function openRow (row: TDuelLeaderboardRow) {
+  open('DuelLeaderboardRowModal', { row, highlightId: props.highlightId })
+}
 
 const TONES: Record<number, string> = {
   1: 'var(--ds-gold-rgb)',
@@ -123,7 +144,7 @@ function goToPlayer (id: string) {
   border-spacing: 0 4px;
 }
 
-/* Додаткові колонки (W–L, серія, остання гра) — лише коли контейнер достатньо широкий. */
+/* Додаткові колонки (W–L, вінрейт, серія, остання гра) — лише коли контейнер достатньо широкий. */
 .dboard__col--wide,
 .dboard__col--full {
   display: none;
@@ -133,6 +154,59 @@ function goToPlayer (id: string) {
   .dboard__col--wide {
     display: table-cell;
   }
+
+  /* На широкому екрані вся статистика вже в рядку — кнопка «Детальніше» зайва. */
+  .dboard__col--narrow {
+    display: none;
+  }
+
+  .dboard__names .dboard__handle {
+    display: block;
+  }
+}
+
+/* Вузький контейнер: лише місце, нік, рейтинг і кнопка «Детальніше»; хендл ховаємо, щоб нік не різався. */
+.dboard__names .dboard__handle {
+  display: none;
+}
+
+.dboard__th--more {
+  width: 40px;
+}
+
+.dboard__td--more {
+  padding-left: 0 !important;
+  padding-right: 6px !important;
+  text-align: right;
+}
+
+.dboard__more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(var(--tile-tone), 0.3);
+  border-radius: 8px;
+  background: rgba(var(--tile-tone), 0.08);
+  color: rgb(var(--tile-tone));
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    border-color var(--ds-duration-fast) ease,
+    background-color var(--ds-duration-fast) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+}
+
+.dboard__more:active {
+  transform: scale(0.92);
+}
+
+.dboard__more:focus-visible {
+  outline: 2px solid rgba(var(--ds-primary-rgb), 0.6);
+  outline-offset: 2px;
 }
 
 @container (min-width: 720px) {
@@ -332,6 +406,17 @@ function goToPlayer (id: string) {
 }
 
 /* Вузький контейнер (телефон або бічна колонка): щільніші відступи, щоб імені гравця вистачило місця. */
+@container (max-width: 499px) {
+  .dboard {
+    /* Колонок лише чотири — таблиця вміщається без горизонтального скролу. */
+    min-width: 0;
+  }
+
+  .dboard__th--rating {
+    width: 72px;
+  }
+}
+
 @container (max-width: 419px) {
   .dboard__th,
   .dboard__td {
