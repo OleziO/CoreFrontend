@@ -1,10 +1,23 @@
 <template>
-  <li class="notif-item" :class="{ 'is-unread': !item.readAt, 'is-actionable': isPending }">
-    <span class="notif-item__icon" :class="`is-${tone}`" aria-hidden="true">
-      <component :is="icon" :size="16" weight="bold" />
+  <li
+    class="notif-item"
+    :class="[`tone-${tone}`, { 'is-unread': !item.readAt, 'is-actionable': isPending }]"
+    :style="{ '--i': Math.min(index, 10) }"
+  >
+    <!-- Непрочитане: тонка світна риска зліва; гасне, щойно панель позначила все прочитаним -->
+    <span class="notif-item__unread" aria-hidden="true" />
+
+    <!-- Хто: аватар актора з маленьким бейджем типу події в куті -->
+    <span class="notif-item__avatar-wrap" aria-hidden="true">
+      <el-avatar :src="resolvePublicOrApiUrl(item.actor?.avatarUrl)" :size="36" class="notif-item__avatar">
+        {{ actorInitial }}
+      </el-avatar>
+      <span class="notif-item__type">
+        <component :is="icon" :size="11" weight="bold" />
+      </span>
     </span>
 
-    <div class="flex min-w-0 flex-1 flex-col gap-4">
+    <div class="notif-item__body">
       <p class="notif-item__text">
         <RouterLink
           v-if="item.actor"
@@ -16,14 +29,18 @@
         </RouterLink>
         <span>{{ text }}</span>
       </p>
-      <span class="notif-item__meta">
-        {{ when }}
-        <template v-if="statusLabel"> · {{ statusLabel }}</template>
-        <template v-else-if="isPending && expiresIn"> · ще {{ expiresIn }}</template>
-      </span>
+
+      <div class="notif-item__meta">
+        <time :datetime="item.createdAt" :title="whenAbsolute">{{ whenRelative }}</time>
+        <span v-if="statusLabel" class="notif-item__pill" :class="`is-${item.status}`">{{ statusLabel }}</span>
+        <span v-else-if="isPending && expiresIn" class="notif-item__pill is-timer">
+          <PhTimer :size="10" weight="bold" aria-hidden="true" />
+          {{ expiresIn }}
+        </span>
+      </div>
 
       <!-- Дії: лише поки запит / виклик відкритий -->
-      <div v-if="isPending && item.refId" class="mt-4 flex flex-wrap items-center gap-6">
+      <div v-if="isPending && item.refId" class="notif-item__actions">
         <el-button
           type="success"
           size="small"
@@ -46,7 +63,7 @@
         @click="emit('navigate')"
       >
         Перейти до дуелі
-        <PhArrowRight :size="12" weight="bold" />
+        <PhArrowRight :size="12" weight="bold" class="notif-item__link-arrow" />
       </RouterLink>
     </div>
   </li>
@@ -55,14 +72,19 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { PhArrowRight, PhCheck, PhSword, PhUserPlus, PhUsersThree, PhXCircle, PhTimer } from '@phosphor-icons/vue'
+import { resolvePublicOrApiUrl } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
 import { useDuelChallenges } from '@/views/duels/composables/use-duel-challenges'
 import { formatDuelCountdown, secondsUntil } from '@/views/duels/duels.utils'
 import type { TNotification, TNotificationStatus, TNotificationType } from '@/api/types/api.types'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   item: TNotification
-}>()
+  /** Порядок у списку — для каскаду появи. */
+  index?: number
+}>(), {
+  index: 0
+})
 
 const emit = defineEmits<{
   /** Користувач перейшов за посиланням — панель закривається. */
@@ -77,6 +99,7 @@ const { accept: acceptChallenge, decline: declineChallenge } = useDuelChallenges
 const now = useNow({ interval: 1000 })
 
 const actorName = computed(() => props.item.actor?.discordName || props.item.actor?.discordUsername || 'Гравець')
+const actorInitial = computed(() => actorName.value.charAt(0).toUpperCase())
 const isPending = computed(() => props.item.status === 'pending')
 const busy = computed(() => store.isBusy(props.item.id))
 
@@ -105,6 +128,8 @@ const tone = computed(() => {
     case 'friend_request_accepted':
     case 'duel_challenge_accepted':
       return 'success'
+    case 'duel_challenge':
+      return 'gold'
     case 'duel_challenge_declined':
     case 'duel_challenge_expired':
       return 'muted'
@@ -122,9 +147,22 @@ const statusLabels: Record<TNotificationStatus, string> = {
 }
 const statusLabel = computed(() => (props.item.status ? statusLabels[props.item.status] : ''))
 
-const when = computed(() => {
+const whenAbsolute = computed(() => {
   const d = dayjs(props.item.createdAt)
-  return d.isValid() ? d.format('DD.MM HH:mm') : ''
+  return d.isValid() ? d.format('DD.MM.YYYY HH:mm') : ''
+})
+
+/** «щойно», «5 хв тому», «вчора, 21:13», далі — дата: читається швидше за DD.MM HH:mm. */
+const whenRelative = computed(() => {
+  const d = dayjs(props.item.createdAt)
+  if (!d.isValid()) return ''
+  const current = dayjs(now.value)
+  const minutes = current.diff(d, 'minute')
+  if (minutes < 1) return 'щойно'
+  if (minutes < 60) return `${minutes} хв тому`
+  if (current.isSame(d, 'day')) return `${current.diff(d, 'hour')} год тому`
+  if (current.subtract(1, 'day').isSame(d, 'day')) return `вчора, ${d.format('HH:mm')}`
+  return d.format('DD.MM, HH:mm')
 })
 
 const expiresIn = computed(() => {
@@ -162,47 +200,117 @@ async function onDecline () {
 
 <style scoped>
 .notif-item {
-  display: flex;
-  align-items: flex-start;
+  --tone: var(--ds-primary-rgb);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
   gap: 12px;
-  padding: 10px 10px;
+  padding: 10px 12px 10px 14px;
   border-radius: 12px;
-  transition: background-color var(--ds-duration-fast) ease;
+  transition: background-color var(--ds-duration-fast) ease, box-shadow var(--ds-duration-fast) ease;
 }
 
-.notif-item.is-unread {
-  background: rgba(var(--ds-primary-rgb), 0.06);
+.notif-item.tone-success {
+  --tone: 34, 197, 94;
 }
 
+.notif-item.tone-gold {
+  --tone: var(--ds-gold-rgb);
+}
+
+.notif-item.tone-muted {
+  --tone: 148, 163, 184;
+}
+
+/* Відкритий запит — картка з ціановою рамкою, її видно з першого погляду */
 .notif-item.is-actionable {
-  box-shadow: inset 0 0 0 1px rgba(var(--ds-primary-rgb), 0.25);
+  background: rgba(var(--ds-primary-rgb), 0.05);
+  box-shadow: inset 0 0 0 1px rgba(var(--ds-primary-rgb), 0.22);
 }
 
-.notif-item__icon {
-  display: inline-flex;
+@media (hover: hover) and (pointer: fine) {
+  .notif-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .notif-item.is-actionable:hover {
+    background: rgba(var(--ds-primary-rgb), 0.08);
+  }
+}
+
+.notif-item__unread {
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 4px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--ds-primary);
+  box-shadow: 0 0 8px rgba(var(--ds-primary-rgb), 0.8);
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+
+.notif-item.is-unread .notif-item__unread {
+  opacity: 1;
+}
+
+.notif-item__avatar-wrap {
+  position: relative;
   flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+}
+
+.notif-item__avatar {
+  --el-avatar-bg-color: rgba(var(--tone), 0.25);
+
+  width: 36px;
+  height: 36px;
+  font-size: 13px;
+  box-shadow: 0 0 0 1px rgba(var(--tone), 0.35);
+}
+
+/* Бейдж типу події: сидить на куті аватара, обведений кольором панелі, щоб не зливатись */
+.notif-item__type {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--ds-text-muted);
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: rgb(var(--tone));
+  color: #07080f;
+  box-shadow: 0 0 0 2px rgb(16, 19, 36), 0 0 10px rgba(var(--tone), 0.5);
 }
 
-.notif-item__icon.is-primary {
-  color: var(--ds-primary);
-  background: rgba(var(--ds-primary-rgb), 0.12);
+.notif-item.tone-muted .notif-item__type {
+  background: rgb(51, 58, 78);
+  color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 2px rgb(16, 19, 36);
 }
 
-.notif-item__icon.is-success {
-  color: rgb(34, 197, 94);
-  background: rgba(34, 197, 94, 0.12);
+.notif-item__body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .notif-item__text {
   font-size: 13px;
   line-height: 1.45;
+  color: var(--ds-text-muted);
+  transition: color 500ms ease;
+}
+
+.notif-item.is-unread .notif-item__text,
+.notif-item.is-actionable .notif-item__text {
   color: var(--ds-text);
 }
 
@@ -210,13 +318,64 @@ async function onDecline () {
   margin-right: 4px;
   font-weight: 600;
   color: var(--ds-text-strong);
+  transition: color var(--ds-duration-fast) ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .notif-item__actor:hover {
+    color: var(--ds-primary);
+  }
 }
 
 .notif-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   font-family: var(--ds-font-mono);
   font-size: 10px;
   letter-spacing: 0.04em;
   color: var(--ds-text-faint);
+}
+
+.notif-item__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--ds-text-faint);
+}
+
+.notif-item__pill.is-accepted {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+}
+
+.notif-item__pill.is-timer {
+  border-color: rgba(var(--ds-gold-rgb), 0.4);
+  background: rgba(var(--ds-gold-rgb), 0.1);
+  color: var(--ds-gold);
+}
+
+.notif-item__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.notif-item__actions :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 
 .notif-item__link {
@@ -224,9 +383,39 @@ async function onDecline () {
   align-items: center;
   gap: 4px;
   width: fit-content;
-  margin-top: 2px;
+  margin-top: 4px;
   font-size: 12px;
   font-weight: 600;
   color: var(--ds-primary);
+}
+
+.notif-item__link-arrow {
+  transition: transform var(--ds-duration-fast) var(--ds-ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .notif-item__link:hover .notif-item__link-arrow {
+    transform: translateX(3px);
+  }
+}
+
+/* Каскад появи при відкритті панелі: коротко, лише перші рядки */
+@media (prefers-reduced-motion: no-preference) {
+  .notif-item {
+    animation: notif-item-in 220ms var(--ds-ease-out) both;
+    animation-delay: calc(var(--i, 0) * 35ms);
+  }
+
+  @keyframes notif-item-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 </style>

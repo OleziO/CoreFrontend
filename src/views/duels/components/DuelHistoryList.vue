@@ -7,8 +7,9 @@
       :class="`is-${row.outcome}`"
       :style="{ '--i': Math.min(index, 12) }"
     >
+      <!-- Лише слово результату; що дуель дружня — у tooltip, бейдж не розтягується -->
       <span class="dhistory__badge" :title="isFriendDuel(row.duel) ? 'Дружня дуель (±10)' : undefined">
-        {{ duelOutcomeLabels[row.outcome] }}<template v-if="isFriendDuel(row.duel)"> · дружня</template>
+        {{ duelOutcomeLabels[row.outcome] }}
       </span>
 
       <RouterLink
