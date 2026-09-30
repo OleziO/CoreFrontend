@@ -3,7 +3,7 @@
     v-model:visible="open"
     trigger="click"
     placement="bottom-end"
-    :width="400"
+    :width="380"
     :show-arrow="false"
     :persistent="false"
     popper-class="notif-popover"
@@ -29,16 +29,14 @@
     </template>
 
     <div class="notif-panel" role="dialog" aria-label="Сповіщення">
+      <!-- Один рядок: назва + скільки чекає на відповідь, праворуч — стан з'єднання -->
       <header class="notif-panel__head">
-        <div class="flex min-w-0 flex-col gap-2">
-          <span class="sys-label sys-label--muted !text-[9px]">// Центр сповіщень</span>
-          <span class="notif-panel__title">
-            Сповіщення
-            <span v-if="pendingCount" class="notif-panel__count" :title="`Очікують відповіді: ${pendingCount}`">
-              {{ pendingCount }}
-            </span>
+        <h2 class="notif-panel__title">
+          Сповіщення
+          <span v-if="pendingCount" class="notif-panel__count" :title="`Очікують відповіді: ${pendingCount}`">
+            {{ pendingCount }}
           </span>
-        </div>
+        </h2>
         <span
           class="notif-panel__live"
           :class="store.realtime ? 'is-on' : 'is-off'"
@@ -53,16 +51,14 @@
       <!-- Список: спершу те, що чекає на відповідь, далі — за днями -->
       <div v-if="groups.length" class="notif-panel__scroll">
         <section v-for="group in groups" :key="group.key" class="notif-group" :class="`is-${group.key}`">
-          <h3 class="notif-group__label">
-            <span>// {{ group.label }}</span>
-            <span class="notif-group__line" aria-hidden="true" />
-          </h3>
+          <h3 class="notif-group__label">{{ group.label }}</h3>
           <ul class="notif-group__list">
             <NotificationItem
               v-for="entry in group.entries"
               :key="entry.item.id"
               :item="entry.item"
               :index="entry.index"
+              :day="group.key === 'pending' ? undefined : group.key"
               @navigate="open = false"
             />
           </ul>
@@ -71,19 +67,17 @@
 
       <!-- Завантаження: три «кістки» рядків замість тексту -->
       <div v-else-if="!store.loaded" class="notif-panel__skeleton" aria-busy="true" aria-label="Завантажуємо">
-        <div v-for="n in 3" :key="n" class="notif-panel__skeleton-row" :style="{ '--skeleton-delay': `${n * 80}ms` }">
-          <span class="skeleton-bone h-[36px] w-[36px] !rounded-full" />
+        <div v-for="n in 3" :key="n" class="notif-panel__skeleton-row">
+          <span class="skeleton-bone h-[32px] w-[32px] !rounded-full" />
           <span class="flex flex-1 flex-col gap-6">
             <span class="skeleton-bone block h-[12px] w-4/5 !rounded-md" />
-            <span class="skeleton-bone block h-[10px] w-2/5 !rounded-md" />
+            <span class="skeleton-bone block h-[10px] w-1/4 !rounded-md" />
           </span>
         </div>
       </div>
 
       <div v-else class="notif-panel__empty">
-        <span class="notif-panel__empty-glyph" aria-hidden="true">
-          <PhBellSlash :size="22" weight="duotone" />
-        </span>
+        <PhBellSlash :size="20" weight="regular" aria-hidden="true" />
         <span class="notif-panel__empty-title">Поки тихо</span>
         <span class="notif-panel__empty-text">Тут з’являться запити в друзі та виклики на дуель.</span>
       </div>
@@ -157,7 +151,7 @@ const groups = computed<INotificationGroup[]>(() => {
     }))
 })
 
-// Відкрили панель — даємо мить побачити, що саме нове (світні риски), і лише тоді гасимо їх.
+// Відкрили панель — даємо мить побачити, що саме нове (крапки), і лише тоді гасимо їх.
 const { start: scheduleMarkRead, stop: cancelMarkRead } = useTimeoutFn(() => store.markAllRead(), 900, {
   immediate: false
 })
@@ -299,16 +293,15 @@ watch(() => store.unreadCount, (count, previous) => {
 <!-- Not scoped: el-popover is teleported to <body>. -->
 <style lang="scss">
 .el-popover.el-popper.notif-popover {
-  --notif-surface: 16, 19, 36;
+  // Один непрозорий колір поверхні: липкі підписи груп перекривають список без «просвітів»
+  --notif-surface: 15, 18, 33;
 
   padding: 0;
   overflow: hidden;
-  border: 1px solid rgba(var(--ds-primary-rgb), 0.22);
-  border-radius: 16px;
-  background: rgba(var(--notif-surface), 0.86);
-  backdrop-filter: blur(24px) saturate(130%);
-  -webkit-backdrop-filter: blur(24px) saturate(130%);
-  box-shadow: var(--ds-elevation-4), 0 0 24px rgba(var(--ds-primary-rgb), 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgb(var(--notif-surface));
+  box-shadow: var(--ds-elevation-4);
   max-width: calc(100vw - 24px);
 
   .notif-panel {
@@ -322,9 +315,9 @@ watch(() => store.unreadCount, (count, previous) => {
   .notif-panel::before {
     content: '';
     position: absolute;
-    inset: 0 16px auto;
+    inset: 0 24px auto;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(var(--ds-primary-rgb), 0.7), transparent);
+    background: linear-gradient(90deg, transparent, rgba(var(--ds-primary-rgb), 0.55), transparent);
     pointer-events: none;
   }
 
@@ -334,15 +327,18 @@ watch(() => store.unreadCount, (count, previous) => {
     justify-content: space-between;
     gap: 12px;
     padding: 14px 16px 12px;
-    border-bottom: 1px solid rgba(var(--ds-primary-rgb), 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .notif-panel__title {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    margin: 0;
     font-family: var(--ds-font-display);
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
     color: var(--ds-text-strong);
   }
 
@@ -350,16 +346,16 @@ watch(() => store.unreadCount, (count, previous) => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
     border-radius: 9999px;
-    background: rgb(var(--ds-pink-rgb));
-    color: #fff;
+    background: rgba(var(--ds-primary-rgb), 0.14);
+    color: var(--ds-primary);
     font-family: var(--ds-font-mono);
     font-size: 10px;
     font-weight: 700;
-    box-shadow: 0 0 10px rgba(var(--ds-pink-rgb), 0.55);
+    font-variant-numeric: tabular-nums;
   }
 
   .notif-panel__live {
@@ -374,26 +370,28 @@ watch(() => store.unreadCount, (count, previous) => {
   }
 
   .notif-panel__live-dot {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     border-radius: 9999px;
     background: currentcolor;
-    box-shadow: 0 0 6px currentcolor;
   }
 
   .notif-panel__live.is-on {
-    color: rgb(34, 197, 94);
+    color: var(--ds-success);
   }
 
   .notif-panel__scroll {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 6px 8px 10px;
+    padding: 0 0 6px;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
-    scrollbar-color: rgba(var(--ds-primary-rgb), 0.3) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+  }
+
+  .notif-group + .notif-group {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   // Підпис групи липне до верху під час прокрутки — завжди видно, який це день
@@ -401,49 +399,34 @@ watch(() => store.unreadCount, (count, previous) => {
     position: sticky;
     top: 0;
     z-index: 1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
     margin: 0;
-    padding: 8px 6px 6px;
-    background: linear-gradient(180deg, rgba(var(--notif-surface), 0.98) 70%, rgba(var(--notif-surface), 0));
+    padding: 10px 16px 4px;
+    background: rgb(var(--notif-surface));
     font-family: var(--ds-font-mono);
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.24em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--ds-text-faint);
   }
 
   .notif-group.is-pending .notif-group__label {
     color: var(--ds-primary);
-    text-shadow: var(--ds-neon-text-subtle);
-  }
-
-  .notif-group__line {
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent);
-  }
-
-  .notif-group.is-pending .notif-group__line {
-    background: linear-gradient(90deg, rgba(var(--ds-primary-rgb), 0.35), transparent);
   }
 
   .notif-group__list {
     display: flex;
     flex-direction: column;
-    gap: 2px;
     margin: 0;
-    padding: 0;
+    padding: 0 6px;
     list-style: none;
   }
 
   .notif-panel__skeleton {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 12px 14px;
+    gap: 4px;
+    padding: 12px 16px;
   }
 
   .notif-panel__skeleton-row {
@@ -457,36 +440,23 @@ watch(() => store.unreadCount, (count, previous) => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    padding: 32px 20px 30px;
+    gap: 4px;
+    padding: 36px 20px 32px;
     text-align: center;
-  }
-
-  .notif-panel__empty-glyph {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    margin-bottom: 6px;
-    border-radius: 9999px;
-    border: 1px dashed rgba(var(--ds-primary-rgb), 0.35);
-    background: rgba(var(--ds-primary-rgb), 0.05);
-    color: var(--ds-primary);
+    color: var(--ds-text-faint);
   }
 
   .notif-panel__empty-title {
-    font-family: var(--ds-font-display);
-    font-size: 14px;
-    letter-spacing: 0.04em;
-    color: var(--ds-text-strong);
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ds-text);
   }
 
   .notif-panel__empty-text {
-    max-width: 260px;
+    max-width: 240px;
     font-size: 12px;
     line-height: 1.5;
-    color: var(--ds-text-faint);
   }
 }
 </style>
