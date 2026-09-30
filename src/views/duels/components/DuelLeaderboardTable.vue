@@ -6,10 +6,10 @@
           <th scope="col" class="dboard__th dboard__th--pos">#</th>
           <th scope="col" class="dboard__th">Гравець</th>
           <th scope="col" class="dboard__th dboard__th--num dboard__th--rating">Рейтинг</th>
-          <th scope="col" class="dboard__th dboard__th--num dboard__th--wl hidden md:table-cell">W – L</th>
+          <th scope="col" class="dboard__th dboard__th--num dboard__th--wl dboard__col--wide">W – L</th>
           <th scope="col" class="dboard__th dboard__th--num dboard__th--winrate">Вінрейт</th>
-          <th scope="col" class="dboard__th dboard__th--num dboard__th--streak hidden md:table-cell">Серія</th>
-          <th scope="col" class="dboard__th dboard__th--date hidden xl:table-cell">Остання гра</th>
+          <th scope="col" class="dboard__th dboard__th--num dboard__th--streak dboard__col--wide">Серія</th>
+          <th scope="col" class="dboard__th dboard__th--date dboard__col--full">Остання гра</th>
         </tr>
       </thead>
       <tbody>
@@ -44,7 +44,7 @@
             </div>
           </td>
           <td class="dboard__td dboard__td--num dboard__td--rating">{{ formatDuelNumber(row.rating) }}</td>
-          <td class="dboard__td dboard__td--num hidden md:table-cell">
+          <td class="dboard__td dboard__td--num dboard__col--wide">
             <span class="dboard__wl">
               <span class="text-success">{{ row.wins }}</span>
               <span class="dboard__wl-sep">–</span>
@@ -53,12 +53,12 @@
           </td>
           <td class="dboard__td dboard__td--num">{{ formatDuelPercent(row.winrate) }}</td>
           <td
-            class="dboard__td dboard__td--num hidden md:table-cell"
+            class="dboard__td dboard__td--num dboard__col--wide"
             :class="row.streak > 0 ? 'text-success' : row.streak < 0 ? 'dboard__wl-loss' : ''"
           >
             {{ formatDuelStreak(row.streak) }}
           </td>
-          <td class="dboard__td dboard__td--date hidden xl:table-cell">
+          <td class="dboard__td dboard__td--date dboard__col--full">
             {{ row.lastPlayedAt ? dayjs(row.lastPlayedAt).format('DD.MM.YYYY HH:mm') : '—' }}
           </td>
         </tr>
@@ -103,6 +103,11 @@ function goToPlayer (id: string) {
 
 <style scoped>
 .dboard-scroll {
+  /*
+   * Таблиця живе і в бічній колонці на десктопі (~300–450px), і на всю ширину на сторінці рейтингу,
+   * тому колонки вмикаємо за шириною контейнера, а не за viewport-брейкпоінтами.
+   */
+  container-type: inline-size;
   width: 100%;
   min-width: 0;
   /* Вузький контейнер (телефон, бічна колонка): таблиця прокручується, а не ріже аватар у колонці гравця. */
@@ -111,10 +116,29 @@ function goToPlayer (id: string) {
 
 .dboard {
   width: 100%;
+  /* #44 + рейтинг 90 + вінрейт 76 = 210px; решта — гравцю (мінімум ~130px). */
   min-width: 340px;
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0 4px;
+}
+
+/* Додаткові колонки (W–L, серія, остання гра) — лише коли контейнер достатньо широкий. */
+.dboard__col--wide,
+.dboard__col--full {
+  display: none;
+}
+
+@container (min-width: 500px) {
+  .dboard__col--wide {
+    display: table-cell;
+  }
+}
+
+@container (min-width: 720px) {
+  .dboard__col--full {
+    display: table-cell;
+  }
 }
 
 .dboard__th {
@@ -307,7 +331,8 @@ function goToPlayer (id: string) {
   white-space: nowrap;
 }
 
-@media (max-width: 767px) {
+/* Вузький контейнер (телефон або бічна колонка): щільніші відступи, щоб імені гравця вистачило місця. */
+@container (max-width: 419px) {
   .dboard__th,
   .dboard__td {
     padding-left: 5px;
