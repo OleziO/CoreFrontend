@@ -53,7 +53,15 @@ function close () {
 .el-dialog.dadmin-dialog {
   margin: 0 auto;
   max-width: calc(100vw - 32px);
+  /* Глобальний el-dialog обрізає 70vh — тут список високий, тож даємо більше і скролимо його всередині */
+  max-height: min(88vh, 940px);
   background: rgba(12, 15, 30, 0.82);
+
+  .el-dialog__body {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
   backdrop-filter: blur(24px) saturate(130%);
   -webkit-backdrop-filter: blur(24px) saturate(130%);
 
@@ -75,12 +83,12 @@ function close () {
     color: var(--ds-text-muted);
   }
 
-  /* Список прокручується всередині; діалог не виростає вище екрана */
+  /* Список прокручується всередині; висота стала (не стрибає при зміні фільтра) і вміщається
+     разом із шапкою та футером (~190px) у max-height діалогу */
   .dadmin-dialog__body {
     display: flex;
     flex-direction: column;
-    height: min(70vh, 720px);
-    min-height: 320px;
+    height: clamp(320px, calc(88vh - 190px), 720px);
   }
 }
 </style>
