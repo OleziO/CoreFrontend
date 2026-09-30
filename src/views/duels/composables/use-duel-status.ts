@@ -1,13 +1,15 @@
 import { useQueryCache } from '@pinia/colada'
-import { DUEL_STATUS_QUERY_KEY, useGetDuelStatus } from '@/views/duels/duels.queries'
+import { DUEL_BOTS_STATUS_QUERY_KEY, DUEL_STATUS_QUERY_KEY, useGetDuelStatus } from '@/views/duels/duels.queries'
 import { duelsService } from '@/views/duels/duels.service'
+import { useDuelSocket } from '@/views/duels/composables/use-duel-socket'
 import { DUEL_ACCEPT_POLL_MS, DUEL_STATUS_POLL_MS } from '@/views/duels/duels.utils'
 import type { TDuelStatus } from '@/api/types/api.types'
 
 /**
- * Мій 1v1 статус + полінг. `GET /duels/me` — це ще й heartbeat черги: бекенд
- * викидає з черги того, хто перестав опитувати (20 с), тож інтервал працює
- * рівно доти, доки гравець у черзі або в активній дуелі.
+ * Мій 1v1 статус. Основний канал — сокет `<API>/duels`: сервер сам шле свіжий
+ * статус після кожної зміни, а живе з'єднання і є heartbeat черги. Полінг
+ * `GET /duels/me` лишається запасним: працює лише поки сокет не підключений,
+ * бо цей запит — теж heartbeat (без нього бекенд викидає з черги за 20 с).
  */
 export const useDuelStatus = () => {
   const authStore = useAuthStore()
@@ -20,8 +22,21 @@ export const useDuelStatus = () => {
   const isPending = computed(() => isLoggedIn.value && query.isPending.value)
   const isError = computed(() => isLoggedIn.value && !!query.error.value)
 
+  function applyStatus (next: TDuelStatus) {
+    queryCache.setQueryData([...DUEL_STATUS_QUERY_KEY], next)
+    // Знімок містить і стан пулу ботів — смужка ботів оновлюється тим самим пушем.
+    queryCache.setQueryData([...DUEL_BOTS_STATUS_QUERY_KEY], next.bots)
+  }
+
+  /** `realtime` — сокет підключений: статус приходить сам, полінг не потрібен. */
+  const { connected: realtime } = useDuelSocket(applyStatus)
+
   const shouldPoll = computed(
-    () => isLoggedIn.value && !!status.value && (status.value.queue != null || status.value.activeDuel != null)
+    () =>
+      isLoggedIn.value &&
+      !realtime.value &&
+      !!status.value &&
+      (status.value.queue != null || status.value.activeDuel != null)
   )
 
   /** Поки матч чекає на «Прийняти», опитуємо частіше — дедлайн 30 с. */
@@ -45,10 +60,6 @@ export const useDuelStatus = () => {
     },
     { immediate: true }
   )
-
-  function applyStatus (next: TDuelStatus) {
-    queryCache.setQueryData([...DUEL_STATUS_QUERY_KEY], next)
-  }
 
   /** Після завершення дуелі історія/рейтинг/дошка застаріли — перечитуємо все з префіксом `duels`. */
   function invalidateDuelQueries () {
@@ -139,6 +150,7 @@ export const useDuelStatus = () => {
     isPending,
     isError,
     isLoggedIn,
+    realtime,
     joining,
     leaving,
     accepting,

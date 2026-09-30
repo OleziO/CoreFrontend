@@ -371,6 +371,7 @@
     "analyticsService": true,
     "leaderboardService": true,
     "duelsService": true,
-    "useDuelsAdminStore": true
+    "useDuelsAdminStore": true,
+    "duelsSocketService": true
   }
 }

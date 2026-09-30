@@ -67,6 +67,7 @@
             :is-error="isError"
             :joining="joining"
             :leaving="leaving"
+            :realtime="realtime"
             :bots-offline="botsOffline"
             @join="join"
             @leave="leave"
@@ -172,6 +173,7 @@ const {
   isPending,
   isError,
   isLoggedIn,
+  realtime,
   joining,
   leaving,
   accepting,

@@ -40,6 +40,14 @@
           <span class="text-xs text-white/60">
             Вікно рейтингу ±{{ liveWindow }} · у черзі {{ pluralizeDuelPlayers(status.queue.playersInQueue) }}
           </span>
+          <span
+            class="queue-panel__live"
+            :class="realtime ? 'queue-panel__live--on' : 'queue-panel__live--off'"
+            :title="realtime ? 'Статус оновлюється миттєво' : 'Немає живого з’єднання — оновлюємо кожні кілька секунд'"
+          >
+            <span class="queue-panel__live-dot" aria-hidden="true" />
+            {{ realtime ? 'live' : 'polling' }}
+          </span>
         </div>
         <span class="queue-panel__timer">{{ formatDuelCountdown(liveWaitSeconds) }}</span>
       </div>
@@ -121,6 +129,8 @@ const props = defineProps<{
   leaving: boolean
   /** Жоден бот-хост не онлайн — кнопка черги вимкнена. */
   botsOffline?: boolean
+  /** Сокет підключений — статус приходить миттєво, без полінгу. */
+  realtime?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -221,6 +231,32 @@ const blockedText = computed(() => {
   font-variant-numeric: tabular-nums;
   color: var(--ds-primary);
   text-shadow: var(--ds-neon-text-subtle);
+}
+
+.queue-panel__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.queue-panel__live--on {
+  color: var(--ds-success, #22c55e);
+}
+
+.queue-panel__live--off {
+  color: var(--ds-text-faint);
+}
+
+.queue-panel__live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: currentcolor;
+  box-shadow: 0 0 6px currentcolor;
 }
 
 .queue-panel__radar {

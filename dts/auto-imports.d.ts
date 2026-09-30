@@ -47,6 +47,7 @@ declare global {
   const defineStore: typeof import('pinia')['defineStore']
   const devService: typeof import('../src/views/tournaments/dev.service')['devService']
   const duelsService: typeof import('../src/views/duels/duels.service')['duelsService']
+  const duelsSocketService: typeof import('../src/views/duels/duels-socket.service')['duelsSocketService']
   const eagerComputed: typeof import('@vueuse/core')['eagerComputed']
   const effectScope: typeof import('vue')['effectScope']
   const extendRef: typeof import('@vueuse/core')['extendRef']
