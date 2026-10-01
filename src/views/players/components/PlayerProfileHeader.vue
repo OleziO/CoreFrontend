@@ -39,12 +39,17 @@
 
             <el-tooltip
               v-if="isVip"
-              :content="vipUntilLabel"
+              :content="vipEditable ? `${vipUntilLabel} · змінити` : vipUntilLabel"
               placement="top"
               effect="dark"
               :show-after="180"
             >
-              <VipBadge size="sm" class="shrink-0" />
+              <VipBadge
+                size="sm"
+                class="shrink-0"
+                :editable="vipEditable"
+                @click="vipEditable && emit('editVip')"
+              />
             </el-tooltip>
 
             <PlayerModerationTags class="shrink-0" :tags="playerTags" />
@@ -158,17 +163,6 @@
       >
         <PhPencil :size="16" class="mr-10 shrink-0" />
         <span>Редагувати{{ showFullLabel ? ' профіль' : '' }}</span>
-      </el-button>
-
-      <!-- Власний профіль: вхід у VIP (налаштування рамки або покупка) -->
-      <el-button
-        v-if="isProfilePage"
-        plain
-        class="vip-admin-btn min-w-0 flex-1 max-sm:!px-8"
-        @click="emit('openVip')"
-      >
-        <PhCrown :size="16" weight="fill" class="mr-10 shrink-0" />
-        <span>{{ isVip ? 'Мій VIP' : 'Стати VIP' }}</span>
       </el-button>
 
       <el-button
@@ -352,7 +346,6 @@ import {
   PhClockCountdown,
   PhInfo,
   PhSword,
-  PhCrown,
   PhLockSimple
 } from '@phosphor-icons/vue'
 import { getCopy, isPlayerVip } from '@/core/helpers'
@@ -382,6 +375,8 @@ interface IProps {
   challenging?: boolean
   /** Глядач бачить Steam / Dotabuff / Discord (VIP, медіа, адмін або власний профіль). */
   canViewLinks?: boolean
+  /** Олівець на VIP-бейджі: власник VIP або адмін відкривають налаштування. */
+  vipEditable?: boolean
 }
 
 const props = withDefaults(defineProps<IProps>(), { canViewLinks: true })
@@ -397,6 +392,7 @@ const emit = defineEmits<{
   removeFriend: []
   challenge: []
   openVip: []
+  editVip: []
 }>()
 
 const isVip = computed(() => isPlayerVip(props.player))
@@ -448,16 +444,6 @@ const profileLinks = computed<IProfileLink[]>(() => {
 // External-profile tiles: 32px dark wells with a cyan hairline, so the row of
 // brand marks reads as HUD chips rather than loose icons. Brand SVGs keep their
 // own fills; the Discord mark (currentColor) inherits the white/primary text.
-// VIP entry points (admin grant / own profile): the gold VIP foil on a plain button.
-.vip-admin-btn {
-  --el-button-text-color: rgb(255, 222, 140);
-  --el-button-border-color: rgba(255, 206, 84, 0.45);
-  --el-button-hover-text-color: rgb(255, 230, 170);
-  --el-button-hover-border-color: rgba(255, 206, 84, 0.8);
-  --el-button-hover-bg-color: rgba(255, 206, 84, 0.08);
-  --el-button-bg-color: rgba(255, 206, 84, 0.04);
-}
-
 // Locked profile links: the brand marks dimmed behind a gold VIP lock.
 .profile-links-locked {
   @apply inline-flex h-32 shrink-0 cursor-pointer items-center gap-8 rounded-lg border px-10;

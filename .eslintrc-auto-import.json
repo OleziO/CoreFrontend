@@ -380,6 +380,8 @@
     "useNotificationsStore": true,
     "useVipStore": true,
     "vipService": true,
-    "useVipPaymentReturn": true
+    "useVipPaymentReturn": true,
+    "useLiteMode": true,
+    "useAdminVipActions": true
   }
 }

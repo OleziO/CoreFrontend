@@ -110,6 +110,9 @@ export const useVipStore = defineStore('vip', () => {
     runAdmin(playerId, () => vipService.grantByAdmin(playerId, grant))
   const revokeByAdmin = (playerId: string) =>
     runAdmin(playerId, () => vipService.revokeByAdmin(playerId))
+  const setFrameColorByAdmin = (playerId: string, color: string | null) =>
+    runAdmin(playerId, () =>
+      vipService.setFrameColorByAdmin(playerId, color as Parameters<typeof vipService.setFrameColorByAdmin>[1]))
 
   /** Вихід з акаунта — статус належав попередньому користувачу. */
   watch(() => authStore.token, (token) => {
@@ -130,6 +133,7 @@ export const useVipStore = defineStore('vip', () => {
     setFrameColor,
     awaitPaymentResult,
     grantByAdmin,
-    revokeByAdmin
+    revokeByAdmin,
+    setFrameColorByAdmin
   }
 })

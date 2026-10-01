@@ -1,5 +1,4 @@
 import App from '@/App.vue'
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { createGtag } from 'vue-gtag'
 
 import { router } from '@/router'
@@ -9,25 +8,18 @@ import '@/assets/styles/main.scss'
 
 import { installTimeSpinnerDiscreteWheel } from '@/core/time-spinner-discrete-wheel'
 
-import VueVirtualScroller from 'vue-virtual-scroller'
-import PhosphorIcons from '@phosphor-icons/vue'
-
 installTimeSpinnerDiscreteWheel()
 
 const app = createApp(App)
 
+// Іконки (@phosphor-icons/vue, @element-plus/icons-vue) імпортуються явно в кожному
+// компоненті: глобальна реєстрація всіх наборів тягнула ~7 МБ у головний чанк.
 app
   .use(store)
   .use(router)
-  .use(VueVirtualScroller)
-  .use(PhosphorIcons)
 
 if (import.meta.env.VITE_GA_MEASUREMENT_ID) {
   app.use(createGtag({ tagId: import.meta.env.VITE_GA_MEASUREMENT_ID, pageTracker: { router } }))
-}
-
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  app.component(key, component)
 }
 
 app.mount('#app')

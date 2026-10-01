@@ -239,13 +239,12 @@
 
 <script setup lang="ts">
 import { routeNames } from '@/router/route-names'
-import logo from '@/assets/images/core-league-logo-full.png'
+import logo from '@/assets/images/core-league-logo-full.webp'
 import {
   PhDiscordLogo, PhSignOut, PhUser, PhUserPlus, PhTrophy, PhCaretDown, PhGauge, PhChartLineUp,
   PhHouse, PhUsersThree, PhUsers, PhRanking, PhSword
 } from '@phosphor-icons/vue'
 import type { Component } from 'vue'
-import CreateTournamentDrawer from '@/views/admin-panel/components/drawers/CreateTournamentDrawer.vue'
 import NotificationCenter from '@/components/NotificationCenter.vue'
 import VipHeaderButton from '@/components/VipHeaderButton.vue'
 import { useVipPaymentReturn } from '@/composables/use-vip-payment-return'
@@ -254,6 +253,12 @@ import { roleLabelMap } from '@/components/player-tags/player.enums'
 
 const authStore = useAuthStore()
 const showCreateTournamentDrawer = ref(false)
+
+// Адмінська шторка (форми, date-picker Element Plus) — лише для адмінів, тому вантажиться
+// окремим чанком, а не в головному разом із шапкою.
+const CreateTournamentDrawer = defineAsyncComponent(
+  () => import('@/views/admin-panel/components/drawers/CreateTournamentDrawer.vue')
+)
 
 /** Повернення з оплати VIP (`?vip=return`) + статус для кнопки VIP. */
 useVipPaymentReturn()

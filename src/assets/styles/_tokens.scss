@@ -130,3 +130,16 @@
     scroll-behavior: auto !important;
   }
 }
+
+// Економний режим (див. _lite.scss): ті самі правила, що й для reduced-motion —
+// фонові цикли, світіння та transition-и зникають, залишається лише контент.
+html[data-lite='1'] {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

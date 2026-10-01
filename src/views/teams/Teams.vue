@@ -131,6 +131,7 @@
 
 <script lang="ts" setup>
 import { PhSlidersHorizontal } from '@phosphor-icons/vue'
+import { Search } from '@element-plus/icons-vue'
 import { useWindowSize } from '@vueuse/core'
 import { countActiveTeamsFilters, parseTeamsFilters, teamMatchesFilters } from '@/views/teams/teams-filters.utils'
 

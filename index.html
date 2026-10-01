@@ -6,8 +6,34 @@
          autofill, date inputs) must ignore the OS / browser light preference. -->
     <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="#07080f" />
-    <link rel="icon" href="/favicon.jpg" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
+    <!-- Економний режим для слабких пристроїв / повільної мережі: виставляємо data-lite
+         до першого кадру, щоб CSS (_lite.scss, _tokens.scss) не «миготів». Явний вибір
+         користувача — localStorage['core-league:lite'] = '1' | '0' (див. use-lite-mode.ts). -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('core-league:lite');
+          if (stored === '1' || stored === '0') {
+            if (stored === '1') document.documentElement.dataset.lite = '1';
+            return;
+          }
+          var nav = navigator;
+          var conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+          var mem = nav.deviceMemory;
+          var cores = nav.hardwareConcurrency;
+          var slowNet = !!conn && (conn.saveData === true || /(^|-)2g$|3g/.test(conn.effectiveType || ''));
+          var weakCpu = (typeof mem === 'number' && mem <= 2) ||
+            (typeof cores === 'number' && cores <= 2) ||
+            (typeof mem === 'number' && mem <= 4 && typeof cores === 'number' && cores <= 4);
+          var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (slowNet || weakCpu || reducedMotion) document.documentElement.dataset.lite = '1';
+        } catch (e) { /* no storage / no navigator API — full mode */ }
+      })();
+    </script>
 
     <!-- SEO. Статичні значення дублюють src/config/seo.ts для ботів без JS
          (прев'ю в Telegram/Discord, перший прохід Googlebot). Для решти маршрутів
@@ -73,7 +99,17 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;500;600;700&family=Russo+One&display=swap" rel="stylesheet">
+    <!-- Шрифти не блокують перший кадр: CSS вантажиться як print і перемикається на all після
+         завантаження; текст одразу малюється системним шрифтом (display=swap). -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;500;600;700&family=Russo+One&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    >
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;500;600;700&family=Russo+One&display=swap" rel="stylesheet">
+    </noscript>
   </head>
   <body>
     <div id="app"></div>

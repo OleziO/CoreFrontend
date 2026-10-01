@@ -43,6 +43,15 @@ class PlayersService {
     }
   }
 
+  /** Той самий GET /players/:id без тосту — для фонового оновлення кешу після адмін-дій. */
+  async fetchPlayerQuietly (id: string): Promise<TPlayer | null> {
+    try {
+      return await apiClient.get('/players/{id}', { dynamicKeys: { id } }) as TPlayer
+    } catch {
+      return null
+    }
+  }
+
   /** Статистика матчів у турнірах платформи. Без тостів — блок сам показує стан помилки. */
   async fetchPlayerMatchStats (id: string): Promise<TPlayerMatchStats> {
     return await apiClient.get('/players/{id}/match-stats', {

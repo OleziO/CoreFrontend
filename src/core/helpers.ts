@@ -1,8 +1,14 @@
 import { ERole } from '@/types/general.enums'
-import get from 'lodash/get'
 import type { LocationQuery, LocationQueryValue, RouteLocationNormalized } from 'vue-router'
 import type { TPlayerRankDto, TTournamentFormat } from '@/api/types/api.types'
 import { getDotaPositionLabel, roleLabelMap } from '@/components/player-tags/player.enums'
+
+/** `lodash/get` для рядкового шляху (`a.b.c`) — без окремого пакета lodash у головному чанку. */
+const getByPath = (source: unknown, path: string): unknown =>
+  path.split('.').reduce<unknown>(
+    (acc, segment) => (acc == null ? undefined : (acc as Record<string, unknown>)[segment]),
+    source
+  )
 
 export const createHashedObject = <
   T extends TIndexedObject,
@@ -15,7 +21,7 @@ export const createHashedObject = <
   shouldRemoveKeyField?: boolean
 ): Record<T[Prop], ValueArray extends true ? T[] : T> => {
   return array.reduce((acc, current) => {
-    const key = get(current, prop as string) as T[Prop]
+    const key = getByPath(current, prop as string) as T[Prop]
 
     if (shouldRemoveKeyField) {
       delete current[prop]
@@ -242,6 +248,17 @@ export function hasAdminRole (roles: readonly { isAdminRole?: boolean }[] | unde
   return !!roles?.some(r => r.isAdminRole)
 }
 
+/**
+ * Адмін для відображення (золота рамка, перша група в реєстрі). «ІТ» має ті самі права
+ * (`isAdminRole`), але візуально не виділяється — тож тут його не враховуємо.
+ * Для перевірки доступу використовуй `hasAdminRole`.
+ */
+export function hasDisplayAdminRole (
+  roles: readonly { name: string; isAdminRole?: boolean }[] | undefined | null
+): boolean {
+  return !!roles?.some(r => r.isAdminRole && !hasPlayerRole([r], ERole.DEV))
+}
+
 const ROLE_FILTER_UUID_RE =
   /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i
 
@@ -309,18 +326,18 @@ function hexToRgbTriplet (hex: string): string | null {
 }
 
 /**
- * Рольовий акцент рамки (картка, профіль): медіа — фіолет, адмін — золото, VIP — обраний колір.
- * Ролі мають пріоритет над VIP-кольором, щоб рамка персоналу лишалась впізнаваною.
+ * Рольовий акцент рамки (картка, профіль): VIP — обраний колір, медіа — фіолет, адмін — золото.
+ * Обраний VIP-колір має пріоритет над кольором ролі; без обраного кольору — колір ролі.
  * Повертає клас `.role-frame--*` з `_neon.scss` або порожній рядок.
  */
 export function getPlayerRoleAccentClass (
   player: ({ roles?: readonly { name: string; isAdminRole?: boolean }[] | null } & TVipFramePlayer) | null | undefined
 ): '' | 'role-frame--gold' | 'role-frame--violet' | 'role-frame--vip' {
   if (!player) return ''
+  if (getPlayerVipFrameStyle(player)) return 'role-frame--vip'
   // Медіа пріоритетніше за адмін-рамку: у медійника з адмін-правами рамка лишається фіолетовою.
   if (hasPlayerRole(player.roles, ERole.MEDIA)) return 'role-frame--violet'
-  if (hasAdminRole(player.roles)) return 'role-frame--gold'
-  if (getPlayerVipFrameStyle(player)) return 'role-frame--vip'
+  if (hasDisplayAdminRole(player.roles)) return 'role-frame--gold'
   return ''
 }
 

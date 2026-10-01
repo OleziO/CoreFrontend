@@ -27,5 +27,27 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@colors': fileURLToPath(new URL('./tailwind/tailwind.colors.ts', import.meta.url))
     }
+  },
+
+  build: {
+    // Стабільні вендорні бібліотеки — окремими чанками: після деплою браузер перекачує лише
+    // код застосунку, а не весь бандл разом із Vue/Element Plus.
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (!id.includes('node_modules')) return undefined
+          if (/[\\/]node_modules[\\/](vue|@vue|vue-router|pinia|@pinia|@vueuse)[\\/]/.test(id)) return 'vendor-vue'
+          if (/[\\/]node_modules[\\/](element-plus|@element-plus|@popperjs|@ctrl|async-validator|lodash-es|lodash-unified|memoize-one|normalize-wheel-es|@floating-ui)[\\/]/.test(id)) {
+            return 'vendor-element-plus'
+          }
+          if (/[\\/]node_modules[\\/](socket\.io-client|engine\.io-client|socket\.io-parser|engine\.io-parser)[\\/]/.test(id)) {
+            return 'vendor-socket'
+          }
+          return undefined
+        }
+      }
+    },
+    // Підрахунок gzip-розмірів у логах білду лише сповільнює CI.
+    reportCompressedSize: false
   }
 })

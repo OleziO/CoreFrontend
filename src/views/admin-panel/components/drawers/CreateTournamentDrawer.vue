@@ -827,10 +827,14 @@ const handleSubmit = async () => {
     try {
       if (files.header) await tournamentsService.uploadHeaderBanner(id, files.header)
       if (files.list) await tournamentsService.uploadListBanner(id, files.list)
+      // Банери пишуться окремими запитами — перечитуємо турнір, щоб список і деталка показали нові URL.
+      if (files.header || files.list) await tournamentStore.reloadTournament(id)
     } catch (up: unknown) {
       const um = up instanceof Error ? up.message : String(up)
       const action = isEditMode.value ? 'оновлено' : 'створено'
       ElMessage.warning(`Турнір ${action}, але зображення не завантажились: ${translateUploadErr(um)}`)
+      // Частина банерів могла встигнути завантажитись.
+      tournamentStore.reloadTournament(id).catch(() => {})
       showCreateTournamentDrawer.value = false
       clearData()
       return

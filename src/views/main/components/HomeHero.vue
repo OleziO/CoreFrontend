@@ -3,6 +3,7 @@
     ref="heroRef"
     class="hero hud-corners hud-corners--fade relative flex min-h-[calc(100svh-144px)] flex-col overflow-hidden
            lg:h-[calc(100svh-133px)] lg:min-h-[580px]"
+    :class="{ 'is-idle': heroIdle }"
     @pointermove="onPointerMove"
     @pointerleave="onPointerLeave"
   >
@@ -111,12 +112,17 @@
               <img
                 v-if="mountedHeroes.has(index)"
                 :src="heroRenderUrl(hero.slug)"
+                :srcset="heroRenderSrcset(hero.slug)"
+                :sizes="HERO_SIZES"
                 :alt="index === activeHero ? hero.name : ''"
                 class="hero-arena__img"
                 :class="{ 'is-active': index === activeHero }"
                 :style="{ '--hero-scale': hero.scale }"
+                width="960"
+                height="960"
                 draggable="false"
                 decoding="async"
+                :fetchpriority="index === activeHero ? 'high' : 'low'"
               >
             </template>
           </div>
@@ -198,6 +204,7 @@
 <script setup lang="ts">
 import { PhArrowRight, PhArrowUpRight, PhCaretDown, PhPaperPlaneTilt, PhTrophy } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
+import { useLiteMode } from '@/composables/use-lite-mode'
 
 interface ITickerItem {
   text: string
@@ -222,10 +229,10 @@ const props = withDefaults(defineProps<{
 
 // ── Hero roster ───────────────────────────────────────────────────────────
 // Official full-body renders from the Dota 2 CDN (1440×1440 transparent PNG,
-// the same files dota2.com uses on hero pages). Slugs are Valve's internal
-// hero names.
+// ~1.2 MB each), re-encoded to WebP at 960 / 640 px and self-hosted in
+// public/images/heroes (≈50–130 KB). Slugs are Valve's internal hero names.
 // `scale` evens out the renders: Juggernaut and Crystal Maiden already fill
-// their frame, the others sit smaller inside the same 1440px canvas.
+// their frame, the others sit smaller inside the same square canvas.
 const HERO_ROSTER = [
   { slug: 'juggernaut', name: 'Juggernaut', scale: 1.08 },
   { slug: 'invoker', name: 'Invoker', scale: 1.22 },
@@ -236,27 +243,60 @@ const HERO_ROSTER = [
 
 const HERO_SWAP_MS = 5200
 
-function heroRenderUrl (slug: string) {
-  return `https://cdn.cloudflare.steamstatic.com/apps/dota2/videos/dota_react/heroes/renders/${slug}.png`
+function heroRenderUrl (slug: string, size: 640 | 960 = 960) {
+  return `/images/heroes/${slug}-${size}.webp`
 }
 
+function heroRenderSrcset (slug: string) {
+  return `${heroRenderUrl(slug, 640)} 640w, ${heroRenderUrl(slug, 960)} 960w`
+}
+
+// Arena is ≤440px wide on mobile and ≤480px on lg (see .hero-arena).
+const HERO_SIZES = '(min-width: 1024px) 480px, min(100vw, 440px)'
+
+const { isLite } = useLiteMode()
+
+// Lite mode behaves like reduced motion: one static render, no rotation, no parallax.
 const reducedMotion =
-  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ||
+  isLite.value
 
 const activeHero = ref(0)
 let swapTimer = 0
 
 // Previous stays for its fade-out, next is fetched ahead of its fade-in.
+// With rotation off only the active render is mounted (one request instead of three).
 const mountedHeroes = computed(() => {
+  if (reducedMotion) return new Set([activeHero.value])
   const n = HERO_ROSTER.length
   return new Set([(activeHero.value - 1 + n) % n, activeHero.value, (activeHero.value + 1) % n])
 })
 
-onMounted(() => {
-  if (reducedMotion) return
+// ── Off-screen idle ───────────────────────────────────────────────────────
+// The landing is long; once the hero is scrolled away its ~15 ambient loops and
+// the image rotation keep burning GPU/CPU for nothing. `is-idle` pauses the
+// loops (animation-play-state), and the swap timer skips ticks while hidden.
+const heroIdle = ref(false)
+let idleObserver: IntersectionObserver | null = null
+
+function startSwapTimer () {
   swapTimer = window.setInterval(() => {
+    if (heroIdle.value || document.visibilityState === 'hidden') return
     activeHero.value = (activeHero.value + 1) % HERO_ROSTER.length
   }, HERO_SWAP_MS)
+}
+
+onMounted(() => {
+  if (heroRef.value && 'IntersectionObserver' in window) {
+    idleObserver = new IntersectionObserver(
+      ([entry]) => { heroIdle.value = !entry.isIntersecting },
+      { threshold: 0.05 }
+    )
+    idleObserver.observe(heroRef.value)
+  }
+
+  if (reducedMotion) return
+  startSwapTimer()
 })
 
 // ── Metrics ───────────────────────────────────────────────────────────────
@@ -375,6 +415,7 @@ function scrollToNextSection () {
 onBeforeUnmount(() => {
   if (frame) cancelAnimationFrame(frame)
   if (swapTimer) window.clearInterval(swapTimer)
+  idleObserver?.disconnect()
 })
 </script>
 
@@ -1276,6 +1317,55 @@ $lead: 180ms;
       color: var(--ds-primary);
       transform: translateY(3px);
     }
+  }
+}
+
+// ─── Off-screen idle: the hero scrolled away, so every ambient loop pauses ──
+// Entrance animations are one-shot (already finished by then); the loops that
+// keep ticking are listed here. `animation-play-state` leaves the current frame
+// in place, so nothing jumps when the user scrolls back up.
+.hero.is-idle {
+  .atm-glow,
+  .hero-floor__grid,
+  .hero-shimmer,
+  .hero-boot::after,
+  .hero-kicker__dot,
+  .hero-arena__ring,
+  .hero-arena__base,
+  .hero-arena__figure,
+  .hero-chip,
+  .hero-chip__dot,
+  .hero-cta--neon::before,
+  .hero-cta__plane,
+  .hero-cta__sheen,
+  .hero-scroll__dot,
+  .hero-ticker__track {
+    animation-play-state: paused;
+  }
+}
+
+// ─── Lite mode (html[data-lite="1"], see _lite.scss) ────────────────────────
+// Loops and transitions are already killed globally by _tokens.scss; here we drop
+// the layers whose mere presence is expensive: the perspective floor (a huge
+// 3D-transformed grid), film grain (full-size mix-blend-mode layer) and the
+// blur filters on the big decorative glows.
+html[data-lite='1'] .hero {
+  .hero-floor,
+  .hero-grain {
+    display: none;
+  }
+
+  .hero-arena__base,
+  .hero-cta--neon::before,
+  .hero-arena__ring--sweep,
+  .hero-cta__plane,
+  .hero-cta__icon {
+    filter: none;
+  }
+
+  .hero-arena__img {
+    filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.6));
+    transition: none;
   }
 }
 

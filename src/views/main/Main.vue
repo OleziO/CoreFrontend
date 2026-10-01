@@ -664,11 +664,34 @@ function initReveal () {
 }
 
 // ── Data fetching ──────────────────────────────────────────────────────────
-async function fetchAllStats () {
-  const [players, teams, tournaments] = await Promise.allSettled([
-    playersService.fetchPlayers(),
-    teamsService.fetchAllTeams(),
-    tournamentsService.fetchTournaments()
+const playersStore = usePlayersStore()
+const teamsStore = useTeamsStore()
+
+// Турніри (≈10 КБ) потрібні одразу: від них залежать spotlight і чип у hero.
+async function fetchTournaments () {
+  try {
+    const tournaments = await tournamentsService.fetchTournaments()
+    if (Array.isArray(tournaments)) allTournaments.value = tournaments
+  } catch {
+    // лічильник «активних турнірів» лишиться 0, решта лендингу працює
+  } finally {
+    tournamentsLoading.value = false
+  }
+
+  // Картки турнірів монтуються наступним тіком — повторно запускаємо
+  // спостереження reveal, щоб вони анімувалися при появі.
+  await nextTick()
+  observeReveals()
+}
+
+// Повні списки гравців і команд (разом ≈650 КБ без стиснення) потрібні лише для
+// двох лічильників, тож їх вантажимо після `load` — коли чанки, шрифти та hero вже
+// на екрані — і через стори, щоб сторінки «Гравці» / «Команди» відкрилися без
+// повторного запиту.
+async function fetchCounts () {
+  const [players, teams] = await Promise.allSettled([
+    playersStore.getPlayers(),
+    teamsStore.getTeams()
   ])
 
   if (players.status === 'fulfilled' && Array.isArray(players.value)) {
@@ -677,16 +700,23 @@ async function fetchAllStats () {
   if (teams.status === 'fulfilled' && Array.isArray(teams.value)) {
     teamsCount.value = teams.value.length
   }
-  if (tournaments.status === 'fulfilled' && Array.isArray(tournaments.value)) {
-    allTournaments.value = tournaments.value as TTournament[]
+}
+
+let countsIdleTimer = 0
+let countsOnLoad: (() => void) | null = null
+
+function scheduleCounts () {
+  const run = () => {
+    countsOnLoad = null
+    // Ще один кадр тиші після load, щоб не заважати LCP-кандидатам.
+    countsIdleTimer = window.setTimeout(fetchCounts, 300)
   }
-
-  tournamentsLoading.value = false
-
-  // Картки турнірів монтуються наступним тіком — повторно запускаємо
-  // спостереження reveal, щоб вони анімувалися при появі.
-  await nextTick()
-  observeReveals()
+  if (document.readyState === 'complete') {
+    run()
+    return
+  }
+  countsOnLoad = run
+  window.addEventListener('load', run, { once: true })
 }
 
 async function fetchDiscordMembers () {
@@ -702,7 +732,8 @@ async function fetchDiscordMembers () {
 }
 
 onMounted(() => {
-  fetchAllStats()
+  fetchTournaments()
+  scheduleCounts()
   fetchDiscordMembers()
   initReveal()
 })
@@ -713,6 +744,8 @@ onUpdated(observeReveals)
 
 onBeforeUnmount(() => {
   revealObserver?.disconnect()
+  if (countsOnLoad) window.removeEventListener('load', countsOnLoad)
+  if (countsIdleTimer) window.clearTimeout(countsIdleTimer)
 })
 </script>
 
@@ -1152,6 +1185,11 @@ onBeforeUnmount(() => {
   opacity: 0.8;
   pointer-events: none;
   transition: opacity 600ms ease, transform 900ms var(--ds-ease-out);
+}
+
+/* Економний режим: градієнт лишається, 28px blur на великому шарі — ні. */
+html[data-lite='1'] .community-discord__glow {
+  filter: none;
 }
 
 .community-discord__well {

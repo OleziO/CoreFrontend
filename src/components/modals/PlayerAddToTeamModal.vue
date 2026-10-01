@@ -137,6 +137,7 @@ import { getApiErrorMessage } from '@/core/utils/api-errors'
 import {
   PhCheck, PhMagnifyingGlass, PhPlus, PhSealCheck, PhUser, PhUsersThree, PhWarning, PhX
 } from '@phosphor-icons/vue'
+import { RecycleScroller } from 'vue-virtual-scroller'
 
 const props = defineProps<{
   team: TTeam | undefined

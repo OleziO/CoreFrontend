@@ -1,3 +1,4 @@
+import { queryCache } from '@/core/query-cache-client'
 import type { TAdminDuel, TDuel, TDuelState, THostBot, TCreateHostBotDto } from '@/api/types/api.types'
 
 /** Адмінка дуелей: список дуелей (з фільтром за станом) і пул ботів-хостів. */
@@ -35,21 +36,37 @@ export const useDuelsAdminStore = defineStore('duelsAdmin', () => {
     duels.value.splice(ix, 1, { ...duels.value[ix], ...updated })
   }
 
+  /**
+   * Адмін-дії змінюють статус, лідерборд і профілі дуелянтів — позначаємо всі `['duels', …]`
+   * запити застарілими, щоб відкриті сторінки дуелей перечитались без перезавантаження.
+   */
+  function invalidateDuelQueries (): void {
+    queryCache.invalidateQueries({ key: ['duels'] }).catch(() => { /* тихо */ })
+  }
+
   async function cancelDuel (id: string): Promise<void> {
     patchDuel(await duelsService.adminCancelDuel(id))
+    invalidateDuelQueries()
   }
 
   async function recoverDuel (id: string): Promise<void> {
     patchDuel(await duelsService.adminRecoverDuel(id))
+    invalidateDuelQueries()
   }
 
   async function resolveDuel (id: string, winnerId: string | null): Promise<void> {
     patchDuel(await duelsService.adminResolveDuel(id, winnerId))
+    invalidateDuelQueries()
+  }
+
+  async function removeDuel (id: string): Promise<void> {
+    await duelsService.adminDeleteDuel(id)
+    duels.value = duels.value.filter((d) => d.id !== id)
   }
 
   async function deleteDuel (id: string): Promise<void> {
-    await duelsService.adminDeleteDuel(id)
-    duels.value = duels.value.filter((d) => d.id !== id)
+    await removeDuel(id)
+    invalidateDuelQueries()
   }
 
   /**
@@ -58,9 +75,13 @@ export const useDuelsAdminStore = defineStore('duelsAdmin', () => {
    */
   async function deleteDuels (ids: readonly string[]): Promise<number> {
     let deleted = 0
-    for (const id of ids) {
-      await deleteDuel(id)
-      deleted += 1
+    try {
+      for (const id of ids) {
+        await removeDuel(id)
+        deleted += 1
+      }
+    } finally {
+      if (deleted) invalidateDuelQueries()
     }
     return deleted
   }

@@ -213,7 +213,7 @@ const sponsors = ref<TSponsor[]>([
   {
     id: 'sponsor-1',
     name: 'BETKING',
-    bannerUrl: '/sponsors/bet_1.png',
+    bannerUrl: '/sponsors/bet_1.webp',
     logoUrl: '/sponsors/logo_1.png',
     websiteUrl: 'https://77953937.uatracer.link/',
     tier: 'title',
@@ -222,7 +222,7 @@ const sponsors = ref<TSponsor[]>([
   {
     id: 'sponsor-2',
     name: 'BETKING',
-    bannerUrl: '/sponsors/bet_2.png',
+    bannerUrl: '/sponsors/bet_2.webp',
     logoUrl: '/sponsors/logo_2.png',
     websiteUrl: 'https://77953937.uatracer.link/',
     tier: 'title',

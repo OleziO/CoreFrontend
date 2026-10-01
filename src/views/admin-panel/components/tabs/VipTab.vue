@@ -105,7 +105,7 @@
             <el-dropdown
               trigger="click"
               :disabled="row.isLifetime || isBusy(row.player.id)"
-              @command="(cmd: TGrantCommand) => grant(row.player, cmd)"
+              @command="(cmd: TVipGrantCommand) => grant(row.player, cmd)"
             >
               <el-button
                 :type="row.isVip ? 'default' : 'primary'"
@@ -171,14 +171,12 @@ import {
   PhUsers,
   PhX
 } from '@phosphor-icons/vue'
-import { ElMessageBox } from 'element-plus'
 import { routeNames } from '@/router/route-names'
 import VipBadge from '@/components/VipBadge.vue'
 import { VIP_ADMIN_GRANT_OPTIONS, isVipLifetime } from '@/core/vip.constants'
-import { useVipStore } from '@/store/modules/vip'
+import { type TVipGrantCommand, useAdminVipActions } from '@/composables/use-admin-vip-actions'
 
 type TFilter = 'vip' | 'all'
-type TGrantCommand = number | 'lifetime'
 
 interface IVipRow {
   player: TPlayer
@@ -198,7 +196,7 @@ const MAX_ROWS = 150
 const EXPIRING_DAYS = 7
 
 const playersStore = usePlayersStore()
-const vipStore = useVipStore()
+const { isBusy, grant, revoke } = useAdminVipActions()
 
 const filters: { value: TFilter; label: string; icon: Component }[] = [
   { value: 'vip', label: 'VIP', icon: PhCrown },
@@ -260,41 +258,6 @@ const summaryLabel = computed(() => {
   const expiring = allRows.value.filter(r => r.isExpiring).length
   return `VIP: ${vipCount.value} · безстрокових: ${lifetime} · спливає за ${EXPIRING_DAYS} днів: ${expiring}`
 })
-
-function isBusy (playerId: string) {
-  return vipStore.adminBusyId === playerId
-}
-
-async function grant (player: TPlayer, command: TGrantCommand) {
-  const name = player.discordName ?? 'гравцю'
-  if (command === 'lifetime') {
-    try {
-      await ElMessageBox.confirm(
-        `Видати ${name} безстроковий VIP? Він ніколи не спливає, автопродовження вимкнеться.`,
-        'Безстроковий VIP',
-        { confirmButtonText: 'Видати назавжди', cancelButtonText: 'Скасувати', type: 'warning' }
-      )
-    } catch {
-      return
-    }
-    await vipStore.grantByAdmin(player.id, { lifetime: true })
-    return
-  }
-  await vipStore.grantByAdmin(player.id, { months: command })
-}
-
-async function revoke (player: TPlayer) {
-  try {
-    await ElMessageBox.confirm(
-      `Зняти VIP у ${player.discordName ?? 'гравця'}? Статус зникне одразу, автопродовження вимкнеться.`,
-      'Зняти VIP',
-      { confirmButtonText: 'Зняти', cancelButtonText: 'Скасувати', type: 'warning' }
-    )
-  } catch {
-    return
-  }
-  await vipStore.revokeByAdmin(player.id)
-}
 
 onMounted(() => {
   if (!playersStore.players.length) playersStore.getPlayers()

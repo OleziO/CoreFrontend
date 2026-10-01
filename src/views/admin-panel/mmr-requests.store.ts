@@ -1,3 +1,4 @@
+import { usePlayersStore } from '@/views/players/players.store'
 import type { TMmrUpdateRequest } from '@/views/players/mmr-requests.service'
 
 export const useMmrRequestsStore = defineStore('mmrRequests', () => {
@@ -23,8 +24,11 @@ export const useMmrRequestsStore = defineStore('mmrRequests', () => {
   }
 
   async function approve (id: string): Promise<void> {
-    await mmrRequestsService.approveRequest(id)
+    const approved = await mmrRequestsService.approveRequest(id)
+    const playerId = approved?.playerId ?? requests.value.find((r) => r.id === id)?.playerId
     removeFromList(id)
+    // Новий MMR (і перерахований бекендом rank) — у список гравців, ростери та /me без перезавантаження.
+    if (playerId) usePlayersStore().refreshPlayer(playerId).catch(() => {})
   }
 
   async function reject (id: string): Promise<void> {

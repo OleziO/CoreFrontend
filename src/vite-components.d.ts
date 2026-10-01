@@ -104,6 +104,7 @@ declare module 'vue' {
     PlayerModerationTags: typeof import('./views/players/components/PlayerModerationTags.vue')['default']
     PlayerPlayPreferences: typeof import('./views/players/components/PlayerPlayPreferences.vue')['default']
     PlayerPositionsTooltip: typeof import('./components/PlayerPositionsTooltip.vue')['default']
+    PlayerProfileEditButton: typeof import('./views/players/components/PlayerProfileEditButton.vue')['default']
     PlayerProfileHeader: typeof import('./views/players/components/PlayerProfileHeader.vue')['default']
     PlayerRoleTag: typeof import('./components/player-tags/PlayerRoleTag.vue')['default']
     PlayersRoles: typeof import('./views/players/components/PlayersRoles.vue')['default']

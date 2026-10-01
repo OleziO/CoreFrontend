@@ -30,6 +30,7 @@
 
 <script setup lang="ts" generic="T">
 import { useWindowSize } from '@vueuse/core'
+import { RecycleScroller } from 'vue-virtual-scroller'
 
 const props = withDefaults(defineProps<{
   items: T[]

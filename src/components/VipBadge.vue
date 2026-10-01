@@ -1,25 +1,37 @@
 <template>
-  <span
+  <component
+    :is="editable ? 'button' : 'span'"
+    :type="editable ? 'button' : undefined"
     class="vip-badge"
-    :class="[`vip-badge--${size}`, { 'vip-badge--static': static }]"
-    role="img"
-    aria-label="VIP"
+    :class="[`vip-badge--${size}`, { 'vip-badge--static': static, 'vip-badge--editable': editable }]"
+    :role="editable ? undefined : 'img'"
+    :aria-label="editable ? 'Налаштування VIP' : 'VIP'"
   >
     <PhCrown class="vip-badge__icon" weight="fill" :size="iconSize" aria-hidden="true" />
     <span class="vip-badge__text">VIP</span>
-  </span>
+    <PhPencilSimple
+      v-if="editable"
+      class="vip-badge__edit"
+      weight="bold"
+      :size="iconSize"
+      aria-hidden="true"
+    />
+  </component>
 </template>
 
 <script setup lang="ts">
-import { PhCrown } from '@phosphor-icons/vue'
+import { PhCrown, PhPencilSimple } from '@phosphor-icons/vue'
 
 const props = withDefaults(defineProps<{
   size?: 'xs' | 'sm' | 'md'
   /** Без відблиску, що пробігає (для щільних списків). */
   static?: boolean
+  /** Кнопка з олівцем: відкриває налаштування VIP (власник / адмін). */
+  editable?: boolean
 }>(), {
   size: 'sm',
-  static: false
+  static: false,
+  editable: false
 })
 
 const iconSize = computed(() => ({ xs: 10, sm: 12, md: 15 })[props.size])
@@ -80,6 +92,36 @@ const iconSize = computed(() => ({ xs: 10, sm: 12, md: 15 })[props.size])
     font-size: 13px;
     gap: 6px;
   }
+}
+
+.vip-badge--editable {
+  margin: 0;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: rgba(var(--vip-gold), 0.95);
+    box-shadow: 0 0 14px rgba(var(--vip-gold), 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  }
+
+  &:hover .vip-badge__edit {
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--vip-gold), 0.7);
+    outline-offset: 2px;
+  }
+}
+
+// Pencil after the label, split off by a hairline so it reads as an action.
+.vip-badge__edit {
+  margin-left: 1px;
+  padding-left: 4px;
+  box-sizing: content-box;
+  border-left: 1px solid rgba(var(--vip-gold), 0.4);
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
 }
 
 .vip-badge__icon {

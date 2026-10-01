@@ -84,6 +84,25 @@ class VipService {
     }
   }
 
+  /** Колір рамки VIP-гравця від адміна; `null` — стандартна рамка. */
+  async setFrameColorByAdmin (
+    playerId: string,
+    color: TRequestBody<'/admin/players/{id}/vip/frame-color', 'patch'>['color']
+  ): Promise<TAdminVipResult | null> {
+    try {
+      const res = await apiClient.patch(
+        '/admin/players/{id}/vip/frame-color',
+        { color },
+        { dynamicKeys: { id: playerId } }
+      )
+      ElMessage.success(color ? 'Колір рамки змінено' : 'Рамку скинуто до стандартної')
+      return res
+    } catch (err) {
+      ElMessage.error(apiErrorMessage(err, 'Не вдалося змінити колір рамки'))
+      return null
+    }
+  }
+
   async revokeByAdmin (playerId: string): Promise<TAdminVipResult | null> {
     try {
       const res = await apiClient.delete('/admin/players/{id}/vip', { dynamicKeys: { id: playerId } })

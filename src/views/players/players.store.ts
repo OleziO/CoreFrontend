@@ -167,6 +167,16 @@ export const usePlayersStore = defineStore('players', () => {
     }
   }
 
+  /**
+   * Тихо перечитує гравця після зміни на беку (схвалення MMR, верифікація) і розсилає
+   * свіжі дані в ростери та /me. `rank` рахує бекенд, тож локально `rating` не патчимо.
+   */
+  async function refreshPlayer (playerId: string): Promise<TPlayer | null> {
+    const fresh = await playersService.fetchPlayerQuietly(playerId)
+    if (fresh) patchPlayerInList(fresh)
+    return fresh
+  }
+
   return {
     players,
     loading,
@@ -185,6 +195,7 @@ export const usePlayersStore = defineStore('players', () => {
     fetchUserRoles,
     findPlayer,
     ensurePlayer,
+    refreshPlayer,
     // searchPlayer,
     getPlayers
   }

@@ -34,8 +34,10 @@
             :friend-relation="friendRelation"
             :friend-busy="friendBusy"
             :challenging="challenging"
+            :vip-editable="vipEditable"
             @toggle-verification="togglePlayerVerification"
             @open-vip="open('VipModal')"
+            @edit-vip="openVipSettings"
             @edit-profile="openEditProfileModal"
             @link-steam="handleSteamLink"
             @request-mmr="openRequestMmrModal"
@@ -341,7 +343,8 @@ import {
   getPlayerRoleAccentClass,
   getPlayerVipFrameStyle,
   canViewPlayerProfileLinks,
-  isPlayerVerified
+  isPlayerVerified,
+  isPlayerVip
 } from '@/core/helpers'
 import { positionOptions } from '@/components/player-tags/player.enums'
 import { routeNames } from '@/router/route-names'
@@ -400,7 +403,7 @@ const ratingMmrLabel = computed(() => formatPlayerRatingMmr(player.value?.rating
 
 const isVerified = computed(() => isPlayerVerified(player.value))
 
-/** Рольовий акцент рамок профілю (`.role-frame--*`): адмін — золото, медіа — фіолет. */
+/** Акцент рамок профілю (`.role-frame--*`): обраний VIP-колір, інакше роль (адмін — золото, медіа — фіолет). */
 const roleAccentClass = computed(() => getPlayerRoleAccentClass(player.value))
 /** `--vip-frame-rgb` на корені сторінки: усі рамки з `.role-frame--vip` успадковують колір. */
 const vipFrameStyle = computed(() => getPlayerVipFrameStyle(player.value))
@@ -445,6 +448,18 @@ const showAdminVerificationActions = computed(() => {
 })
 
 const isProfilePage = computed(() => route.name === routeNames.profile)
+
+/** Власний VIP — налаштування рамки / автопродовження; чужий — ручне керування адміна. */
+const isOwnPlayer = computed(() => !!player.value && player.value.id === me.user?.id)
+const vipEditable = computed(() =>
+  isPlayerVip(player.value) && (isOwnPlayer.value || !!me.isAdmin.isAdmin)
+)
+
+function openVipSettings () {
+  if (!player.value) return
+  if (isOwnPlayer.value) open('VipModal')
+  else open('AdminVipModal', { playerId: player.value.id })
+}
 
 const canRequestMmr = computed(() =>
   isProfilePage.value &&

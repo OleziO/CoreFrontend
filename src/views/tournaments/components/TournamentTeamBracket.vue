@@ -21,6 +21,7 @@
 </template>
 
 <script setup lang="ts">
+import { Trophy } from '@element-plus/icons-vue'
 import { ETournamentStatus } from '@/components/tournaments-tags/tournament.constants'
 
 defineProps<{ tournament: TTournament | undefined }>()

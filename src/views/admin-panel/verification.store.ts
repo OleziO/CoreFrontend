@@ -1,6 +1,8 @@
 import dayjs from 'dayjs'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import type { IVerificationDayData, TCompleteRequestPayload } from '@/services/verification.types'
+import { usePlayersStore } from '@/views/players/players.store'
+import { useTeamsStore } from '@/views/teams/teams.store'
 
 export const useVerificationStore = defineStore('verification', () => {
   // Day data cached by `YYYY-MM-DD`. The list endpoints filter by an inclusive date-only
@@ -54,8 +56,19 @@ export const useVerificationStore = defineStore('verification', () => {
   }
 
   async function completeRequest (day: string, id: string, payload: TCompleteRequestPayload): Promise<void> {
-    await verificationService.completeRequest(id, payload)
+    const completed = await verificationService.completeRequest(id, payload)
     await refreshMonth(day)
+    syncVerifiedEntities(completed?.teamId, payload.results.map((r) => r.playerId))
+  }
+
+  /**
+   * Завершена верифікація змінює MMR / `verifiedAt` гравців і може верифікувати команду —
+   * тихо перечитуємо їх, щоб списки, ростери та /me оновились без перезавантаження.
+   */
+  function syncVerifiedEntities (teamId: string | null | undefined, playerIds: string[]): void {
+    const playersStore = usePlayersStore()
+    for (const playerId of new Set(playerIds)) playersStore.refreshPlayer(playerId).catch(() => {})
+    if (teamId) useTeamsStore().refreshTeam(teamId).catch(() => {})
   }
 
   async function cancelRequest (day: string, id: string): Promise<void> {

@@ -43,7 +43,22 @@
           </template>
         </el-avatar>
 
+        <!-- VIP займає місце бейджа верифікації: «стрічка» по нижньому краю аватара -->
         <el-tooltip
+          v-if="isVip"
+          content="VIP-гравець Core League"
+          placement="bottom"
+          effect="dark"
+          :show-after="180"
+        >
+          <VipBadge
+            size="xs"
+            static
+            class="user-card__vip !absolute -bottom-6 left-1/2 z-10 -translate-x-1/2"
+          />
+        </el-tooltip>
+        <el-tooltip
+          v-else
           :content="isVerified ? 'Верифікований' : 'Не верифікований'"
           placement="bottom"
           effect="dark"
@@ -58,19 +73,8 @@
         </el-tooltip>
       </div>
 
-      <div class="flex min-w-0 flex-1 flex-col gap-3 pr-20">
-        <span class="flex items-center gap-6">
-          <span class="sys-label sys-label--muted !text-[9px]">Гравець</span>
-          <el-tooltip
-            v-if="isVip"
-            content="VIP-гравець Core League"
-            placement="top"
-            effect="dark"
-            :show-after="180"
-          >
-            <VipBadge size="xs" static />
-          </el-tooltip>
-        </span>
+      <div class="flex min-w-0 flex-1 flex-col gap-3 pr-40">
+        <span class="sys-label sys-label--muted !text-[9px]">{{ cardRoleLabel }}</span>
         <el-tooltip
           :disabled="!user.discordName"
           :content="user.discordName || 'Імʼя відсутнє'"
@@ -157,12 +161,14 @@ import {
   getPlayerRankImageSrcFromPlayerRank,
   getPlayerRoleAccentClass,
   getPlayerVipFrameStyle,
+  hasPlayerRole,
   isPlayerVerified,
   isPlayerVip
 } from '@/core/helpers'
 import { PhCopy, PhUser } from '@phosphor-icons/vue'
 import VipBadge from '@/components/VipBadge.vue'
 import { getCountryFlagUrl, useLocations } from '@/composables/use-locations'
+import { ERole } from '@/types/general.enums'
 
 const props = withDefaults(defineProps<{
   user: TPlayer
@@ -177,7 +183,16 @@ const isVerified = computed(() => isPlayerVerified(props.user))
 
 const isVip = computed(() => isPlayerVip(props.user))
 
-/** Рольовий акцент рамки (`.role-frame--*`): адмін — золото, медіа — фіолет, VIP — обраний колір. */
+/** Підпис над іменем: службова роль (медіа → адмін → ІТ), інакше «Гравець». */
+const cardRoleLabel = computed(() => {
+  const roles = props.user.roles
+  if (hasPlayerRole(roles, ERole.MEDIA)) return 'Стрімер'
+  if (hasPlayerRole(roles, ERole.ADMIN)) return 'Адмін'
+  if (hasPlayerRole(roles, ERole.DEV)) return 'Програміст'
+  return 'Гравець'
+})
+
+/** Акцент рамки (`.role-frame--*`): обраний VIP-колір, інакше роль (адмін — золото, медіа — фіолет). */
 const accentClass = computed(() => getPlayerRoleAccentClass(props.user))
 /** `--vip-frame-rgb` для `.role-frame--vip`. */
 const vipFrameStyle = computed(() => getPlayerVipFrameStyle(props.user))
@@ -257,6 +272,15 @@ function goToPlayerPage (id: string) {
     outline: 2px solid rgba(var(--ds-primary-rgb), 0.55);
     outline-offset: 2px;
   }
+}
+
+// VIP pill sits on top of the avatar photo: the stock foil is translucent, so lay
+// it over an opaque dark base to keep it legible on any picture.
+.user-card .user-card__vip {
+  background:
+    linear-gradient(120deg, rgba(255, 206, 84, 0.38), rgba(255, 94, 170, 0.34)),
+    rgb(22, 16, 24);
+  box-shadow: 0 0 10px rgba(255, 206, 84, 0.35), 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
 // Country flag in the corner: quiet by default, lifts on card hover.
