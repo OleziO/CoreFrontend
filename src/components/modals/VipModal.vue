@@ -299,11 +299,6 @@
               </div>
             </div>
 
-            <p v-if="paymentPending" class="vip-offer__pending">
-              <PhHourglassMedium :size="16" weight="duotone" class="shrink-0" />
-              Оплату створено — підтвердження від monobank зазвичай приходить за хвилину.
-            </p>
-
             <ul v-if="!isVip" class="vip-trust">
               <li class="vip-reveal" :style="revealDelay(offerStart + 120)">
                 <PhShieldCheck :size="14" weight="fill" /> Безпечна оплата через monobank
@@ -333,7 +328,6 @@ import {
   PhCalendarCheck,
   PhCrown,
   PhHeart,
-  PhHourglassMedium,
   PhArrowFatLinesUp,
   PhInfinity,
   PhPalette,
@@ -366,7 +360,6 @@ const route = useRoute()
 const status = computed(() => vipStore.status)
 const isVip = computed(() => vipStore.isVip)
 const isLifetime = computed(() => isVipLifetime(status.value?.vipUntil ?? authStore.user?.vipUntil))
-const paymentPending = computed(() => !!status.value?.paymentPending && !isVip.value)
 
 const price = computed(() => Math.round((status.value?.priceKopecks ?? VIP_PRICE_UAH * 100) / 100))
 const pricePerDay = computed(() => Math.round(price.value / 30))
@@ -1301,19 +1294,6 @@ watch(modelValue, (isOpen) => {
 .vip-offer__cup {
   flex-shrink: 0;
   color: rgb(var(--vip-gold));
-}
-
-.vip-offer__pending {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 12px 0 0;
-  border-radius: 10px;
-  border: 1px solid rgba(var(--ds-primary-rgb), 0.3);
-  background: rgba(var(--ds-primary-rgb), 0.08);
-  padding: 8px 12px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.8);
 }
 
 .vip-offer__actions {

@@ -287,14 +287,14 @@ export function playerMatchesRoleFilterToken (
 
 /**
  * Гравець верифікований, якщо є `verifiedAt` або роль «Гравець».
- * Роль «Медіа» (стрімери) також вважається верифікованою.
+ * Ролі «Медіа» (стрімери), «Адмін» та «ІТ» також вважаються верифікованими — інші ролі їм не потрібні.
  */
 export function isPlayerVerified (
   player: { roles?: readonly { name: string }[] | null; verifiedAt?: string | null } | null | undefined
 ): boolean {
   if (!player) return false
   if (player.verifiedAt) return true
-  return hasPlayerRole(player.roles, ERole.PLAYER) || hasPlayerRole(player.roles, ERole.MEDIA)
+  return [ERole.PLAYER, ERole.MEDIA, ERole.ADMIN, ERole.DEV].some(role => hasPlayerRole(player.roles, role))
 }
 
 type TVipFramePlayer = { isVip?: boolean; vipFrameColor?: string | null } | null | undefined
