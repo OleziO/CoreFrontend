@@ -64,6 +64,8 @@
 import type { TUserRole, TCurrentPlayerRole } from '@/api/types/api.types'
 import { getRoleTagCssVars } from '@/core/utils/role-tag-styles'
 import { resolveRoleDisplayLabel } from '@/components/player-tags/player.enums'
+import { hasPlayerRole } from '@/core/helpers'
+import { ERole } from '@/types/general.enums'
 
 export type TAnyRoleForTag = TUserRole | TCurrentPlayerRole
 
@@ -126,7 +128,12 @@ const allRoles = computed((): TAnyRoleForTag[] => {
 
 const sortedRoles = computed(() => {
   const list = [...allRoles.value]
+  // «Медіа» — пріоритетна роль (стрімер), показуємо першою, навіть перед «Адмін».
+  const rank = (role: TAnyRoleForTag) => hasPlayerRole([role], ERole.MEDIA) ? 0 : 1
   list.sort((a, b) => {
+    const ra = rank(a)
+    const rb = rank(b)
+    if (ra !== rb) return ra - rb
     const la = resolveRoleDisplayLabel(a).length
     const lb = resolveRoleDisplayLabel(b).length
     if (la !== lb) return la - lb

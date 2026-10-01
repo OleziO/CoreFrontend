@@ -371,7 +371,8 @@ import {
 } from '@phosphor-icons/vue'
 import { MAX_RATING, positionOptions, wantToPlayOptions } from '@/components/player-tags/player.enums'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
-import { getCopy, getPlayerLanCities, getPlayerWantToPlay, isPlayerVerified } from '@/core/helpers'
+import { getCopy, getPlayerLanCities, getPlayerWantToPlay, hasPlayerRole, isPlayerVerified } from '@/core/helpers'
+import { ERole } from '@/types/general.enums'
 import { getCountryFlagUrl, useLocations, type ICountryOption } from '@/composables/use-locations'
 import { useAuthStore } from '@/store/modules/auth'
 import type { TTag } from '@/services/tags.types'
@@ -503,6 +504,22 @@ const originalRoleNames = ref<string[]>([])
 function playerRoleNames (p: TPlayer): string[] {
   return (p.roles ?? []).map((r) => r.name)
 }
+
+/**
+ * «Гість» — взаємовиключний з «Гравець» / «Медіа» (ті двоє можуть бути разом).
+ * Перемагає щойно обрана роль: додали «Гість» — знімаємо Гравця/Медіа, і навпаки.
+ */
+const isGuestName = (name: string) => hasPlayerRole([{ name }], ERole.GUEST)
+const isVerifiedTierName = (name: string) =>
+  hasPlayerRole([{ name }], ERole.PLAYER) || hasPlayerRole([{ name }], ERole.MEDIA)
+
+watch(selectedRoleNames, (next, prev = []) => {
+  const added = next.filter((name) => !prev.includes(name))
+  if (!next.some(isGuestName) || !next.some(isVerifiedTierName)) return
+  selectedRoleNames.value = added.some(isGuestName)
+    ? next.filter((name) => !isVerifiedTierName(name))
+    : next.filter((name) => !isGuestName(name))
+})
 
 const rolesChanged = computed(() => {
   const a = [...selectedRoleNames.value].sort()
