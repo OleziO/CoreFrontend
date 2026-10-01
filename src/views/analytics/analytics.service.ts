@@ -13,6 +13,11 @@ class AnalyticsService {
     return await apiClient.get('/admin/analytics/achievements')
   }
 
+  /** Склад і рекрутинг, виручка, VIP-підписники та активність дуелей по днях. */
+  async fetchInsights () {
+    return await apiClient.get('/admin/analytics/insights')
+  }
+
   /**
    * Ручне значення підписників для каналу без публічного API (Instagram, TikTok).
    * Живе значення з платформи, якщо воно є, все одно має пріоритет — бекенд повертає

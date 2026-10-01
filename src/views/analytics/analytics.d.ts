@@ -42,3 +42,14 @@ type TAnalyticsStackedSegment = {
 
 /** Топ-3 найбільш титулованих гравців (поле `topAchievers` дошки трофеїв). */
 type TAnalyticsTopAchiever = TAnalyticsAchievements['topAchievers'][number]
+
+/**
+ * Додаткові зрізи (GET /admin/analytics/insights): склад і рекрутинг, виручка в копійках,
+ * VIP-підписники та активність дуелей по днях. Окремий запит — дошка живе й без нього.
+ */
+type TAnalyticsInsights = TResponse<'/admin/analytics/insights', 'get'>
+type TAnalyticsRoster = TAnalyticsInsights['roster']
+type TAnalyticsRevenue = TAnalyticsInsights['revenue']
+type TAnalyticsRevenueBySource = TAnalyticsRevenue['total']
+type TAnalyticsVip = TAnalyticsInsights['vip']
+type TAnalyticsDuelDay = TAnalyticsInsights['duelActivity']['daily'][number]

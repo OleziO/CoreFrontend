@@ -76,6 +76,33 @@
 
       <!-- ─── Dashboard ────────────────────────────────────────────────── -->
       <template v-else-if="data">
+        <!-- Потребує уваги: лише ненульові пункти; ховається, коли все гаразд -->
+        <section
+          v-if="attentionItems.length"
+          class="analytics-alerts"
+          aria-label="Потребує уваги"
+        >
+          <span class="sys-label sys-label--muted">// Потребує уваги</span>
+          <ul class="analytics-alerts__list">
+            <li v-for="item in attentionItems" :key="item.key">
+              <router-link
+                v-if="item.to"
+                :to="item.to"
+                class="analytics-alert"
+                :class="`analytics-alert--${item.tone}`"
+              >
+                <component :is="item.icon" :size="14" weight="bold" />
+                {{ item.text }}
+                <PhArrowRight :size="12" weight="bold" class="analytics-alert__arrow" />
+              </router-link>
+              <span v-else class="analytics-alert" :class="`analytics-alert--${item.tone}`">
+                <component :is="item.icon" :size="14" weight="bold" />
+                {{ item.text }}
+              </span>
+            </li>
+          </ul>
+        </section>
+
         <!-- 01 · Лічильники -->
         <section class="flex flex-col gap-12" aria-labelledby="analytics-kpi">
           <h2 id="analytics-kpi" class="sys-label sys-label--muted">// 01 · Ліга в цифрах</h2>
@@ -93,10 +120,54 @@
           </div>
         </section>
 
-        <!-- 02 · Соцмережі -->
+        <!-- 02 · Гроші (окремий запит insights; ховається, якщо ендпоінт ще не задеплоєно) -->
+        <span v-if="insightsPending" class="skeleton-bone block h-[420px] !rounded-2xl" />
+        <AnalyticsPanel
+          v-else-if="insights"
+          code="// 02 · Гроші"
+          title="Виручка та VIP"
+          subtitle="Лише оплачені платежі: VIP-підписки, внески за участь у турнірах і донати"
+          :delay="160"
+        >
+          <template #aside>
+            <span class="analytics-chip">
+              <PhCrown :size="12" weight="fill" />
+              VIP: {{ formatAnalyticsNumber(insights.vip.active) }}
+            </span>
+          </template>
+          <div class="analytics-trio">
+            <AnalyticsStatTile
+              v-for="(tile, index) in moneyTiles"
+              :key="tile.key"
+              :label="tile.label"
+              :value="tile.value"
+              :icon="tile.icon"
+              :accent="tile.accent"
+              :hint="tile.hint"
+              :format-value="tile.format"
+              :delay="160 + index * 60"
+            />
+          </div>
+          <div class="analytics-block">
+            <span class="analytics-block__caption">Виручка по місяцях — останні 6 місяців</span>
+            <AnalyticsColumnChart
+              :items="revenueMonthItems"
+              :format-value="formatUah"
+              :format-tick-value="formatUahTick"
+            />
+          </div>
+          <div class="analytics-block">
+            <span class="analytics-block__caption">
+              Джерела виручки за весь час — {{ formatAnalyticsUah(revenueTotal) }}, гривні
+            </span>
+            <AnalyticsStackedBar :segments="revenueSourceSegments" />
+          </div>
+        </AnalyticsPanel>
+
+        <!-- 03 · Соцмережі -->
         <section class="flex flex-col gap-12" aria-labelledby="analytics-socials">
           <div class="flex flex-wrap items-baseline justify-between gap-8">
-            <h2 id="analytics-socials" class="sys-label sys-label--muted">// 02 · Підписники в соцмережах</h2>
+            <h2 id="analytics-socials" class="sys-label sys-label--muted">// 03 · Підписники в соцмережах</h2>
             <span class="analytics-note">
               Наживо — з платформи (кеш 10 хв); вручну — значення, введене адміном.
             </span>
@@ -112,9 +183,9 @@
           </div>
         </section>
 
-        <!-- 03 · Ранги -->
+        <!-- 04 · Ранги -->
         <AnalyticsPanel
-          code="// 03 · Розподіл за рангами"
+          code="// 04 · Розподіл за рангами"
           title="Ранги гравців"
           :subtitle="`${formatAnalyticsNumber(data.totals.players)} гравців із заданим MMR за поточним рейтингом`"
           :delay="400"
@@ -128,10 +199,10 @@
           <AnalyticsColumnChart :items="rankItems" unit="гравців" />
         </AnalyticsPanel>
 
-        <!-- 04 · Команди  |  05 · Онлайн-турніри -->
+        <!-- 05 · Команди  |  06 · Онлайн-турніри -->
         <div class="grid gap-16 lg:grid-cols-2">
           <AnalyticsPanel
-            code="// 04 · Верифікація"
+            code="// 05 · Верифікація"
             title="Верифіковані vs неверифіковані команди"
             :subtitle="`${formatAnalyticsNumber(data.totals.teams)} активних команд`"
             :delay="480"
@@ -147,7 +218,7 @@
           </AnalyticsPanel>
 
           <AnalyticsPanel
-            code="// 05 · Формат турнірів"
+            code="// 06 · Формат турнірів"
             title="Зацікавлені в онлайн-турнірах"
             subtitle="За відповіддю «Де хочу грати» у профілі гравця"
             :delay="540"
@@ -163,10 +234,51 @@
           </AnalyticsPanel>
         </div>
 
-        <!-- 06 · Дуелі 1v1 (v-if — страховка на вікно між деплоями фронту й бекенду) -->
+        <!-- 07 · Склад і рекрутинг -->
+        <span v-if="insightsPending" class="skeleton-bone block h-[420px] !rounded-2xl" />
+        <AnalyticsPanel
+          v-else-if="insights"
+          code="// 07 · Склад і рекрутинг"
+          title="Вільні гравці та позиції"
+          subtitle="Гравець «у команді» — основа, запас або капітан активної команди"
+          :delay="580"
+        >
+          <div class="analytics-hero">
+            <span class="analytics-hero__value">{{ formatAnalyticsNumber(insights.roster.freeAgents) }}</span>
+            <span class="analytics-hero__label">
+              гравців без команди —
+              {{ formatAnalyticsPercent(insights.roster.freeAgents, insights.roster.players) }} усіх,
+              можна запрошувати
+            </span>
+          </div>
+          <AnalyticsStackedBar :segments="rosterSegments" />
+          <div class="analytics-block">
+            <span class="analytics-block__caption">
+              Позиції, які обрали гравці (можна кілька) — у тултипі скільки з них без команди
+            </span>
+            <AnalyticsColumnChart :items="positionItems" unit="гравців" />
+          </div>
+          <div class="analytics-block">
+            <span class="analytics-block__caption">Заповненість профілів</span>
+            <div class="analytics-trio">
+              <AnalyticsStatTile
+                v-for="(tile, index) in profileTiles"
+                :key="tile.key"
+                :label="tile.label"
+                :value="tile.value"
+                :icon="tile.icon"
+                :accent="tile.accent"
+                :hint="tile.hint"
+                :delay="580 + index * 60"
+              />
+            </div>
+          </div>
+        </AnalyticsPanel>
+
+        <!-- 08 · Дуелі 1v1 (v-if — страховка на вікно між деплоями фронту й бекенду) -->
         <AnalyticsPanel
           v-if="data.duels"
-          code="// 06 · Дуелі 1v1"
+          code="// 08 · Дуелі 1v1"
           title="Дуелі та боти-хости"
           :subtitle="duelsSubtitle"
           :delay="620"
@@ -192,11 +304,18 @@
             </span>
             <AnalyticsStackedBar :segments="duelOutcomeSegments" />
           </div>
+          <div v-if="insights" class="analytics-block">
+            <span class="analytics-block__caption">
+              Зіграні дуелі по днях — {{ formatAnalyticsNumber(duelsPlayed30d) }} за 30 днів,
+              у середньому {{ duelsPerDayAverage }} на день
+            </span>
+            <AnalyticsColumnChart :items="duelDayItems" unit="дуелей" dense :label-every="7" />
+          </div>
         </AnalyticsPanel>
 
-        <!-- 07 · Турніри -->
+        <!-- 09 · Турніри -->
         <AnalyticsPanel
-          code="// 07 · Учасники турнірів"
+          code="// 09 · Учасники турнірів"
           title="Команди в турнірах"
           :subtitle="tournamentsSubtitle"
           :delay="700"
@@ -208,9 +327,9 @@
           />
         </AnalyticsPanel>
 
-        <!-- 08 · Міста -->
+        <!-- 10 · Міста -->
         <AnalyticsPanel
-          code="// 08 · Географія"
+          code="// 10 · Географія"
           title="Гравці за містами"
           :subtitle="citiesSubtitle"
           :delay="780"
@@ -222,9 +341,9 @@
           />
         </AnalyticsPanel>
 
-        <!-- 09 · Досягнення -->
+        <!-- 11 · Досягнення -->
         <AnalyticsPanel
-          code="// 09 · Досягнення"
+          code="// 11 · Досягнення"
           title="Дошка трофеїв"
           subtitle="Усі досягнення платформи — наведіть на трофей, щоб побачити, хто його здобув"
           :delay="860"
@@ -253,9 +372,18 @@
 
 <script setup lang="ts">
 import type { Component } from 'vue'
+import type { RouteLocationRaw } from 'vue-router'
 import {
+  PhArrowRight,
   PhArrowsClockwise,
+  PhCalendarCheck,
+  PhCoins,
+  PhCrosshair,
+  PhCrown,
   PhCrownSimple,
+  PhRobot,
+  PhSteamLogo,
+  PhTelegramLogo,
   PhHourglassHigh,
   PhLightning,
   PhShieldCheck,
@@ -267,16 +395,26 @@ import {
   PhUsersThree,
   PhWarningOctagon
 } from '@phosphor-icons/vue'
-import { useGetAnalyticsAchievements, useGetAnalyticsOverview } from '@/views/analytics/analytics.queries'
+import {
+  useGetAnalyticsAchievements,
+  useGetAnalyticsInsights,
+  useGetAnalyticsOverview
+} from '@/views/analytics/analytics.queries'
+import { routeNames } from '@/router/route-names'
+import { getDotaPositionLabel } from '@/components/player-tags/player.enums'
 import { pluralizePlayers } from '@/views/players/player-achievements.utils'
 import {
   ANALYTICS_RANK_RAMP,
   ANALYTICS_SERIES,
   analyticsTournamentStatusLabelMap,
+  formatAnalyticsDay,
+  formatAnalyticsMonth,
   formatAnalyticsNumber,
   formatAnalyticsPercent,
   formatAnalyticsTime,
-  getRankBucketImageSrc
+  formatAnalyticsUah,
+  getRankBucketImageSrc,
+  sumAnalyticsRevenue
 } from '@/views/analytics/analytics.utils'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import AnalyticsPanel from './components/AnalyticsPanel.vue'
@@ -300,12 +438,23 @@ const {
   refetch: refetchAchievements
 } = useGetAnalyticsAchievements()
 
-/** Кнопка «Оновити» та повтор після помилки перечитують обидва запити дошки. */
+// Додаткові зрізи — окремий запит: його помилка (напр. бекенд ще без ендпоінта) ховає лише нові секції.
+const {
+  data: insightsData,
+  isPending: insightsPending,
+  refetch: refetchInsights
+} = useGetAnalyticsInsights()
+const insights = computed(() => insightsData.value ?? null)
+
+/** Кнопка «Оновити» та повтор після помилки перечитують усі запити дошки. */
 function refetch () {
-  return Promise.all([refetchOverview(), refetchAchievements()])
+  return Promise.all([refetchOverview(), refetchAchievements(), refetchInsights()])
 }
 
-// ─── 09 · Досягнення ────────────────────────────────────────────────────────
+const formatUah = (kopecks: number) => formatAnalyticsUah(kopecks)
+const formatUahTick = (kopecks: number) => formatAnalyticsUah(kopecks, true)
+
+// ─── 11 · Досягнення ────────────────────────────────────────────────────────
 const achievementHoldersTotal = computed(() => {
   const ids = new Set<string>()
   for (const a of achievementsData.value?.achievements ?? []) {
@@ -327,7 +476,169 @@ type TKpiTile = {
   icon: Component
   accent: 'primary' | 'gold' | 'violet' | 'pink'
   hint?: string
+  format?: (value: number) => string
 }
+
+// ─── Потребує уваги ─────────────────────────────────────────────────────────
+type TAttentionItem = {
+  key: string
+  text: string
+  icon: Component
+  tone: 'pink' | 'gold'
+  to?: RouteLocationRaw
+}
+
+const attentionItems = computed<TAttentionItem[]>(() => {
+  const items: TAttentionItem[] = []
+  const review = insights.value?.duelActivity.awaitingReview ?? 0
+  if (review > 0) {
+    items.push({
+      key: 'duelReview',
+      text: `Дуелей чекають рішення адміна: ${formatAnalyticsNumber(review)}`,
+      icon: PhSword,
+      tone: 'pink',
+      to: { name: routeNames.adminPanel }
+    })
+  }
+  const bots = data.value?.duels?.bots
+  if (bots && bots.total > 0 && bots.online === 0) {
+    items.push({ key: 'bots', text: 'Жоден бот-хост не онлайн — черга дуелей стоїть', icon: PhRobot, tone: 'pink' })
+  }
+  const unverified = data.value?.teams.unverified ?? 0
+  if (unverified > 0) {
+    items.push({
+      key: 'teams',
+      text: `Команд без верифікації: ${formatAnalyticsNumber(unverified)}`,
+      icon: PhShieldCheck,
+      tone: 'gold',
+      to: { name: routeNames.adminPanel }
+    })
+  }
+  const expiring = insights.value?.vip.expiringSoon ?? 0
+  if (expiring > 0) {
+    items.push({
+      key: 'vip',
+      text: `VIP закінчується протягом 7 днів: ${formatAnalyticsNumber(expiring)}`,
+      icon: PhCrown,
+      tone: 'gold'
+    })
+  }
+  return items
+})
+
+// ─── 02 · Гроші ─────────────────────────────────────────────────────────────
+const revenueTotal = computed(() => sumAnalyticsRevenue(insights.value?.revenue.total))
+const revenueLast30 = computed(() => sumAnalyticsRevenue(insights.value?.revenue.last30Days))
+
+const moneyTiles = computed<TKpiTile[]>(() => {
+  const i = insights.value
+  const vip = i?.vip
+  const vipHint = vip
+    ? [
+      `${formatAnalyticsNumber(vip.autoRenew)} з автопродовженням`,
+      vip.lifetime ? `${formatAnalyticsNumber(vip.lifetime)} довічних` : ''
+    ].filter(Boolean).join(' · ')
+    : ''
+  return [
+    {
+      key: 'revenue30',
+      label: 'Виручка за 30 днів',
+      value: i ? revenueLast30.value : null,
+      icon: PhCalendarCheck,
+      accent: 'gold',
+      hint: i
+        ? `VIP ${formatAnalyticsUah(i.revenue.last30Days.vip)} · внески ${formatAnalyticsUah(i.revenue.last30Days.entryFees)}`
+        : '',
+      format: formatUah
+    },
+    {
+      key: 'revenueTotal',
+      label: 'Виручка за весь час',
+      value: i ? revenueTotal.value : null,
+      icon: PhCoins,
+      accent: 'gold',
+      hint: i ? `донати ${formatAnalyticsUah(i.revenue.total.donations)}` : '',
+      format: formatUah
+    },
+    {
+      key: 'vipActive',
+      label: 'Активні VIP',
+      value: vip?.active ?? null,
+      icon: PhCrown,
+      accent: 'violet',
+      hint: vipHint
+    }
+  ]
+})
+
+const revenueMonthItems = computed<TAnalyticsChartItem[]>(() =>
+  (insights.value?.revenue.monthly ?? []).map(m => ({
+    key: m.month,
+    label: formatAnalyticsMonth(m.month),
+    value: sumAnalyticsRevenue(m),
+    hint: `VIP ${formatAnalyticsUah(m.vip)} · внески ${formatAnalyticsUah(m.entryFees)}` +
+      ` · донати ${formatAnalyticsUah(m.donations)}`
+  }))
+)
+
+// Складена смужка рахує частки від цілого, тож гривні замість копійок нічого не спотворюють.
+const revenueSourceSegments = computed<TAnalyticsStackedSegment[]>(() => {
+  const t = insights.value?.revenue.total
+  return [
+    { key: 'vip', label: 'VIP-підписки', value: (t?.vip ?? 0) / 100, color: ANALYTICS_SERIES.secondary },
+    { key: 'entryFees', label: 'Внески за турніри', value: (t?.entryFees ?? 0) / 100, color: ANALYTICS_SERIES.primary },
+    { key: 'donations', label: 'Донати', value: (t?.donations ?? 0) / 100, color: ANALYTICS_SERIES.pink }
+  ]
+})
+
+// ─── 07 · Склад і рекрутинг ─────────────────────────────────────────────────
+const rosterSegments = computed<TAnalyticsStackedSegment[]>(() => {
+  const r = insights.value?.roster
+  return [
+    { key: 'inTeam', label: 'У команді', value: r?.inTeam ?? 0, color: ANALYTICS_SERIES.primary },
+    { key: 'freeAgents', label: 'Без команди', value: r?.freeAgents ?? 0, color: ANALYTICS_SERIES.secondary }
+  ]
+})
+
+const positionItems = computed<TAnalyticsChartItem[]>(() =>
+  (insights.value?.roster.positions ?? []).map(p => ({
+    key: String(p.position),
+    label: `${p.position} · ${getDotaPositionLabel(p.position)}`,
+    value: p.players,
+    hint: `без команди: ${formatAnalyticsNumber(p.freeAgents)}`
+  }))
+)
+
+const profileTiles = computed<TKpiTile[]>(() => {
+  const r = insights.value?.roster
+  const share = (part: number) => (r ? `${formatAnalyticsPercent(part, r.players)} гравців` : '')
+  return [
+    {
+      key: 'steam',
+      label: 'Прив’язали Steam',
+      value: r?.steamLinked ?? null,
+      icon: PhSteamLogo,
+      accent: 'primary',
+      hint: share(r?.steamLinked ?? 0)
+    },
+    {
+      key: 'telegram',
+      label: 'Прив’язали Telegram',
+      value: r?.telegramLinked ?? null,
+      icon: PhTelegramLogo,
+      accent: 'violet',
+      hint: share(r?.telegramLinked ?? 0)
+    },
+    {
+      key: 'positions',
+      label: 'Обрали позицію',
+      value: r?.withPositions ?? null,
+      icon: PhCrosshair,
+      accent: 'gold',
+      hint: share(r?.withPositions ?? 0)
+    }
+  ]
+})
 
 const kpiTiles = computed<TKpiTile[]>(() => {
   const t = data.value?.totals
@@ -362,7 +673,7 @@ const kpiTiles = computed<TKpiTile[]>(() => {
   ]
 })
 
-// ─── 03 · Ранги ─────────────────────────────────────────────────────────────
+// ─── 04 · Ранги ─────────────────────────────────────────────────────────────
 const rankItems = computed<TAnalyticsChartItem[]>(() =>
   (data.value?.ranks ?? []).map((bucket, index) => ({
     key: String(bucket.rankNumber),
@@ -380,7 +691,7 @@ const topRankLabel = computed(() => {
   return top.players ? `${top.nameUk} (${formatAnalyticsNumber(top.players)})` : '—'
 })
 
-// ─── 04 · Команди ───────────────────────────────────────────────────────────
+// ─── 05 · Команди ───────────────────────────────────────────────────────────
 const teamSegments = computed<TAnalyticsStackedSegment[]>(() => [
   { key: 'verified', label: 'Верифіковані', value: data.value?.teams.verified ?? 0, color: ANALYTICS_SERIES.primary },
   { key: 'unverified', label: 'Без верифікації', value: data.value?.teams.unverified ?? 0, color: ANALYTICS_SERIES.muted }
@@ -390,7 +701,7 @@ const verifiedTeamsShare = computed(() =>
   formatAnalyticsPercent(data.value?.teams.verified ?? 0, data.value?.totals.teams ?? 0)
 )
 
-// ─── 05 · Онлайн / LAN ──────────────────────────────────────────────────────
+// ─── 06 · Онлайн / LAN ──────────────────────────────────────────────────────
 const wantToPlaySegments = computed<TAnalyticsStackedSegment[]>(() => {
   const w = data.value?.wantToPlay
   return [
@@ -401,7 +712,7 @@ const wantToPlaySegments = computed<TAnalyticsStackedSegment[]>(() => {
   ]
 })
 
-// ─── 06 · Дуелі 1v1 ─────────────────────────────────────────────────────────
+// ─── 08 · Дуелі 1v1 ─────────────────────────────────────────────────────────
 const duelTiles = computed<TKpiTile[]>(() => {
   const d = data.value?.duels
   return [
@@ -456,7 +767,23 @@ const duelsSubtitle = computed(() => {
   return `${formatAnalyticsPercent(d.played, duelsFinished.value)} завершених дуелей дійшли до результату · ${bots}`
 })
 
-// ─── 07 · Турніри ───────────────────────────────────────────────────────────
+const duelDayItems = computed<TAnalyticsChartItem[]>(() =>
+  (insights.value?.duelActivity.daily ?? []).map(d => ({
+    key: d.date,
+    label: formatAnalyticsDay(d.date),
+    value: d.played,
+    hint: d.notPlayed ? `без результату: ${formatAnalyticsNumber(d.notPlayed)}` : ''
+  }))
+)
+
+const duelsPlayed30d = computed(() => duelDayItems.value.reduce((sum, d) => sum + d.value, 0))
+const duelsPerDayAverage = computed(() => {
+  const days = duelDayItems.value.length
+  if (!days) return '0'
+  return (duelsPlayed30d.value / days).toLocaleString('uk-UA', { maximumFractionDigits: 1 })
+})
+
+// ─── 09 · Турніри ───────────────────────────────────────────────────────────
 const tournamentItems = computed<TAnalyticsChartItem[]>(() =>
   (data.value?.tournaments ?? []).slice(0, TOURNAMENTS_LIMIT).map(t => ({
     key: t.id,
@@ -475,7 +802,7 @@ const tournamentsSubtitle = computed(() => {
   return total > shown ? `${base} · останні ${shown} з ${total}` : base
 })
 
-// ─── 08 · Міста ─────────────────────────────────────────────────────────────
+// ─── 10 · Міста ─────────────────────────────────────────────────────────────
 const cityItems = computed<TAnalyticsChartItem[]>(() => {
   const cities = data.value?.cities ?? []
   const top = cities.slice(0, CITIES_LIMIT).map(c => ({
@@ -640,6 +967,85 @@ const citiesSubtitle = computed(() => {
   font-size: 13px;
   line-height: 1.4;
   color: var(--ds-text-muted);
+}
+
+/* Три плитки в ряд від планшета (гроші, профілі). */
+.analytics-trio {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 640px) {
+  .analytics-trio {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.analytics-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.analytics-block__caption {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ds-text-muted);
+}
+
+.analytics-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.analytics-alerts__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.analytics-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  border: 1px solid var(--alert-border);
+  background: var(--alert-bg);
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--alert-ink);
+  transition: background-color var(--ds-duration-base) ease;
+}
+
+.analytics-alert--pink {
+  --alert-border: rgba(240, 15, 192, 0.4);
+  --alert-bg: rgba(240, 15, 192, 0.08);
+  --alert-ink: #ff8ae2;
+}
+
+.analytics-alert--gold {
+  --alert-border: rgba(var(--ds-gold-rgb), 0.4);
+  --alert-bg: rgba(var(--ds-gold-rgb), 0.08);
+  --alert-ink: var(--ds-gold);
+}
+
+a.analytics-alert:hover,
+a.analytics-alert:focus-visible {
+  --alert-bg: rgba(255, 255, 255, 0.06);
+
+  outline: none;
+}
+
+.analytics-alert__arrow {
+  opacity: 0.7;
 }
 
 .analytics-error {

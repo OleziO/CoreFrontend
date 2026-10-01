@@ -53,6 +53,37 @@ export function formatAnalyticsTime (iso: string | null | undefined): string {
   return timeFormat.format(date)
 }
 
+const uahFormat = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 })
+const uahCompactFormat = new Intl.NumberFormat('uk-UA', { notation: 'compact', maximumFractionDigits: 1 })
+const monthFormat = new Intl.DateTimeFormat('uk-UA', { month: 'short', timeZone: 'UTC' })
+const dayFormat = new Intl.DateTimeFormat('uk-UA', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+
+/** Копійки → «₴12 400»; `compact` — «₴12,4 тис.» для поділок шкали. */
+export function formatAnalyticsUah (kopecks: number | null | undefined, compact = false): string {
+  if (kopecks == null || !Number.isFinite(kopecks)) return '—'
+  const uah = kopecks / 100
+  return `₴${compact && uah >= 10_000 ? uahCompactFormat.format(uah) : uahFormat.format(Math.round(uah))}`
+}
+
+/** «2026-09» → «вер.»; ключ місяця вже за Києвом, тож форматуємо в UTC без зсуву. */
+export function formatAnalyticsMonth (month: string): string {
+  const [year, monthIndex] = month.split('-').map(Number)
+  if (!year || !monthIndex) return month
+  return monthFormat.format(new Date(Date.UTC(year, monthIndex - 1, 1)))
+}
+
+/** «2026-09-30» → «30 вер.». */
+export function formatAnalyticsDay (date: string): string {
+  const [year, monthIndex, day] = date.split('-').map(Number)
+  if (!year || !monthIndex || !day) return date
+  return dayFormat.format(new Date(Date.UTC(year, monthIndex - 1, day)))
+}
+
+/** Сума виручки по всіх джерелах, копійки. */
+export function sumAnalyticsRevenue (sources: TAnalyticsRevenueBySource | null | undefined): number {
+  return sources ? sources.vip + sources.entryFees + sources.donations : 0
+}
+
 /** Медаль для стовпчика рангу: п'ята зірка тиру (`x5`); Титан має єдину медаль `81`. */
 export function getRankBucketImageSrc (rankNumber: number): string {
   return getPlayerRankImageSrc(rankNumber >= 8 ? 81 : rankNumber * 10 + 5)

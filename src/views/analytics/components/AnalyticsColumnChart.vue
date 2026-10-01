@@ -1,6 +1,7 @@
 <template>
   <div
     class="column-chart"
+    :class="{ 'column-chart--dense': dense }"
     :style="{ '--n': items.length }"
     role="img"
     :aria-label="ariaLabel"
@@ -14,7 +15,7 @@
         :class="{ 'is-baseline': tick === 0 }"
         :style="{ bottom: `${(tick / scale.max) * 100}%` }"
       >
-        <span class="column-chart__tick">{{ formatAnalyticsNumber(tick) }}</span>
+        <span class="column-chart__tick">{{ formatTick(tick) }}</span>
       </span>
     </div>
 
@@ -27,7 +28,7 @@
       >
         <el-tooltip :content="tooltipFor(item)" placement="top" :show-after="80">
           <div class="column-chart__hit" tabindex="0">
-            <span class="column-chart__value">{{ formatAnalyticsNumber(item.value) }}</span>
+            <span v-if="!dense" class="column-chart__value">{{ format(item.value) }}</span>
             <span
               class="column-chart__bar"
               :style="{
@@ -47,7 +48,7 @@
             loading="lazy"
             decoding="async"
           >
-          <span class="column-chart__label">{{ item.label }}</span>
+          <span v-if="axisLabel(item, index)" class="column-chart__label">{{ axisLabel(item, index) }}</span>
         </span>
       </li>
     </ul>
@@ -67,22 +68,43 @@ const props = withDefaults(defineProps<{
   /** Підпис величини для тултипа й aria, напр. «гравців». */
   unit?: string
   fallbackColor?: string
+  /** Форматер значень (тултип, підпис над стовпчиком); за замовчуванням — число з роздільниками. */
+  formatValue?: (value: number) => string
+  /** Компактна шкала для поділок осі (напр. «₴12,4 тис.»); за замовчуванням — `formatValue`. */
+  formatTickValue?: (value: number) => string
+  /** Щільний ряд (30 днів): без цифр над стовпчиками, підпис осі — кожен `labelEvery`-й. */
+  dense?: boolean
+  labelEvery?: number
 }>(), {
   unit: '',
-  fallbackColor: ANALYTICS_SERIES.primary
+  fallbackColor: ANALYTICS_SERIES.primary,
+  formatValue: undefined,
+  formatTickValue: undefined,
+  dense: false,
+  labelEvery: 5
 })
+
+const format = (value: number) => (props.formatValue ?? formatAnalyticsNumber)(value)
+const formatTick = (value: number) => (props.formatTickValue ?? format)(value)
+
+/** У щільному ряді підписуємо кожен N-й стовпчик, рахуючи від останнього (сьогодні завжди видно). */
+function axisLabel (item: TAnalyticsChartItem, index: number): string {
+  if (!props.dense) return item.label
+  return (props.items.length - 1 - index) % props.labelEvery === 0 ? item.label : ''
+}
 
 const total = computed(() => props.items.reduce((sum, item) => sum + item.value, 0))
 const scale = computed(() => getAnalyticsNiceScale(Math.max(0, ...props.items.map(i => i.value))))
 
 const ariaLabel = computed(() =>
-  props.items.map(i => `${i.label}: ${formatAnalyticsNumber(i.value)}`).join(', ')
+  props.items.map(i => `${i.label}: ${format(i.value)}`).join(', ')
 )
 
 function tooltipFor (item: TAnalyticsChartItem): string {
   const unit = props.unit ? ` ${props.unit}` : ''
   const share = total.value ? ` · ${formatAnalyticsPercent(item.value, total.value)}` : ''
-  return `${item.label}: ${formatAnalyticsNumber(item.value)}${unit}${share}`
+  const hint = item.hint ? ` · ${item.hint}` : ''
+  return `${item.label}: ${format(item.value)}${unit}${share}${hint}`
 }
 </script>
 
@@ -215,6 +237,26 @@ function tooltipFor (item: TAnalyticsChartItem): string {
   line-height: 1.2;
   text-align: center;
   color: var(--ds-text-muted);
+}
+
+/* Щільний ряд: вужчі проміжки, підписи осі можуть виходити за свою колонку. */
+.column-chart--dense .column-chart__columns {
+  column-gap: 2px;
+}
+
+.column-chart--dense .column-chart__bar {
+  width: 14px;
+  max-width: 80%;
+}
+
+.column-chart--dense .column-chart__axis {
+  overflow: visible;
+}
+
+.column-chart--dense .column-chart__label {
+  max-width: none;
+  overflow: visible;
+  font-size: 10px;
 }
 
 @media (max-width: 640px) {

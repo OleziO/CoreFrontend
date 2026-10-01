@@ -26,10 +26,13 @@ const props = withDefaults(defineProps<{
   /** Другий рядок — частка, порівняння тощо. */
   hint?: string
   delay?: number
+  /** Форматер значення (напр. гривні з копійок); за замовчуванням — число з роздільниками. */
+  formatValue?: (value: number) => string
 }>(), {
   accent: 'primary',
   hint: '',
-  delay: 0
+  delay: 0,
+  formatValue: undefined
 })
 
 // Лічильник «докручується» до значення; під reduced-motion VueUse сам вимикає перехід.
@@ -38,7 +41,9 @@ const animated = useTransition(source, {
   duration: 1100,
   transition: [0.16, 1, 0.3, 1]
 })
-const display = computed(() => (props.value == null ? '—' : formatAnalyticsNumber(animated.value)))
+const display = computed(() =>
+  props.value == null ? '—' : (props.formatValue ?? formatAnalyticsNumber)(animated.value)
+)
 </script>
 
 <style scoped>

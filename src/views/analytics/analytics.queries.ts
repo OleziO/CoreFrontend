@@ -24,3 +24,14 @@ export const useGetAnalyticsAchievements = () => {
     staleTime: 60_000
   })
 }
+
+export const ANALYTICS_INSIGHTS_QUERY_KEY = ['admin', 'analytics', 'insights'] as const
+
+export const useGetAnalyticsInsights = () => {
+  return useQueryWrapper({
+    key: [...ANALYTICS_INSIGHTS_QUERY_KEY],
+    query: () => analyticsService.fetchInsights(),
+    refetchOnWindowFocus: false,
+    staleTime: 60_000
+  })
+}

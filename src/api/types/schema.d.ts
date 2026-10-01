@@ -977,6 +977,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/analytics/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin analytics insights
+         * @description Secondary dashboard numbers: recruiting pool (players in a team vs free agents, linked accounts, positions 1–5 with free agents per position), settled revenue in kopecks (VIP, entry fees, donations — all-time, last 30 days, last 6 months), VIP subscribers and 1v1 duel activity per day over the last 30 days. Days and months are Europe/Kyiv.
+         */
+        get: operations["AnalyticsController_getInsights"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/matches/{matchId}/result": {
         parameters: {
             query?: never;
@@ -2084,6 +2104,96 @@ export interface components {
             /** @description Sorted by players, descending. */
             cities: components["schemas"]["CityBucketDto"][];
             duels: components["schemas"]["AnalyticsDuelsDto"];
+        };
+        PositionBucketDto: {
+            /**
+             * @description Dota position 1–5.
+             * @enum {number}
+             */
+            position: 1 | 2 | 3 | 4 | 5;
+            /** @description Players who listed this position (a player may list several). */
+            players: number;
+            /** @description Of them, players without a team — available to recruit. */
+            freeAgents: number;
+        };
+        AnalyticsRosterDto: {
+            /** @description Players with a rating above 0 (same filter as the overview). */
+            players: number;
+            /** @description Main, reserve or captain of a team that is not disbanded. */
+            inTeam: number;
+            /** @description Players without a team. */
+            freeAgents: number;
+            /** @description Players with a linked Steam account. */
+            steamLinked: number;
+            /** @description Players with a linked Telegram account. */
+            telegramLinked: number;
+            /** @description Players who picked at least one position. */
+            withPositions: number;
+            positions: components["schemas"]["PositionBucketDto"][];
+        };
+        RevenueBySourceDto: {
+            /** @description Kopecks. */
+            vip: number;
+            /** @description Kopecks. */
+            entryFees: number;
+            /** @description Kopecks. */
+            donations: number;
+        };
+        RevenueMonthDto: {
+            /**
+             * @description Calendar month, Europe/Kyiv.
+             * @example 2026-09
+             */
+            month: string;
+            /** @description Paid VIP charges, kopecks. */
+            vip: number;
+            /** @description Paid tournament entry fees, kopecks. */
+            entryFees: number;
+            /** @description Paid tournament donations, kopecks. */
+            donations: number;
+        };
+        AnalyticsRevenueDto: {
+            /** @description All-time paid amounts per source. */
+            total: components["schemas"]["RevenueBySourceDto"];
+            /** @description Paid amounts over the last 30 days. */
+            last30Days: components["schemas"]["RevenueBySourceDto"];
+            /** @description Last 6 calendar months, oldest first, current month included; empty months are zeros. */
+            monthly: components["schemas"]["RevenueMonthDto"][];
+        };
+        AnalyticsVipDto: {
+            /** @description Players with `vipUntil` in the future (lifetime grants included). */
+            active: number;
+            /** @description Of them, lifetime admin grants. */
+            lifetime: number;
+            /** @description Active VIPs with auto-renewal switched on. */
+            autoRenew: number;
+            /** @description Non-lifetime VIPs whose period ends within 7 days. */
+            expiringSoon: number;
+        };
+        DuelDayDto: {
+            /**
+             * @description Calendar day, Europe/Kyiv.
+             * @example 2026-09-30
+             */
+            date: string;
+            /** @description Duels created that day which finished with a result (RESOLVED). */
+            played: number;
+            /** @description Duels created that day which ended without a result (CANCELLED or FAILED). */
+            notPlayed: number;
+        };
+        AnalyticsDuelActivityDto: {
+            /** @description Last 30 days, oldest first, today included. */
+            daily: components["schemas"]["DuelDayDto"][];
+            /** @description FAILED duels waiting for an admin decision. */
+            awaitingReview: number;
+        };
+        AnalyticsInsightsDto: {
+            /** @example 2026-10-01T12:00:00.000Z */
+            generatedAt: string;
+            roster: components["schemas"]["AnalyticsRosterDto"];
+            revenue: components["schemas"]["AnalyticsRevenueDto"];
+            vip: components["schemas"]["AnalyticsVipDto"];
+            duelActivity: components["schemas"]["AnalyticsDuelActivityDto"];
         };
         AnalyticsDuelsDto: {
             /** @description Every 1v1 duel ever created, any state. */
@@ -3645,6 +3755,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlatformAchievementsDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_getInsights: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsInsightsDto"];
                 };
             };
         };
