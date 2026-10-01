@@ -280,18 +280,58 @@ export function isPlayerVerified (
   return hasPlayerRole(player.roles, ERole.PLAYER) || hasPlayerRole(player.roles, ERole.MEDIA)
 }
 
+type TVipFramePlayer = { isVip?: boolean; vipFrameColor?: string | null } | null | undefined
+
 /**
- * Рольовий акцент рамки (картка, профіль): адмін — золото, медіа (стрімер) — фіолет.
- * Адмін має пріоритет. Повертає клас `.role-frame--*` з `_neon.scss` або порожній рядок.
+ * Steam, Dotabuff і Discord ЧУЖОГО гравця відкриті VIP, медіа та адмінам;
+ * свої профілі власник бачить завжди. Решта бачить замок із пропозицією VIP.
+ */
+export function canViewPlayerProfileLinks (
+  viewer: { id?: string; isVip?: boolean; roles?: readonly { name: string; isAdminRole?: boolean }[] | null }
+  | null | undefined,
+  targetId: string | null | undefined
+): boolean {
+  if (!viewer) return false
+  if (targetId && viewer.id === targetId) return true
+  return !!viewer.isVip || hasAdminRole(viewer.roles) || hasPlayerRole(viewer.roles, ERole.MEDIA)
+}
+
+/** VIP зараз (бек рахує `isVip` з `vipUntil`). */
+export function isPlayerVip (player: { isVip?: boolean } | null | undefined): boolean {
+  return !!player?.isVip
+}
+
+/** `#RRGGBB` → `"r, g, b"` для `rgba(var(--…-rgb), a)`; null для невалідного значення. */
+function hexToRgbTriplet (hex: string): string | null {
+  const m = /^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(hex.trim())
+  if (!m) return null
+  return m.slice(1).map(part => parseInt(part, 16)).join(', ')
+}
+
+/**
+ * Рольовий акцент рамки (картка, профіль): медіа — фіолет, адмін — золото, VIP — обраний колір.
+ * Ролі мають пріоритет над VIP-кольором, щоб рамка персоналу лишалась впізнаваною.
+ * Повертає клас `.role-frame--*` з `_neon.scss` або порожній рядок.
  */
 export function getPlayerRoleAccentClass (
-  player: { roles?: readonly { name: string; isAdminRole?: boolean }[] | null } | null | undefined
-): '' | 'role-frame--gold' | 'role-frame--violet' {
+  player: ({ roles?: readonly { name: string; isAdminRole?: boolean }[] | null } & TVipFramePlayer) | null | undefined
+): '' | 'role-frame--gold' | 'role-frame--violet' | 'role-frame--vip' {
   if (!player) return ''
   // Медіа пріоритетніше за адмін-рамку: у медійника з адмін-правами рамка лишається фіолетовою.
   if (hasPlayerRole(player.roles, ERole.MEDIA)) return 'role-frame--violet'
   if (hasAdminRole(player.roles)) return 'role-frame--gold'
+  if (getPlayerVipFrameStyle(player)) return 'role-frame--vip'
   return ''
+}
+
+/**
+ * CSS-змінна для `.role-frame--vip`: ставиться на корінь картки / сторінки, звідки
+ * її успадковують усі рамки. undefined — коли гравець не VIP або колір не обрано.
+ */
+export function getPlayerVipFrameStyle (player: TVipFramePlayer): Record<string, string> | undefined {
+  if (!player?.isVip || !player.vipFrameColor) return undefined
+  const rgb = hexToRgbTriplet(player.vipFrameColor)
+  return rgb ? { '--vip-frame-rgb': rgb } : undefined
 }
 
 /** Єдиний текст тоста після копіювання: «<що саме> успішно скопійовано». */

@@ -1873,6 +1873,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/vip/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My VIP status, price, palette and auto-renewal */
+        get: operations["VipController_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vip/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create the first VIP invoice (250 ₴) with card tokenization */
+        post: operations["VipController_checkout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vip/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn auto-renewal off; VIP lasts until the paid period ends */
+        post: operations["VipController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vip/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn auto-renewal back on with the saved card (VIP must still last) */
+        post: operations["VipController_resume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vip/frame-color": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Pick the card frame colour (VIP only) */
+        patch: operations["VipController_setFrameColor"];
+        trace?: never;
+    };
+    "/admin/players/{id}/vip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Grant VIP without payment */
+        post: operations["VipAdminController_grant"];
+        /** Revoke VIP now */
+        delete: operations["VipAdminController_revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2242,6 +2345,18 @@ export interface components {
             lanCities?: string[] | null;
             /** Format: date-time */
             verifiedAt?: string | null;
+            /** @description VIP right now (vipUntil in the future) */
+            isVip: boolean;
+            /**
+             * Format: date-time
+             * @description Null when not VIP
+             */
+            vipUntil?: string | null;
+            /**
+             * @description Card frame colour picked by a VIP; null when not VIP or not set
+             * @enum {string|null}
+             */
+            vipFrameColor?: "#10B981" | "#A3E635" | "#F97316" | "#FDA4AF" | "#EC4899" | "#9D174D" | "#E2E8F0" | "#64748B" | null;
             teamId?: string | null;
             roles: components["schemas"]["PlayerRolePublicDto"][];
         };
@@ -2334,6 +2449,18 @@ export interface components {
             lanCities?: string[] | null;
             /** Format: date-time */
             verifiedAt?: string | null;
+            /** @description VIP right now (vipUntil in the future) */
+            isVip: boolean;
+            /**
+             * Format: date-time
+             * @description Null when not VIP
+             */
+            vipUntil?: string | null;
+            /**
+             * @description Card frame colour picked by a VIP; null when not VIP or not set
+             * @enum {string|null}
+             */
+            vipFrameColor?: "#10B981" | "#A3E635" | "#F97316" | "#FDA4AF" | "#EC4899" | "#9D174D" | "#E2E8F0" | "#64748B" | null;
             /** @description UUID команди або null поза складом */
             teamId?: string | null;
             roles: components["schemas"]["CurrentPlayerRoleDto"][];
@@ -2642,8 +2769,12 @@ export interface components {
             /** @description Unique code carried as the reference on the Monobank invoice. */
             reference: string;
             status: components["schemas"]["PaymentStatus"];
-            /** @description Entry fee owed, in kopecks. */
+            /** @description Entry fee owed, in kopecks (VIP discount already applied). */
             amount: number;
+            /** @description Entry fee before any discount, in kopecks. */
+            fullAmount: number;
+            /** @description VIP discount applied to `amount`, percent (0 when none). */
+            vipDiscountPercent: number;
             /** @description Amount paid so far, in kopecks. */
             amountPaid: number;
             /** @description Monobank payment page for the open invoice, or null when there is none to pay. */
@@ -3202,6 +3333,8 @@ export interface components {
             acceptedToday: number;
             /** @description Friendly duels a player may accept per day */
             dailyLimit: number;
+            /** @description VIP: friendly duels are not limited per day (for duels with a VIP on either side) */
+            unlimited: boolean;
             /** @description Points a friendly duel moves (10) */
             ratingDelta: number;
         };
@@ -3372,6 +3505,85 @@ export interface components {
             enabled: boolean;
             /** @description true when the worker touched this row within the last 30 s — the process is alive */
             alive: boolean;
+        };
+        PlayerVipFieldsDto: {
+            /** @description VIP right now (vipUntil in the future) */
+            isVip: boolean;
+            /**
+             * Format: date-time
+             * @description Null when not VIP
+             */
+            vipUntil?: string | null;
+            /**
+             * @description Card frame colour picked by a VIP; null when not VIP or not set
+             * @enum {string|null}
+             */
+            vipFrameColor?: "#10B981" | "#A3E635" | "#F97316" | "#FDA4AF" | "#EC4899" | "#9D174D" | "#E2E8F0" | "#64748B" | null;
+        };
+        VipStatusDto: {
+            /** @description VIP right now (vipUntil in the future) */
+            isVip: boolean;
+            /**
+             * Format: date-time
+             * @description Null when not VIP
+             */
+            vipUntil?: string | null;
+            /**
+             * @description Card frame colour picked by a VIP; null when not VIP or not set
+             * @enum {string|null}
+             */
+            vipFrameColor?: "#10B981" | "#A3E635" | "#F97316" | "#FDA4AF" | "#EC4899" | "#9D174D" | "#E2E8F0" | "#64748B" | null;
+            /** @description Price of one month, kopecks */
+            priceKopecks: number;
+            /** @description Frame colours a VIP may pick */
+            frameColors: string[];
+            /** @description A saved card will be charged automatically at the end of the period */
+            autoRenew: boolean;
+            /** Format: date-time */
+            nextChargeAt?: string | null;
+            /** @description Card on file, e.g. 537541******1234 */
+            maskedPan?: string | null;
+            /** @description A card is saved, so auto-renewal can be switched back on */
+            hasSavedCard: boolean;
+            /** @description A first-payment invoice was created and has not settled yet */
+            paymentPending: boolean;
+        };
+        VipCheckoutDto: {
+            /** @description Monobank payment page; null when acquiring is not configured */
+            pageUrl?: string | null;
+            reference: string;
+            /** @description Kopecks */
+            amount: number;
+        };
+        UpdateVipFrameColorDto: {
+            /**
+             * @description null resets to the standard frame
+             * @enum {string|null}
+             */
+            color?: "#10B981" | "#A3E635" | "#F97316" | "#FDA4AF" | "#EC4899" | "#9D174D" | "#E2E8F0" | "#64748B" | null;
+        };
+        AdminGrantVipDto: {
+            /** @description Months added on top of the current VIP period (or from now). Required unless `lifetime`. */
+            months?: number;
+            /** @description Lifetime VIP: never expires, auto-renewal is switched off */
+            lifetime?: boolean;
+        };
+        AdminVipResultDto: {
+            /** @description VIP right now (vipUntil in the future) */
+            isVip: boolean;
+            /**
+             * Format: date-time
+             * @description Null when not VIP
+             */
+            vipUntil?: string | null;
+            /**
+             * @description Card frame colour picked by a VIP; null when not VIP or not set
+             * @enum {string|null}
+             */
+            vipFrameColor?: "#10B981" | "#A3E635" | "#F97316" | "#FDA4AF" | "#EC4899" | "#9D174D" | "#E2E8F0" | "#64748B" | null;
+            playerId: string;
+            /** @description VIP never expires */
+            lifetime: boolean;
         };
     };
     responses: never;
@@ -6191,6 +6403,151 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NotificationsSnapshotDto"];
+                };
+            };
+        };
+    };
+    VipController_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VipStatusDto"];
+                };
+            };
+        };
+    };
+    VipController_checkout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VipCheckoutDto"];
+                };
+            };
+        };
+    };
+    VipController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VipStatusDto"];
+                };
+            };
+        };
+    };
+    VipController_resume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VipStatusDto"];
+                };
+            };
+        };
+    };
+    VipController_setFrameColor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateVipFrameColorDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VipStatusDto"];
+                };
+            };
+        };
+    };
+    VipAdminController_grant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminGrantVipDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminVipResultDto"];
+                };
+            };
+        };
+    };
+    VipAdminController_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminVipResultDto"];
                 };
             };
         };

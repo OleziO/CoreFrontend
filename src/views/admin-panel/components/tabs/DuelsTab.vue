@@ -38,25 +38,63 @@
       <div class="flex flex-col gap-12">
         <!-- Додати бота -->
         <form class="bot-form hud-panel" @submit.prevent="addBot">
-          <span class="sys-label sys-label--muted !text-[9px]">// Додати бота-хоста</span>
+          <header class="bot-form__head">
+            <span class="bot-form__icon" aria-hidden="true">
+              <PhRobot :size="20" weight="duotone" />
+            </span>
+            <span class="flex min-w-0 flex-col gap-3">
+              <span class="bot-form__title">Додати бота-хоста</span>
+              <span class="bot-form__lead">Steam-акаунт, який створює лобі й веде дуелі</span>
+            </span>
+          </header>
+
           <div class="bot-form__fields">
-            <el-input v-model="newBot.accountName" placeholder="Steam-логін" clearable aria-label="Steam-логін" />
-            <el-input
-              v-model="newBot.password"
-              type="password"
-              show-password
-              placeholder="Пароль"
-              aria-label="Пароль"
-            />
-            <el-input-number v-model="newBot.region" :min="0" :max="50" aria-label="Регіон (3 = EU West)" />
-            <el-button type="primary" native-type="submit" :loading="addingBot" :disabled="!canAddBot">
-              <PhPlus v-if="!addingBot" :size="14" weight="bold" class="mr-6" />
-              Додати
+            <label class="bot-field">
+              <span class="bot-field__label">Steam-логін</span>
+              <el-input v-model="newBot.accountName" placeholder="login" clearable autocomplete="off">
+                <template #prefix>
+                  <PhUser :size="16" />
+                </template>
+              </el-input>
+            </label>
+            <label class="bot-field">
+              <span class="bot-field__label">Пароль</span>
+              <el-input
+                v-model="newBot.password"
+                type="password"
+                show-password
+                placeholder="••••••••"
+                autocomplete="new-password"
+              >
+                <template #prefix>
+                  <PhLockSimple :size="16" />
+                </template>
+              </el-input>
+            </label>
+            <label class="bot-field">
+              <span class="bot-field__label">
+                Регіон
+                <span v-if="regionName" class="bot-field__hint">{{ regionName }}</span>
+              </span>
+              <el-input-number v-model="newBot.region" :min="0" :max="50" class="!w-full" />
+            </label>
+            <el-button
+              type="primary"
+              native-type="submit"
+              class="bot-form__submit"
+              :loading="addingBot"
+              :disabled="!canAddBot"
+            >
+              <PhPlus v-if="!addingBot" :size="16" weight="bold" class="mr-6" />
+              Додати бота
             </el-button>
           </div>
-          <span class="text-[11px] text-white/45">
-            Пароль шифрується на бекенді. Steam Guard на акаунті має бути вимкнений. Регіон 3 — EU West.
-          </span>
+
+          <ul class="bot-form__notes">
+            <li><PhShieldCheck :size="14" weight="fill" /> Пароль шифрується на бекенді</li>
+            <li class="is-warn"><PhWarning :size="14" weight="fill" /> Steam Guard на акаунті має бути вимкнений</li>
+            <li><PhGlobe :size="14" weight="bold" /> Регіон 3 — EU West</li>
+          </ul>
         </form>
 
         <ul v-if="store.bots.length" class="duels-list">
@@ -90,8 +128,9 @@
                 :model-value="bot.enabled"
                 :loading="processingBotId === bot.id"
                 inline-prompt
-                active-text="on"
-                inactive-text="off"
+                active-text="ON"
+                inactive-text="OFF"
+                :aria-label="bot.enabled ? 'Вимкнути бота' : 'Увімкнути бота'"
                 @change="toggleBot(bot, $event as boolean)"
               />
               <el-button
@@ -133,7 +172,18 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import { PhArrowsClockwise, PhPlus, PhRobot, PhSword, PhTrash } from '@phosphor-icons/vue'
+import {
+  PhArrowsClockwise,
+  PhGlobe,
+  PhLockSimple,
+  PhPlus,
+  PhRobot,
+  PhShieldCheck,
+  PhSword,
+  PhTrash,
+  PhUser,
+  PhWarning
+} from '@phosphor-icons/vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-status'
 import { hostBotStatusLabels } from '@/views/duels/duels.utils'
@@ -159,6 +209,10 @@ const addingBot = ref(false)
 
 const newBot = reactive({ accountName: '', password: '', region: 3 })
 const canAddBot = computed(() => !!newBot.accountName.trim() && !!newBot.password)
+
+/** Назви регіонів Steam/Dota для підказки біля поля (відомі напевно — решта без назви). */
+const BOT_REGION_NAMES: Record<number, string> = { 3: 'EU West' }
+const regionName = computed(() => BOT_REGION_NAMES[newBot.region] ?? '')
 
 async function loadBots () {
   try {
@@ -310,12 +364,104 @@ async function removeBot (bot: THostBot) {
 }
 
 .bot-row,
+// Add-bot form: an icon + title header, labelled fields on one row (the submit
+// sits on the inputs' baseline), and the account rules as small icon notes.
 .bot-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: 12px;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 14px;
+}
+
+.bot-form__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bot-form__icon {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--ds-primary-rgb), 0.35);
+  background: rgba(var(--ds-primary-rgb), 0.1);
+  color: var(--ds-primary);
+  box-shadow: var(--ds-glow-primary-soft);
+}
+
+.bot-form__title {
+  font-family: var(--ds-font-display);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ds-text-strong);
+}
+
+.bot-form__lead {
+  font-size: 12px;
+  color: var(--ds-text-muted);
+}
+
+.bot-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bot-field__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ds-text-muted);
+}
+
+.bot-field__hint {
+  border-radius: 999px;
+  padding: 1px 7px;
+  background: rgba(var(--ds-primary-rgb), 0.12);
+  color: var(--ds-primary);
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+.bot-form__submit {
+  min-width: 150px;
+}
+
+.bot-form__notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0;
+  padding: 12px 0 0;
+  list-style: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+  color: var(--ds-text-muted);
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  :deep(svg) {
+    color: var(--ds-primary);
+  }
+
+  .is-warn :deep(svg) {
+    color: rgb(245, 158, 11);
+  }
 }
 
 @media (min-width: 1024px) {
@@ -400,12 +546,13 @@ async function removeBot (bot: THostBot) {
 .bot-form__fields {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
+  align-items: end;
+  gap: 12px;
 }
 
 @media (min-width: 768px) {
   .bot-form__fields {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 140px auto;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 160px auto;
   }
 }
 

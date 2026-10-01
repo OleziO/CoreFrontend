@@ -37,6 +37,16 @@
               {{ player.discordName || '-' }}
             </h2>
 
+            <el-tooltip
+              v-if="isVip"
+              :content="vipUntilLabel"
+              placement="top"
+              effect="dark"
+              :show-after="180"
+            >
+              <VipBadge size="sm" class="shrink-0" />
+            </el-tooltip>
+
             <PlayerModerationTags class="shrink-0" :tags="playerTags" />
           </div>
 
@@ -150,6 +160,17 @@
         <span>Редагувати{{ showFullLabel ? ' профіль' : '' }}</span>
       </el-button>
 
+      <!-- Власний профіль: вхід у VIP (налаштування рамки або покупка) -->
+      <el-button
+        v-if="isProfilePage"
+        plain
+        class="vip-admin-btn min-w-0 flex-1 max-sm:!px-8"
+        @click="emit('openVip')"
+      >
+        <PhCrown :size="16" weight="fill" class="mr-10 shrink-0" />
+        <span>{{ isVip ? 'Мій VIP' : 'Стати VIP' }}</span>
+      </el-button>
+
       <el-button
         v-if="isProfilePage && !player.steamId"
         :loading="linkingSteam"
@@ -261,9 +282,31 @@
         />
       </div>
 
+      <!-- Без VIP: замість посилань — замок із пропозицією VIP -->
+      <el-tooltip
+        v-if="!canViewLinks && lockedLinkIcons.length"
+        content="Steam, Dotabuff і Discord гравців відкриваються з VIP"
+        placement="top"
+        effect="dark"
+        :show-after="180"
+      >
+        <button
+          type="button"
+          class="profile-links-locked"
+          aria-label="Профілі гравця доступні з VIP — дізнатися більше"
+          @click="emit('openVip')"
+        >
+          <span class="profile-links-locked__icons" aria-hidden="true">
+            <Icon v-for="icon in lockedLinkIcons" :key="icon" :size="14" :name="icon" />
+          </span>
+          <PhLockSimple :size="12" weight="bold" class="shrink-0" />
+          <span class="profile-links-locked__label">VIP</span>
+        </button>
+      </el-tooltip>
+
       <!-- Зовнішні профілі: HUD-плитки з фірмовими іконками, eyebrow і підказками -->
       <div
-        v-if="profileLinks.length"
+        v-else-if="profileLinks.length"
         class="flex shrink-0 items-center gap-10"
       >
         <span class="sys-label sys-label--muted hidden !text-[9px] xs:inline">Профілі</span>
@@ -308,9 +351,13 @@ import {
   PhCheck,
   PhClockCountdown,
   PhInfo,
-  PhSword
+  PhSword,
+  PhCrown,
+  PhLockSimple
 } from '@phosphor-icons/vue'
-import { getCopy } from '@/core/helpers'
+import { getCopy, isPlayerVip } from '@/core/helpers'
+import { isVipLifetime } from '@/core/vip.constants'
+import VipBadge from '@/components/VipBadge.vue'
 import type { TIconName } from '@/components/Icon.vue'
 import type { TTag } from '@/services/tags.types'
 
@@ -333,9 +380,11 @@ interface IProps {
   friendRelation?: TFriendRelationState | null
   friendBusy?: boolean
   challenging?: boolean
+  /** Глядач бачить Steam / Dotabuff / Discord (VIP, медіа, адмін або власний профіль). */
+  canViewLinks?: boolean
 }
 
-const props = defineProps<IProps>()
+const props = withDefaults(defineProps<IProps>(), { canViewLinks: true })
 
 const emit = defineEmits<{
   toggleVerification: []
@@ -347,7 +396,17 @@ const emit = defineEmits<{
   cancelFriendRequest: []
   removeFriend: []
   challenge: []
+  openVip: []
 }>()
+
+const isVip = computed(() => isPlayerVip(props.player))
+
+const vipDateFormat = new Intl.DateTimeFormat('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })
+const vipUntilLabel = computed(() => {
+  const until = props.player.vipUntil
+  if (isVipLifetime(until)) return 'Безстроковий VIP'
+  return until ? `VIP до ${vipDateFormat.format(new Date(until))}` : 'VIP-гравець'
+})
 
 const windowSize = useWindowSize()
 const showFullLabel = computed(() => windowSize.width.value > 650)
@@ -362,6 +421,14 @@ interface IProfileLink {
   url: string
   icon: TIconName
 }
+
+/** Іконки під замком: які акаунти гравець прив'язав (самих посилань глядач не отримує). */
+const lockedLinkIcons = computed<TIconName[]>(() => {
+  const icons: TIconName[] = []
+  if (props.player.steamId) icons.push('steam', 'dotabuff')
+  if (props.player.discordId) icons.push('discord')
+  return icons
+})
 
 /** Зовнішні профілі гравця — лише ті, для яких є прив'язаний акаунт і URL. */
 const profileLinks = computed<IProfileLink[]>(() => {
@@ -381,6 +448,50 @@ const profileLinks = computed<IProfileLink[]>(() => {
 // External-profile tiles: 32px dark wells with a cyan hairline, so the row of
 // brand marks reads as HUD chips rather than loose icons. Brand SVGs keep their
 // own fills; the Discord mark (currentColor) inherits the white/primary text.
+// VIP entry points (admin grant / own profile): the gold VIP foil on a plain button.
+.vip-admin-btn {
+  --el-button-text-color: rgb(255, 222, 140);
+  --el-button-border-color: rgba(255, 206, 84, 0.45);
+  --el-button-hover-text-color: rgb(255, 230, 170);
+  --el-button-hover-border-color: rgba(255, 206, 84, 0.8);
+  --el-button-hover-bg-color: rgba(255, 206, 84, 0.08);
+  --el-button-bg-color: rgba(255, 206, 84, 0.04);
+}
+
+// Locked profile links: the brand marks dimmed behind a gold VIP lock.
+.profile-links-locked {
+  @apply inline-flex h-32 shrink-0 cursor-pointer items-center gap-8 rounded-lg border px-10;
+  border-color: rgba(255, 206, 84, 0.35);
+  background: linear-gradient(110deg, rgba(255, 206, 84, 0.08), rgba(255, 94, 170, 0.06));
+  color: rgb(255, 214, 102);
+  transition: border-color var(--ds-duration-base) ease, box-shadow var(--ds-duration-base) ease;
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 206, 84, 0.7);
+    outline-offset: 2px;
+  }
+}
+
+.profile-links-locked__icons {
+  @apply inline-flex items-center gap-6;
+  filter: grayscale(1) blur(0.6px);
+  opacity: 0.45;
+}
+
+.profile-links-locked__label {
+  font-family: var(--ds-font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .profile-links-locked:hover {
+    border-color: rgba(255, 206, 84, 0.7);
+    box-shadow: 0 0 14px rgba(255, 206, 84, 0.25);
+  }
+}
+
 .profile-links {
   @apply m-0 flex list-none items-center gap-6 p-0;
 }

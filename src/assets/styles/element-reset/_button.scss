@@ -45,6 +45,9 @@ $warning: #f59e0b;
 $danger: #ef4444;
 $info: #38bdf8;
 
+// Disabled tinted buttons keep their hue at this strength (see the mixin below).
+$disabled-text-alpha: 0.45;
+
 // Tinted variants (success / warning / danger / info) — translucent fill of the
 // status colour with a light text tint. Reads clearly on the dark base without
 // shouting; the primary action stays the only solid button on screen.
@@ -59,9 +62,9 @@ $info: #38bdf8;
     --el-button-active-text-color: #{$text};
     --el-button-active-bg-color: #{rgba($color, 0.26)};
     --el-button-active-border-color: #{rgba($color, 0.6)};
-    --el-button-disabled-text-color: #{$text};
-    --el-button-disabled-bg-color: #{rgba($color, 0.12)};
-    --el-button-disabled-border-color: #{rgba($color, 0.35)};
+    --el-button-disabled-text-color: #{rgba($text, $disabled-text-alpha)};
+    --el-button-disabled-bg-color: #{rgba($color, 0.04)};
+    --el-button-disabled-border-color: #{rgba($color, 0.28)};
     --el-button-outline-color: #{rgba($color, 0.6)};
     --el-button-hover-link-text-color: #{color.scale($text, $lightness: 40%)};
     --el-button-active-color: #{$text};
@@ -80,15 +83,37 @@ $info: #38bdf8;
     --el-button-active-text-color: #{$text};
     --el-button-active-bg-color: #{rgba($color, 0.16)};
     --el-button-active-border-color: #{rgba($color, 0.6)};
-    --el-button-disabled-text-color: #{$text};
+    --el-button-disabled-text-color: #{rgba($text, $disabled-text-alpha)};
     --el-button-disabled-bg-color: transparent;
-    --el-button-disabled-border-color: #{rgba($color, 0.4)};
+    --el-button-disabled-border-color: #{rgba($color, 0.28)};
+  }
+
+  // Disabled keeps a whisper of its hue (you still see it is «delete») but reads
+  // as unavailable: muted text, a dashed low-contrast border, almost no fill, at
+  // full opacity — the global 45% opacity turned the tint into murky pink-grey.
+  .el-button--#{$name}.is-disabled,
+  .el-button--#{$name}.is-disabled:hover {
+    opacity: 1;
+    cursor: not-allowed;
+    border-style: dashed;
+    box-shadow: none;
+  }
+
+  // EP paints plain disabled buttons with its own light-9 tint (near-white on
+  // our dark base) via a 3-class selector — match it and set the colours outright.
+  .el-button--#{$name}.is-plain.is-disabled,
+  .el-button--#{$name}.is-plain.is-disabled:hover,
+  .el-button--#{$name}.is-plain.is-disabled:focus,
+  .el-button--#{$name}.is-plain.is-disabled:active {
+    color: rgba($text, $disabled-text-alpha);
+    background-color: transparent;
+    border-color: rgba($color, 0.28);
   }
 
   .el-button--#{$name}.is-text,
   .el-button--#{$name}.is-link {
     --el-button-text-color: #{$text};
-    --el-button-disabled-text-color: #{$text};
+    --el-button-disabled-text-color: #{rgba($text, $disabled-text-alpha)};
   }
 }
 

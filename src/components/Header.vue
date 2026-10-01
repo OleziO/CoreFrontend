@@ -27,8 +27,19 @@
         />
       </RouterLink>
 
+      <!-- VIP (mobile) — ліворуч, симетрично дзвіночку праворуч; на lg+ — у правому блоці -->
+      <VipHeaderButton class="app-header__vip-mobile lg:!hidden" />
+
       <!-- PRIMARY NAV — desktop only (visibility is set in scoped CSS, see .app-header__nav) -->
-      <nav class="app-header__nav" aria-label="Основна навігація">
+      <nav ref="navRef" class="app-header__nav" aria-label="Основна навігація">
+        <!-- Одна підсвічена плашка, що переїжджає під активний розділ -->
+        <span
+          class="app-header__nav-indicator"
+          :class="{ 'is-visible': indicator.visible, 'is-animated': indicatorAnimated }"
+          :style="{ width: `${indicator.w}px`, transform: `translateX(${indicator.x}px)` }"
+          aria-hidden="true"
+        />
+
         <RouterLink
           v-for="item in navItems"
           :key="item.name"
@@ -39,13 +50,23 @@
           active-class=""
           exact-active-class=""
         >
-          {{ item.label }}
+          <component
+            :is="item.icon"
+            :size="15"
+            :weight="isNavActive(item.name) ? 'fill' : 'bold'"
+            class="app-header__nav-icon"
+          />
+          <span>{{ item.label }}</span>
         </RouterLink>
       </nav>
 
       <!-- RIGHT SIDE. Дзвіночок видно на всіх екранах (на мобільному — абсолютно
            праворуч у смузі); пігулка користувача та кнопка входу — лише на lg+. -->
       <div class="app-header__actions flex items-center gap-10 lg:justify-self-end">
+        <!-- VIP — видно всім, і гостям теж: модалка сама запропонує увійти.
+             Нижче lg кнопка живе біля лівого краю смуги (див. app-header__vip-mobile). -->
+        <VipHeaderButton class="!hidden lg:!inline-flex" />
+
         <!-- NOTIFICATIONS -->
         <NotificationCenter v-if="authStore.token" />
 
@@ -220,15 +241,22 @@
 import { routeNames } from '@/router/route-names'
 import logo from '@/assets/images/core-league-logo-full.png'
 import {
-  PhDiscordLogo, PhSignOut, PhUser, PhUserPlus, PhTrophy, PhCaretDown, PhGauge, PhChartLineUp
+  PhDiscordLogo, PhSignOut, PhUser, PhUserPlus, PhTrophy, PhCaretDown, PhGauge, PhChartLineUp,
+  PhHouse, PhUsersThree, PhUsers, PhRanking, PhSword
 } from '@phosphor-icons/vue'
+import type { Component } from 'vue'
 import CreateTournamentDrawer from '@/views/admin-panel/components/drawers/CreateTournamentDrawer.vue'
 import NotificationCenter from '@/components/NotificationCenter.vue'
+import VipHeaderButton from '@/components/VipHeaderButton.vue'
+import { useVipPaymentReturn } from '@/composables/use-vip-payment-return'
 import { hasAdminRole } from '@/core/helpers'
 import { roleLabelMap } from '@/components/player-tags/player.enums'
 
 const authStore = useAuthStore()
 const showCreateTournamentDrawer = ref(false)
+
+/** Повернення з оплати VIP (`?vip=return`) + статус для кнопки VIP. */
+useVipPaymentReturn()
 const menuOpen = ref(false)
 
 /** Єдиний предикат адмінського доступу — спільний із гардом роуту /finance. */
@@ -273,13 +301,13 @@ const router = useRouter()
 // ─── Primary nav (lg+) ──────────────────────────────────────────────────────
 // Ті самі шість розділів, що й на мобільному (таббар + меню). «Друзі» — в
 // меню користувача, бо доступні лише авторизованим.
-const navItems: Array<{ name: string; label: string }> = [
-  { name: routeNames.rootPage, label: 'Головна' },
-  { name: routeNames.tournaments, label: 'Турніри' },
-  { name: routeNames.teams, label: 'Команди' },
-  { name: routeNames.players, label: 'Гравці' },
-  { name: routeNames.leaderboard, label: 'Лідери' },
-  { name: routeNames.duels, label: 'Дуелі' }
+const navItems: Array<{ name: string; label: string; icon: Component }> = [
+  { name: routeNames.rootPage, label: 'Головна', icon: PhHouse },
+  { name: routeNames.tournaments, label: 'Турніри', icon: PhTrophy },
+  { name: routeNames.teams, label: 'Команди', icon: PhUsersThree },
+  { name: routeNames.players, label: 'Гравці', icon: PhUsers },
+  { name: routeNames.leaderboard, label: 'Лідери', icon: PhRanking },
+  { name: routeNames.duels, label: 'Дуелі', icon: PhSword }
 ]
 
 /** Сторінка деталей підсвічує свій розділ; «Друзі» живуть під «Гравцями». */
@@ -292,6 +320,35 @@ const navDetailOf: Record<string, string[]> = {
 function isNavActive (name: string): boolean {
   return route.name === name || (navDetailOf[name] ?? []).includes(String(route.name))
 }
+
+// ─── Sliding active plate ───────────────────────────────────────────────────
+// Міряємо активне посилання після кожної зміни роуту та при зміні розміру
+// навігації (підвантаження шрифтів, перехід через lg/xl). Перше позиціювання —
+// без анімації, щоб плашка не «виїжджала» з лівого краю при завантаженні.
+const navRef = ref<HTMLElement | null>(null)
+const indicator = reactive({ x: 0, w: 0, visible: false })
+const indicatorAnimated = ref(false)
+
+function measureIndicator () {
+  const active = navRef.value?.querySelector<HTMLElement>('.app-header__nav-link.is-active')
+  if (!active || !active.offsetWidth) {
+    indicator.visible = false
+    return
+  }
+  indicator.x = active.offsetLeft
+  indicator.w = active.offsetWidth
+  indicator.visible = true
+}
+
+watch(() => route.name, () => nextTick(measureIndicator))
+useResizeObserver(navRef, measureIndicator)
+
+onMounted(() => {
+  measureIndicator()
+  requestAnimationFrame(() => {
+    indicatorAnimated.value = true
+  })
+})
 </script>
 
 <style scoped>
@@ -324,6 +381,13 @@ function isNavActive (name: string): boolean {
   }
 }
 
+/* ─── VIP (mobile) — біля лівого краю смуги, по центру висоти ────────────── */
+.app-header__vip-mobile {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+}
+
 /* ─── Logo — the header's one lit element ────────────────────────────────── */
 .app-header__logo {
   filter: drop-shadow(0 0 12px rgba(var(--ds-primary-rgb), 0.35));
@@ -338,32 +402,72 @@ function isNavActive (name: string): boolean {
 
 /* ─── Primary nav ────────────────────────────────────────────────────────── */
 /* Видимість керується тут, а не утилітою `hidden lg:flex`: scoped-селектор
-   специфічніший за утиліту й переміг би її. Нижче lg навігації в хедері немає. */
+   специфічніший за утиліту й переміг би її. Нижче lg навігації в хедері немає.
+   Underline indicator: see .app-header__nav-indicator below. */
 .app-header__nav {
   display: none;
 }
 
 @screen lg {
   .app-header__nav {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 2px;
   }
 }
 
-/* Mono uppercase, the header's HUD voice. The active link is lit in the
-   brand colour with a short neon underline; hover only tints the surface. */
+/* No track, no plate: links sit on the header glass. A single neon underline
+   slides between sections, with a soft cyan bloom rising from it — the same
+   hairline language as the header's bottom edge. */
+.app-header__nav-indicator {
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  z-index: 0;
+  height: 26px;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse 60% 100% at 50% 100%, rgba(var(--ds-primary-rgb), 0.16), transparent 75%);
+}
+
+.app-header__nav-indicator::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 9999px;
+  background: var(--ds-primary);
+  box-shadow: 0 0 10px rgba(var(--ds-primary-rgb), 0.85);
+}
+
+.app-header__nav-indicator.is-visible {
+  opacity: 1;
+}
+
+.app-header__nav-indicator.is-animated {
+  transition:
+    transform 320ms var(--ds-ease-out),
+    width 320ms var(--ds-ease-out),
+    opacity var(--ds-duration-base) ease;
+}
+
+/* Mono uppercase, the header's HUD voice. */
 .app-header__nav-link {
   position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
+  gap: 7px;
   height: 36px;
-  padding: 0 14px;
-  border-radius: var(--ds-control-radius);
+  padding: 0 12px;
+  border-radius: 8px;
   font-family: var(--ds-font-mono);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   line-height: 1;
   text-transform: uppercase;
   text-decoration: none;
@@ -375,19 +479,12 @@ function isNavActive (name: string): boolean {
     transform var(--ds-duration-press) var(--ds-ease-out);
 }
 
-.app-header__nav-link::after {
-  content: '';
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 5px;
-  height: 1px;
-  border-radius: 9999px;
-  background: var(--ds-primary);
-  box-shadow: 0 0 8px rgba(var(--ds-primary-rgb), 0.8);
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform var(--ds-duration-base) var(--ds-ease-out);
+/* Icons only where the bar has room (xl+); at lg six labels must fit. */
+.app-header__nav-icon {
+  display: none;
+  flex-shrink: 0;
+  color: var(--ds-text-faint);
+  transition: color var(--ds-duration-fast) ease;
 }
 
 .app-header__nav-link:active {
@@ -396,27 +493,30 @@ function isNavActive (name: string): boolean {
 
 .app-header__nav-link:focus-visible {
   outline: 2px solid rgba(var(--ds-primary-rgb), 0.55);
-  outline-offset: 2px;
+  outline-offset: 1px;
 }
 
 .app-header__nav-link.is-active {
-  color: var(--ds-primary);
+  color: var(--ds-text-strong);
   text-shadow: var(--ds-neon-text-subtle);
 }
 
-.app-header__nav-link.is-active::after {
-  transform: scaleX(1);
+.app-header__nav-link.is-active .app-header__nav-icon {
+  color: var(--ds-primary);
+  filter: drop-shadow(0 0 6px rgba(var(--ds-primary-rgb), 0.6));
 }
 
-/* Between lg and xl the pill's name column is narrower so six links, the
-   bell and the pill never fight for the bar. */
 @screen xl {
   .app-header__nav {
-    gap: 6px;
+    gap: 4px;
   }
 
   .app-header__nav-link {
-    padding: 0 16px;
+    padding: 0 14px;
+  }
+
+  .app-header__nav-icon {
+    display: block;
   }
 }
 
@@ -611,7 +711,10 @@ function isNavActive (name: string): boolean {
 
   .app-header__nav-link:hover:not(.is-active) {
     color: rgba(255, 255, 255, 0.92);
-    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .app-header__nav-link:hover:not(.is-active) .app-header__nav-icon {
+    color: rgba(var(--ds-primary-rgb), 0.75);
   }
 }
 

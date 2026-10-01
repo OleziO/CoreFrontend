@@ -190,6 +190,16 @@
   @include role-frame(var(--ds-secondary-rgb), var(--ds-glow-secondary));
 }
 
+// VIP: the colour the player picked from the VIP palette. `--vip-frame-rgb` is
+// set inline (getPlayerVipFrameStyle) on the card or on the page root, so every
+// frame below it inherits the same tint.
+.role-frame--vip {
+  @include role-frame(
+    var(--vip-frame-rgb),
+    (0 0 10px rgba(var(--vip-frame-rgb), 0.45), 0 0 26px rgba(var(--vip-frame-rgb), 0.22))
+  );
+}
+
 // ─── Chamfered shapes ───────────────────────────────────────────────────────
 // Reference-site cuts. `clip-path` removes the border radius visually, so use
 // these on flat fills (CTAs, banners, hero frames), not on bordered cards.

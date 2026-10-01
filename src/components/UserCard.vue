@@ -3,7 +3,7 @@
     class="user-card neon-card hud-corners group relative z-10 flex w-full !cursor-pointer flex-col gap-16
            overflow-hidden rounded-2xl px-18 py-20"
     :class="accentClass"
-    :style="{ maxWidth: `${width}px` }"
+    :style="[{ maxWidth: `${width}px` }, vipFrameStyle]"
     @click="goToPlayerPage(user.id)"
   >
     <!-- Амбієнтне світло за аватаром: картка «дихає» кольором бренду -->
@@ -59,7 +59,18 @@
       </div>
 
       <div class="flex min-w-0 flex-1 flex-col gap-3 pr-20">
-        <span class="sys-label sys-label--muted !text-[9px]">Гравець</span>
+        <span class="flex items-center gap-6">
+          <span class="sys-label sys-label--muted !text-[9px]">Гравець</span>
+          <el-tooltip
+            v-if="isVip"
+            content="VIP-гравець Core League"
+            placement="top"
+            effect="dark"
+            :show-after="180"
+          >
+            <VipBadge size="xs" static />
+          </el-tooltip>
+        </span>
         <el-tooltip
           :disabled="!user.discordName"
           :content="user.discordName || 'Імʼя відсутнє'"
@@ -145,9 +156,12 @@ import {
   getCopy,
   getPlayerRankImageSrcFromPlayerRank,
   getPlayerRoleAccentClass,
-  isPlayerVerified
+  getPlayerVipFrameStyle,
+  isPlayerVerified,
+  isPlayerVip
 } from '@/core/helpers'
 import { PhCopy, PhUser } from '@phosphor-icons/vue'
+import VipBadge from '@/components/VipBadge.vue'
 import { getCountryFlagUrl, useLocations } from '@/composables/use-locations'
 
 const props = withDefaults(defineProps<{
@@ -161,8 +175,12 @@ const router = useRouter()
 
 const isVerified = computed(() => isPlayerVerified(props.user))
 
-/** Рольовий акцент рамки (`.role-frame--*`): адмін — золото, медіа — фіолет. */
+const isVip = computed(() => isPlayerVip(props.user))
+
+/** Рольовий акцент рамки (`.role-frame--*`): адмін — золото, медіа — фіолет, VIP — обраний колір. */
 const accentClass = computed(() => getPlayerRoleAccentClass(props.user))
+/** `--vip-frame-rgb` для `.role-frame--vip`. */
+const vipFrameStyle = computed(() => getPlayerVipFrameStyle(props.user))
 
 const rankImageSrc = computed(() => getPlayerRankImageSrcFromPlayerRank(props.user.rank))
 
@@ -201,7 +219,8 @@ function goToPlayerPage (id: string) {
 // Role frame (`.role-frame--*` in _neon.scss) tints border and corners; the
 // aura follows so the whole card reads in the role colour.
 .role-frame--gold .user-card__aura,
-.role-frame--violet .user-card__aura {
+.role-frame--violet .user-card__aura,
+.role-frame--vip .user-card__aura {
   background: radial-gradient(closest-side, rgba(var(--role-frame-rgb), 0.2), transparent 100%);
 }
 

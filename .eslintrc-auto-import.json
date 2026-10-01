@@ -377,6 +377,9 @@
     "notificationsService": true,
     "notificationsSocketService": true,
     "useFriendsStore": true,
-    "useNotificationsStore": true
+    "useNotificationsStore": true,
+    "useVipStore": true,
+    "vipService": true,
+    "useVipPaymentReturn": true
   }
 }

@@ -12,7 +12,10 @@
           Виклик другу поза чергою
           <span class="challenges__meta">
             · ±{{ challenges.ratingDelta }}
-            · <span :title="`Прийнятих дружніх дуелей сьогодні: ${challenges.acceptedToday}`">
+            · <span v-if="challenges.unlimited" class="challenges__vip" title="VIP: дружні дуелі без ліміту">
+              VIP · безліміт
+            </span>
+            <span v-else :title="`Прийнятих дружніх дуелей сьогодні: ${challenges.acceptedToday}`">
               {{ challenges.acceptedToday }}/{{ challenges.dailyLimit }} сьогодні
             </span>
           </span>
@@ -137,7 +140,9 @@ const emit = defineEmits<{
 
 const now = useNow({ interval: 1000 })
 
-const limitReached = computed(() => props.challenges.acceptedToday >= props.challenges.dailyLimit)
+const limitReached = computed(() =>
+  !props.challenges.unlimited && props.challenges.acceptedToday >= props.challenges.dailyLimit
+)
 const canChallenge = computed(() => !props.activeDuel && !limitReached.value && !props.botsOffline)
 
 /** Чому кнопка вимкнена — коротко, під заголовком, а не на самій кнопці. */
@@ -191,6 +196,12 @@ const blockedReason = computed(() => {
 .challenges__blocked {
   font-size: 12px;
   color: var(--ds-text-faint);
+}
+
+.challenges__vip {
+  font-weight: 700;
+  color: rgb(255, 214, 102);
+  text-shadow: 0 0 8px rgba(255, 206, 84, 0.45);
 }
 
 .challenges__cta {

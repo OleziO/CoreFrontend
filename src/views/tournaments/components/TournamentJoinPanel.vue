@@ -76,12 +76,26 @@
         <div class="join-ticket__body">
           <span class="join-stats__label join-stats__label--primary">Вступний внесок</span>
           <span class="join-ticket__value">
+            <s v-if="isVip" class="join-ticket__old">{{ fullFeePerPlayerLabel }}</s>
             {{ feePerPlayerLabel }}
             <span class="join-ticket__unit">з гравця</span>
+            <span v-if="isVip" class="join-ticket__vip">VIP −{{ VIP_TOURNAMENT_DISCOUNT_PERCENT }}%</span>
           </span>
-          <span class="join-ticket__note">
+          <span v-if="isVip" class="join-ticket__note">
+            ({{ feePerTeamLabel }} з команди — VIP-ціна діє, коли внесок оплачує капітан із VIP)
+          </span>
+          <span v-else class="join-ticket__note">
             ({{ feePerTeamLabel }} з команди. Капітан оплачує повну суму за команду)
           </span>
+          <button
+            v-if="!isVip"
+            type="button"
+            class="join-ticket__upsell"
+            @click="open('VipModal')"
+          >
+            <PhCrown :size="12" weight="fill" />
+            З VIP — на {{ VIP_TOURNAMENT_DISCOUNT_PERCENT }}% дешевше
+          </button>
         </div>
       </div>
     </div>
@@ -95,7 +109,8 @@
              px-10 py-10 text-center"
           >
             <p class="text-sm font-semibold text-emerald-300">
-              Необхідно сплатити вступний внесок — {{ formatEntryFeeUah(entryFee) }}
+              Необхідно сплатити вступний внесок — {{ formatEntryFeeUah(dueFee) }}
+              <span v-if="isVip" class="join-ticket__vip">VIP −{{ VIP_TOURNAMENT_DISCOUNT_PERCENT }}%</span>
             </p>
 
             <template v-if="paymentPolling">
@@ -127,7 +142,7 @@
 
             <template v-else>
               <p v-if="myTeamPaymentStatus === 'UNDERPAID'" class="text-xs font-semibold text-amber-300">
-                Сплачено {{ formatEntryFeeUah(myTeamAmountPaid) }} з {{ formatEntryFeeUah(entryFee) }}
+                Сплачено {{ formatEntryFeeUah(myTeamAmountPaid) }} з {{ formatEntryFeeUah(dueFee) }}
               </p>
 
               <p class="text-xs leading-snug text-gray-400">
@@ -217,8 +232,9 @@
 
 <script setup lang="ts">
 import { Loading } from '@element-plus/icons-vue'
-import { PhSteamLogo, PhTrophy, PhCalendarBlank, PhUsersThree, PhTicket, PhInfo } from '@phosphor-icons/vue'
-import { formatDate } from '@/core/helpers'
+import { PhSteamLogo, PhTrophy, PhCalendarBlank, PhUsersThree, PhTicket, PhInfo, PhCrown } from '@phosphor-icons/vue'
+import { formatDate, isPlayerVip } from '@/core/helpers'
+import { getVipEntryFee, VIP_TOURNAMENT_DISCOUNT_PERCENT } from '@/core/vip.constants'
 import { formatEntryFeeUah } from '@/core/utils/formatters'
 import { TEAM_SIZE } from '@/views/tournaments/tournaments.enums'
 
@@ -278,10 +294,17 @@ const teamsCount = computed(() => props.tournament?.teams?.length ?? 0)
 const isFull = computed(() => slots.value > 0 && teamsCount.value >= slots.value)
 const fillRatio = computed(() => (slots.value ? Math.min(1, teamsCount.value / slots.value) : 0))
 
+const authStore = useAuthStore()
+const { open } = useAppModals()
+
 const hasEntryFee = computed(() => !!props.entryFee && props.entryFee > 0)
+/** VIP-перк: −10% на внесок (оплачує капітан, тож знижка — за його VIP; бек рахує так само). */
+const isVip = computed(() => isPlayerVip(authStore.user))
+const dueFee = computed(() => getVipEntryFee(props.entryFee ?? 0, isVip.value))
 // `entryFee` — квиток команди в копійках; з гравця — п'ята частина (див. TEAM_SIZE).
-const feePerPlayerLabel = computed(() => formatEntryFeeUah((props.entryFee ?? 0) / TEAM_SIZE))
-const feePerTeamLabel = computed(() => formatEntryFeeUah(props.entryFee))
+const feePerPlayerLabel = computed(() => formatEntryFeeUah(dueFee.value / TEAM_SIZE))
+const fullFeePerPlayerLabel = computed(() => formatEntryFeeUah((props.entryFee ?? 0) / TEAM_SIZE))
+const feePerTeamLabel = computed(() => formatEntryFeeUah(dueFee.value))
 
 const paymentStatusHint = computed(() => {
   if (props.myTeamPaymentStatus === 'UNDERPAID') {
@@ -560,6 +583,42 @@ const emit = defineEmits<{
   font-size: 12px;
   line-height: 1.45;
   color: var(--ds-text-faint);
+}
+
+// VIP price: the full fee struck through, a gold «VIP −10%» chip; non-VIPs get a quiet upsell.
+.join-ticket__old {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ds-text-faint);
+  text-decoration-thickness: 1px;
+}
+
+.join-ticket__vip {
+  @apply inline-flex items-center rounded-full px-8 py-2 align-middle;
+  border: 1px solid rgba(255, 206, 84, 0.55);
+  background: linear-gradient(110deg, rgba(255, 206, 84, 0.18), rgba(255, 94, 170, 0.14));
+  font-family: var(--ds-font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgb(255, 222, 140);
+}
+
+.join-ticket__upsell {
+  @apply mt-4 inline-flex w-fit cursor-pointer items-center gap-5 border-0 bg-transparent p-0 text-left;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(255, 214, 102);
+  transition: color var(--ds-duration-fast) ease;
+
+  &:hover {
+    color: rgb(255, 230, 170);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 206, 84, 0.7);
+    outline-offset: 2px;
+  }
 }
 
 // ─── Заповненість слотів ────────────────────────────────────────────────────

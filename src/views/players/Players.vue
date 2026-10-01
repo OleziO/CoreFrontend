@@ -147,7 +147,7 @@ const filteredPlayers = computed(() => {
     ? mappedPlayers.filter(player => searchPlayer(player))
     : mappedPlayers
 
-  /** Адміни → Медіа → Верифіковані → Неверифіковані (players-sort.utils). */
+  /** Адміни → Медіа → VIP → Верифіковані → Неверифіковані (players-sort.utils). */
   return sortPlayersByRolePriority(visiblePlayers)
 })
 

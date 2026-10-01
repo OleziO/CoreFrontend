@@ -1,16 +1,17 @@
 import { ERole } from '@/types/general.enums'
-import { hasAdminRole, hasPlayerRole, isPlayerVerified } from '@/core/helpers'
+import { hasAdminRole, hasPlayerRole, isPlayerVerified, isPlayerVip } from '@/core/helpers'
 
 /**
  * Пріоритет групи для сортування реєстру гравців:
- * Адміни → Медіа (стрімери) → Верифіковані → Неверифіковані.
+ * Адміни → Медіа (стрімери) → VIP → Верифіковані → Неверифіковані.
  * Менше значення — вище у списку.
  */
 export function getPlayerSortPriority (player: TPlayer): number {
   if (hasAdminRole(player.roles)) return 0
   if (hasPlayerRole(player.roles, ERole.MEDIA)) return 1
-  if (isPlayerVerified(player)) return 2
-  return 3
+  if (isPlayerVip(player)) return 2
+  if (isPlayerVerified(player)) return 3
+  return 4
 }
 
 /** Стабільне сортування за групою; всередині групи зберігається порядок з бекенду. */

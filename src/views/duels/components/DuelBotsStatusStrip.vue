@@ -10,12 +10,12 @@
 
     <!-- Мінімальний пігулка для шапки: лише «боти 2/3» або «боти офлайн», деталі — у tooltip -->
     <template v-if="minimal">
-      <PhRobot :size="13" weight="bold" class="shrink-0 text-white/60" />
+      <PhRobot :size="15" weight="bold" class="shrink-0 text-white/60" />
       <span v-if="bots" class="bots-strip__state">
         {{ isOffline ? 'боти офлайн' : `боти ${bots.online}/${bots.total}` }}
       </span>
       <span v-else-if="isError" class="bots-strip__state">боти: н/д</span>
-      <span v-else class="skeleton-bone inline-block h-[12px] w-[64px] !rounded-md" />
+      <span v-else class="skeleton-bone inline-block h-[13px] w-[72px] !rounded-md" />
     </template>
 
     <template v-else>
@@ -94,9 +94,10 @@ const ariaLabel = computed(() => {
 
 .bots-strip.is-minimal {
   flex-wrap: nowrap;
-  gap: 7px;
-  height: var(--ds-control-height-sm);
-  padding: 0 12px;
+  gap: 8px;
+  /* Та сама висота, що й el-button поруч у шапці дуелей */
+  height: var(--ds-control-height);
+  padding: 0 16px;
   border-radius: 9999px;
   white-space: nowrap;
 }
@@ -115,8 +116,8 @@ const ariaLabel = computed(() => {
 }
 
 .is-minimal .bots-strip__dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
 }
 
 .bots-strip__title {
@@ -140,7 +141,7 @@ const ariaLabel = computed(() => {
 
 .is-minimal .bots-strip__state {
   font-family: var(--ds-font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   font-variant-numeric: tabular-nums;
 }

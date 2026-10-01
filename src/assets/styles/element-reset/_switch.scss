@@ -1,0 +1,138 @@
+// Switch — HUD toggle. Off: a recessed dark track with a muted thumb. On: the
+// track lights up in the brand cyan with a soft glow and the thumb turns white,
+// so state reads at a glance (not only by thumb position). Inline-prompt text
+// («ON» / «OFF») is set in the mono register like other HUD labels.
+// Components can still recolour it through `--el-switch-on-color` (e.g. the
+// tournament drawer's option tint).
+.el-switch {
+  --el-switch-on-color: var(--ds-primary);
+  --el-switch-off-color: rgba(255, 255, 255, 0.06);
+  --el-switch-border-color: transparent;
+  --app-switch-off-border: rgba(255, 255, 255, 0.14);
+
+  height: 26px;
+  line-height: 26px;
+
+  .el-switch__core {
+    min-width: 46px;
+    height: 24px;
+    border-radius: 999px;
+    border: 1px solid var(--app-switch-off-border);
+    background: var(--el-switch-off-color);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+    transition:
+      background-color var(--ds-duration-base) ease,
+      border-color var(--ds-duration-base) ease,
+      box-shadow var(--ds-duration-base) ease;
+  }
+
+  // Thumb
+  .el-switch__core .el-switch__action {
+    width: 18px;
+    height: 18px;
+    left: 2px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.55);
+    color: var(--ds-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    transition:
+      left var(--ds-duration-base) var(--ds-ease-out),
+      background-color var(--ds-duration-base) ease,
+      transform var(--ds-duration-press) var(--ds-ease-out);
+  }
+
+  // Inline prompt («ON» / «OFF»)
+  .el-switch__core .el-switch__inner {
+    padding: 0 6px 0 22px;
+
+    .is-text {
+      font-family: var(--ds-font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  &.is-checked .el-switch__core {
+    border-color: rgba(var(--ds-primary-rgb), 0.9);
+    background: var(--el-switch-on-color);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      0 0 12px rgba(var(--ds-primary-rgb), 0.45);
+
+    .el-switch__action {
+      left: calc(100% - 20px);
+      background: #fff;
+    }
+
+    .el-switch__inner {
+      padding: 0 22px 0 6px;
+
+      .is-text {
+        color: rgba(4, 18, 24, 0.85);
+      }
+    }
+  }
+
+  // Press feedback: the thumb squashes a little.
+  &:not(.is-disabled):active .el-switch__action {
+    transform: scaleX(1.15);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:not(.is-disabled):not(.is-checked):hover .el-switch__core {
+      border-color: rgba(var(--ds-primary-rgb), 0.45);
+    }
+  }
+
+  // Keyboard focus — the input is visually hidden, so ring the track.
+  .el-switch__input:focus-visible ~ .el-switch__core {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.6);
+    outline-offset: 2px;
+  }
+
+  &.is-disabled {
+    opacity: 0.45;
+
+    .el-switch__core,
+    .el-switch__label {
+      cursor: not-allowed;
+    }
+  }
+
+  // Side labels (non-inline `active-text` / `inactive-text`).
+  .el-switch__label {
+    color: var(--ds-text-muted);
+    font-size: 13px;
+
+    &.is-active {
+      color: var(--ds-text-strong);
+    }
+  }
+
+  // Loading spinner sits in the thumb.
+  .el-switch__action .is-loading {
+    color: var(--ds-primary);
+  }
+
+  &--small {
+    height: 20px;
+    line-height: 20px;
+
+    .el-switch__core {
+      min-width: 36px;
+      height: 18px;
+    }
+
+    .el-switch__core .el-switch__action {
+      width: 12px;
+      height: 12px;
+    }
+
+    &.is-checked .el-switch__core .el-switch__action {
+      left: calc(100% - 14px);
+    }
+  }
+}

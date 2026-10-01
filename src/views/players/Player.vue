@@ -2,6 +2,7 @@
   <div
     v-loading.fullscreen="loading"
     class="w-full relative overflow-y-auto px-20 lg:px-40"
+    :style="vipFrameStyle"
   >
     <div
       class="mx-auto flex flex-col 2md:justify-center items-center py-20 relative"
@@ -26,6 +27,7 @@
             :linking-steam="linkingSteam"
             :is-profile-page="isProfilePage"
             :links="links"
+            :can-view-links="canViewLinks"
             :can-request-mmr="canRequestMmr"
             :pending-mmr-request="pendingMmrRequest"
             :show-friend-actions="showFriendActions"
@@ -33,6 +35,7 @@
             :friend-busy="friendBusy"
             :challenging="challenging"
             @toggle-verification="togglePlayerVerification"
+            @open-vip="open('VipModal')"
             @edit-profile="openEditProfileModal"
             @link-steam="handleSteamLink"
             @request-mmr="openRequestMmrModal"
@@ -336,6 +339,8 @@ import {
   formatPlayerRatingMmr,
   getPlayerDotaPositions,
   getPlayerRoleAccentClass,
+  getPlayerVipFrameStyle,
+  canViewPlayerProfileLinks,
   isPlayerVerified
 } from '@/core/helpers'
 import { positionOptions } from '@/components/player-tags/player.enums'
@@ -378,7 +383,11 @@ const loading = ref(false)
 const linkingSteam = ref(false)
 const verifyLoading = ref(false)
 
+/** Steam / Dotabuff / Discord — перк VIP (а також медіа, адмінів і власного профілю). */
+const canViewLinks = computed(() => canViewPlayerProfileLinks(me.user, player.value?.id))
+
 const links = computed(() => {
+  if (!canViewLinks.value) return { discord: undefined, steam: undefined, dotabuff: undefined }
   return {
     discord: getDiscordProfileUrl(player.value?.discordId),
     steam: getSteamProfileUrl(player.value?.steamId),
@@ -393,6 +402,8 @@ const isVerified = computed(() => isPlayerVerified(player.value))
 
 /** Рольовий акцент рамок профілю (`.role-frame--*`): адмін — золото, медіа — фіолет. */
 const roleAccentClass = computed(() => getPlayerRoleAccentClass(player.value))
+/** `--vip-frame-rgb` на корені сторінки: усі рамки з `.role-frame--vip` успадковують колір. */
+const vipFrameStyle = computed(() => getPlayerVipFrameStyle(player.value))
 
 /** Матчі у турнірах платформи — окремий запит, бо не входять у `TPlayer`. */
 const {

@@ -44,6 +44,7 @@
 @use './table';
 @use './tabs';
 @use './button';
+@use './switch' as app-switch;
 @use './tag' as app-tag;
 @use './input';
 @use './dialog';

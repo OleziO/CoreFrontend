@@ -27,7 +27,6 @@
         </el-checkbox>
         <el-button
           type="danger"
-          size="small"
           plain
           :disabled="!selectedIds.size || !!deletingIds.size"
           :loading="bulkDeleting"
