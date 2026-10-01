@@ -31,7 +31,7 @@ export const hasTeamBadgeLabelMap: Record<EUserIsTeam, string> = {
 
 export const roleLabelMap: Record<ERole, string> = {
   [ERole.ADMIN]: 'Адмін',
-  [ERole.DEV]: 'ІТ',
+  [ERole.DEV]: 'IT',
   [ERole.MODERATOR]: 'Модер',
   [ERole.MEDIA]: 'Медіа',
   [ERole.CAP]: 'Капітан',
@@ -43,7 +43,7 @@ export const roleLabelMap: Record<ERole, string> = {
 
 export const roleShortLabelMap: Record<ERole, string> = {
   [ERole.ADMIN]: 'Адмін',
-  [ERole.DEV]: 'ІТ',
+  [ERole.DEV]: 'IT',
   [ERole.MODERATOR]: 'Мод.',
   [ERole.MEDIA]: 'Медіа',
   [ERole.CAP]: 'Кеп',

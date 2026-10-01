@@ -183,7 +183,7 @@ const isVerified = computed(() => isPlayerVerified(props.user))
 
 const isVip = computed(() => isPlayerVip(props.user))
 
-/** Підпис над іменем: службова роль (медіа → адмін → ІТ), інакше «Гравець». */
+/** Підпис над іменем: службова роль (медіа → адмін → IT), інакше «Гравець». */
 const cardRoleLabel = computed(() => {
   const roles = props.user.roles
   if (hasPlayerRole(roles, ERole.MEDIA)) return 'Стрімер'

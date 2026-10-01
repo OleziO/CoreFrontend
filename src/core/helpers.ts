@@ -249,7 +249,7 @@ export function hasAdminRole (roles: readonly { isAdminRole?: boolean }[] | unde
 }
 
 /**
- * Адмін для відображення (золота рамка, перша група в реєстрі). «ІТ» має ті самі права
+ * Адмін для відображення (золота рамка, перша група в реєстрі). «IT» має ті самі права
  * (`isAdminRole`), але візуально не виділяється — тож тут його не враховуємо.
  * Для перевірки доступу використовуй `hasAdminRole`.
  */
@@ -287,7 +287,7 @@ export function playerMatchesRoleFilterToken (
 
 /**
  * Гравець верифікований, якщо є `verifiedAt` або роль «Гравець».
- * Ролі «Медіа» (стрімери), «Адмін» та «ІТ» також вважаються верифікованими — інші ролі їм не потрібні.
+ * Ролі «Медіа» (стрімери), «Адмін» та «IT» також вважаються верифікованими — інші ролі їм не потрібні.
  */
 export function isPlayerVerified (
   player: { roles?: readonly { name: string }[] | null; verifiedAt?: string | null } | null | undefined

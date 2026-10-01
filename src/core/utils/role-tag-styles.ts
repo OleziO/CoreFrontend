@@ -29,7 +29,7 @@ type TRgb = { r: number; g: number; b: number }
  */
 export const ROLE_COLORS: Record<ERole, string> = {
   [ERole.ADMIN]: '#e8b931', // gold
-  [ERole.DEV]: '#a3abb9', // slate-400 — ІТ без власного акценту, як DEFAULT
+  [ERole.DEV]: '#a3abb9', // slate-400 — IT без власного акценту, як DEFAULT
   [ERole.MODERATOR]: '#a855f7', // violet
   [ERole.MEDIA]: '#ff2fd2', // hot pink
   [ERole.CAP]: '#22c55e', // green

@@ -2583,14 +2583,14 @@ export interface components {
         };
         CreateUserRoleDto: {
             /** @enum {string} */
-            name: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін" | "ІТ";
+            name: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін" | "IT";
             isAdminRole: boolean;
         };
         UserRoleResponseDto: {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            name: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін" | "ІТ";
+            name: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін" | "IT";
             isAdminRole: boolean;
             /**
              * @description CSS hex #RRGGBB (для parseHexColor на клієнті)
@@ -2600,7 +2600,7 @@ export interface components {
         };
         UpdateUserRoleDto: {
             /** @enum {string} */
-            name?: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін" | "ІТ";
+            name?: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін" | "IT";
             isAdminRole?: boolean;
         };
         /**
@@ -3019,7 +3019,7 @@ export interface components {
         };
         AdminPlayerRoleItemDto: {
             /** @enum {string} */
-            name: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін" | "ІТ";
+            name: "Гість" | "Гравець" | "Капітан" | "Медіа" | "Адмін" | "IT";
             /** @description Для ролі «Адмін» очікується true; для «Гість/Гравець/Капітан» — false. */
             isAdminRole: boolean;
         };
