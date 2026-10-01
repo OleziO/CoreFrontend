@@ -15,7 +15,7 @@ function apiErrorMessage (err: unknown, fallback: string): string {
 
 /**
  * VIP-статус: оплата через Monobank (перший платіж зберігає картку, далі бек
- * списує 250 ₴ щомісяця сам), рамка профілю та ручна видача адміном.
+ * списує 200 ₴ щомісяця сам), рамка профілю та ручна видача адміном.
  */
 class VipService {
   async fetchStatus (): Promise<TVipStatus | null> {

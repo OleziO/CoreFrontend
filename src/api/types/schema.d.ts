@@ -1899,7 +1899,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create the first VIP invoice (250 ₴) with card tokenization */
+        /** Create the first VIP invoice (200 ₴) with card tokenization */
         post: operations["VipController_checkout"];
         delete?: never;
         options?: never;

@@ -8,7 +8,7 @@ export function getVipEntryFee (entryFee: number, isVip: boolean): number {
 }
 
 /** Ціна VIP за місяць, ₴ (бек — `VIP_MONTHLY_PRICE_KOPECKS`). Показується до відповіді `/vip/me`. */
-export const VIP_PRICE_UAH = 250
+export const VIP_PRICE_UAH = 200
 
 /**
  * Палітра рамки VIP — дзеркало `VIP_FRAME_COLORS` на беку (бек відхилить інший колір).
