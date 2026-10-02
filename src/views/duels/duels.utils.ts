@@ -119,6 +119,8 @@ export const DUEL_TOURNAMENT_NAME_MIN = 3
 export const DUEL_TOURNAMENT_NAME_MAX = 64
 export const DUEL_TOURNAMENT_PASSWORD_MIN = 4
 export const DUEL_TOURNAMENT_PASSWORD_MAX = 32
+/** Посилання на стрім турніру (дзеркало `STREAM_URL_MAX`). */
+export const DUEL_TOURNAMENT_STREAM_URL_MAX = 512
 
 /** Призові місця турніру (дзеркало `DUEL_TOURNAMENT_PRIZES_MAX` / `…_PLACE_MAX` / `…_VIP_MONTHS_MAX`). */
 export const DUEL_TOURNAMENT_PRIZES_MAX = 10
@@ -176,6 +178,16 @@ function isHttpUrl (value: string): boolean {
   } catch {
     return false
   }
+}
+
+/** Помилка посилання на стрім (необов’язкове поле) або порожній рядок. */
+export function duelStreamUrlError (value: string): string {
+  const link = value.trim()
+  if (!link) return ''
+  if (link.length > DUEL_TOURNAMENT_STREAM_URL_MAX || !isHttpUrl(link)) {
+    return 'Посилання має бути повною адресою: https://…'
+  }
+  return ''
 }
 
 /** Помилка рядка призу (дзеркало валідації бекенду) або порожній рядок. */

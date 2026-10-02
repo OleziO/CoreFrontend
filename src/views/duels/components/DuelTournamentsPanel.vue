@@ -79,6 +79,14 @@
                 · <span class="dtour__prizes"><PhGift :size="12" weight="fill" aria-hidden="true" />
                   {{ pluralizePrizePlaces(t.prizes.length) }}</span>
               </template>
+              <template v-if="t.streamUrl">
+                · <a
+                  :href="t.streamUrl"
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  class="dtour__stream no-underline"
+                ><PhBroadcast :size="12" weight="bold" aria-hidden="true" />стрім</a>
+              </template>
               <template v-if="t.joined"> · <span class="text-success">ви учасник</span></template>
             </span>
           </div>
@@ -273,11 +281,29 @@ const tournamentRoute = (id: string) => ({ name: routeNames.duelTournament, para
   color: rgb(196, 167, 255);
 }
 
+/*
+ * Інлайн, а не inline-flex: у inline-flex базовою лінією стає низ SVG, і весь фрагмент «підстрибує»
+ * над рештою тексту рядка. Іконку центруємо на середину малих літер вручну.
+ */
 .dtour__prizes {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
   color: var(--ds-gold);
+  white-space: nowrap;
+}
+
+.dtour__stream {
+  color: rgb(248, 113, 113);
+  white-space: nowrap;
+}
+
+.dtour__stream:hover {
+  text-decoration: underline;
+}
+
+.dtour__prizes > svg,
+.dtour__stream > svg {
+  display: inline-block;
+  margin-right: 1px;
+  vertical-align: -2px;
 }
 
 .dtour__blocked {

@@ -1,6 +1,6 @@
 <template>
   <div class="dboard-scroll">
-    <table class="dboard">
+    <table class="dboard" :class="{ 'dboard--prizes': hasPrizes }">
       <thead>
         <tr>
           <th scope="col" class="dboard__th dboard__th--pos">#</th>
@@ -10,6 +10,7 @@
           <th scope="col" class="dboard__th dboard__th--num dboard__th--winrate dboard__col--wide">Вінрейт</th>
           <th scope="col" class="dboard__th dboard__th--num dboard__th--streak dboard__col--wide">Серія</th>
           <th scope="col" class="dboard__th dboard__th--date dboard__col--full">Остання гра</th>
+          <th v-if="hasPrizes" scope="col" class="dboard__th dboard__th--prize">Приз</th>
           <!-- Вузький контейнер: замість статистики — кнопка «Детальніше», що відкриває модалку -->
           <th scope="col" class="dboard__th dboard__th--more dboard__col--narrow">
             <span class="sr-only">Детальніше</span>
@@ -44,7 +45,6 @@
                 <span v-if="row.player.discordUsername" class="dboard__handle truncate">
                   @{{ row.player.discordUsername }}
                 </span>
-                <DuelPrizeChip v-if="prizeOf(row)" :prize="prizeOf(row)!" class="dboard__prize" />
               </span>
             </div>
           </td>
@@ -66,6 +66,9 @@
           <td class="dboard__td dboard__td--date dboard__col--full">
             {{ row.lastPlayedAt ? dayjs(row.lastPlayedAt).format('DD.MM.YYYY HH:mm') : '—' }}
           </td>
+          <td v-if="hasPrizes" class="dboard__td dboard__td--prize">
+            <DuelPrizeTile v-if="prizeOf(row)" :prize="prizeOf(row)!" />
+          </td>
           <td class="dboard__td dboard__td--more dboard__col--narrow">
             <button
               type="button"
@@ -76,6 +79,32 @@
               <PhCaretRight :size="14" weight="bold" />
             </button>
           </td>
+        </tr>
+
+        <!-- Призові місця, які ще ніхто не посідає (або не розіграні): приз видно ще до старту турніру -->
+        <tr
+          v-for="(prize, index) in unclaimedPrizes"
+          :key="`prize-${prize.place}`"
+          class="dboard__row dboard__row--ghost"
+          :style="{ '--i': Math.min(rows.length + index, 24), '--tile-tone': toneOf(prize.place) }"
+        >
+          <td class="dboard__td dboard__td--pos">
+            <span class="dboard__pos">{{ prize.place }}</span>
+          </td>
+          <td class="dboard__td">
+            <span class="dboard__ghost-label truncate">
+              {{ prizesSettled ? 'Не розіграно' : 'Вільне призове місце' }}
+            </span>
+          </td>
+          <td class="dboard__td dboard__td--num dboard__td--rating dboard__ghost-dash">—</td>
+          <td class="dboard__td dboard__col--wide" />
+          <td class="dboard__td dboard__col--wide" />
+          <td class="dboard__td dboard__td--streak dboard__col--wide" />
+          <td class="dboard__td dboard__td--date dboard__col--full" />
+          <td class="dboard__td dboard__td--prize">
+            <DuelPrizeTile :prize="prize" />
+          </td>
+          <td class="dboard__td dboard__td--more dboard__col--narrow" />
         </tr>
       </tbody>
     </table>
@@ -94,7 +123,7 @@ import {
   formatDuelPercent,
   formatDuelStreak
 } from '@/views/duels/duels.utils'
-import DuelPrizeChip from '@/views/duels/components/DuelPrizeChip.vue'
+import DuelPrizeTile from '@/views/duels/components/DuelPrizeTile.vue'
 import type { TDuelLeaderboardRow, TDuelTournamentPrize } from '@/api/types/api.types'
 
 const props = defineProps<{
@@ -120,6 +149,14 @@ const prizeByRow = computed(() => {
 })
 
 const prizeOf = (row: TDuelLeaderboardRow) => prizeByRow.value.get(row.player.id) ?? null
+
+const hasPrizes = computed(() => !!props.prizes?.length)
+
+/** Призи без власника в таблиці — «порожні» рядки під гравцями. */
+const unclaimedPrizes = computed(() => {
+  const claimed = new Set(prizeByRow.value.values())
+  return (props.prizes ?? []).filter(p => !claimed.has(p)).sort((a, b) => a.place - b.place)
+})
 
 const router = useRouter()
 const { open } = useAppModals()
@@ -343,6 +380,20 @@ function goToPlayer (id: string) {
   }
 }
 
+/* Колонка призу — остання видима від 500px (кнопка «Детальніше» тоді схована). */
+@container (min-width: 500px) {
+  .dboard--prizes .dboard__td--streak,
+  .dboard--prizes .dboard__td--date {
+    border-right: 0;
+    border-radius: 0;
+  }
+
+  .dboard--prizes .dboard__td--prize {
+    border-right: 1px solid transparent;
+    border-radius: 0 10px 10px 0;
+  }
+}
+
 .dboard__row--top .dboard__td {
   border-color: rgba(var(--tile-tone), 0.28);
   background: rgba(var(--tile-tone), 0.05);
@@ -354,7 +405,7 @@ function goToPlayer (id: string) {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .dboard__row:hover .dboard__td {
+  .dboard__row:not(.dboard__row--ghost):hover .dboard__td {
     background: rgba(255, 255, 255, 0.06);
   }
 }
@@ -412,8 +463,61 @@ function goToPlayer (id: string) {
   max-width: 100%;
 }
 
-.dboard__prize {
-  margin-top: 2px;
+.dboard__th--prize {
+  width: 220px;
+}
+
+.dboard__td--prize {
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
+}
+
+@container (max-width: 719px) {
+  .dboard__th--prize {
+    width: 170px;
+  }
+}
+
+/* Вузький контейнер: лише плашка з картинкою, назва призу — у модалці «Детальніше». */
+@container (max-width: 499px) {
+  .dboard__th--prize {
+    width: 60px;
+  }
+
+  /* Лише квадрат картинки (36px): колонка 60px мінус відступи комірки. */
+  .dboard__td--prize .dprize-tile {
+    width: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .dboard__td--prize :deep(.dprize-tile__title) {
+    display: none;
+  }
+}
+
+/* Порожнє призове місце: пунктирна рамка в тоні місця, без фону й без переходу на профіль. */
+.dboard__row--ghost {
+  cursor: default;
+}
+
+.dboard__row--ghost .dboard__td {
+  border-style: dashed;
+  border-color: rgba(var(--tile-tone), 0.3);
+  background: transparent;
+}
+
+.dboard__ghost-label {
+  display: block;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--ds-text-faint);
+}
+
+.dboard__ghost-dash {
+  color: var(--ds-text-faint) !important;
+  font-weight: 400 !important;
 }
 
 .dboard__name {
@@ -489,6 +593,10 @@ function goToPlayer (id: string) {
 
   .dboard__th--pos {
     width: 34px;
+  }
+
+  .dboard__th--prize {
+    width: 52px;
   }
 }
 

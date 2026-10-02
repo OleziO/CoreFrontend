@@ -3950,18 +3950,24 @@ export interface components {
              * @description Winners fixed and VIP granted (after the end, once no game of it is running)
              */
             prizesAwardedAt: string | null;
+            /** @description Stream link (http/https) */
+            streamUrl: string | null;
         };
         CreateDuelTournamentDto: {
             name: string;
             password: string;
             /** @description One prize per place, places unique */
             prizes?: components["schemas"]["DuelTournamentPrizeInputDto"][];
+            /** @description Stream link (http/https) */
+            streamUrl?: string | null;
         };
         UpdateDuelTournamentDto: {
             name?: string;
             password?: string;
             /** @description Replaces all prize places. VIP places may be changed by admins only. */
             prizes?: components["schemas"]["DuelTournamentPrizeInputDto"][];
+            /** @description Stream link (http/https); null or empty string clears it */
+            streamUrl?: string | null;
         };
         JoinDuelTournamentDto: {
             password: string;

@@ -40,17 +40,32 @@
             </p>
           </div>
 
-          <!-- Дія гравця: увійти / ввести пароль / шукати суперника -->
-          <div v-if="isActive" class="dt-head__aside">
-            <el-button v-if="!isLoggedIn" type="primary" @click="openLogin">Увійти, щоб грати</el-button>
-            <el-button v-else-if="!tournament.joined" type="primary" @click="openJoin">
-              <PhKey :size="16" weight="bold" />
-              <span class="ml-6">Увійти за паролем</span>
-            </el-button>
-            <el-button v-else type="primary" :loading="queueing" @click="queueInTournament">
-              <PhSword :size="16" weight="fill" />
-              <span class="ml-6">Шукати суперника</span>
-            </el-button>
+          <!-- Стрім турніру + дія гравця: увійти / ввести пароль / шукати суперника -->
+          <div v-if="isActive || tournament.streamUrl" class="dt-head__aside">
+            <a
+              v-if="tournament.streamUrl"
+              :href="tournament.streamUrl"
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              class="dt-stream no-underline"
+              :class="{ 'is-live': isActive }"
+            >
+              <span v-if="isActive" class="dt-stream__dot" aria-hidden="true" />
+              <PhBroadcast v-else :size="16" weight="bold" aria-hidden="true" />
+              {{ isActive ? 'Стрім наживо' : 'Запис стріму' }}
+              <PhArrowSquareOut :size="14" class="opacity-60" aria-hidden="true" />
+            </a>
+            <template v-if="isActive">
+              <el-button v-if="!isLoggedIn" type="primary" @click="openLogin">Увійти, щоб грати</el-button>
+              <el-button v-else-if="!tournament.joined" type="primary" @click="openJoin">
+                <PhKey :size="16" weight="bold" />
+                <span class="ml-6">Увійти за паролем</span>
+              </el-button>
+              <el-button v-else type="primary" :loading="queueing" @click="queueInTournament">
+                <PhSword :size="16" weight="fill" />
+                <span class="ml-6">Шукати суперника</span>
+              </el-button>
+            </template>
           </div>
         </header>
 
@@ -103,36 +118,6 @@
         </section>
       </template>
 
-      <!-- ─── Призи ────────────────────────────────────────────────────── -->
-      <section v-if="tournament && prizes.length" class="dt-panel neon-card hud-corners rounded-2xl">
-        <header class="flex flex-wrap items-center justify-between gap-10">
-          <h2 class="sys-label sys-label--gold">// Призи</h2>
-          <span class="dt-panel__meta">{{ prizesStatus }}</span>
-        </header>
-        <ul class="dt-prizes" aria-label="Призові місця">
-          <li
-            v-for="prize in prizes"
-            :key="prize.place"
-            class="dt-prize"
-            :style="{ '--tile-tone': toneOf(prize.place) }"
-          >
-            <span class="dt-prize__place">#{{ prize.place }}</span>
-            <DuelPrizeChip :prize="prize" size="md" class="min-w-0" />
-            <span class="dt-prize__holder truncate">
-              <template v-if="holderOf(prize)">
-                {{ prizesSettled ? '' : 'зараз: ' }}{{ holderOf(prize) }}
-              </template>
-              <template v-else-if="prizesSettled">не розіграно</template>
-            </span>
-          </li>
-        </ul>
-        <p class="dt-panel__hint">
-          Приз отримує гравець, що посідає місце після завершення турніру й зіграв хоча б одну дуель.
-          <template v-if="hasVipPrize">VIP нараховується автоматично.</template>
-          <template v-if="hasCustomPrize">Власні призи видає стрімер.</template>
-        </p>
-      </section>
-
       <!-- ─── Таблиця турніру ──────────────────────────────────────────── -->
       <section v-if="tournament" class="dt-panel neon-card hud-corners rounded-2xl">
         <header class="flex items-center justify-between gap-10">
@@ -145,16 +130,26 @@
         <p v-else-if="leaderboardError && !leaderboard" class="dt__empty text-error">
           Не вдалося завантажити таблицю
         </p>
-        <p v-else-if="!rows.length" class="dt__empty">
-          Ще ніхто не увійшов у турнір — перші рядки з’являться, щойно учасники введуть пароль.
+        <template v-else>
+          <p v-if="!rows.length" class="dt__empty">
+            Ще ніхто не увійшов у турнір — перші рядки з’являться, щойно учасники введуть пароль.
+          </p>
+          <DuelLeaderboardTable
+            v-if="rows.length || prizes.length"
+            :rows="rows"
+            :highlight-id="meId"
+            :prizes="prizes"
+            :prizes-settled="prizesSettled"
+          />
+        </template>
+        <p v-if="prizes.length" class="dt-panel__hint">
+          <span class="dt-prizes-status">
+            <PhGift :size="12" weight="fill" aria-hidden="true" />Призи — {{ prizesStatus }}.
+          </span>
+          Приз отримує гравець, що посідає місце після завершення турніру й зіграв хоча б одну дуель.
+          <template v-if="hasVipPrize">VIP нараховується автоматично.</template>
+          <template v-if="hasCustomPrize">Власні призи видає стрімер.</template>
         </p>
-        <DuelLeaderboardTable
-          v-else
-          :rows="rows"
-          :highlight-id="meId"
-          :prizes="prizes"
-          :prizes-settled="prizesSettled"
-        />
       </section>
     </div>
   </div>
@@ -166,12 +161,14 @@ import { ElMessageBox } from 'element-plus'
 import { useQueryCache } from '@pinia/colada'
 import {
   PhArrowLeft,
+  PhArrowSquareOut,
   PhBroadcast,
   PhCheck,
   PhCopy,
   PhEye,
   PhEyeSlash,
   PhFlagCheckered,
+  PhGift,
   PhKey,
   PhPencilSimple,
   PhSword,
@@ -186,8 +183,6 @@ import {
 import { duelsService } from '@/views/duels/duels.service'
 import { DUEL_RATING_DELTA, duelPlayerName, pluralizeDuelPlayers } from '@/views/duels/duels.utils'
 import DuelLeaderboardTable from '@/views/duels/components/DuelLeaderboardTable.vue'
-import DuelPrizeChip from '@/views/duels/components/DuelPrizeChip.vue'
-import type { TDuelTournamentPrize } from '@/api/types/api.types'
 
 const route = useRoute()
 const router = useRouter()
@@ -225,21 +220,6 @@ const prizesStatus = computed(() => {
   if (!isActive.value) return 'дограються останні ігри — потім видамо'
   return 'після завершення турніру'
 })
-
-const PRIZE_TONES: Record<number, string> = {
-  1: 'var(--ds-gold-rgb)',
-  2: '198, 205, 220',
-  3: '205, 127, 50'
-}
-const toneOf = (place: number) => PRIZE_TONES[place] ?? 'var(--ds-primary-rgb)'
-
-/** Хто бере приз: після розіграшу — переможець, до того — хто зараз на місці (з хоча б однією грою). */
-function holderOf (prize: TDuelTournamentPrize): string {
-  const row = prizesSettled.value
-    ? rows.value.find(r => r.player.id === prize.awardedPlayerId)
-    : rows.value.find(r => r.position === prize.place && r.wins + r.losses > 0)
-  return row ? duelPlayerName(row.player) : ''
-}
 
 /** Список, сам турнір і таблиця — усе під `['duels', 'tournaments']`. */
 function refreshTournament () {
@@ -414,13 +394,81 @@ async function endTournament () {
 
 .dt-head__aside {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+/* Кнопка стріму: червоний «ефір», поки турнір триває; після — нейтральне посилання на запис. */
+.dt-stream {
+  --stream-rgb: 255, 255, 255;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 15px;
+  border: 1px solid rgba(var(--stream-rgb), 0.25);
+  border-radius: var(--el-border-radius-base, 4px);
+  background: rgba(var(--stream-rgb), 0.06);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ds-text-strong);
+  transition:
+    border-color var(--ds-duration-fast) ease,
+    background-color var(--ds-duration-fast) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+}
+
+.dt-stream.is-live {
+  --stream-rgb: 239, 68, 68;
+}
+
+.dt-stream:active {
+  transform: scale(0.97);
+}
+
+.dt-stream:focus-visible {
+  outline: 2px solid rgba(var(--ds-primary-rgb), 0.7);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dt-stream:hover {
+    border-color: rgba(var(--stream-rgb), 0.6);
+    background: rgba(var(--stream-rgb), 0.14);
+  }
+}
+
+.dt-stream__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgb(239, 68, 68);
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dt-stream__dot {
+    animation: dt-stream-pulse 1.6s ease-out infinite;
+  }
+
+  @keyframes dt-stream-pulse {
+    to {
+      box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+    }
+  }
 }
 
 @media (max-width: 767px) {
   .dt-head__aside,
-  .dt-head__aside :deep(.el-button) {
+  .dt-head__aside :deep(.el-button),
+  .dt-stream {
     width: 100%;
+  }
+
+  .dt-head__aside :deep(.el-button) {
+    margin-left: 0;
   }
 }
 
@@ -446,41 +494,16 @@ async function endTournament () {
   color: var(--ds-text-faint);
 }
 
-.dt-prizes {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.dt-prizes-status {
+  font-weight: 600;
+  color: var(--ds-gold);
+  white-space: nowrap;
 }
 
-.dt-prize {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(var(--tile-tone), 0.2);
-  background: rgba(var(--tile-tone), 0.05);
-}
-
-.dt-prize__place {
-  flex-shrink: 0;
-  min-width: 34px;
-  font-family: var(--ds-font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  color: rgb(var(--tile-tone));
-}
-
-.dt-prize__holder {
-  flex: 1;
-  min-width: 0;
-  text-align: right;
-  font-size: 12px;
-  color: var(--ds-text-muted);
+.dt-prizes-status > svg {
+  display: inline-block;
+  margin-right: 3px;
+  vertical-align: -2px;
 }
 
 .dt-password {

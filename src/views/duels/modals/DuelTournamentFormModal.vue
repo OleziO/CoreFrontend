@@ -54,6 +54,27 @@
         </span>
       </label>
 
+      <label class="flex flex-col gap-6">
+        <span class="duel-tournament-dialog__label">
+          Посилання на стрім <span class="font-normal">(необов’язково)</span>
+        </span>
+        <el-input
+          v-model="streamUrl"
+          :maxlength="DUEL_TOURNAMENT_STREAM_URL_MAX"
+          clearable
+          inputmode="url"
+          placeholder="https://twitch.tv/…"
+        >
+          <template #prefix>
+            <PhBroadcast :size="14" aria-hidden="true" />
+          </template>
+        </el-input>
+        <span v-if="showErrors && streamUrlError" class="duel-tournament-dialog__error">{{ streamUrlError }}</span>
+        <span v-else class="duel-tournament-dialog__hint">
+          Twitch, YouTube чи інша платформа — кнопка стріму з’явиться на сторінці турніру.
+        </span>
+      </label>
+
       <DuelTournamentPrizesEditor v-model="prizes" :can-use-vip="isAdmin" :show-errors="showErrors" />
     </form>
 
@@ -79,6 +100,8 @@ import {
   DUEL_TOURNAMENT_NAME_MIN,
   DUEL_TOURNAMENT_PASSWORD_MAX,
   DUEL_TOURNAMENT_PASSWORD_MIN,
+  DUEL_TOURNAMENT_STREAM_URL_MAX,
+  duelStreamUrlError,
   generateDuelTournamentPassword
 } from '@/views/duels/duels.utils'
 import type { TDuelTournament } from '@/api/types/api.types'
@@ -98,6 +121,7 @@ const isAdmin = computed(() => authStore.isAdmin.isAdmin)
 
 const name = ref('')
 const password = ref('')
+const streamUrl = ref('')
 const prizes = ref<TDuelPrizeDraft[]>([])
 const saving = ref(false)
 const showErrors = ref(false)
@@ -114,12 +138,15 @@ const passwordError = computed(() => {
   return ''
 })
 
+const streamUrlError = computed(() => duelStreamUrlError(streamUrl.value))
+
 /** Модалку монтують уже відкритою — `@open` у el-dialog тоді не спрацьовує, тож заповнюємо поля за `modelValue`. */
 watch(modelValue, (open) => {
   if (!open) return
   showErrors.value = false
   name.value = props.tournament?.name ?? ''
   password.value = props.tournament?.password ?? generateDuelTournamentPassword()
+  streamUrl.value = props.tournament?.streamUrl ?? ''
   prizes.value = duelPrizeDraftsFrom(props.tournament?.prizes)
 }, { immediate: true })
 
@@ -127,12 +154,14 @@ const prizesError = computed(() => prizes.value.some(p => duelPrizeDraftError(p,
 
 async function submit () {
   showErrors.value = true
-  if (nameError.value || passwordError.value || prizesError.value || saving.value) return
+  if (nameError.value || passwordError.value || streamUrlError.value || prizesError.value || saving.value) return
   saving.value = true
   try {
     const dto = {
       name: name.value.trim(),
       password: password.value.trim(),
+      // null на редагуванні прибирає посилання
+      streamUrl: streamUrl.value.trim() || null,
       prizes: [...prizes.value].sort((a, b) => a.place - b.place).map(duelPrizeDraftToInput)
     }
     const saved = props.tournament
