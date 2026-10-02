@@ -1,7 +1,7 @@
 <template>
   <section class="dtour neon-card hud-corners rounded-2xl" aria-labelledby="duel-tournaments-title">
     <header class="dtour__head">
-      <div class="flex min-w-0 flex-col gap-4">
+      <div class="dtour__intro">
         <span class="flex flex-wrap items-center gap-8">
           <span id="duel-tournaments-title" class="sys-label sys-label--muted">// Стрім-турніри</span>
           <span class="dtour__badge">
@@ -9,9 +9,17 @@
             Для стрімерів
           </span>
         </span>
-        <span class="dtour__lead">
-          Турніри від стрімерів ліги — вхід за паролем зі стріму
-          <span class="dtour__meta">· своя таблиця · ±{{ DUEL_RATING_DELTA }}</span>
+        <span class="dtour__lead">Турніри від стрімерів ліги — вхід за паролем зі стріму</span>
+        <span class="dtour__tags">
+          <span class="dtour__tag">
+            <PhKey :size="11" weight="bold" aria-hidden="true" />
+            пароль
+          </span>
+          <span class="dtour__tag">
+            <PhListNumbers :size="11" weight="bold" aria-hidden="true" />
+            своя таблиця
+          </span>
+          <span class="dtour__tag">±{{ DUEL_RATING_DELTA }} за дуель</span>
         </span>
         <span v-if="blockedReason" class="dtour__blocked">{{ blockedReason }}</span>
       </div>
@@ -32,9 +40,22 @@
       <span v-for="n in 2" :key="n" class="skeleton-bone block h-[56px] !rounded-xl" />
     </template>
 
-    <p v-else-if="!active.length && !ended.length" class="dtour__empty">
-      Зараз немає стрім-турнірів. Їх проводять стрімери ліги — пароль дають на стрімі чи в Discord.
-    </p>
+    <!-- Порожньо: «ефір вимкнено» -->
+    <div v-else-if="!active.length && !ended.length" class="dtour__empty">
+      <span class="dtour__empty-icon" aria-hidden="true">
+        <PhBroadcast :size="22" weight="duotone" />
+      </span>
+      <div class="flex min-w-0 flex-col gap-4">
+        <span class="dtour__empty-title">
+          <span class="dtour__offair">Off air</span>
+          Зараз немає стрім-турнірів
+        </span>
+        <span class="dtour__empty-text">
+          Їх проводять стрімери ліги — пароль дають на стрімі чи в Discord.
+          <template v-if="canCreate">Запустіть перший — кнопка вище.</template>
+        </span>
+      </div>
+    </div>
 
     <template v-else>
       <ul v-if="active.length" class="dtour__list" aria-label="Активні турніри">
@@ -126,7 +147,16 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import { PhBroadcast, PhFlagCheckered, PhGift, PhKey, PhPlus, PhSword, PhTrophy } from '@phosphor-icons/vue'
+import {
+  PhBroadcast,
+  PhFlagCheckered,
+  PhGift,
+  PhKey,
+  PhListNumbers,
+  PhPlus,
+  PhSword,
+  PhTrophy
+} from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import { pluralizeUk } from '@/views/players/player-achievements.utils'
 import { DUEL_RATING_DELTA, duelPlayerName, pluralizeDuelPlayers } from '@/views/duels/duels.utils'
@@ -187,13 +217,45 @@ const tournamentRoute = (id: string) => ({ name: routeNames.duelTournament, para
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px 16px;
+  gap: 12px 20px;
+}
+
+/* Текст тягнеться, а кнопка лишається праворуч — переноситься лише на вузьких екранах. */
+.dtour__intro {
+  display: flex;
+  flex: 1 1 320px;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
 }
 
 .dtour__lead {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
+  line-height: 1.35;
   color: var(--ds-text-strong);
+}
+
+.dtour__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dtour__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--ds-border-neutral);
+  background: rgba(7, 8, 15, 0.45);
+  font-family: var(--ds-font-mono);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ds-text-muted);
+  white-space: nowrap;
 }
 
 .dtour__badge {
@@ -216,14 +278,6 @@ const tournamentRoute = (id: string) => ({ name: routeNames.duelTournament, para
   align-items: center;
   gap: 3px;
   color: var(--ds-gold);
-}
-
-.dtour__meta {
-  font-family: var(--ds-font-mono);
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--ds-text-faint);
-  white-space: nowrap;
 }
 
 .dtour__blocked {
@@ -255,7 +309,70 @@ const tournamentRoute = (id: string) => ({ name: routeNames.duelTournament, para
 }
 
 .dtour__empty {
-  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px dashed rgba(124, 58, 237, 0.3);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(124, 58, 237, 0.035) 0 8px,
+      transparent 8px 16px
+    ),
+    rgba(7, 8, 15, 0.35);
+}
+
+.dtour__empty-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  background: rgba(124, 58, 237, 0.12);
+  color: rgb(196, 167, 255);
+}
+
+.dtour__empty-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ds-text);
+}
+
+/* «Off air» — табло студії, що згасло: сірий індикатор замість червоного LIVE. */
+.dtour__offair {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-family: var(--ds-font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ds-text-faint);
+}
+
+.dtour__offair::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.dtour__empty-text {
   font-size: 13px;
   line-height: 1.5;
   color: var(--ds-text-faint);

@@ -121,9 +121,16 @@ onMounted(() => nextTick(() => inputRef.value?.focus()))
 
 .chat-search__item.is-highlighted {
   background: rgba(var(--ds-primary-rgb), 0.1);
+  box-shadow: inset 2px 0 0 rgba(var(--ds-primary-rgb), 0.8);
+}
+
+.chat-search__item > :first-child {
+  flex-shrink: 0;
 }
 
 .chat-search__name {
+  min-width: 0;
+  flex: 0 1 auto;
   overflow: hidden;
   font-size: 13px;
   font-weight: 600;
@@ -133,7 +140,10 @@ onMounted(() => nextTick(() => inputRef.value?.focus()))
 }
 
 .chat-search__handle {
+  min-width: 0;
+  flex: 1 1 0;
   overflow: hidden;
+  font-family: var(--ds-font-mono);
   font-size: 11px;
   white-space: nowrap;
   text-overflow: ellipsis;

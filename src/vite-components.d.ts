@@ -116,6 +116,7 @@ declare module 'vue' {
     Modals: typeof import('./components/modals/Modals.vue')['default']
     NotificationCenter: typeof import('./components/NotificationCenter.vue')['default']
     NotificationItem: typeof import('./components/NotificationItem.vue')['default']
+    PhListNumbers: typeof import('~icons/ph/list-numbers')['default']
     PhUserPlus: typeof import('~icons/ph/user-plus')['default']
     PlayerAchievements: typeof import('./views/players/components/PlayerAchievements.vue')['default']
     PlayerAddToTeamModal: typeof import('./components/modals/PlayerAddToTeamModal.vue')['default']

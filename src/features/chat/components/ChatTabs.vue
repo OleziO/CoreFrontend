@@ -45,6 +45,8 @@
       trigger="click"
       placement="bottom-end"
       :width="280"
+      :offset="6"
+      :show-arrow="false"
       popper-class="chat-search-popper"
       :teleported="true"
     >
@@ -288,5 +290,28 @@ watch(
 .chat-tabs__add:focus-visible {
   outline: 2px solid var(--ds-primary);
   outline-offset: -2px;
+}
+</style>
+
+<!-- Not scoped: el-popover is teleported to <body>. -->
+<style lang="scss">
+/*
+  Глобальний `.el-popper.is-light.el-tooltip` (_select.scss) дає попперу скло bg-white/5 з блюром —
+  поверх чату крізь пошук просвічували рамка панелі й повідомлення. Тут — непрозора поверхня,
+  як у центрі сповіщень; селектор важчий за глобальні ресети (див. NotificationCenter.vue).
+*/
+body .el-popper.el-tooltip.el-popover.chat-search-popper {
+  display: block;
+  max-width: calc(100vw - 24px);
+  padding: 10px;
+  border: 1px solid rgba(var(--ds-primary-rgb), 0.22);
+  border-radius: 12px;
+  background: rgb(11, 13, 25);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    0 20px 56px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(7, 8, 15, 0.8),
+    var(--ds-glow-primary-soft);
 }
 </style>
