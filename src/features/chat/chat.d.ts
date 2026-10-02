@@ -6,6 +6,8 @@ export interface IChatAccess {
   isAdmin: boolean
   canCaptains: boolean
   canDuel: boolean
+  /** Канал «VIP»: активні VIP-гравці та адміни. */
+  canVip: boolean
   readOnly: boolean
 }
 
@@ -65,7 +67,7 @@ export type TChatAck<T extends object = object> =
   | { ok: false; error: string; message: string }
 
 /** Вкладка панелі чату. Публічні та «Адмін» — фіксовані, `dm` — закривані. */
-export type TChatTabId = 'general' | 'captains' | 'duel' | 'admin' | `dm:${string}`
+export type TChatTabId = 'general' | 'captains' | 'duel' | 'vip' | 'admin' | `dm:${string}`
 
 /** Відкрита вкладка приватного чату: зберігається в localStorage разом із карткою співрозмовника. */
 export interface IChatDirectTab {
@@ -102,7 +104,7 @@ export type TChatMentionSuggestion =
   | { type: 'command'; name: string; description: string }
 
 /** Звук нового повідомлення: свій для кожного типу каналу + окремий для згадки. */
-export type TChatSoundKind = 'general' | 'captains' | 'duel' | 'admin' | 'dm' | 'mention'
+export type TChatSoundKind = 'general' | 'captains' | 'duel' | 'vip' | 'admin' | 'dm' | 'mention'
 
 /** Налаштування звуків (localStorage): загальний вимикач + окремо для кожного типу. */
 export interface IChatSoundSettings {

@@ -65,6 +65,7 @@ const kinds: { kind: TChatSoundKind; label: string }[] = [
   { kind: 'general', label: 'Загальний' },
   { kind: 'captains', label: 'Капітани' },
   { kind: 'duel', label: 'Дуелі' },
+  { kind: 'vip', label: 'VIP' },
   { kind: 'admin', label: 'Адмін' },
   { kind: 'dm', label: 'Приватні' },
   { kind: 'mention', label: 'Згадки (@ви)' }

@@ -4216,7 +4216,7 @@ export interface components {
             lifetime: boolean;
         };
         /** @enum {string} */
-        ChatChannelKind: "general" | "captains" | "duel" | "admin" | "dm";
+        ChatChannelKind: "general" | "captains" | "duel" | "vip" | "admin" | "dm";
         ChatPlayerDto: {
             id: string;
             discordName?: string | null;
@@ -4227,7 +4227,7 @@ export interface components {
         };
         ChatMessageDto: {
             id: string;
-            /** @description `general` | `captains` | `duel` | `admin:<ownerId>` | `dm:<minPlayerId>:<maxPlayerId>` */
+            /** @description `general` | `captains` | `duel` | `vip` | `admin:<ownerId>` | `dm:<minPlayerId>:<maxPlayerId>` */
             channelKey: string;
             channelKind: components["schemas"]["ChatChannelKind"];
             author: components["schemas"]["ChatPlayerDto"];

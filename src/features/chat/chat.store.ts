@@ -32,12 +32,13 @@ const GUEST_ACCESS: IChatAccess = {
   isAdmin: false,
   canCaptains: false,
   canDuel: false,
+  canVip: false,
   readOnly: true
 }
 
 const DEFAULT_SOUND_SETTINGS: IChatSoundSettings = {
   enabled: true,
-  kinds: { general: true, captains: true, duel: true, admin: true, dm: true, mention: true }
+  kinds: { general: true, captains: true, duel: true, vip: true, admin: true, dm: true, mention: true }
 }
 
 /** Затримка перед `chat:read`: не шлемо маркер на кожне повідомлення, що прилетіло під час читання. */
@@ -114,6 +115,7 @@ export const useChatStore = defineStore('chat', () => {
     const list: TChatTabId[] = ['general']
     if (access.value.canCaptains) list.push('captains')
     if (access.value.canDuel) list.push('duel')
+    if (access.value.canVip) list.push('vip')
     if (isLoggedIn.value) list.push('admin')
     for (const t of directTabs.value) list.push(t.channelKey as TChatTabId)
     return list
@@ -470,6 +472,7 @@ export const useChatStore = defineStore('chat', () => {
       if (isOpen.value && activeChannelKey.value) loadChannel(activeChannelKey.value)
     }
     if (!next.canCaptains) delete channels.value.captains
+    if (!next.canVip) delete channels.value.vip
     if (!next.isAdmin) {
       adminThreads.value = []
       adminThreadsLoaded.value = false

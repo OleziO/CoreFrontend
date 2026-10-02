@@ -33,7 +33,7 @@ export class ChatCommandError extends Error {
   }
 }
 
-export const CHAT_PUBLIC_KINDS: readonly TChatChannelKind[] = ['general', 'captains', 'duel']
+export const CHAT_PUBLIC_KINDS: readonly TChatChannelKind[] = ['general', 'captains', 'duel', 'vip']
 
 export function isPublicChannel (kind: TChatChannelKind | string): boolean {
   return (CHAT_PUBLIC_KINDS as readonly string[]).includes(kind)

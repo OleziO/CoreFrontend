@@ -326,6 +326,7 @@ import {
   PhArrowCounterClockwise,
   PhArrowsClockwise,
   PhCalendarCheck,
+  PhChatsCircle,
   PhCrown,
   PhHeart,
   PhArrowFatLinesUp,
@@ -416,6 +417,11 @@ const perks = [
     text: 'Знижка на вступний внесок, коли оплачуєш як капітан.'
   },
   {
+    icon: PhChatsCircle,
+    title: 'Закритий VIP-чат',
+    text: 'Окремий канал у чаті сайту — лише для VIP-гравців і адмінів.'
+  },
+  {
     icon: PhPalette,
     title: 'Власний колір рамки',
     text: `${frameColorCount} ${colorForms.exclusive} профілю й картки.`
@@ -439,6 +445,7 @@ const compareRows: ReadonlyArray<{
   { label: 'Заявки й запрошення', icon: PhPaperPlaneTilt, base: `${FIND_DAILY_LIMIT} на день`, vip: 'Безліміт' },
   { label: 'Профілі гравців', icon: PhIdentificationCard, base: '', vip: '', links: true },
   { label: 'Внесок за турнір', icon: PhTicket, base: 'Повний', vip: `−${VIP_TOURNAMENT_DISCOUNT_PERCENT}%` },
+  { label: 'VIP-чат', icon: PhChatsCircle, base: 'Немає', vip: 'Закритий канал' },
   { label: 'Рамка й бейдж', icon: PhPalette, base: 'Стандартні', vip: `${frameColorCount} ${colorForms.noun} + VIP` },
   { label: 'Реєстр і пошук команди', icon: PhArrowFatLinesUp, base: 'Загальна черга', vip: 'Топ списку' }
 ]

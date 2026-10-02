@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhArrowLeft, PhCrown, PhLockSimple, PhShieldCheck } from '@phosphor-icons/vue'
+import { PhArrowLeft, PhCrown, PhDiamond, PhLockSimple, PhShieldCheck } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import type { TChatPlayer } from '@/api/types/api.types'
 import { useChatStore } from '@/features/chat/chat.store'
@@ -77,6 +77,7 @@ const threadOwner = computed<TChatPlayer | null>(() => {
 
 const hint = computed(() => {
   if (kind.value === 'captains') return { icon: PhCrown, text: 'Канал капітанів команд — бачать лише капітани та адміни' }
+  if (kind.value === 'vip') return { icon: PhDiamond, text: 'Закритий канал VIP-гравців — бачать лише VIP та адміни' }
   if (kind.value === 'admin') return { icon: PhShieldCheck, text: 'Приватний канал з адміністрацією — бачите лише ви та адміни' }
   if (kind.value === 'dm') return { icon: PhLockSimple, text: 'Приватні повідомлення' }
   return null

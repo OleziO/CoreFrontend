@@ -7,6 +7,7 @@ const THROTTLE_MS: Record<TChatSoundKind, number> = {
   general: 4_000,
   captains: 3_000,
   duel: 3_000,
+  vip: 3_000,
   admin: 1_500,
   dm: 1_500,
   mention: 1_500
@@ -156,6 +157,14 @@ const SOUNDS: Record<TChatSoundKind, TSound> = {
       tone(ctx, out, { type: 'sine', frequency: frequency * 2.76, startAt: at, duration: 0.1, gain: 0.12 })
       tone(ctx, out, { type: 'triangle', frequency: frequency * 0.5, startAt: at, duration: 0.08, gain: 0.25 })
     }
+  },
+
+  /** «VIP» — мʼякий мажорний акорд-«сяйво» з іскрою зверху: дорожчий за «Загальний», тихіший за згадку. */
+  vip: (ctx, out, t) => {
+    for (const frequency of [659.25, 830.61, 987.77]) {
+      tone(ctx, out, { type: 'sine', frequency, startAt: t, duration: 0.45, gain: 0.22, attack: 0.02 })
+    }
+    bell(ctx, out, 1975.53, t + 0.06, 0.4, 0.28)
   },
 
   /** «Адмін» / підтримка — спокійний, довгий дзвоник «до ресепшну». */

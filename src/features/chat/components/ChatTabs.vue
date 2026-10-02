@@ -6,7 +6,7 @@
         :key="tab"
         :ref="el => setTabRef(tab, el)"
         class="chat-tab"
-        :class="{ 'is-active': chatStore.currentTab === tab, 'is-direct': isDirect(tab) }"
+        :class="{ 'is-active': chatStore.currentTab === tab, 'is-direct': isDirect(tab), 'is-vip': tab === 'vip' }"
         role="tab"
         :aria-selected="chatStore.currentTab === tab"
         :tabindex="chatStore.currentTab === tab ? 0 : -1"
@@ -60,7 +60,7 @@
 
 <script setup lang="ts">
 import type { ComponentPublicInstance } from 'vue'
-import { PhCrown, PhGlobeHemisphereEast, PhPlus, PhShieldCheck, PhSword, PhX } from '@phosphor-icons/vue'
+import { PhCrown, PhDiamond, PhGlobeHemisphereEast, PhPlus, PhShieldCheck, PhSword, PhX } from '@phosphor-icons/vue'
 import type { TChatPlayer } from '@/api/types/api.types'
 import { useChatStore } from '@/features/chat/chat.store'
 import { playerName } from '@/features/chat/chat.utils'
@@ -68,7 +68,7 @@ import type { TChatTabId } from '@/features/chat/chat.d'
 import ChatPlayerSearch from '@/features/chat/components/ChatPlayerSearch.vue'
 import ChatAvatar from '@/features/chat/components/ChatAvatar.vue'
 
-type TFixedTab = 'general' | 'captains' | 'duel' | 'admin'
+type TFixedTab = 'general' | 'captains' | 'duel' | 'vip' | 'admin'
 
 const chatStore = useChatStore()
 
@@ -76,6 +76,7 @@ const fixedTabs: Record<TFixedTab, { label: string; icon: Component }> = {
   general: { label: 'Загальний', icon: PhGlobeHemisphereEast },
   captains: { label: 'Капітани', icon: PhCrown },
   duel: { label: 'Дуелі', icon: PhSword },
+  vip: { label: 'VIP', icon: PhDiamond },
   admin: { label: 'Адмін', icon: PhShieldCheck }
 }
 
@@ -204,6 +205,24 @@ watch(
 
 .chat-tab__label {
   white-space: nowrap;
+}
+
+/* «VIP» — золото, як у VipBadge: іконка завжди, підсвітка — коли вкладка активна. */
+.chat-tab.is-vip {
+  --vip-gold: 255, 206, 84;
+}
+
+.chat-tab.is-vip > svg {
+  color: rgb(var(--vip-gold));
+}
+
+.chat-tab.is-vip.is-active {
+  background: rgba(var(--vip-gold), 0.08);
+}
+
+.chat-tab.is-vip.is-active::after {
+  background: rgb(var(--vip-gold));
+  box-shadow: 0 0 8px rgba(var(--vip-gold), 0.6);
 }
 
 .chat-tab__label.is-name {
