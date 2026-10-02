@@ -1,6 +1,7 @@
 import apiClient from '@/api/client'
 import { ElMessage } from 'element-plus'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
+import { validateImageFileForUpload } from '@/services/image-upload.service'
 import type {
   TAdminDuel,
   TAdminResolveDuelDto,
@@ -158,7 +159,7 @@ class DuelsService {
     return await apiClient.get('/duel-tournaments/{id}/leaderboard', { dynamicKeys: { id } })
   }
 
-  /** Створити турнір (медіа або адмін). */
+  /** Створити стрім-турнір (стрімер — роль «Медіа» — або адмін). */
   async createTournament (dto: TCreateDuelTournamentDto): Promise<TDuelTournament> {
     try {
       const tournament = await apiClient.post('/duel-tournaments', dto)
@@ -170,7 +171,7 @@ class DuelsService {
     }
   }
 
-  /** Змінити назву або пароль (організатор чи адмін, поки турнір активний). */
+  /** Змінити назву, пароль чи призи (організатор чи адмін, поки турнір активний; VIP-призи — лише адмін). */
   async updateTournament (id: string, dto: TUpdateDuelTournamentDto): Promise<TDuelTournament> {
     try {
       const tournament = await apiClient.patch('/duel-tournaments/{id}', dto, { dynamicKeys: { id } })
@@ -192,6 +193,27 @@ class DuelsService {
       ElMessage.error(getApiErrorMessage(e, 'Не вдалося завершити турнір'))
       throw e
     }
+  }
+
+  /** Видалити турнір (лише адмін): нестартовані дуелі скасовуються, таблиця зникає. Незворотно. */
+  async deleteTournament (id: string): Promise<void> {
+    try {
+      await apiClient.delete('/duel-tournaments/{id}', { dynamicKeys: { id } })
+      ElMessage.success('Турнір видалено')
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося видалити турнір'))
+      throw e
+    }
+  }
+
+  /** Завантажити картинку власного призу — повертає url для `prizes[].imageUrl`. Тост — на боці форми. */
+  async uploadTournamentPrizeImage (file: File): Promise<string> {
+    const err = validateImageFileForUpload(file)
+    if (err != null) throw new Error(err)
+    const fd = new FormData()
+    fd.append('file', file)
+    const { url } = await apiClient.post('/duel-tournaments/prize-image', fd as never)
+    return url
   }
 
   /** Увійти в турнір за паролем — після цього можна ставати в його чергу. */

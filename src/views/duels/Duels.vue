@@ -308,7 +308,7 @@ const {
   refetch: refetchTournaments
 } = useGetDuelTournaments(() => meId.value)
 
-/** Створювати турніри можуть медіа та адміни; керувати конкретним — організатор і адміни (`canManage`). */
+/** Створювати стрім-турніри можуть стрімери (роль «Медіа») та адміни; керувати конкретним — організатор і адміни (`canManage`). */
 const canCreateTournament = computed(() =>
   isAdmin.value || hasPlayerRole(authStore.user?.roles, ERole.MEDIA)
 )

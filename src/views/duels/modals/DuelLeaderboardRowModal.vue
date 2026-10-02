@@ -33,6 +33,11 @@
         <DuelRatingBadge :rating="row.rating" :streak="row.streak" size="lg" />
       </div>
 
+      <div v-if="prize" class="dboard-row-dialog__prize">
+        <span class="dboard-row-dialog__prize-label">Приз за {{ prize.place }} місце</span>
+        <DuelPrizeChip :prize="prize" size="md" />
+      </div>
+
       <dl class="dboard-row-dialog__stats">
         <div class="dboard-row-dialog__stat" style="--i: 0">
           <dt>Перемоги</dt>
@@ -79,15 +84,19 @@ import { PhCrown, PhUser } from '@phosphor-icons/vue'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
 import { duelPlayerInitial, duelPlayerName, formatDuelPercent, formatDuelStreak } from '@/views/duels/duels.utils'
+import DuelPrizeChip from '@/views/duels/components/DuelPrizeChip.vue'
 import DuelRatingBadge from '@/views/duels/components/DuelRatingBadge.vue'
-import type { TDuelLeaderboardRow } from '@/api/types/api.types'
+import type { TDuelLeaderboardRow, TDuelTournamentPrize } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
   row: TDuelLeaderboardRow
   /** id залогіненого гравця — його рядок позначається «це ви». */
   highlightId?: string | null
+  /** Приз турніру, що «висить» на цьому рядку (лише в таблиці турніру). */
+  prize?: TDuelTournamentPrize | null
 }>(), {
-  highlightId: null
+  highlightId: null,
+  prize: null
 })
 
 const modelValue = defineModel<boolean>({ default: false })
@@ -114,6 +123,23 @@ function close () {
   background: rgba(12, 15, 30, 0.72);
   backdrop-filter: blur(24px) saturate(130%);
   -webkit-backdrop-filter: blur(24px) saturate(130%);
+
+  .dboard-row-dialog__prize {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .dboard-row-dialog__prize-label {
+    font-size: 12px;
+    color: var(--ds-text-muted);
+  }
 
   .dboard-row-dialog__head {
     --tile-tone: var(--ds-primary-rgb);

@@ -2,16 +2,29 @@
   <section class="dtour neon-card hud-corners rounded-2xl" aria-labelledby="duel-tournaments-title">
     <header class="dtour__head">
       <div class="flex min-w-0 flex-col gap-4">
-        <span id="duel-tournaments-title" class="sys-label sys-label--muted">// Турніри</span>
+        <span class="flex flex-wrap items-center gap-8">
+          <span id="duel-tournaments-title" class="sys-label sys-label--muted">// Стрім-турніри</span>
+          <span class="dtour__badge">
+            <PhBroadcast :size="11" weight="bold" aria-hidden="true" />
+            Для стрімерів
+          </span>
+        </span>
         <span class="dtour__lead">
-          Закриті турніри за паролем
+          Турніри від стрімерів ліги — вхід за паролем зі стріму
           <span class="dtour__meta">· своя таблиця · ±{{ DUEL_RATING_DELTA }}</span>
         </span>
         <span v-if="blockedReason" class="dtour__blocked">{{ blockedReason }}</span>
       </div>
-      <el-button v-if="canCreate" type="primary" plain class="dtour__cta" @click="emit('create')">
+      <el-button
+        v-if="canCreate"
+        type="primary"
+        plain
+        class="dtour__cta"
+        title="Створювати стрім-турніри можуть стрімери (роль «Медіа») та адміни"
+        @click="emit('create')"
+      >
         <PhPlus :size="16" weight="bold" class="mr-6" />
-        Створити турнір
+        Створити стрім-турнір
       </el-button>
     </header>
 
@@ -20,7 +33,7 @@
     </template>
 
     <p v-else-if="!active.length && !ended.length" class="dtour__empty">
-      Зараз немає турнірів. Їх проводять медіа ліги — пароль дають на стрімі чи в Discord.
+      Зараз немає стрім-турнірів. Їх проводять стрімери ліги — пароль дають на стрімі чи в Discord.
     </p>
 
     <template v-else>
@@ -40,7 +53,11 @@
             </RouterLink>
             <span class="dtour__hint truncate">
               {{ pluralizeDuelPlayers(t.participantsCount) }}
-              <template v-if="t.createdBy"> · {{ duelPlayerName(t.createdBy) }}</template>
+              <template v-if="t.createdBy"> · стрімер {{ duelPlayerName(t.createdBy) }}</template>
+              <template v-if="t.prizes?.length">
+                · <span class="dtour__prizes"><PhGift :size="12" weight="fill" aria-hidden="true" />
+                  {{ pluralizePrizePlaces(t.prizes.length) }}</span>
+              </template>
               <template v-if="t.joined"> · <span class="text-success">ви учасник</span></template>
             </span>
           </div>
@@ -109,8 +126,9 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import { PhFlagCheckered, PhKey, PhPlus, PhSword, PhTrophy } from '@phosphor-icons/vue'
+import { PhBroadcast, PhFlagCheckered, PhGift, PhKey, PhPlus, PhSword, PhTrophy } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
+import { pluralizeUk } from '@/views/players/player-achievements.utils'
 import { DUEL_RATING_DELTA, duelPlayerName, pluralizeDuelPlayers } from '@/views/duels/duels.utils'
 import type { TDuelTournament } from '@/api/types/api.types'
 
@@ -121,7 +139,7 @@ const props = defineProps<{
   tournaments: TDuelTournament[]
   isPending: boolean
   isLoggedIn: boolean
-  /** Медіа або адмін — може створювати турніри. */
+  /** Стрімер (роль «Медіа») або адмін — може створювати турніри. */
   canCreate: boolean
   /** `status.canQueue`: Steam прив’язано, немає активної дуелі, боти онлайн. */
   canQueue: boolean
@@ -149,6 +167,8 @@ function onQueue (t: TDuelTournament) {
   emit('queue', t)
 }
 
+const pluralizePrizePlaces = (n: number) => pluralizeUk(n, 'призове місце', 'призові місця', 'призових місць')
+
 const tournamentRoute = (id: string) => ({ name: routeNames.duelTournament, params: { id } })
 </script>
 
@@ -174,6 +194,28 @@ const tournamentRoute = (id: string) => ({ name: routeNames.duelTournament, para
   font-size: 14px;
   font-weight: 600;
   color: var(--ds-text-strong);
+}
+
+.dtour__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid rgba(124, 58, 237, 0.45);
+  background: rgba(124, 58, 237, 0.14);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(196, 167, 255);
+}
+
+.dtour__prizes {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--ds-gold);
 }
 
 .dtour__meta {

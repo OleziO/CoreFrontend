@@ -1551,8 +1551,31 @@ export interface paths {
          */
         get: operations["DuelTournamentsController_list"];
         put?: never;
-        /** Create a password-protected tournament (media staff or admin) */
+        /**
+         * Create a password-protected stream tournament (streamer or admin)
+         * @description 403 when a non-admin puts VIP on a prize place.
+         */
         post: operations["DuelTournamentsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-tournaments/prize-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload a custom prize image (streamer or admin)
+         * @description Multipart field `file`, image/*, max 10 MB. Put the returned url into `prizes[].imageUrl`.
+         */
+        post: operations["DuelTournamentsController_uploadPrizeImage"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1573,12 +1596,16 @@ export interface paths {
         get: operations["DuelTournamentsController_get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete a tournament (admin)
+         * @description Closes its queue, cancels its duels that have not started, then deletes it with its table. Games already running finish without any rating change; past duels stay in the history. Irreversible.
+         */
+        delete: operations["DuelTournamentsController_remove"];
         options?: never;
         head?: never;
         /**
-         * Rename a tournament or change its password
-         * @description Organiser or admin, while the tournament is ACTIVE.
+         * Rename a tournament, change its password or its prize places
+         * @description Organiser or admin, while the tournament is ACTIVE. `prizes` replaces all places; VIP places may be added, changed or removed by admins only (403).
          */
         patch: operations["DuelTournamentsController_update"];
         trace?: never;
@@ -3738,7 +3765,7 @@ export interface components {
             /** @description Points moved once the result was applied (25) */
             ratingDelta: number | null;
             /** @enum {string|null} */
-            cancelReason: "players_no_show" | "lobby_not_created" | "no_bots_available" | "admin" | "accept_timeout" | "player_cancelled" | "game_aborted" | "tournament_ended" | null;
+            cancelReason: "players_no_show" | "lobby_not_created" | "no_bots_available" | "admin" | "accept_timeout" | "player_cancelled" | "game_aborted" | "tournament_ended" | "tournament_deleted" | null;
             /** @description Who cancelled the duel (player or admin); null for automatic cancels */
             cancelledById: string | null;
             /** @enum {string|null} */
@@ -3865,6 +3892,37 @@ export interface components {
             id: string;
             name: string;
         };
+        /** @description One prize place as the tournament page and its leaderboard show it. */
+        DuelTournamentPrizeDto: {
+            place: number;
+            /** @enum {string} */
+            kind: "vip" | "custom";
+            /** @description VIP months (kind `vip`) */
+            vipMonths: number | null;
+            title: string | null;
+            /** @description Prize image (kind `custom`) */
+            imageUrl: string | null;
+            /** @description Prize link (kind `custom`) */
+            linkUrl: string | null;
+            /** @description Who won the place — set once the prizes are settled (null: nobody with a played game held it) */
+            awardedPlayerId: string | null;
+        };
+        /** @description One prize place in a create / update request. */
+        DuelTournamentPrizeInputDto: {
+            place: number;
+            /**
+             * @description `vip` — admins only
+             * @enum {string}
+             */
+            kind: "vip" | "custom";
+            /** @description Required for `vip` */
+            vipMonths?: number | null;
+            title?: string | null;
+            /** @description Required for `custom`: the url returned by POST /duel-tournaments/prize-image */
+            imageUrl?: string | null;
+            /** @description Required for `custom`: http(s) link of the prize */
+            linkUrl?: string | null;
+        };
         /** @description One tournament as the duels page and the tournament page see it. */
         DuelTournamentDto: {
             id: string;
@@ -3875,7 +3933,7 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             endedAt: string | null;
-            /** @description Organiser (media staff or admin); rating is their ladder rating */
+            /** @description Organiser (streamer or admin); rating is their ladder rating */
             createdBy: components["schemas"]["DuelPlayerDto"] | null;
             /** @description Players who entered the password */
             participantsCount: number;
@@ -3885,17 +3943,32 @@ export interface components {
             canManage: boolean;
             /** @description Join password — only for managers on GET /duel-tournaments/{id} */
             password: string | null;
+            /** @description Prize places, by place */
+            prizes: components["schemas"]["DuelTournamentPrizeDto"][];
+            /**
+             * Format: date-time
+             * @description Winners fixed and VIP granted (after the end, once no game of it is running)
+             */
+            prizesAwardedAt: string | null;
         };
         CreateDuelTournamentDto: {
             name: string;
             password: string;
+            /** @description One prize per place, places unique */
+            prizes?: components["schemas"]["DuelTournamentPrizeInputDto"][];
         };
         UpdateDuelTournamentDto: {
             name?: string;
             password?: string;
+            /** @description Replaces all prize places. VIP places may be changed by admins only. */
+            prizes?: components["schemas"]["DuelTournamentPrizeInputDto"][];
         };
         JoinDuelTournamentDto: {
             password: string;
+        };
+        /** @description Response of POST /duel-tournaments/prize-image. */
+        DuelTournamentPrizeImageDto: {
+            url: string;
         };
         /** @description Player card on the friends page / in a request row. */
         FriendPlayerDto: {
@@ -7081,6 +7154,32 @@ export interface operations {
             };
         };
     };
+    DuelTournamentsController_uploadPrizeImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelTournamentPrizeImageDto"];
+                };
+            };
+        };
+    };
     DuelTournamentsController_get: {
         parameters: {
             query?: never;
@@ -7166,6 +7265,25 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["DuelTournamentDto"];
                 };
+            };
+        };
+    };
+    DuelTournamentsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

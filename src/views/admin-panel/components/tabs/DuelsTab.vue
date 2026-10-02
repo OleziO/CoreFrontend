@@ -29,6 +29,9 @@
     <!-- ─── Дуелі: статус обробки, дії адміна, вибіркове видалення ───────── -->
     <DuelAdminList v-if="section === 'duels'" class="min-h-0 flex-1" />
 
+    <!-- ─── Стрім-турніри: перегляд і видалення ────────────────────────── -->
+    <DuelTournamentAdminList v-else-if="section === 'tournaments'" class="min-h-0 flex-1" />
+
     <!-- ─── Боти ───────────────────────────────────────────────────────── -->
     <div
       v-else
@@ -174,6 +177,7 @@
 import dayjs from 'dayjs'
 import {
   PhArrowsClockwise,
+  PhBroadcast,
   PhGlobe,
   PhLockSimple,
   PhPlus,
@@ -189,13 +193,15 @@ import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-statu
 import { hostBotStatusLabels } from '@/views/duels/duels.utils'
 import DuelAdminList from '@/views/duels/components/DuelAdminList.vue'
 import DuelBotsStatusStrip from '@/views/duels/components/DuelBotsStatusStrip.vue'
+import DuelTournamentAdminList from '@/views/duels/components/DuelTournamentAdminList.vue'
 import type { TStatusTone } from '@/components/status/status.presets'
 import type { THostBot } from '@/api/types/api.types'
 
-type TSection = 'duels' | 'bots'
+type TSection = 'duels' | 'tournaments' | 'bots'
 
 const sections: { value: TSection; label: string; icon: Component }[] = [
   { value: 'duels', label: 'Дуелі', icon: PhSword },
+  { value: 'tournaments', label: 'Стрім-турніри', icon: PhBroadcast },
   { value: 'bots', label: 'Боти', icon: PhRobot }
 ]
 

@@ -10,6 +10,9 @@ import type {
   TDuelQueueBlockedReason,
   TDuelState,
   TDuelStatsPlayer,
+  TDuelTournamentPrize,
+  TDuelTournamentPrizeInput,
+  TDuelTournamentPrizeKind,
   THostBotStatus
 } from '@/api/types/api.types'
 
@@ -107,7 +110,8 @@ export const duelCancelReasonLabels: Record<TDuelCancelReason, string> = {
   accept_timeout: 'Матч не прийнято вчасно',
   player_cancelled: 'Скасовано гравцем',
   game_aborted: 'Гра не стартувала — гравець не завантажився в матч',
-  tournament_ended: 'Турнір завершено до старту гри'
+  tournament_ended: 'Турнір завершено до старту гри',
+  tournament_deleted: 'Турнір видалено до старту гри'
 }
 
 /** Мінімальна / максимальна довжина назви й пароля турніру (дзеркало валідації бекенду). */
@@ -115,6 +119,86 @@ export const DUEL_TOURNAMENT_NAME_MIN = 3
 export const DUEL_TOURNAMENT_NAME_MAX = 64
 export const DUEL_TOURNAMENT_PASSWORD_MIN = 4
 export const DUEL_TOURNAMENT_PASSWORD_MAX = 32
+
+/** Призові місця турніру (дзеркало `DUEL_TOURNAMENT_PRIZES_MAX` / `…_PLACE_MAX` / `…_VIP_MONTHS_MAX`). */
+export const DUEL_TOURNAMENT_PRIZES_MAX = 10
+export const DUEL_TOURNAMENT_PRIZE_PLACE_MAX = 100
+export const DUEL_TOURNAMENT_PRIZE_VIP_MONTHS_MAX = 12
+export const DUEL_TOURNAMENT_PRIZE_TITLE_MAX = 80
+export const DUEL_TOURNAMENT_PRIZE_URL_MAX = 512
+
+export const pluralizeDuelMonths = (n: number) => pluralizeUk(n, 'місяць', 'місяці', 'місяців')
+
+/** Коротка назва призу для бейджа: «VIP · 3 місяці» або назва власного призу. */
+export function duelPrizeLabel (prize: TDuelTournamentPrize): string {
+  if (prize.kind === 'vip') return `VIP · ${pluralizeDuelMonths(prize.vipMonths ?? 0)}`
+  return prize.title || 'Приз'
+}
+
+/** Призи за місцем — для рядків таблиці турніру. */
+export function duelPrizesByPlace (prizes: readonly TDuelTournamentPrize[] | null | undefined) {
+  return new Map((prizes ?? []).map(p => [p.place, p]))
+}
+
+let prizeDraftKey = 0
+
+export function createDuelPrizeDraft (place: number, kind: TDuelTournamentPrizeKind): TDuelPrizeDraft {
+  return { key: ++prizeDraftKey, place, kind, vipMonths: 1, title: '', imageUrl: '', linkUrl: '' }
+}
+
+export function duelPrizeDraftsFrom (prizes: readonly TDuelTournamentPrize[] | null | undefined): TDuelPrizeDraft[] {
+  return (prizes ?? []).map(p => ({
+    ...createDuelPrizeDraft(p.place, p.kind),
+    vipMonths: p.vipMonths ?? 1,
+    title: p.title ?? '',
+    imageUrl: p.imageUrl ?? '',
+    linkUrl: p.linkUrl ?? ''
+  }))
+}
+
+/** Тіло для бекенду: поля іншого виду не надсилаємо (бекенд їх однаково відкидає). */
+export function duelPrizeDraftToInput (draft: TDuelPrizeDraft): TDuelTournamentPrizeInput {
+  const title = draft.title.trim() || null
+  if (draft.kind === 'vip') return { place: draft.place, kind: 'vip', vipMonths: draft.vipMonths, title }
+  return {
+    place: draft.place,
+    kind: 'custom',
+    title,
+    imageUrl: draft.imageUrl.trim(),
+    linkUrl: draft.linkUrl.trim()
+  }
+}
+
+function isHttpUrl (value: string): boolean {
+  try {
+    const url = new URL(value)
+    return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname.includes('.')
+  } catch {
+    return false
+  }
+}
+
+/** Помилка рядка призу (дзеркало валідації бекенду) або порожній рядок. */
+export function duelPrizeDraftError (draft: TDuelPrizeDraft, all: readonly TDuelPrizeDraft[]): string {
+  if (!Number.isInteger(draft.place) || draft.place < 1 || draft.place > DUEL_TOURNAMENT_PRIZE_PLACE_MAX) {
+    return `Місце — від 1 до ${DUEL_TOURNAMENT_PRIZE_PLACE_MAX}`
+  }
+  if (all.some(other => other !== draft && other.place === draft.place)) return `${draft.place} місце вказано двічі`
+  if (draft.kind === 'vip') {
+    const months = draft.vipMonths
+    if (!Number.isInteger(months) || months < 1 || months > DUEL_TOURNAMENT_PRIZE_VIP_MONTHS_MAX) {
+      return `VIP — від 1 до ${DUEL_TOURNAMENT_PRIZE_VIP_MONTHS_MAX} місяців`
+    }
+    return ''
+  }
+  if (!draft.imageUrl.trim()) return 'Завантажте картинку призу'
+  const link = draft.linkUrl.trim()
+  if (!link) return 'Додайте посилання на приз'
+  if (link.length > DUEL_TOURNAMENT_PRIZE_URL_MAX || !isHttpUrl(link)) {
+    return 'Посилання має бути повною адресою: https://…'
+  }
+  return ''
+}
 
 /** Випадковий пароль турніру: 8 символів без схожих літер (0/O, 1/l), щоб легко продиктувати на стрімі. */
 export function generateDuelTournamentPassword (): string {

@@ -24,14 +24,17 @@
       <template v-else-if="tournament">
         <header class="dt-head">
           <div class="flex min-w-0 flex-col gap-6">
-            <span class="sys-label sys-label--gold">// Турнір дуелей</span>
+            <span class="sys-label sys-label--gold inline-flex items-center gap-6">
+              <PhBroadcast :size="12" weight="bold" aria-hidden="true" />
+              // Стрім-турнір 1v1
+            </span>
             <h1 class="dt-head__title">{{ tournament.name }}</h1>
             <p class="dt-head__meta">
               <span class="dt-head__status" :class="isActive ? 'is-active' : 'is-ended'">
                 {{ isActive ? 'Триває' : 'Завершено' }}
               </span>
               <span>{{ pluralizeDuelPlayers(tournament.participantsCount) }}</span>
-              <span v-if="tournament.createdBy">Організатор: {{ duelPlayerName(tournament.createdBy) }}</span>
+              <span v-if="tournament.createdBy">Стрімер: {{ duelPlayerName(tournament.createdBy) }}</span>
               <span v-if="tournament.endedAt">{{ dayjs(tournament.endedAt).format('DD.MM.YYYY HH:mm') }}</span>
               <span v-else>з {{ dayjs(tournament.createdAt).format('DD.MM.YYYY') }}</span>
             </p>
@@ -55,14 +58,20 @@
         <section v-if="tournament.canManage" class="dt-panel neon-card hud-corners rounded-2xl">
           <header class="flex flex-wrap items-center justify-between gap-10">
             <h2 class="sys-label sys-label--muted">// Керування</h2>
-            <div v-if="isActive" class="flex flex-wrap gap-8">
-              <el-button size="small" @click="openEdit">
-                <PhPencilSimple :size="14" weight="bold" />
-                <span class="ml-6">Редагувати</span>
-              </el-button>
-              <el-button size="small" type="danger" plain :loading="ending" @click="endTournament">
-                <PhFlagCheckered :size="14" weight="bold" />
-                <span class="ml-6">Завершити турнір</span>
+            <div class="flex flex-wrap gap-8">
+              <template v-if="isActive">
+                <el-button size="small" @click="openEdit">
+                  <PhPencilSimple :size="14" weight="bold" />
+                  <span class="ml-6">Редагувати</span>
+                </el-button>
+                <el-button size="small" type="danger" plain :loading="ending" @click="endTournament">
+                  <PhFlagCheckered :size="14" weight="bold" />
+                  <span class="ml-6">Завершити турнір</span>
+                </el-button>
+              </template>
+              <el-button v-if="isAdmin" size="small" type="danger" :loading="deleting" @click="deleteTournament">
+                <PhTrash :size="14" weight="bold" />
+                <span class="ml-6">Видалити</span>
               </el-button>
             </div>
           </header>
@@ -94,6 +103,36 @@
         </section>
       </template>
 
+      <!-- ─── Призи ────────────────────────────────────────────────────── -->
+      <section v-if="tournament && prizes.length" class="dt-panel neon-card hud-corners rounded-2xl">
+        <header class="flex flex-wrap items-center justify-between gap-10">
+          <h2 class="sys-label sys-label--gold">// Призи</h2>
+          <span class="dt-panel__meta">{{ prizesStatus }}</span>
+        </header>
+        <ul class="dt-prizes" aria-label="Призові місця">
+          <li
+            v-for="prize in prizes"
+            :key="prize.place"
+            class="dt-prize"
+            :style="{ '--tile-tone': toneOf(prize.place) }"
+          >
+            <span class="dt-prize__place">#{{ prize.place }}</span>
+            <DuelPrizeChip :prize="prize" size="md" class="min-w-0" />
+            <span class="dt-prize__holder truncate">
+              <template v-if="holderOf(prize)">
+                {{ prizesSettled ? '' : 'зараз: ' }}{{ holderOf(prize) }}
+              </template>
+              <template v-else-if="prizesSettled">не розіграно</template>
+            </span>
+          </li>
+        </ul>
+        <p class="dt-panel__hint">
+          Приз отримує гравець, що посідає місце після завершення турніру й зіграв хоча б одну дуель.
+          <template v-if="hasVipPrize">VIP нараховується автоматично.</template>
+          <template v-if="hasCustomPrize">Власні призи видає стрімер.</template>
+        </p>
+      </section>
+
       <!-- ─── Таблиця турніру ──────────────────────────────────────────── -->
       <section v-if="tournament" class="dt-panel neon-card hud-corners rounded-2xl">
         <header class="flex items-center justify-between gap-10">
@@ -109,7 +148,13 @@
         <p v-else-if="!rows.length" class="dt__empty">
           Ще ніхто не увійшов у турнір — перші рядки з’являться, щойно учасники введуть пароль.
         </p>
-        <DuelLeaderboardTable v-else :rows="rows" :highlight-id="meId" />
+        <DuelLeaderboardTable
+          v-else
+          :rows="rows"
+          :highlight-id="meId"
+          :prizes="prizes"
+          :prizes-settled="prizesSettled"
+        />
       </section>
     </div>
   </div>
@@ -121,6 +166,7 @@ import { ElMessageBox } from 'element-plus'
 import { useQueryCache } from '@pinia/colada'
 import {
   PhArrowLeft,
+  PhBroadcast,
   PhCheck,
   PhCopy,
   PhEye,
@@ -128,7 +174,8 @@ import {
   PhFlagCheckered,
   PhKey,
   PhPencilSimple,
-  PhSword
+  PhSword,
+  PhTrash
 } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import {
@@ -139,6 +186,8 @@ import {
 import { duelsService } from '@/views/duels/duels.service'
 import { DUEL_RATING_DELTA, duelPlayerName, pluralizeDuelPlayers } from '@/views/duels/duels.utils'
 import DuelLeaderboardTable from '@/views/duels/components/DuelLeaderboardTable.vue'
+import DuelPrizeChip from '@/views/duels/components/DuelPrizeChip.vue'
+import type { TDuelTournamentPrize } from '@/api/types/api.types'
 
 const route = useRoute()
 const router = useRouter()
@@ -162,7 +211,35 @@ const {
 } = useGetDuelTournamentLeaderboard(() => tournamentId.value)
 
 const isActive = computed(() => tournament.value?.status === 'ACTIVE')
+const isAdmin = computed(() => authStore.isAdmin.isAdmin)
 const rows = computed(() => leaderboard.value?.players ?? [])
+
+// ─── Призи ───────────────────────────────────────────────────────────────────
+const prizes = computed(() => tournament.value?.prizes ?? [])
+const prizesSettled = computed(() => !!tournament.value?.prizesAwardedAt)
+const hasVipPrize = computed(() => prizes.value.some(p => p.kind === 'vip'))
+const hasCustomPrize = computed(() => prizes.value.some(p => p.kind === 'custom'))
+
+const prizesStatus = computed(() => {
+  if (prizesSettled.value) return 'розіграно'
+  if (!isActive.value) return 'дограються останні ігри — потім видамо'
+  return 'після завершення турніру'
+})
+
+const PRIZE_TONES: Record<number, string> = {
+  1: 'var(--ds-gold-rgb)',
+  2: '198, 205, 220',
+  3: '205, 127, 50'
+}
+const toneOf = (place: number) => PRIZE_TONES[place] ?? 'var(--ds-primary-rgb)'
+
+/** Хто бере приз: після розіграшу — переможець, до того — хто зараз на місці (з хоча б однією грою). */
+function holderOf (prize: TDuelTournamentPrize): string {
+  const row = prizesSettled.value
+    ? rows.value.find(r => r.player.id === prize.awardedPlayerId)
+    : rows.value.find(r => r.position === prize.place && r.wins + r.losses > 0)
+  return row ? duelPlayerName(row.player) : ''
+}
 
 /** Список, сам турнір і таблиця — усе під `['duels', 'tournaments']`. */
 function refreshTournament () {
@@ -195,6 +272,33 @@ async function queueInTournament () {
 }
 
 // ─── Керування ───────────────────────────────────────────────────────────────
+const deleting = ref(false)
+/** Лише адмін: турнір і його таблиця зникають; ігри, що вже йдуть, дограються без зміни рейтингу. */
+async function deleteTournament () {
+  if (!tournament.value || deleting.value) return
+  try {
+    await ElMessageBox.confirm(
+      `Турнір «${tournament.value.name}» і його таблицю буде видалено назавжди. Черга закриється, дуелі, що ще ` +
+        'не стартували, скасуються; ігри, які вже йдуть, дограються без зміни рейтингу. ' +
+        'Нерозіграні призи не видаються. Скасувати це не можна.',
+      'Видалити турнір?',
+      { confirmButtonText: 'Видалити', cancelButtonText: 'Ні', type: 'error', confirmButtonClass: 'el-button--danger' }
+    )
+  } catch {
+    return
+  }
+  deleting.value = true
+  try {
+    await duelsService.deleteTournament(tournament.value.id)
+    queryCache.invalidateQueries({ key: [...DUEL_TOURNAMENTS_QUERY_KEY] }).catch(() => { /* тихо */ })
+    await router.push({ name: routeNames.duels })
+  } catch {
+    // тост уже показав duelsService
+  } finally {
+    deleting.value = false
+  }
+}
+
 const passwordShown = ref(false)
 const { copy, copied } = useClipboard({ legacy: true })
 function copyPassword () {
@@ -340,6 +444,43 @@ async function endTournament () {
   font-size: 12px;
   line-height: 1.5;
   color: var(--ds-text-faint);
+}
+
+.dt-prizes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dt-prize {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(var(--tile-tone), 0.2);
+  background: rgba(var(--tile-tone), 0.05);
+}
+
+.dt-prize__place {
+  flex-shrink: 0;
+  min-width: 34px;
+  font-family: var(--ds-font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: rgb(var(--tile-tone));
+}
+
+.dt-prize__holder {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-size: 12px;
+  color: var(--ds-text-muted);
 }
 
 .dt-password {

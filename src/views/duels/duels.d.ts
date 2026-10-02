@@ -28,3 +28,14 @@ type TDuelHistoryRow = {
   /** Рядок статистики цього гравця зі знімка бота; null, коли знімок не зберігся. */
   stats: import('@/api/types/api.types').TDuelStatsPlayer | null
 }
+
+/** Рядок редактора призів турніру; `key` — лише для v-for (місце користувач може змінити). */
+type TDuelPrizeDraft = {
+  key: number
+  place: number
+  kind: import('@/api/types/api.types').TDuelTournamentPrizeKind
+  vipMonths: number
+  title: string
+  imageUrl: string
+  linkUrl: string
+}

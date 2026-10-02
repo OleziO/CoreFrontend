@@ -44,6 +44,7 @@
                 <span v-if="row.player.discordUsername" class="dboard__handle truncate">
                   @{{ row.player.discordUsername }}
                 </span>
+                <DuelPrizeChip v-if="prizeOf(row)" :prize="prizeOf(row)!" class="dboard__prize" />
               </span>
             </div>
           </td>
@@ -93,20 +94,39 @@ import {
   formatDuelPercent,
   formatDuelStreak
 } from '@/views/duels/duels.utils'
-import type { TDuelLeaderboardRow } from '@/api/types/api.types'
+import DuelPrizeChip from '@/views/duels/components/DuelPrizeChip.vue'
+import type { TDuelLeaderboardRow, TDuelTournamentPrize } from '@/api/types/api.types'
 
 const props = defineProps<{
   rows: TDuelLeaderboardRow[]
   /** id залогіненого гравця — його рядок підсвічується. */
   highlightId: string | null
+  /** Призові місця турніру — бейдж призу в рядку гравця. */
+  prizes?: TDuelTournamentPrize[]
+  /** Призи вже розіграно: бейдж у переможця (`awardedPlayerId`), а не за поточним місцем. */
+  prizesSettled?: boolean
 }>()
+
+/** Поки турнір триває — приз «висить» на місці; після розіграшу — на гравці, що його виграв. */
+const prizeByRow = computed(() => {
+  const map = new Map<string, TDuelTournamentPrize>()
+  for (const prize of props.prizes ?? []) {
+    const playerId = props.prizesSettled
+      ? prize.awardedPlayerId
+      : props.rows.find(r => r.position === prize.place)?.player.id
+    if (playerId) map.set(playerId, prize)
+  }
+  return map
+})
+
+const prizeOf = (row: TDuelLeaderboardRow) => prizeByRow.value.get(row.player.id) ?? null
 
 const router = useRouter()
 const { open } = useAppModals()
 
 /** На телефоні в рядку лише нік і рейтинг — решта статистики в модалці. */
 function openRow (row: TDuelLeaderboardRow) {
-  open('DuelLeaderboardRowModal', { row, highlightId: props.highlightId })
+  open('DuelLeaderboardRowModal', { row, highlightId: props.highlightId, prize: prizeOf(row) })
 }
 
 const TONES: Record<number, string> = {
@@ -382,8 +402,18 @@ function goToPlayer (id: string) {
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
+  align-items: flex-start;
   gap: 2px;
   min-width: 0;
+}
+
+.dboard__names > .dboard__name,
+.dboard__names > .dboard__handle {
+  max-width: 100%;
+}
+
+.dboard__prize {
+  margin-top: 2px;
 }
 
 .dboard__name {
