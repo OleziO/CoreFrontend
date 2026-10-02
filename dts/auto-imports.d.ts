@@ -7,6 +7,7 @@ export {}
 declare global {
   const EffectScope: typeof import('vue')['EffectScope']
   const ElMessage: typeof import('element-plus/es')['ElMessage']
+  const FIND_PAGE_SIZE: typeof import('../src/views/find/find.service')['FIND_PAGE_SIZE']
   const UPLOAD_ERROR: typeof import('../src/services/image-upload.service')['UPLOAD_ERROR']
   const VIRTUAL_GRID_CARD_GAP_PX: typeof import('../src/composables/use-virtual-grid')['VIRTUAL_GRID_CARD_GAP_PX']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
@@ -52,6 +53,7 @@ declare global {
   const extendRef: typeof import('@vueuse/core')['extendRef']
   const financeClient: typeof import('../src/api/finance-client')['default']
   const financeService: typeof import('../src/views/finance-monitor/finance.service')['financeService']
+  const findService: typeof import('../src/views/find/find.service')['findService']
   const friendsService: typeof import('../src/views/friends/friends.service')['friendsService']
   const getActivePinia: typeof import('pinia')['getActivePinia']
   const getCountryDisplayName: typeof import('../src/composables/use-locations')['getCountryDisplayName']
@@ -223,6 +225,7 @@ declare global {
   const useFetch: typeof import('@vueuse/core')['useFetch']
   const useFileDialog: typeof import('@vueuse/core')['useFileDialog']
   const useFileSystemAccess: typeof import('@vueuse/core')['useFileSystemAccess']
+  const useFindStore: typeof import('../src/views/find/find.store')['useFindStore']
   const useFocus: typeof import('@vueuse/core')['useFocus']
   const useFocusWithin: typeof import('@vueuse/core')['useFocusWithin']
   const useFps: typeof import('@vueuse/core')['useFps']

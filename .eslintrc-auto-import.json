@@ -388,6 +388,9 @@
     "useChatMentions": true,
     "useChatPanel": true,
     "useChatStore": true,
-    "chatSoundService": true
+    "chatSoundService": true,
+    "FIND_PAGE_SIZE": true,
+    "findService": true,
+    "useFindStore": true
   }
 }

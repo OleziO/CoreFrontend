@@ -25,6 +25,14 @@
           {{ actorName }}
         </RouterLink>
         <span>{{ text }}</span>
+        <RouterLink
+          v-if="item.team"
+          :to="{ name: routeNames.team, params: { id: item.team.id } }"
+          class="notif-item__actor notif-item__team no-underline"
+          @click="emit('navigate')"
+        >
+          {{ item.team.name }}
+        </RouterLink>
       </p>
 
       <!-- Другий рядок лише коли є що сказати: результат, таймер або перехід -->
@@ -47,6 +55,10 @@
 
       <!-- Дії: лише поки запит / виклик відкритий -->
       <div v-if="isPending && item.refId" class="notif-item__actions">
+        <el-button v-if="isTeamRequest" size="small" plain :disabled="busy" @click="onView">
+          <PhEye :size="13" weight="bold" class="mr-4" />
+          Переглянути
+        </el-button>
         <el-button
           type="primary"
           size="small"
@@ -73,11 +85,15 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import { PhArrowRight, PhCheck, PhSword, PhUserPlus, PhUsersThree, PhXCircle, PhTimer } from '@phosphor-icons/vue'
+import {
+  PhArrowRight, PhCheck, PhEnvelopeSimple, PhEye, PhPaperPlaneTilt, PhSword, PhUserPlus, PhUsersThree, PhXCircle,
+  PhTimer
+} from '@phosphor-icons/vue'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
 import { useDuelChallenges } from '@/views/duels/composables/use-duel-challenges'
 import { formatDuelCountdown, secondsUntil } from '@/views/duels/duels.utils'
+import { useFindRequestActions } from '@/views/find/composables/use-find-request-actions'
 import type { TNotification, TNotificationStatus, TNotificationType } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
@@ -100,6 +116,8 @@ const router = useRouter()
 const store = useNotificationsStore()
 const friendsStore = useFriendsStore()
 const { accept: acceptChallenge, decline: declineChallenge } = useDuelChallenges()
+const findRequests = useFindRequestActions()
+const { open: openModal } = useAppModals()
 
 const now = useNow({ interval: 1000 })
 
@@ -107,6 +125,8 @@ const actorName = computed(() => props.item.actor?.discordName || props.item.act
 const actorInitial = computed(() => actorName.value.charAt(0).toUpperCase())
 const isPending = computed(() => props.item.status === 'pending')
 const isDuelReady = computed(() => props.item.type === 'duel_challenge_accepted')
+/** Заявка до команди / запрошення: окрім «Прийняти» є «Переглянути» з усіма деталями. */
+const isTeamRequest = computed(() => props.item.type === 'team_application' || props.item.type === 'team_invite')
 const busy = computed(() => store.isBusy(props.item.id))
 
 const texts: Record<TNotificationType, string> = {
@@ -115,7 +135,13 @@ const texts: Record<TNotificationType, string> = {
   duel_challenge: 'викликає вас на дружню дуель (±10)',
   duel_challenge_accepted: 'прийняв виклик — дуель уже створюється',
   duel_challenge_declined: 'відхилив ваш виклик на дуель',
-  duel_challenge_expired: 'не відповів на виклик — він прострочений'
+  duel_challenge_expired: 'не відповів на виклик — він прострочений',
+  team_application: 'подав заявку до команди',
+  team_application_accepted: 'прийняв вашу заявку — ви в команді',
+  team_application_declined: 'відхилив вашу заявку до команди',
+  team_invite: 'запрошує вас до команди',
+  team_invite_accepted: 'прийняв запрошення до команди',
+  team_invite_declined: 'відхилив запрошення до команди'
 }
 const text = computed(() => texts[props.item.type])
 
@@ -125,7 +151,13 @@ const icons = {
   duel_challenge: PhSword,
   duel_challenge_accepted: PhSword,
   duel_challenge_declined: PhXCircle,
-  duel_challenge_expired: PhTimer
+  duel_challenge_expired: PhTimer,
+  team_application: PhPaperPlaneTilt,
+  team_application_accepted: PhUsersThree,
+  team_application_declined: PhXCircle,
+  team_invite: PhEnvelopeSimple,
+  team_invite_accepted: PhUsersThree,
+  team_invite_declined: PhXCircle
 } satisfies Record<TNotificationType, unknown>
 const icon = computed(() => icons[props.item.type])
 
@@ -133,11 +165,16 @@ const tone = computed(() => {
   switch (props.item.type) {
     case 'friend_request_accepted':
     case 'duel_challenge_accepted':
+    case 'team_application_accepted':
+    case 'team_invite_accepted':
       return 'success'
     case 'duel_challenge':
+    case 'team_invite':
       return 'gold'
     case 'duel_challenge_declined':
     case 'duel_challenge_expired':
+    case 'team_application_declined':
+    case 'team_invite_declined':
       return 'muted'
     default:
       return 'primary'
@@ -188,9 +225,20 @@ const expiresIn = computed(() => {
   return left > 0 ? formatDuelCountdown(left) : ''
 })
 
+function onView () {
+  const refId = props.item.refId
+  if (!refId) return
+  emit('navigate')
+  openModal('FindRequestModal', { requestId: refId })
+}
+
 async function onAccept () {
   const refId = props.item.refId
   if (!refId) return
+  if (isTeamRequest.value) {
+    await store.runAction(props.item.id, () => findRequests.accept(refId))
+    return
+  }
   if (props.item.type === 'friend_request') {
     await store.runAction(props.item.id, () => friendsStore.acceptRequest(refId))
     return
@@ -207,7 +255,9 @@ async function onAccept () {
 async function onDecline () {
   const refId = props.item.refId
   if (!refId) return
-  if (props.item.type === 'friend_request') {
+  if (isTeamRequest.value) {
+    await store.runAction(props.item.id, () => findRequests.decline(refId))
+  } else if (props.item.type === 'friend_request') {
     await store.runAction(props.item.id, () => friendsStore.declineRequest(refId))
   } else if (props.item.type === 'duel_challenge') {
     await store.runAction(props.item.id, () => declineChallenge(refId))
@@ -332,6 +382,12 @@ async function onDecline () {
   font-weight: 600;
   color: var(--ds-text-strong);
   transition: color var(--ds-duration-fast) ease;
+}
+
+/* Назва команди йде після тексту, а не перед ним */
+.notif-item__team {
+  margin-right: 0;
+  margin-left: 4px;
 }
 
 @media (hover: hover) and (pointer: fine) {

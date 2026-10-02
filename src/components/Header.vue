@@ -242,7 +242,7 @@ import { routeNames } from '@/router/route-names'
 import logo from '@/assets/images/core-league-logo-full.webp'
 import {
   PhDiscordLogo, PhSignOut, PhUser, PhUserPlus, PhTrophy, PhCaretDown, PhGauge, PhChartLineUp,
-  PhHouse, PhUsersThree, PhUsers, PhRanking, PhSword
+  PhHouse, PhUsersThree, PhUsers, PhRanking, PhSword, PhBinoculars
 } from '@phosphor-icons/vue'
 import type { Component } from 'vue'
 import NotificationCenter from '@/components/NotificationCenter.vue'
@@ -304,16 +304,17 @@ const route = useRoute()
 const router = useRouter()
 
 // ─── Primary nav (lg+) ──────────────────────────────────────────────────────
-// Ті самі шість розділів, що й на мобільному (таббар + меню). «Друзі» — в
-// меню користувача, бо доступні лише авторизованим.
-const navItems: Array<{ name: string; label: string; icon: Component }> = [
+// Ті самі розділи, що й на мобільному (таббар + меню). «Друзі» — в меню
+// користувача, «Пошук команди» — лише для авторизованих (сторінка закрита для гостей).
+const navItems = computed<Array<{ name: string; label: string; icon: Component }>>(() => [
   { name: routeNames.rootPage, label: 'Головна', icon: PhHouse },
   { name: routeNames.tournaments, label: 'Турніри', icon: PhTrophy },
   { name: routeNames.teams, label: 'Команди', icon: PhUsersThree },
   { name: routeNames.players, label: 'Гравці', icon: PhUsers },
+  ...(authStore.token ? [{ name: routeNames.find, label: 'Пошук команди', icon: PhBinoculars }] : []),
   { name: routeNames.leaderboard, label: 'Лідери', icon: PhRanking },
   { name: routeNames.duels, label: 'Дуелі', icon: PhSword }
-]
+])
 
 /** Сторінка деталей підсвічує свій розділ; «Друзі» живуть під «Гравцями». */
 const navDetailOf: Record<string, string[]> = {

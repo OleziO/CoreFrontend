@@ -244,6 +244,17 @@
         <PhChatCircleDots :size="16" weight="bold" class="mr-10 shrink-0" />
         Написати
       </el-button>
+
+      <!-- Запрошення до команди: капітан / тренер / адмін, гравець без команди -->
+      <el-button
+        v-if="canInviteToTeam"
+        plain
+        class="min-w-0 flex-1 max-sm:!px-8"
+        @click="openTeamInvite"
+      >
+        <PhUsersThree :size="16" weight="bold" class="mr-10 shrink-0" />
+        Запросити в команду
+      </el-button>
     </div>
 
     <!-- DUEL: третій рядок, лише для друзів — виклик на дружню дуель на всю ширину -->
@@ -357,10 +368,12 @@ import {
   PhInfo,
   PhSword,
   PhLockSimple,
-  PhChatCircleDots
+  PhChatCircleDots,
+  PhUsersThree
 } from '@phosphor-icons/vue'
 import { getCopy, isPlayerVip } from '@/core/helpers'
 import { useChatStore } from '@/features/chat/chat.store'
+import { useFindStore } from '@/views/find/find.store'
 import { isVipLifetime } from '@/core/vip.constants'
 import VipBadge from '@/components/VipBadge.vue'
 import type { TIconName } from '@/components/Icon.vue'
@@ -394,6 +407,19 @@ interface IProps {
 const props = withDefaults(defineProps<IProps>(), { canViewLinks: true })
 
 const chatStore = useChatStore()
+const findStore = useFindStore()
+const { open: openModal } = useAppModals()
+
+/** Менеджер команди (або адмін) бачить чужий профіль гравця без команди. */
+const canInviteToTeam = computed(() => !!props.showFriendActions && findStore.canInvite && !props.player.teamId)
+
+watch(() => props.showFriendActions, (on) => {
+  if (on) findStore.loadMe()
+}, { immediate: true })
+
+function openTeamInvite () {
+  openModal('FindInviteModal', { player: props.player })
+}
 
 const emit = defineEmits<{
   toggleVerification: []

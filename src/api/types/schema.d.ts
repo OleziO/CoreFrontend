@@ -2073,6 +2073,224 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/recruitment/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My recruitment state
+         * @description My listing, daily limits left, and the teams I captain / coach with their open post.
+         */
+        get: operations["RecruitmentController_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/recruitment/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Open team posts
+         * @description VIP captains first, then newest. Paged with limit / offset.
+         */
+        get: operations["RecruitmentController_listTeamPosts"];
+        put?: never;
+        /**
+         * Open a team post (captain / coach / admin)
+         * @description 409 when the team already has an open post.
+         */
+        post: operations["RecruitmentController_createTeamPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/recruitment/teams/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Close a team post (managers, admin moderation)
+         * @description Its pending applications are cancelled.
+         */
+        delete: operations["RecruitmentController_closeTeamPost"];
+        options?: never;
+        head?: never;
+        /** Edit an open team post */
+        patch: operations["RecruitmentController_updateTeamPost"];
+        trace?: never;
+    };
+    "/recruitment/teams/{id}/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply to a team post
+         * @description Needs a verified, Steam-linked, team-less player whose MMR fits the range and who plays one of the positions. 429 past the daily limit (VIP unlimited).
+         */
+        post: operations["RecruitmentController_apply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/recruitment/players": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Players looking for a team
+         * @description VIP players first, then newest. Paged with limit / offset.
+         */
+        get: operations["RecruitmentController_listPlayerListings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/recruitment/players/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Publish / edit my "looking for a team" listing
+         * @description Needs a verified, Steam-linked, team-less player with positions.
+         */
+        put: operations["RecruitmentController_upsertMyListing"];
+        post?: never;
+        /** Remove my listing */
+        delete: operations["RecruitmentController_deleteMyListing"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/recruitment/players/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a listing (author or admin) */
+        delete: operations["RecruitmentController_deleteListing"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/recruitment/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Invite a team-less player (captain / coach / admin)
+         * @description 429 past the daily team limit (unlimited for a VIP / admin sender).
+         */
+        post: operations["RecruitmentController_invite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/recruitment/requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Application / invite details (participants only) */
+        get: operations["RecruitmentController_getRequest"];
+        put?: never;
+        post?: never;
+        /** Withdraw: the applicant an application, a manager an invite */
+        delete: operations["RecruitmentController_withdraw"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/recruitment/requests/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept: a manager an application, the invitee an invite
+         * @description The player joins the team right away; their other pending requests and listing are dropped.
+         */
+        post: operations["RecruitmentController_accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/recruitment/requests/{id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline: a manager an application, the invitee an invite */
+        post: operations["RecruitmentController_decline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3593,24 +3811,26 @@ export interface components {
         NotificationDto: {
             id: string;
             /** @enum {string} */
-            type: "friend_request" | "friend_request_accepted" | "duel_challenge" | "duel_challenge_accepted" | "duel_challenge_declined" | "duel_challenge_expired";
+            type: "friend_request" | "friend_request_accepted" | "duel_challenge" | "duel_challenge_accepted" | "duel_challenge_declined" | "duel_challenge_expired" | "team_application" | "team_application_accepted" | "team_application_declined" | "team_invite" | "team_invite_accepted" | "team_invite_declined";
             /**
              * @description Outcome of the request / challenge the entry is about; `pending` means the buttons are still live
              * @enum {string|null}
              */
-            status: "pending" | "accepted" | "declined" | "cancelled" | "expired" | null;
-            /** @description friendship.id (friend_request*) or duel_challenge.id (duel_challenge*) */
-            refId: string | null;
-            actor: components["schemas"]["NotificationActorDto"] | null;
+            status?: "pending" | "accepted" | "declined" | "cancelled" | "expired" | null;
+            /** @description friendship.id (friend_request*), duel_challenge.id (duel_challenge*) or team_join_request.id (team_application*, team_invite*) */
+            refId?: string | null;
+            actor?: components["schemas"]["NotificationActorDto"] | null;
+            /** @description Team of a team_application* / team_invite* entry */
+            team?: components["schemas"]["NotificationTeamDto"] | null;
             /** @description Friendly duel created from an accepted challenge */
-            duelId: string | null;
+            duelId?: string | null;
             /**
              * Format: date-time
-             * @description Until when a duel challenge can be answered
+             * @description Until when a duel challenge / team request can be answered
              */
-            expiresAt: string | null;
+            expiresAt?: string | null;
             /** Format: date-time */
-            readAt: string | null;
+            readAt?: string | null;
             /** Format: date-time */
             createdAt: string;
         };
@@ -3814,6 +4034,204 @@ export interface components {
             lastMessage: components["schemas"]["ChatMessageDto"];
             /** @description Messages of the owner the caller has not read yet */
             unread: number;
+        };
+        NotificationTeamDto: {
+            id: string;
+            name: string;
+            logoUrl?: string | null;
+        };
+        CreateTeamPostDto: {
+            /**
+             * Format: uuid
+             * @description Team the post is for (caller must manage it)
+             */
+            teamId: string;
+            description?: string | null;
+            /** @enum {array} */
+            positions: (1 | 2 | 3 | 4 | 5)[];
+            playersNeeded: number;
+            /** @description At least one of mmrMin / mmrMax is required */
+            mmrMin?: number | null;
+            mmrMax?: number | null;
+            /** @description Formats the team plays; empty = any */
+            formats?: ("ONLINE" | "LAN")[];
+        };
+        UpdateTeamPostDto: {
+            description?: string | null;
+            /** @enum {array} */
+            positions?: (1 | 2 | 3 | 4 | 5)[];
+            playersNeeded?: number;
+            /** @description At least one of mmrMin / mmrMax is required */
+            mmrMin?: number | null;
+            mmrMax?: number | null;
+            /** @description Formats the team plays; empty = any */
+            formats?: ("ONLINE" | "LAN")[];
+        };
+        ApplyToTeamPostDto: {
+            /**
+             * @description One of the player positions the post is looking for
+             * @enum {number}
+             */
+            position: 1 | 2 | 3 | 4 | 5;
+            message?: string | null;
+        };
+        UpsertPlayerListingDto: {
+            description?: string | null;
+        };
+        CreateTeamInviteRequestDto: {
+            /**
+             * Format: uuid
+             * @description Inviting team (caller must manage it)
+             */
+            teamId: string;
+            /**
+             * Format: uuid
+             * @description Invited player (must have no team)
+             */
+            playerId: string;
+            /** @enum {string} */
+            slot: "main" | "reserved" | "coach";
+            message?: string | null;
+        };
+        AcceptJoinRequestDto: {
+            /**
+             * @description Applications only: roster slot; omitted = main if free (and not locked by a tournament), else reserved
+             * @enum {string}
+             */
+            slot?: "main" | "reserved" | "coach";
+        };
+        RecruitmentTeamDto: {
+            id: string;
+            name: string;
+            logoUrl?: string | null;
+            isVerified: boolean;
+            isPlayingTournament: boolean;
+            /** @description Mean rating of the main roster, rounded */
+            avgRating?: number | null;
+            /** @description Captain is VIP (posts sort first) */
+            isVip: boolean;
+            captainId?: string | null;
+            coachId?: string | null;
+            mainCount: number;
+            reservedCount: number;
+        };
+        JoinRequestBriefDto: {
+            id: string;
+            /** @enum {string} */
+            kind: "APPLICATION" | "INVITE";
+            /** @enum {string} */
+            status: "PENDING" | "ACCEPTED" | "DECLINED" | "CANCELLED" | "EXPIRED";
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        TeamPostDto: {
+            id: string;
+            team: components["schemas"]["RecruitmentTeamDto"];
+            description?: string | null;
+            positions: (1 | 2 | 3 | 4 | 5)[];
+            playersNeeded: number;
+            mmrMin?: number | null;
+            mmrMax?: number | null;
+            formats: ("ONLINE" | "LAN")[];
+            /** @enum {string} */
+            status: "OPEN" | "CLOSED";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** @description The caller's pending application to this team */
+            myApplication?: components["schemas"]["JoinRequestBriefDto"] | null;
+            /** @description Why the caller cannot apply; empty = can apply */
+            blockReasons: ("not_verified" | "no_steam" | "has_team" | "no_positions" | "mmr_too_low" | "mmr_too_high" | "position_mismatch")[];
+            /** @description Caller is captain / coach of the team or an admin */
+            canManage: boolean;
+        };
+        TeamPostsPageDto: {
+            items: components["schemas"]["TeamPostDto"][];
+            total: number;
+        };
+        PlayerListingDto: {
+            id: string;
+            description?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** @description Live profile (MMR, positions, formats, city) */
+            player: components["schemas"]["PlayerResponseDto"];
+            /** @description Pending invite from a team the caller manages */
+            myTeamInvite?: components["schemas"]["JoinRequestBriefDto"] | null;
+        };
+        PlayerListingsPageDto: {
+            items: components["schemas"]["PlayerListingDto"][];
+            total: number;
+        };
+        RecruitmentPlayerCardDto: {
+            id: string;
+            discordName?: string | null;
+            discordUsername?: string | null;
+            avatarUrl?: string | null;
+        };
+        TeamPostBriefDto: {
+            id: string;
+            description?: string | null;
+            positions: (1 | 2 | 3 | 4 | 5)[];
+            playersNeeded: number;
+            mmrMin?: number | null;
+            mmrMax?: number | null;
+            /** @enum {string} */
+            status: "OPEN" | "CLOSED";
+        };
+        JoinRequestDto: {
+            id: string;
+            /** @enum {string} */
+            kind: "APPLICATION" | "INVITE";
+            /** @enum {string} */
+            status: "PENDING" | "ACCEPTED" | "DECLINED" | "CANCELLED" | "EXPIRED";
+            message?: string | null;
+            /**
+             * @description Position the applicant picked
+             * @enum {number|null}
+             */
+            position?: 1 | 2 | 3 | 4 | 5 | null;
+            /**
+             * @description Invite: offered slot. Accepted application: slot given
+             * @enum {string|null}
+             */
+            slot?: "main" | "reserved" | "coach" | null;
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            respondedAt?: string | null;
+            /** @description Live profile */
+            player: components["schemas"]["PlayerResponseDto"];
+            team: components["schemas"]["TeamResponseDto"];
+            createdBy?: components["schemas"]["RecruitmentPlayerCardDto"] | null;
+            post?: components["schemas"]["TeamPostBriefDto"] | null;
+            /** @description Caller may accept / decline */
+            canRespond: boolean;
+            /** @description Caller may withdraw (cancel) */
+            canWithdraw: boolean;
+        };
+        ManagedTeamDto: {
+            team: components["schemas"]["RecruitmentTeamDto"];
+            post?: components["schemas"]["TeamPostDto"] | null;
+            /** @description Invites left today; null = unlimited (VIP / admin) */
+            invitesLeft?: number | null;
+        };
+        RecruitmentMeDto: {
+            isAdmin: boolean;
+            listing?: components["schemas"]["PlayerListingDto"] | null;
+            /** @description Why the caller cannot publish a listing; empty = can */
+            listingBlockReasons: ("not_verified" | "no_steam" | "has_team" | "no_positions" | "mmr_too_low" | "mmr_too_high" | "position_mismatch")[];
+            /** @description Applications left today; null = unlimited (VIP) */
+            applicationsLeft?: number | null;
+            /** @description Teams the caller captains / coaches */
+            managedTeams: components["schemas"]["ManagedTeamDto"][];
         };
     };
     responses: never;
@@ -6890,6 +7308,395 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChatPlayerDto"][];
+                };
+            };
+        };
+    };
+    RecruitmentController_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecruitmentMeDto"];
+                };
+            };
+        };
+    };
+    RecruitmentController_listTeamPosts: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                search?: string;
+                /** @description Comma-separated positions 1–5 */
+                positions?: string;
+                /** @description Comma-separated formats ONLINE / LAN */
+                formats?: string;
+                /** @description Only posts whose MMR range includes this value */
+                mmr?: number;
+                /** @description Only posts the caller may apply to */
+                eligible?: boolean;
+                /** @description Only verified teams */
+                verified?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamPostsPageDto"];
+                };
+            };
+        };
+    };
+    RecruitmentController_createTeamPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTeamPostDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamPostDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamPostDto"];
+                };
+            };
+        };
+    };
+    RecruitmentController_closeTeamPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamPostDto"];
+                };
+            };
+        };
+    };
+    RecruitmentController_updateTeamPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTeamPostDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamPostDto"];
+                };
+            };
+        };
+    };
+    RecruitmentController_apply: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplyToTeamPostDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamPostDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamPostDto"];
+                };
+            };
+        };
+    };
+    RecruitmentController_listPlayerListings: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                search?: string;
+                /** @description Comma-separated positions 1–5 */
+                positions?: string;
+                /** @description Comma-separated formats ONLINE / LAN */
+                formats?: string;
+                ratingFrom?: number;
+                ratingTo?: number;
+                /** @description Comma-separated medal tiers 1–8 (Herald … Immortal) */
+                ranks?: string;
+                /** @description Comma-separated LAN cities */
+                lanCities?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayerListingsPageDto"];
+                };
+            };
+        };
+    };
+    RecruitmentController_upsertMyListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertPlayerListingDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayerListingDto"];
+                };
+            };
+        };
+    };
+    RecruitmentController_deleteMyListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RecruitmentController_deleteListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RecruitmentController_invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTeamInviteRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinRequestDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinRequestDto"];
+                };
+            };
+        };
+    };
+    RecruitmentController_getRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinRequestDto"];
+                };
+            };
+        };
+    };
+    RecruitmentController_withdraw: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinRequestDto"];
+                };
+            };
+        };
+    };
+    RecruitmentController_accept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptJoinRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinRequestDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinRequestDto"];
+                };
+            };
+        };
+    };
+    RecruitmentController_decline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinRequestDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinRequestDto"];
                 };
             };
         };

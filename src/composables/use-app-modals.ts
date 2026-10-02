@@ -50,7 +50,16 @@ export const appModals = useModals({
   DuelAdminMatchesModal:
     defineAsyncComponent(() => import('@/views/duels/modals/DuelAdminMatchesModal.vue')) as Component,
   LeaderboardRowModal:
-    defineAsyncComponent(() => import('@/views/leaderboard/modals/LeaderboardRowModal.vue')) as Component
+    defineAsyncComponent(() => import('@/views/leaderboard/modals/LeaderboardRowModal.vue')) as Component,
+  FindTeamsFilterModal:
+    defineAsyncComponent(() => import('@/views/find/modals/FindTeamsFilterModal.vue')) as Component,
+  FindPlayersFilterModal:
+    defineAsyncComponent(() => import('@/views/find/modals/FindPlayersFilterModal.vue')) as Component,
+  FindTeamPostModal: defineAsyncComponent(() => import('@/views/find/modals/FindTeamPostModal.vue')) as Component,
+  FindApplyModal: defineAsyncComponent(() => import('@/views/find/modals/FindApplyModal.vue')) as Component,
+  FindListingModal: defineAsyncComponent(() => import('@/views/find/modals/FindListingModal.vue')) as Component,
+  FindInviteModal: defineAsyncComponent(() => import('@/views/find/modals/FindInviteModal.vue')) as Component,
+  FindRequestModal: defineAsyncComponent(() => import('@/views/find/modals/FindRequestModal.vue')) as Component
 })
 
 export function useAppModals () {

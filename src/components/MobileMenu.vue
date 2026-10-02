@@ -63,6 +63,18 @@
         </RouterLink>
 
         <RouterLink
+          v-if="authStore.token"
+          :to="{ name: routeNames.find }"
+          class="mobile-menu-link no-underline"
+          :class="{ 'mobile-menu-link--active': isActive(routeNames.find) }"
+          :aria-current="isActive(routeNames.find) ? 'page' : undefined"
+          @click="close"
+        >
+          <PhBinoculars :size="20" />
+          <span>Пошук команди</span>
+        </RouterLink>
+
+        <RouterLink
           :to="{ name: routeNames.duels }"
           class="mobile-menu-link no-underline"
           :class="{ 'mobile-menu-link--active': isActive(routeNames.duels) }"
@@ -151,7 +163,7 @@
 import { routeNames } from '@/router/route-names'
 import Icon, { type TIconName } from '@/components/Icon.vue'
 import {
-  PhDiscordLogo, PhUser, PhUserPlus, PhUsersThree, PhChartLineUp, PhGauge, PhSignOut, PhSword, PhX
+  PhDiscordLogo, PhUser, PhUserPlus, PhUsersThree, PhChartLineUp, PhGauge, PhSignOut, PhSword, PhX, PhBinoculars
 } from '@phosphor-icons/vue'
 import { hasAdminRole } from '@/core/helpers'
 
