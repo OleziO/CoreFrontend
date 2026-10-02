@@ -33,34 +33,45 @@
         <FilterChips v-model="form.positions" :options="positionChipOptions" />
       </div>
 
-      <div class="grid grid-cols-1 gap-16 sm:grid-cols-[140px_1fr]">
-        <div class="find-field">
-          <label class="find-field__label" for="find-post-needed">Потрібно гравців</label>
-          <el-input-number
-            id="find-post-needed"
-            v-model="form.playersNeeded"
-            :min="1"
-            :max="FIND_PLAYERS_NEEDED_MAX"
-            :step="1"
-            step-strictly
-            class="!w-full"
-          />
+      <div class="find-field">
+        <span id="find-post-needed-label" class="find-field__label">Потрібно гравців</span>
+        <!-- 1–5: одна кнопка на число замість степера — вибір в один дотик -->
+        <div
+          role="radiogroup"
+          aria-labelledby="find-post-needed-label"
+          class="needed-picker"
+          @keydown.left.prevent="stepNeeded(-1)"
+          @keydown.right.prevent="stepNeeded(1)"
+        >
+          <button
+            v-for="n in FIND_PLAYERS_NEEDED_MAX"
+            :key="n"
+            type="button"
+            role="radio"
+            class="needed-picker__option"
+            :class="{ 'is-selected': form.playersNeeded === n }"
+            :aria-checked="form.playersNeeded === n"
+            :tabindex="form.playersNeeded === n ? 0 : -1"
+            @click="form.playersNeeded = n"
+          >
+            {{ n }}
+          </button>
         </div>
+      </div>
 
-        <div class="find-field">
-          <span class="find-field__label">
-            Діапазон MMR
-            <span v-if="showErrors && mmrError" class="text-error">{{ mmrError }}</span>
-          </span>
-          <FilterRange
-            v-model:from="form.mmrMin"
-            v-model:to="form.mmrMax"
-            :max="FIND_MMR_MAX"
-            unit="MMR"
-            aria-label="Діапазон MMR"
-          />
-          <p class="find-field__hint">Вкажіть мінімум, максимум або обидва — інші гравці не зможуть подати заявку.</p>
-        </div>
+      <div class="find-field">
+        <span class="find-field__label">
+          Діапазон MMR
+          <span v-if="showErrors && mmrError" class="text-error">{{ mmrError }}</span>
+        </span>
+        <FilterRange
+          v-model:from="form.mmrMin"
+          v-model:to="form.mmrMax"
+          :max="FIND_MMR_MAX"
+          unit="MMR"
+          aria-label="Діапазон MMR"
+        />
+        <p class="find-field__hint">Вкажіть мінімум, максимум або обидва — інші гравці не зможуть подати заявку.</p>
       </div>
 
       <div class="find-field">
@@ -158,6 +169,15 @@ const selectedTeamId = ref<string | null>(null)
 const saving = ref(false)
 const showErrors = ref(false)
 
+/** Стрілки ←/→ у групі радіо-кнопок; фокус іде за вибором. */
+function stepNeeded (delta: number) {
+  const next = Math.min(FIND_PLAYERS_NEEDED_MAX, Math.max(1, form.playersNeeded + delta))
+  form.playersNeeded = next
+  nextTick(() => {
+    document.querySelector<HTMLElement>('.needed-picker__option.is-selected')?.focus()
+  })
+}
+
 const mmrError = computed(() => {
   if (form.mmrMin == null && form.mmrMax == null) return 'Вкажіть мінімум або максимум'
   if (form.mmrMin != null && form.mmrMax != null && form.mmrMin > form.mmrMax) return 'Мінімум більший за максимум'
@@ -208,3 +228,76 @@ async function submit () {
   }
 }
 </script>
+
+<style scoped lang="scss">
+// Players-needed picker: a row of five numbered tiles in the same well /
+// cyan-lit vocabulary as the slot picker and the position pips on the cards.
+.needed-picker {
+  @apply grid gap-6;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  max-width: 260px;
+}
+
+.needed-picker__option {
+  @apply relative inline-flex h-40 items-center justify-center overflow-hidden rounded-lg border p-0;
+  font-family: var(--ds-font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ds-text-muted);
+  border-color: var(--ds-border);
+  background: rgba(7, 8, 15, 0.45);
+  cursor: pointer;
+  transition:
+    color var(--ds-duration-fast) ease,
+    border-color var(--ds-duration-fast) ease,
+    background-color var(--ds-duration-fast) ease,
+    box-shadow var(--ds-duration-fast) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+
+  // Top rail lights up on the chosen tile.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: var(--ds-primary);
+    box-shadow: 0 0 8px rgba(var(--ds-primary-rgb), 0.9);
+    opacity: 0;
+    transition: opacity var(--ds-duration-fast) ease;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.7) !important;
+    outline-offset: 2px;
+  }
+
+  &.is-selected {
+    color: #fff;
+    border-color: rgba(var(--ds-primary-rgb), 0.6);
+    background: rgba(var(--ds-primary-rgb), 0.12);
+    box-shadow: 0 0 14px rgba(var(--ds-primary-rgb), 0.18);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .needed-picker__option:not(.is-selected):hover {
+    color: var(--ds-text);
+    border-color: rgba(var(--ds-primary-rgb), 0.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .needed-picker__option {
+    transition: none;
+  }
+}
+</style>
