@@ -234,6 +234,16 @@
         <PhUserMinus v-if="!friendBusy" :size="16" weight="bold" class="mr-10 shrink-0" />
         Видалити з друзів
       </el-button>
+
+      <!-- Приватний чат — з будь-яким гравцем, не лише з друзями -->
+      <el-button
+        plain
+        class="min-w-0 flex-1 max-sm:!px-8"
+        @click="chatStore.openDirect(player)"
+      >
+        <PhChatCircleDots :size="16" weight="bold" class="mr-10 shrink-0" />
+        Написати
+      </el-button>
     </div>
 
     <!-- DUEL: третій рядок, лише для друзів — виклик на дружню дуель на всю ширину -->
@@ -346,9 +356,11 @@ import {
   PhClockCountdown,
   PhInfo,
   PhSword,
-  PhLockSimple
+  PhLockSimple,
+  PhChatCircleDots
 } from '@phosphor-icons/vue'
 import { getCopy, isPlayerVip } from '@/core/helpers'
+import { useChatStore } from '@/features/chat/chat.store'
 import { isVipLifetime } from '@/core/vip.constants'
 import VipBadge from '@/components/VipBadge.vue'
 import type { TIconName } from '@/components/Icon.vue'
@@ -380,6 +392,8 @@ interface IProps {
 }
 
 const props = withDefaults(defineProps<IProps>(), { canViewLinks: true })
+
+const chatStore = useChatStore()
 
 const emit = defineEmits<{
   toggleVerification: []

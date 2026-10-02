@@ -2013,6 +2013,66 @@ export interface paths {
         patch: operations["VipAdminController_setFrameColor"];
         trace?: never;
     };
+    "/chat/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Channel history
+         * @description Newest page first (items are returned oldest → newest), cursor `before`. Guests may read `general` only. New messages arrive over the `/chat` socket namespace (`chat:message`).
+         */
+        get: operations["ChatController_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/admin/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin support threads (admins only)
+         * @description One entry per player who has an admin thread, latest activity first, with the number of messages from the player the caller has not read.
+         */
+        get: operations["ChatController_adminThreads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/players": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Find players to message or mention
+         * @description Up to 10 players matching `q` (Discord name / username), excluding the caller. With `channel`, only players who can read that channel.
+         */
+        get: operations["ChatController_searchPlayers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3711,6 +3771,47 @@ export interface components {
             playerId: string;
             /** @description VIP never expires */
             lifetime: boolean;
+        };
+        /** @enum {string} */
+        ChatChannelKind: "general" | "captains" | "duel" | "admin" | "dm";
+        ChatPlayerDto: {
+            id: string;
+            discordName?: string | null;
+            discordUsername?: string | null;
+            avatarUrl?: string | null;
+            /** @description Holds an admin role (Адмін / IT) */
+            isAdmin: boolean;
+        };
+        ChatMessageDto: {
+            id: string;
+            /** @description `general` | `captains` | `duel` | `admin:<ownerId>` | `dm:<minPlayerId>:<maxPlayerId>` */
+            channelKey: string;
+            channelKind: components["schemas"]["ChatChannelKind"];
+            author: components["schemas"]["ChatPlayerDto"];
+            /** @description Plain text, never HTML */
+            body: string;
+            /** @description Players mentioned as `@<discordName>` in the body */
+            mentions: components["schemas"]["ChatPlayerDto"][];
+            /** @description Owner of the admin thread (`admin` channels only) */
+            threadOwner?: components["schemas"]["ChatPlayerDto"] | null;
+            /** @description Both players of a direct thread (`dm` channels only) */
+            participants?: components["schemas"]["ChatPlayerDto"][] | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ChatHistoryDto: {
+            /** @description Oldest first */
+            items: components["schemas"]["ChatMessageDto"][];
+            /** @description Older messages exist before the first item */
+            hasMore: boolean;
+        };
+        ChatAdminThreadDto: {
+            /** @description `admin:<ownerId>` */
+            channelKey: string;
+            owner: components["schemas"]["ChatPlayerDto"];
+            lastMessage: components["schemas"]["ChatMessageDto"];
+            /** @description Messages of the owner the caller has not read yet */
+            unread: number;
         };
     };
     responses: never;
@@ -6719,6 +6820,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminVipResultDto"];
+                };
+            };
+        };
+    };
+    ChatController_history: {
+        parameters: {
+            query: {
+                /** @description Channel key, e.g. `general` or `dm:<a>:<b>` */
+                channel: string;
+                /** @description Cursor: only messages strictly older than this */
+                before?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatHistoryDto"];
+                };
+            };
+        };
+    };
+    ChatController_adminThreads: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatAdminThreadDto"][];
+                };
+            };
+        };
+    };
+    ChatController_searchPlayers: {
+        parameters: {
+            query?: {
+                /** @description Part of the Discord name / username */
+                q?: string;
+                /** @description Only players who can read this channel (mention autocomplete), e.g. `captains` */
+                channel?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatPlayerDto"][];
                 };
             };
         };

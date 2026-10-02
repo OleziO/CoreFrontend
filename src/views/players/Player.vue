@@ -263,7 +263,7 @@
     >
       <div
         v-if="isProfilePage && !mmrNotificationDismissed && pendingMmrRequest?.status === 'pending'"
-        class="fixed bottom-32 right-24 z-50 w-[420px] rounded-2xl
+        class="fixed bottom-[152px] right-24 z-50 w-[420px] rounded-2xl
                border border-white/10
                shadow-[0_20px_48px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset]"
         style="background: rgba(13,18,35,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);"

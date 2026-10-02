@@ -10,7 +10,8 @@ export const ComponentsBuilder = () => Components({
   dts: './src/vite-components.d.ts',
   dirs: [
     './src/components',
-    ...buildViewsComponents()
+    ...buildViewsComponents('./src/views'),
+    ...buildViewsComponents('./src/features')
   ],
   resolvers: [
     ElementPlusResolver({ importStyle: false }),
@@ -18,7 +19,7 @@ export const ComponentsBuilder = () => Components({
   ]
 })
 
-function buildViewsComponents () {
+function buildViewsComponents (rootDir: string) {
   const componentsDirs: string[] = []
   function getComponentsDirs (dirName: string) {
     try {
@@ -34,6 +35,6 @@ function buildViewsComponents () {
       console.warn(`No such file or directory, ${dirName}`)
     }
   }
-  getComponentsDirs('./src/views')
+  getComponentsDirs(rootDir)
   return componentsDirs
 }

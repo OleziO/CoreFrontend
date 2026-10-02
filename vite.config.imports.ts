@@ -12,7 +12,10 @@ export const ImportsBuilder = () => AutoImport({
     './src/store/modules',
     './src/services',
     './src/views/**/*.store.ts',
-    './src/views/**/*.service.ts'
+    './src/views/**/*.service.ts',
+    './src/features/**/*.store.ts',
+    './src/features/**/*.service.ts',
+    './src/features/**/composables'
   ],
 
   eslintrc: {

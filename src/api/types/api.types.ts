@@ -127,3 +127,9 @@ export type TNotificationStatus = NonNullable<TNotification['status']>
 export type TNotificationActor = components['schemas']['NotificationActorDto']
 export type TNotificationsSnapshot = components['schemas']['NotificationsSnapshotDto']
 export type TMarkNotificationsReadDto = components['schemas']['MarkNotificationsReadDto']
+/** Чат (GET /chat/* + сокет `/chat`) — секції `schema.d.ts` згенеровано з DTO бекенду до його деплою. */
+export type TChatChannelKind = components['schemas']['ChatChannelKind']
+export type TChatPlayer = components['schemas']['ChatPlayerDto']
+export type TChatMessage = components['schemas']['ChatMessageDto']
+export type TChatHistory = components['schemas']['ChatHistoryDto']
+export type TChatAdminThread = components['schemas']['ChatAdminThreadDto']

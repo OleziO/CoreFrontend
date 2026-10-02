@@ -31,10 +31,14 @@
          соцмережі та оферта — у MobileMenu -->
     <Footer />
     <MobileBottomTabBar />
+    <!-- Чат сайту: кнопка в правому нижньому куті + неблокуюче вікно (телепортується в body) -->
+    <Chat />
   </div>
 </template>
 
 <script setup lang="ts">
+import Chat from '@/features/chat/Chat.vue'
+
 const route = useRoute()
 </script>
 

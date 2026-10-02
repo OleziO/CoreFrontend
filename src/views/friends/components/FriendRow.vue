@@ -36,6 +36,17 @@
           Дуель
         </el-button>
       </el-tooltip>
+      <el-tooltip content="Написати повідомлення" placement="top" effect="dark" :show-after="180">
+        <el-button
+          size="small"
+          text
+          class="btn-icon"
+          aria-label="Написати повідомлення"
+          @click="chatStore.openDirect(friend.player)"
+        >
+          <PhChatCircleDots :size="16" weight="bold" />
+        </el-button>
+      </el-tooltip>
       <el-tooltip content="Видалити з друзів" placement="top" effect="dark" :show-after="180">
         <el-button
           size="small"
@@ -54,7 +65,8 @@
 </template>
 
 <script setup lang="ts">
-import { PhSword, PhUserMinus } from '@phosphor-icons/vue'
+import { PhChatCircleDots, PhSword, PhUserMinus } from '@phosphor-icons/vue'
+import { useChatStore } from '@/features/chat/chat.store'
 import { routeNames } from '@/router/route-names'
 import { formatPlayerRatingMmr, resolvePublicOrApiUrl } from '@/core/helpers'
 import type { TFriend } from '@/api/types/api.types'
@@ -70,6 +82,8 @@ const emit = defineEmits<{
   challenge: []
   remove: []
 }>()
+
+const chatStore = useChatStore()
 
 const name = computed(() => props.friend.player.discordName || props.friend.player.discordUsername || 'Гравець')
 const initial = computed(() => name.value.charAt(0).toUpperCase())

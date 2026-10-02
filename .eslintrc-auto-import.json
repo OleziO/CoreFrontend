@@ -382,6 +382,11 @@
     "vipService": true,
     "useVipPaymentReturn": true,
     "useLiteMode": true,
-    "useAdminVipActions": true
+    "useAdminVipActions": true,
+    "chatService": true,
+    "chatSocketService": true,
+    "useChatMentions": true,
+    "useChatPanel": true,
+    "useChatStore": true
   }
 }
