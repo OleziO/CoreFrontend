@@ -2,6 +2,7 @@ import { ElMessage } from 'element-plus'
 import type { TChatAdminThread, TChatMessage, TChatPlayer } from '@/api/types/api.types'
 import { chatService } from '@/features/chat/chat.service'
 import { chatSocketService } from '@/features/chat/chat-socket.service'
+import { chatSoundService } from '@/features/chat/chat-sound.service'
 import {
   ChatCommandError,
   CHAT_TYPING_EMIT_MS,
@@ -18,8 +19,10 @@ import type {
   IChatChannelState,
   IChatDirectTab,
   IChatPeerInput,
+  IChatSoundSettings,
   IChatTyping,
   IChatUnreadSummary,
+  TChatSoundKind,
   TChatTabId
 } from '@/features/chat/chat.d'
 
@@ -29,6 +32,11 @@ const GUEST_ACCESS: IChatAccess = {
   canCaptains: false,
   canDuel: false,
   readOnly: true
+}
+
+const DEFAULT_SOUND_SETTINGS: IChatSoundSettings = {
+  enabled: true,
+  kinds: { general: true, captains: true, duel: true, admin: true, dm: true, mention: true }
 }
 
 /** Затримка перед `chat:read`: не шлемо маркер на кожне повідомлення, що прилетіло під час читання. */
@@ -85,6 +93,9 @@ export const useChatStore = defineStore('chat', () => {
   const activeTab = useLocalStorage<TChatTabId>('chat:active-tab', 'general')
   /** Відкриті приватні вкладки по id користувача — на спільному компʼютері в кожного свої. */
   const directTabsByUser = useLocalStorage<Record<string, IChatDirectTab[]>>('chat:dm-tabs', {})
+  const soundSettings = useLocalStorage<IChatSoundSettings>('chat:sounds', DEFAULT_SOUND_SETTINGS, {
+    mergeDefaults: (stored, defaults) => ({ ...defaults, ...stored, kinds: { ...defaults.kinds, ...stored.kinds } })
+  })
 
   const selfId = computed(() => access.value.playerId)
   const isLoggedIn = computed(() => !!selfId.value)
@@ -354,6 +365,34 @@ export const useChatStore = defineStore('chat', () => {
     chatSocketService.typing(channelKey)
   }
 
+  // ─── звуки ─────────────────────────────────────────────────────────────────
+
+  /** Згадка звучить своїм сигналом поверх звуку каналу — навіть якщо канал приглушено. */
+  function soundKindOf (m: TChatMessage): TChatSoundKind | null {
+    const { kinds } = soundSettings.value
+    if (kinds.mention && m.mentions.some(p => p.id === selfId.value)) return 'mention'
+    return kinds[m.channelKind] ? m.channelKind : null
+  }
+
+  function playIncomingSound (m: TChatMessage) {
+    if (!soundSettings.value.enabled) return
+    const kind = soundKindOf(m)
+    if (kind) chatSoundService.playIncoming(kind, m.id)
+  }
+
+  function setSoundEnabled (enabled: boolean) {
+    soundSettings.value = { ...soundSettings.value, enabled }
+  }
+
+  function setSoundKind (kind: TChatSoundKind, enabled: boolean) {
+    soundSettings.value = { ...soundSettings.value, kinds: { ...soundSettings.value.kinds, [kind]: enabled } }
+    if (enabled) chatSoundService.preview(kind)
+  }
+
+  function previewSound (kind: TChatSoundKind) {
+    chatSoundService.preview(kind)
+  }
+
   // ─── події сокета ──────────────────────────────────────────────────────────
 
   function applyMessage (m: TChatMessage) {
@@ -376,9 +415,14 @@ export const useChatStore = defineStore('chat', () => {
       return
     }
     if (isForeignThread) {
-      if (m.author.id === m.threadOwner?.id) adminUnreadThreads.value.add(m.channelKey)
+      // Чужий тред підтримки: сигналимо лише на повідомлення власника, не інших адмінів.
+      if (m.author.id === m.threadOwner?.id) {
+        adminUnreadThreads.value.add(m.channelKey)
+        playIncomingSound(m)
+      }
       return
     }
+    playIncomingSound(m)
     const counter = unread.value[m.channelKey] ?? { unread: 0, mentions: 0 }
     unread.value[m.channelKey] = {
       unread: counter.unread + 1,
@@ -545,6 +589,7 @@ export const useChatStore = defineStore('chat', () => {
     adminThreadsLoading,
     selectedAdminThread,
     typing,
+    soundSettings,
     isOpen,
     tabs,
     currentTab,
@@ -574,6 +619,9 @@ export const useChatStore = defineStore('chat', () => {
     draftOf,
     saveDraft,
     notifyTyping,
+    setSoundEnabled,
+    setSoundKind,
+    previewSound,
     isOnline
   }
 })

@@ -26,9 +26,12 @@
         />
         <span v-if="!chatStore.connected" class="chat-panel__status-label">підключення…</span>
         <PhDotsSixVertical v-if="!isMobile" :size="16" class="chat-panel__grip" aria-hidden="true" />
-        <button type="button" class="chat-panel__icon-btn ml-auto" aria-label="Закрити чат" @click="chatStore.close()">
-          <PhX :size="16" weight="bold" />
-        </button>
+        <div class="ml-auto flex items-center gap-0.5">
+          <ChatSoundSettings v-if="chatStore.isLoggedIn" />
+          <button type="button" class="chat-panel__icon-btn" aria-label="Закрити чат" @click="chatStore.close()">
+            <PhX :size="16" weight="bold" />
+          </button>
+        </div>
       </header>
 
       <ChatTabs />
@@ -63,6 +66,7 @@ import { useChatPanel, type TResizeDirection } from '@/features/chat/composables
 import ChatTabs from '@/features/chat/components/ChatTabs.vue'
 import ChatAdminThreads from '@/features/chat/components/ChatAdminThreads.vue'
 import ChatChannelView from '@/features/chat/components/ChatChannelView.vue'
+import ChatSoundSettings from '@/features/chat/components/ChatSoundSettings.vue'
 
 const chatStore = useChatStore()
 const { isMobile, panelStyle, interacting, startDrag, startResize, resetGeometry } = useChatPanel()

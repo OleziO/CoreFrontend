@@ -387,6 +387,7 @@
     "chatSocketService": true,
     "useChatMentions": true,
     "useChatPanel": true,
-    "useChatStore": true
+    "useChatStore": true,
+    "chatSoundService": true
   }
 }

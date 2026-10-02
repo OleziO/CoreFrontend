@@ -35,6 +35,7 @@ declare module 'vue' {
     ChatMessageList: typeof import('./features/chat/components/ChatMessageList.vue')['default']
     ChatPanel: typeof import('./features/chat/components/ChatPanel.vue')['default']
     ChatPlayerSearch: typeof import('./features/chat/components/ChatPlayerSearch.vue')['default']
+    ChatSoundSettings: typeof import('./features/chat/components/ChatSoundSettings.vue')['default']
     ChatTabs: typeof import('./features/chat/components/ChatTabs.vue')['default']
     CreateTournamentDrawer: typeof import('./views/admin-panel/components/drawers/CreateTournamentDrawer.vue')['default']
     DuelAcceptOverlay: typeof import('./views/duels/components/DuelAcceptOverlay.vue')['default']

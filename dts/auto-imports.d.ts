@@ -19,6 +19,7 @@ declare global {
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
   const chatService: typeof import('../src/features/chat/chat.service')['chatService']
   const chatSocketService: typeof import('../src/features/chat/chat-socket.service')['chatSocketService']
+  const chatSoundService: typeof import('../src/features/chat/chat-sound.service')['chatSoundService']
   const client: typeof import('../src/api/client')['default']
   const computed: typeof import('vue')['computed']
   const computedAsync: typeof import('@vueuse/core')['computedAsync']

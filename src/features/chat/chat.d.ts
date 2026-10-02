@@ -95,6 +95,15 @@ export type TChatBodySegment =
   | { type: 'link'; text: string; href: string }
   | { type: 'mention'; text: string; playerId: string }
 
+/** Звук нового повідомлення: свій для кожного типу каналу + окремий для згадки. */
+export type TChatSoundKind = 'general' | 'captains' | 'duel' | 'admin' | 'dm' | 'mention'
+
+/** Налаштування звуків (localStorage): загальний вимикач + окремо для кожного типу. */
+export interface IChatSoundSettings {
+  enabled: boolean
+  kinds: Record<TChatSoundKind, boolean>
+}
+
 /** Мінімум про гравця, з яким відкривають приватний чат (профіль, друзі, автор повідомлення). */
 export interface IChatPeerInput {
   id: string
