@@ -5,6 +5,7 @@ import type {
   TAdminDuel,
   TAdminResolveDuelDto,
   TCreateDuelChallengeDto,
+  TCreateDuelTournamentDto,
   TCreateHostBotDto,
   TDuel,
   TDuelBotsStatus,
@@ -13,7 +14,10 @@ import type {
   TDuelRating,
   TDuelState,
   TDuelStatus,
+  TDuelTournament,
   THostBot,
+  TJoinDuelQueueDto,
+  TUpdateDuelTournamentDto,
   TUpdateHostBotDto
 } from '@/api/types/api.types'
 
@@ -29,9 +33,11 @@ class DuelsService {
     return await apiClient.get('/duels/me')
   }
 
-  async joinQueue (): Promise<TDuelStatus> {
+  /** Стати в чергу ліги, або в чергу турніру, коли передано `tournamentId` (гравець уже ввів пароль). */
+  async joinQueue (tournamentId?: string): Promise<TDuelStatus> {
+    const body: TJoinDuelQueueDto = tournamentId ? { tournamentId } : {}
     try {
-      return await apiClient.post('/duels/queue')
+      return await apiClient.post('/duels/queue', body)
     } catch (e) {
       ElMessage.error(getApiErrorMessage(e, 'Не вдалося стати в чергу'))
       throw e
@@ -131,6 +137,71 @@ class DuelsService {
       return await apiClient.delete('/duels/challenges/{id}', { dynamicKeys: { id } })
     } catch (e) {
       ElMessage.error(getApiErrorMessage(e, 'Не вдалося скасувати виклик'))
+      throw e
+    }
+  }
+
+  // ─── турніри з паролем ────────────────────────────────────────────────────
+
+  /** Активні турніри першими, далі завершені. З токеном — `joined` / `canManage` для мене. */
+  async fetchTournaments (): Promise<TDuelTournament[]> {
+    return await apiClient.get('/duel-tournaments')
+  }
+
+  /** Один турнір; `password` бекенд віддає лише організатору та адмінам. */
+  async fetchTournament (id: string): Promise<TDuelTournament> {
+    return await apiClient.get('/duel-tournaments/{id}', { dynamicKeys: { id } })
+  }
+
+  /** Таблиця турніру — публічна, і після завершення теж. */
+  async fetchTournamentLeaderboard (id: string): Promise<TDuelLeaderboard> {
+    return await apiClient.get('/duel-tournaments/{id}/leaderboard', { dynamicKeys: { id } })
+  }
+
+  /** Створити турнір (медіа або адмін). */
+  async createTournament (dto: TCreateDuelTournamentDto): Promise<TDuelTournament> {
+    try {
+      const tournament = await apiClient.post('/duel-tournaments', dto)
+      ElMessage.success('Турнір створено — поділіться паролем з учасниками')
+      return tournament
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося створити турнір'))
+      throw e
+    }
+  }
+
+  /** Змінити назву або пароль (організатор чи адмін, поки турнір активний). */
+  async updateTournament (id: string, dto: TUpdateDuelTournamentDto): Promise<TDuelTournament> {
+    try {
+      const tournament = await apiClient.patch('/duel-tournaments/{id}', dto, { dynamicKeys: { id } })
+      ElMessage.success('Турнір оновлено')
+      return tournament
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося оновити турнір'))
+      throw e
+    }
+  }
+
+  /** Завершити турнір: черга закривається, нестартовані дуелі скасовуються, таблиця лишається. */
+  async endTournament (id: string): Promise<TDuelTournament> {
+    try {
+      const tournament = await apiClient.post('/duel-tournaments/{id}/end', undefined, { dynamicKeys: { id } })
+      ElMessage.success('Турнір завершено')
+      return tournament
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося завершити турнір'))
+      throw e
+    }
+  }
+
+  /** Увійти в турнір за паролем — після цього можна ставати в його чергу. */
+  async joinTournament (id: string, password: string): Promise<TDuelTournament> {
+    try {
+      const tournament = await apiClient.post('/duel-tournaments/{id}/join', { password }, { dynamicKeys: { id } })
+      ElMessage.success('Ви в турнірі — можна шукати суперника')
+      return tournament
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося увійти в турнір'))
       throw e
     }
   }

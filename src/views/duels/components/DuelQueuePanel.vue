@@ -74,7 +74,12 @@
           </span>
           <div class="flex min-w-0 flex-col gap-4">
             <span class="queue-panel__search-title">Шукаємо суперника<span class="queue-panel__dots" /></span>
-            <span class="text-xs text-white/60">
+            <!-- Черга турніру: суперник — будь-який учасник, вікна рейтингу немає -->
+            <span v-if="status.queue.tournament" class="truncate text-xs text-white/60">
+              Турнір «{{ status.queue.tournament.name }}» · у черзі
+              {{ pluralizeDuelPlayers(status.queue.playersInQueue) }}
+            </span>
+            <span v-else class="text-xs text-white/60">
               Вікно рейтингу ±{{ liveWindow }} · у черзі {{ pluralizeDuelPlayers(status.queue.playersInQueue) }}
             </span>
             <span
@@ -88,7 +93,10 @@
           </div>
           <span class="queue-panel__timer">{{ formatDuelCountdown(liveWaitSeconds) }}</span>
         </div>
-        <p class="queue-panel__text">
+        <p v-if="status.queue.tournament" class="queue-panel__text">
+          Підбираємо суперника серед учасників турніру. Не закривайте сторінку — так ми знаємо, що ви ще тут.
+        </p>
+        <p v-else class="queue-panel__text">
           Вікно розширюється на 50 очок кожні 30 секунд. Не закривайте сторінку — так ми знаємо, що ви ще тут.
         </p>
         <el-button size="large" class="w-full" :loading="leaving" @click="emit('leave')">

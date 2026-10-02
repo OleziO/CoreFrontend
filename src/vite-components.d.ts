@@ -52,6 +52,7 @@ declare module 'vue' {
     DuelRatingBadge: typeof import('./views/duels/components/DuelRatingBadge.vue')['default']
     DuelResultBanner: typeof import('./views/duels/components/DuelResultBanner.vue')['default']
     DuelsTab: typeof import('./views/admin-panel/components/tabs/DuelsTab.vue')['default']
+    DuelTournamentsPanel: typeof import('./views/duels/components/DuelTournamentsPanel.vue')['default']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElBadge: typeof import('element-plus/es')['ElBadge']
     ElButton: typeof import('element-plus/es')['ElButton']

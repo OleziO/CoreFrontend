@@ -112,6 +112,13 @@ export type TDuelChallenge = components['schemas']['DuelChallengeDto']
 export type TDuelChallengeStatus = TDuelChallenge['status']
 export type TDuelChallengesState = components['schemas']['DuelChallengesStateDto']
 export type TCreateDuelChallengeDto = components['schemas']['CreateDuelChallengeDto']
+/** Турніри дуелей з паролем (GET/POST /duel-tournaments*) — записи в `schema.d.ts` додано вручну. */
+export type TDuelTournament = components['schemas']['DuelTournamentDto']
+export type TDuelTournamentRef = components['schemas']['DuelTournamentRefDto']
+export type TDuelTournamentStatus = TDuelTournament['status']
+export type TCreateDuelTournamentDto = components['schemas']['CreateDuelTournamentDto']
+export type TUpdateDuelTournamentDto = components['schemas']['UpdateDuelTournamentDto']
+export type TJoinDuelQueueDto = components['schemas']['JoinDuelQueueDto']
 /** Друзі (GET /friends та мутації) — теж додано вручну. */
 export type TFriendPlayer = components['schemas']['FriendPlayerDto']
 export type TFriend = components['schemas']['FriendDto']

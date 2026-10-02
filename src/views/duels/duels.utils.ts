@@ -80,6 +80,11 @@ export function isFriendDuel (duel: TDuel | null | undefined): boolean {
   return duel?.kind === 'friend'
 }
 
+/** Турнірна дуель — з черги турніру, ±25 у таблиці турніру, глобальний рейтинг не змінюється. */
+export function isTournamentDuel (duel: TDuel | null | undefined): boolean {
+  return duel?.kind === 'tournament'
+}
+
 /** Скільки очок на кону в цій дуелі (за її видом). */
 export function duelStakeOf (duel: TDuel | null | undefined): number {
   return isFriendDuel(duel) ? DUEL_FRIEND_RATING_DELTA : DUEL_RATING_DELTA
@@ -101,7 +106,21 @@ export const duelCancelReasonLabels: Record<TDuelCancelReason, string> = {
   admin: 'Скасовано адміністратором',
   accept_timeout: 'Матч не прийнято вчасно',
   player_cancelled: 'Скасовано гравцем',
-  game_aborted: 'Гра не стартувала — гравець не завантажився в матч'
+  game_aborted: 'Гра не стартувала — гравець не завантажився в матч',
+  tournament_ended: 'Турнір завершено до старту гри'
+}
+
+/** Мінімальна / максимальна довжина назви й пароля турніру (дзеркало валідації бекенду). */
+export const DUEL_TOURNAMENT_NAME_MIN = 3
+export const DUEL_TOURNAMENT_NAME_MAX = 64
+export const DUEL_TOURNAMENT_PASSWORD_MIN = 4
+export const DUEL_TOURNAMENT_PASSWORD_MAX = 32
+
+/** Випадковий пароль турніру: 8 символів без схожих літер (0/O, 1/l), щоб легко продиктувати на стрімі. */
+export function generateDuelTournamentPassword (): string {
+  const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789'
+  const bytes = crypto.getRandomValues(new Uint8Array(8))
+  return Array.from(bytes, b => alphabet[b % alphabet.length]).join('')
 }
 
 export const duelFailReasonLabels: Record<TDuelFailReason, string> = {

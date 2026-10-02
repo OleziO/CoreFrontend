@@ -1,6 +1,12 @@
 import { useQueryWrapper } from '@/core/use-query.utils'
 import { duelsService } from '@/views/duels/duels.service'
-import type { TDuelBotsStatus, TDuelLeaderboard, TDuelPlayerProfile, TDuelStatus } from '@/api/types/api.types'
+import type {
+  TDuelBotsStatus,
+  TDuelLeaderboard,
+  TDuelPlayerProfile,
+  TDuelStatus,
+  TDuelTournament
+} from '@/api/types/api.types'
 
 export const DUEL_STATUS_QUERY_KEY = ['duels', 'me'] as const
 export const DUEL_LEADERBOARD_QUERY_KEY = ['duels', 'leaderboard'] as const
@@ -39,6 +45,41 @@ export const useGetDuelPlayerProfile = (getPlayerId: () => string | null | undef
     enabled: () => !!playerId.value,
     refetchOnWindowFocus: false,
     staleTime: 30_000
+  }, null)
+}
+
+/** Ключі турнірів — під префіксом `duels`, тож `invalidateDuelQueries()` після дуелі освіжає й таблиці турнірів. */
+export const DUEL_TOURNAMENTS_QUERY_KEY = ['duels', 'tournaments'] as const
+export const duelTournamentQueryKey = (id: string) => ['duels', 'tournaments', id] as const
+export const duelTournamentLeaderboardQueryKey = (id: string) => ['duels', 'tournaments', id, 'leaderboard'] as const
+
+/** Список турнірів (активні першими). `joined` / `canManage` залежать від токена — ключ включає id гравця. */
+export const useGetDuelTournaments = (getViewerId: () => string | null | undefined) => {
+  return useQueryWrapper<TDuelTournament[]>({
+    key: () => [...DUEL_TOURNAMENTS_QUERY_KEY, 'list', getViewerId() ?? 'guest'],
+    query: () => duelsService.fetchTournaments(),
+    refetchOnWindowFocus: true,
+    staleTime: 15_000
+  }, [])
+}
+
+export const useGetDuelTournament = (getId: () => string, getViewerId: () => string | null | undefined) => {
+  return useQueryWrapper<TDuelTournament | null>({
+    key: () => [...duelTournamentQueryKey(getId()), getViewerId() ?? 'guest'],
+    query: () => duelsService.fetchTournament(getId()),
+    enabled: () => !!getId(),
+    refetchOnWindowFocus: true,
+    staleTime: 15_000
+  }, null)
+}
+
+export const useGetDuelTournamentLeaderboard = (getId: () => string) => {
+  return useQueryWrapper<TDuelLeaderboard | null>({
+    key: () => [...duelTournamentLeaderboardQueryKey(getId())],
+    query: () => duelsService.fetchTournamentLeaderboard(getId()),
+    enabled: () => !!getId(),
+    refetchOnWindowFocus: true,
+    staleTime: 15_000
   }, null)
 }
 

@@ -1538,6 +1538,111 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/duel-tournaments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Duel tournaments, active first
+         * @description Public. With a token, `joined` / `canManage` describe the viewer. Never carries the password.
+         */
+        get: operations["DuelTournamentsController_list"];
+        put?: never;
+        /** Create a password-protected tournament (media staff or admin) */
+        post: operations["DuelTournamentsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-tournaments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One duel tournament
+         * @description Public. `password` is filled only for the organiser and admins.
+         */
+        get: operations["DuelTournamentsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Rename a tournament or change its password
+         * @description Organiser or admin, while the tournament is ACTIVE.
+         */
+        patch: operations["DuelTournamentsController_update"];
+        trace?: never;
+    };
+    "/duel-tournaments/{id}/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Leaderboard of a duel tournament
+         * @description Public, also after the tournament ended. Every participant, best rating first.
+         */
+        get: operations["DuelTournamentsController_leaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-tournaments/{id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End a tournament
+         * @description Organiser or admin. Closes its queue and cancels its duels that have not started (no rating change); games already launched finish and still count. The leaderboard stays public.
+         */
+        post: operations["DuelTournamentsController_end"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-tournaments/{id}/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Join a tournament with its password
+         * @description 403 on a wrong password, 409 once ended, 429 after 10 wrong attempts in 10 minutes. Then queue with POST /duels/queue { tournamentId }.
+         */
+        post: operations["DuelTournamentsController_join"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/friends": {
         parameters: {
             query?: never;
@@ -3584,10 +3689,12 @@ export interface components {
             /** @enum {string} */
             state: "ACCEPTING" | "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "PROCESSING" | "RESOLVED" | "CANCELLED" | "FAILED";
             /**
-             * @description `ranked` — paired from the queue (±25); `friend` — created from an accepted friend challenge (±10)
+             * @description `ranked` — paired from the queue (±25); `friend` — created from an accepted friend challenge (±10); `tournament` — paired from a tournament queue (±25 on the tournament table)
              * @enum {string}
              */
-            kind: "ranked" | "friend";
+            kind: "ranked" | "friend" | "tournament";
+            /** @description Tournament of a `tournament` duel; null otherwise */
+            tournament: components["schemas"]["DuelTournamentRefDto"] | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -3631,7 +3738,7 @@ export interface components {
             /** @description Points moved once the result was applied (25) */
             ratingDelta: number | null;
             /** @enum {string|null} */
-            cancelReason: "players_no_show" | "lobby_not_created" | "no_bots_available" | "admin" | "accept_timeout" | "player_cancelled" | "game_aborted" | null;
+            cancelReason: "players_no_show" | "lobby_not_created" | "no_bots_available" | "admin" | "accept_timeout" | "player_cancelled" | "game_aborted" | "tournament_ended" | null;
             /** @description Who cancelled the duel (player or admin); null for automatic cancels */
             cancelledById: string | null;
             /** @enum {string|null} */
@@ -3686,8 +3793,14 @@ export interface components {
             waitSeconds: number;
             /** @description Current ± rating window used to find an opponent */
             window: number;
-            /** @description Everyone currently queued, including the caller */
+            /** @description Everyone currently waiting in the same queue (ladder or tournament), including the caller */
             playersInQueue: number;
+            /** @description Tournament whose queue the player waits in; null for the ladder queue (no rating window there) */
+            tournament: components["schemas"]["DuelTournamentRefDto"] | null;
+        };
+        JoinDuelQueueDto: {
+            /** @description Queue of this tournament instead of the ladder (the player must have joined it with the password) */
+            tournamentId?: string;
         };
         /** @description Everything the /1v1 page needs; polled every few seconds while queued or in a duel. */
         DuelStatusDto: {
@@ -3746,6 +3859,43 @@ export interface components {
         CreateDuelChallengeDto: {
             /** @description Friend to challenge */
             playerId: string;
+        };
+        /** @description Name tag of a tournament, attached to its duels and queue entries. */
+        DuelTournamentRefDto: {
+            id: string;
+            name: string;
+        };
+        /** @description One tournament as the duels page and the tournament page see it. */
+        DuelTournamentDto: {
+            id: string;
+            name: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "ENDED";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            endedAt: string | null;
+            /** @description Organiser (media staff or admin); rating is their ladder rating */
+            createdBy: components["schemas"]["DuelPlayerDto"] | null;
+            /** @description Players who entered the password */
+            participantsCount: number;
+            /** @description The viewer entered the password already */
+            joined: boolean;
+            /** @description The viewer may edit / end it (organiser or admin) */
+            canManage: boolean;
+            /** @description Join password — only for managers on GET /duel-tournaments/{id} */
+            password: string | null;
+        };
+        CreateDuelTournamentDto: {
+            name: string;
+            password: string;
+        };
+        UpdateDuelTournamentDto: {
+            name?: string;
+            password?: string;
+        };
+        JoinDuelTournamentDto: {
+            password: string;
         };
         /** @description Player card on the friends page / in a request row. */
         FriendPlayerDto: {
@@ -6326,7 +6476,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinDuelQueueDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -6881,6 +7035,161 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DuelStatusDto"];
+                };
+            };
+        };
+    };
+    DuelTournamentsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelTournamentDto"][];
+                };
+            };
+        };
+    };
+    DuelTournamentsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDuelTournamentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelTournamentDto"];
+                };
+            };
+        };
+    };
+    DuelTournamentsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelTournamentDto"];
+                };
+            };
+        };
+    };
+    DuelTournamentsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDuelTournamentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelTournamentDto"];
+                };
+            };
+        };
+    };
+    DuelTournamentsController_leaderboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelLeaderboardDto"];
+                };
+            };
+        };
+    };
+    DuelTournamentsController_end: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelTournamentDto"];
+                };
+            };
+        };
+    };
+    DuelTournamentsController_join: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinDuelTournamentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelTournamentDto"];
                 };
             };
         };

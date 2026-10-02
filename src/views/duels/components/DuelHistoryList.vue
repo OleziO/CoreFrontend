@@ -7,8 +7,8 @@
       :class="`is-${row.outcome}`"
       :style="{ '--i': Math.min(index, 12) }"
     >
-      <!-- Лише слово результату; що дуель дружня — у tooltip, бейдж не розтягується -->
-      <span class="dhistory__badge" :title="isFriendDuel(row.duel) ? 'Дружня дуель (±10)' : undefined">
+      <!-- Лише слово результату; що дуель дружня чи турнірна — у tooltip, бейдж не розтягується -->
+      <span class="dhistory__badge" :title="kindTitle(row.duel)">
         {{ duelOutcomeLabels[row.outcome] }}
       </span>
 
@@ -63,9 +63,16 @@ import {
   formatDuelDelta,
   formatDuelKda,
   isFriendDuel,
+  isTournamentDuel,
   toDuelHistoryRow
 } from '@/views/duels/duels.utils'
 import type { TDuel } from '@/api/types/api.types'
+
+function kindTitle (duel: TDuel): string | undefined {
+  if (isFriendDuel(duel)) return 'Дружня дуель (±10)'
+  if (isTournamentDuel(duel)) return `Турнір «${duel.tournament?.name ?? '—'}» — рейтинг турніру, не загальний`
+  return undefined
+}
 
 const props = withDefaults(defineProps<{
   duels: TDuel[]

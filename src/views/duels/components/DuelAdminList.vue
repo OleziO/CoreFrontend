@@ -77,6 +77,13 @@
               <StatusBadge size="sm" :tone="toneOf(duel.state)" :label="duelStateLabels[duel.state]" />
               <span v-if="duel.adminReviewRequired" class="duel-row__flag">потребує перегляду</span>
               <span v-if="isFriendDuel(duel)" class="duel-row__flag duel-row__flag--muted">дружня</span>
+              <span
+                v-if="isTournamentDuel(duel)"
+                class="duel-row__flag duel-row__flag--muted"
+                :title="duel.tournament?.name"
+              >
+                турнір
+              </span>
             </div>
 
             <div class="duel-row__versus">
@@ -235,6 +242,7 @@ import {
   duelStateLabels,
   isDuelActive,
   isFriendDuel,
+  isTournamentDuel,
   pluralizeDuels
 } from '@/views/duels/duels.utils'
 import type { TStatusTone } from '@/components/status/status.presets'

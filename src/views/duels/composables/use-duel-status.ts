@@ -78,11 +78,12 @@ export const useDuelStatus = () => {
   const inviting = ref(false)
   const restarting = ref(false)
 
-  async function join (): Promise<boolean> {
+  /** Стати в чергу ліги, або турніру — з `tournamentId` (гравець уже ввів пароль турніру). */
+  async function join (tournamentId?: string): Promise<boolean> {
     if (joining.value) return false
     joining.value = true
     try {
-      applyStatus(await duelsService.joinQueue())
+      applyStatus(await duelsService.joinQueue(tournamentId))
       return true
     } catch {
       return false

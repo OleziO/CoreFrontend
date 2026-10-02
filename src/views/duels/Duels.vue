@@ -113,6 +113,23 @@
             @decline="declineChallenge"
             @cancel="cancelChallenge"
           />
+
+          <!-- Турніри за паролем: медіа створюють, гравці входять за паролем і шукають суперника всередині -->
+          <DuelTournamentsPanel
+            v-if="tournaments.length || canCreateTournament"
+            :tournaments="tournaments"
+            :is-pending="tournamentsPending"
+            :is-logged-in="isLoggedIn"
+            :can-create="canCreateTournament"
+            :can-queue="canQueueTournament"
+            :blocked-reason="tournamentBlockedReason"
+            :queued-tournament-id="status?.queue?.tournament?.id ?? null"
+            :joining="joining"
+            @create="openCreateTournament"
+            @login="openLogin"
+            @enter="openJoinTournament"
+            @queue="onTournamentQueue"
+          />
         </div>
 
         <!-- Права колонка: мої дуелі + топ-10 -->
@@ -163,14 +180,17 @@
 <script setup lang="ts">
 import { PhListChecks, PhQuestion, PhRanking } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
+import { hasPlayerRole } from '@/core/helpers'
+import { ERole } from '@/types/general.enums'
 import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-status'
 import { useDuelChallenges } from '@/views/duels/composables/use-duel-challenges'
 import { useDuelSounds } from '@/views/duels/composables/use-duel-sounds'
 import { useDuelStatus } from '@/views/duels/composables/use-duel-status'
-import { useGetDuelLeaderboard, useGetDuelPlayerProfile } from '@/views/duels/duels.queries'
+import { useGetDuelLeaderboard, useGetDuelPlayerProfile, useGetDuelTournaments } from '@/views/duels/duels.queries'
 import {
   DUEL_HOW_IT_WORKS_STORAGE_KEY,
   DUEL_RESULT_BANNER_TTL_MS,
+  duelQueueBlockedLabels,
   formatDuelPercent,
   isDuelProcessing,
   isWithinLast,
@@ -184,7 +204,8 @@ import DuelHistoryList from '@/views/duels/components/DuelHistoryList.vue'
 import DuelLeaderboardTable from '@/views/duels/components/DuelLeaderboardTable.vue'
 import DuelQueuePanel from '@/views/duels/components/DuelQueuePanel.vue'
 import DuelResultBanner from '@/views/duels/components/DuelResultBanner.vue'
-import type { TDuel } from '@/api/types/api.types'
+import DuelTournamentsPanel from '@/views/duels/components/DuelTournamentsPanel.vue'
+import type { TDuel, TDuelTournament } from '@/api/types/api.types'
 
 const TOP_SIZE = 10
 
@@ -277,6 +298,48 @@ watch(
 
 function openLogin () {
   open('LoginModal', { redirectTo: route.fullPath })
+}
+
+// ─── Турніри за паролем ──────────────────────────────────────────────────────
+const router = useRouter()
+const {
+  data: tournaments,
+  isPending: tournamentsPending,
+  refetch: refetchTournaments
+} = useGetDuelTournaments(() => meId.value)
+
+/** Створювати турніри можуть медіа та адміни; керувати конкретним — організатор і адміни (`canManage`). */
+const canCreateTournament = computed(() =>
+  isAdmin.value || hasPlayerRole(authStore.user?.roles, ERole.MEDIA)
+)
+
+/** «Вже в черзі» не блокує: з черги ліги можна перейти в чергу турніру (бекенд переносить запис). */
+const canQueueTournament = computed(() =>
+  !!status.value && (status.value.canQueue || status.value.queueBlockedReason === 'already_queued')
+)
+const tournamentBlockedReason = computed(() => {
+  const reason = status.value?.queueBlockedReason
+  if (!reason || reason === 'already_queued') return ''
+  return duelQueueBlockedLabels[reason]
+})
+
+function openCreateTournament () {
+  open('DuelTournamentFormModal', {
+    // Пароль організатор бачить на сторінці турніру — ведемо туди одразу.
+    onSaved: (t: TDuelTournament) => router.push({ name: routeNames.duelTournament, params: { id: t.id } })
+  })
+}
+
+function openJoinTournament (tournament: TDuelTournament) {
+  open('DuelTournamentJoinModal', {
+    tournament,
+    onJoined: () => { refetchTournaments().catch(() => { /* тихо */ }) }
+  })
+}
+
+function onTournamentQueue (tournament: TDuelTournament) {
+  unlockSounds()
+  return join(tournament.id)
 }
 </script>
 

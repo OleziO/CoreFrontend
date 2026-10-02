@@ -5,6 +5,7 @@
         <span class="sys-label sys-label--gold">
           // Дуель #{{ duel.number }}
           <template v-if="isFriendDuel(duel)"> · дружня · ±{{ duelStakeOf(duel) }}</template>
+          <template v-else-if="isTournamentDuel(duel)"> · турнір «{{ duel.tournament?.name }}»</template>
         </span>
         <h2 id="duel-active-title" class="active-card__title">{{ duelStateLabels[duel.state] }}</h2>
       </div>
@@ -223,6 +224,7 @@ import {
   formatDuelCountdown,
   isDuelCancellable,
   isFriendDuel,
+  isTournamentDuel,
   secondsUntil
 } from '@/views/duels/duels.utils'
 import DuelHeroTile from '@/views/duels/components/DuelHeroTile.vue'
