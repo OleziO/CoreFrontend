@@ -125,7 +125,7 @@
             </h2>
             <p class="vip__lead vip-reveal" :style="revealDelay(180 + titleWords.length * 70)">
               <template v-if="isVip">
-                Дякуємо, що підтримуєш лігу. Налаштуй рамку — її побачать усі у реєстрі гравців.
+                Дякуємо, що підтримуєш лігу. Налаштуй рамку — її побачать усі в реєстрі гравців і в «Пошуку команди».
               </template>
               <template v-else>
                 Статус для тих, хто живе Dota 2 — і хоче, щоб це було видно.
@@ -334,6 +334,7 @@ import {
   PhProhibit,
   PhSealCheck,
   PhIdentificationCard,
+  PhPaperPlaneTilt,
   PhTicket,
   PhLockSimple,
   PhShieldCheck,
@@ -348,6 +349,7 @@ import {
   isVipLifetime
 } from '@/core/vip.constants'
 import { useVipStore } from '@/store/modules/vip'
+import { FIND_DAILY_LIMIT } from '@/views/find/find.utils'
 import VipBadge from '@/components/VipBadge.vue'
 
 const modelValue = defineModel<boolean>({ default: false })
@@ -399,6 +401,11 @@ const perks = [
     text: 'Грай з друзями скільки завгодно — і вони з тобою теж.'
   },
   {
+    icon: PhPaperPlaneTilt,
+    title: 'Безліміт заявок і запрошень',
+    text: `«Пошук команди» без ліміту ${FIND_DAILY_LIMIT} на день — подавайся й клич гравців скільки треба.`
+  },
+  {
     icon: PhIdentificationCard,
     title: 'Steam, Dotabuff, Discord',
     text: 'Відкриті профілі гравців — перевір статистику й напиши тімейту.'
@@ -415,8 +422,8 @@ const perks = [
   },
   {
     icon: PhSealCheck,
-    title: 'VIP-бейдж і топ реєстру',
-    text: 'Бейдж на картці й місце на верхівці реєстру гравців.'
+    title: 'VIP-бейдж і топ списків',
+    text: 'Бейдж на картці й перше місце в реєстрі гравців та в «Пошуку команди».'
   }
 ] as const
 
@@ -429,10 +436,11 @@ const compareRows: ReadonlyArray<{
   links?: boolean
 }> = [
   { label: 'Дружні дуелі', icon: PhInfinity, base: '3 на день', vip: 'Безліміт' },
+  { label: 'Заявки й запрошення', icon: PhPaperPlaneTilt, base: `${FIND_DAILY_LIMIT} на день`, vip: 'Безліміт' },
   { label: 'Профілі гравців', icon: PhIdentificationCard, base: '', vip: '', links: true },
   { label: 'Внесок за турнір', icon: PhTicket, base: 'Повний', vip: `−${VIP_TOURNAMENT_DISCOUNT_PERCENT}%` },
   { label: 'Рамка й бейдж', icon: PhPalette, base: 'Стандартні', vip: `${frameColorCount} ${colorForms.noun} + VIP` },
-  { label: 'Місце в реєстрі', icon: PhArrowFatLinesUp, base: 'Випадково', vip: 'Топ списку' }
+  { label: 'Реєстр і пошук команди', icon: PhArrowFatLinesUp, base: 'Загальна черга', vip: 'Топ списку' }
 ]
 
 // ─── Поява тексту при відкритті ─────────────────────────────────────────────
@@ -1155,7 +1163,7 @@ watch(modelValue, (isOpen) => {
   gap: 5px;
 }
 
-// VIP members get five perks: two columns so the list stays one screen tall.
+// VIP members get six perks: two columns so the list stays one screen tall.
 .vip.is-member .vip-perks {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px 24px;
