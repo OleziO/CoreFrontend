@@ -12,6 +12,7 @@ import {
   directKey,
   directPeerId,
   isPublicChannel,
+  mentionsPlayer,
   mergeMessages
 } from '@/features/chat/chat.utils'
 import type {
@@ -370,7 +371,7 @@ export const useChatStore = defineStore('chat', () => {
   /** Згадка звучить своїм сигналом поверх звуку каналу — навіть якщо канал приглушено. */
   function soundKindOf (m: TChatMessage): TChatSoundKind | null {
     const { kinds } = soundSettings.value
-    if (kinds.mention && m.mentions.some(p => p.id === selfId.value)) return 'mention'
+    if (kinds.mention && mentionsPlayer(m, selfId.value)) return 'mention'
     return kinds[m.channelKind] ? m.channelKind : null
   }
 
@@ -426,7 +427,7 @@ export const useChatStore = defineStore('chat', () => {
     const counter = unread.value[m.channelKey] ?? { unread: 0, mentions: 0 }
     unread.value[m.channelKey] = {
       unread: counter.unread + 1,
-      mentions: counter.mentions + (m.mentions.some(p => p.id === self) ? 1 : 0)
+      mentions: counter.mentions + (mentionsPlayer(m, self) ? 1 : 0)
     }
   }
 

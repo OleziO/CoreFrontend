@@ -14,6 +14,18 @@ export const CHAT_TYPING_EMIT_MS = 2_000
 /** Повідомлення одного автора в межах цього часу склеюються в групу (без повторного аватара). */
 export const CHAT_GROUP_GAP_MS = 5 * 60_000
 
+/**
+ * `@online` у публічних каналах: тегає всіх, хто зараз на сайті й бачить канал. Список визначає
+ * сервер у момент надсилання (не адмінам — раз на 5 хв), клієнт лише підказує й підсвічує.
+ */
+export const CHAT_ONLINE_COMMAND = {
+  name: 'online',
+  description: 'Тегнути всіх, хто зараз на сайті й бачить цей канал'
+} as const
+
+/** Те саме правило, що й на бекенді: окреме слово, після нього — кінець, пробіл або розділовий знак. */
+const ONLINE_MENTION_RE = /(^|\s)(@online)(?=$|[\s.,!?;:)\]}»"'])/giu
+
 /** Помилка команди: `code` — від сервера (`forbidden`, `rate_limited`, …) або `timeout`/`offline`. */
 export class ChatCommandError extends Error {
   constructor (readonly code: string, message: string) {
@@ -79,6 +91,13 @@ export function isSameDay (a: string, b: string): boolean {
   return dayjs(a).isSame(dayjs(b), 'day')
 }
 
+/** Чи тегає повідомлення гравця: прямою згадкою або через `@online`. */
+export function mentionsPlayer (m: TChatMessage, playerId: string | null | undefined): boolean {
+  if (!playerId) return false
+  // `?? []` — повідомлення від бекенду, що ще не знає про `@online`.
+  return m.mentions.some(p => p.id === playerId) || (m.onlineMentionIds ?? []).includes(playerId)
+}
+
 /** Нові повідомлення — в кінець; дублікати (ack + broadcast) відкидаються за id. */
 export function mergeMessages (current: TChatMessage[], incoming: TChatMessage[]): TChatMessage[] {
   const byId = new Map(current.map(m => [m.id, m]))
@@ -107,6 +126,21 @@ function linkify (text: string): TChatBodySegment[] {
   return out
 }
 
+/** Звичайний текст: `@online` (якщо дозволено) окремим шматком, решта — з посиланнями. */
+function splitPlain (text: string, withCommands: boolean): TChatBodySegment[] {
+  if (!withCommands) return linkify(text)
+  const out: TChatBodySegment[] = []
+  let last = 0
+  for (const match of text.matchAll(ONLINE_MENTION_RE)) {
+    const start = (match.index ?? 0) + match[1].length
+    if (start > last) out.push(...linkify(text.slice(last, start)))
+    out.push({ type: 'command', text: match[2] })
+    last = start + match[2].length
+  }
+  if (last < text.length) out.push(...linkify(text.slice(last)))
+  return out
+}
+
 function escapeRegExp (value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
@@ -114,14 +148,15 @@ function escapeRegExp (value: string): string {
 /**
  * Розбиває текст на звичайні шматки, посилання та згадки. Підсвічуються лише
  * згадки, які сервер підтвердив (`message.mentions`), тож `@щось` без гравця лишається текстом.
+ * `withCommands` — публічні канали, де `@online` є командою.
  */
-export function parseMessageBody (body: string, mentions: TChatPlayer[]): TChatBodySegment[] {
+export function parseMessageBody (body: string, mentions: TChatPlayer[], withCommands = false): TChatBodySegment[] {
   const names = mentions
     .flatMap(p => [p.discordName, p.discordUsername]
       .filter((n): n is string => !!n?.trim())
       .map(n => ({ name: n.trim(), id: p.id })))
     .sort((a, b) => b.name.length - a.name.length)
-  if (!names.length) return linkify(body)
+  if (!names.length) return splitPlain(body, withCommands)
 
   const mentionRe = new RegExp(`@(${names.map(n => escapeRegExp(n.name)).join('|')})`, 'giu')
   const out: TChatBodySegment[] = []
@@ -130,10 +165,10 @@ export function parseMessageBody (body: string, mentions: TChatPlayer[]): TChatB
     const start = match.index ?? 0
     const hit = names.find(n => n.name.toLowerCase() === match[1].toLowerCase())
     if (!hit) continue
-    if (start > last) out.push(...linkify(body.slice(last, start)))
+    if (start > last) out.push(...splitPlain(body.slice(last, start), withCommands))
     out.push({ type: 'mention', text: match[0], playerId: hit.id })
     last = start + match[0].length
   }
-  if (last < body.length) out.push(...linkify(body.slice(last)))
+  if (last < body.length) out.push(...splitPlain(body.slice(last), withCommands))
   return out
 }

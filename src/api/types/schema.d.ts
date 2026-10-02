@@ -3792,6 +3792,8 @@ export interface components {
             body: string;
             /** @description Players mentioned as `@<discordName>` in the body */
             mentions: components["schemas"]["ChatPlayerDto"][];
+            /** @description Ids of players tagged by `@online` (everyone connected to the public channel at send time) */
+            onlineMentionIds: string[];
             /** @description Owner of the admin thread (`admin` channels only) */
             threadOwner?: components["schemas"]["ChatPlayerDto"] | null;
             /** @description Both players of a direct thread (`dm` channels only) */

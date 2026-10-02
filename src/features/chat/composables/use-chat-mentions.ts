@@ -1,7 +1,8 @@
 import type { Ref } from 'vue'
 import type { TChatPlayer } from '@/api/types/api.types'
 import { chatService } from '@/features/chat/chat.service'
-import { playerName } from '@/features/chat/chat.utils'
+import { CHAT_ONLINE_COMMAND, playerName } from '@/features/chat/chat.utils'
+import type { TChatMentionSuggestion } from '@/features/chat/chat.d'
 
 /** `@запит` безпосередньо перед курсором (на початку рядка або після пробілу). */
 const MENTION_QUERY_RE = /(^|\s)@([^\s@]{0,32})$/u
@@ -9,34 +10,46 @@ const MENTION_QUERY_RE = /(^|\s)@([^\s@]{0,32})$/u
 /**
  * Автодоповнення `@згадок` у полі вводу публічних каналів: шукає гравців, які бачать канал,
  * вставляє `@Імʼя ` і запамʼятовує id. На відправку йдуть лише ті id, чиє `@Імʼя` ще є в тексті —
- * сервер однаково перевіряє і текст, і доступ.
+ * сервер однаково перевіряє і текст, і доступ. Першою підказкою йде команда `@online`
+ * (з описом), щойно запит збігається з її початком; id для неї не потрібні — сервер бачить її в тексті.
  */
 export function useChatMentions (channelKey: Ref<string>, enabled: Ref<boolean>) {
-  const suggestions = ref<TChatPlayer[]>([])
+  const players = ref<TChatPlayer[]>([])
   const highlighted = ref(0)
   const query = ref<string | null>(null)
   const picked = new Map<string, TChatPlayer>()
   let anchor = -1
   let requestId = 0
 
-  const isOpen = computed(() => query.value !== null && suggestions.value.length > 0)
+  const suggestions = computed<TChatMentionSuggestion[]>(() => {
+    if (query.value === null) return []
+    const items: TChatMentionSuggestion[] = []
+    if (CHAT_ONLINE_COMMAND.name.startsWith(query.value.toLowerCase())) {
+      items.push({ type: 'command', ...CHAT_ONLINE_COMMAND })
+    }
+    for (const player of players.value) items.push({ type: 'player', player })
+    return items
+  })
+
+  const isOpen = computed(() => suggestions.value.length > 0)
 
   const search = useDebounceFn(async (q: string) => {
     const id = ++requestId
     try {
       const found = await chatService.searchPlayers(q, channelKey.value)
       if (id === requestId && query.value !== null) {
-        suggestions.value = found
+        players.value = found
         highlighted.value = 0
       }
     } catch {
-      if (id === requestId) suggestions.value = []
+      if (id === requestId) players.value = []
     }
   }, 200)
 
   function dismiss () {
     query.value = null
-    suggestions.value = []
+    players.value = []
+    highlighted.value = 0
     anchor = -1
   }
 
@@ -50,19 +63,19 @@ export function useChatMentions (channelKey: Ref<string>, enabled: Ref<boolean>)
     search(match[2])
   }
 
-  /** Підставляє `@Імʼя ` замість `@запит`; повертає новий текст і позицію курсора. */
-  function pick (player: TChatPlayer, text: string, caret: number): { text: string; caret: number } {
+  /** Підставляє `@Імʼя ` (або `@online `) замість `@запит`; повертає новий текст і позицію курсора. */
+  function pick (item: TChatMentionSuggestion, text: string, caret: number): { text: string; caret: number } {
     if (anchor < 0) return { text, caret }
-    const insert = `@${playerName(player)} `
+    const insert = `@${item.type === 'command' ? item.name : playerName(item.player)} `
     const next = text.slice(0, anchor) + insert + text.slice(caret)
-    picked.set(player.id, player)
+    if (item.type === 'player') picked.set(item.player.id, item.player)
     const nextCaret = anchor + insert.length
     dismiss()
     return { text: next, caret: nextCaret }
   }
 
   /** Стрілки / Enter / Tab / Esc, поки список відкритий. Повертає true, якщо клавішу оброблено. */
-  function onKeydown (event: KeyboardEvent, apply: (player: TChatPlayer) => void): boolean {
+  function onKeydown (event: KeyboardEvent, apply: (item: TChatMentionSuggestion) => void): boolean {
     if (!isOpen.value) return false
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       const step = event.key === 'ArrowDown' ? 1 : -1
@@ -71,8 +84,8 @@ export function useChatMentions (channelKey: Ref<string>, enabled: Ref<boolean>)
       return true
     }
     if (event.key === 'Enter' || event.key === 'Tab') {
-      const player = suggestions.value[highlighted.value]
-      if (player) apply(player)
+      const item = suggestions.value[highlighted.value]
+      if (item) apply(item)
       event.preventDefault()
       return true
     }

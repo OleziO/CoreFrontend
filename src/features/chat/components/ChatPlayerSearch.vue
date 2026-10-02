@@ -15,6 +15,7 @@
       </template>
     </el-input>
 
+    <p v-if="results.length && !query.trim()" class="chat-search__caption">Друзі та гравці онлайн</p>
     <ul v-if="results.length" class="chat-search__list" role="listbox" aria-label="Гравці">
       <li
         v-for="(player, i) in results"
@@ -37,7 +38,7 @@
       </li>
     </ul>
     <p v-else class="chat-search__empty">
-      {{ loading ? 'Шукаємо…' : query.trim() ? 'Нікого не знайдено' : 'Почніть вводити імʼя' }}
+      {{ loading ? 'Шукаємо…' : query.trim() ? 'Нікого не знайдено' : 'Ні друзів, ні гравців онлайн — почніть вводити імʼя' }}
     </p>
   </div>
 </template>
@@ -92,6 +93,12 @@ onMounted(() => nextTick(() => inputRef.value?.focus()))
 </script>
 
 <style scoped>
+.chat-search__caption {
+  margin: 8px 2px 0;
+  font-size: 11px;
+  color: var(--ds-text-faint);
+}
+
 .chat-search__list {
   display: flex;
   flex-direction: column;

@@ -38,7 +38,11 @@
           {{ formatMessageTime(message.createdAt) }}
         </time>
       </div>
-      <ChatMessageBody :body="message.body" :mentions="message.mentions" />
+      <ChatMessageBody
+        :body="message.body"
+        :mentions="message.mentions"
+        :online-mention-ids="isPublicChannel(message.channelKind) ? message.onlineMentionIds ?? [] : null"
+      />
     </div>
 
     <el-popconfirm
@@ -68,6 +72,7 @@ import {
   formatMessageFull,
   formatMessageTime,
   isPublicChannel,
+  mentionsPlayer,
   playerName
 } from '@/features/chat/chat.utils'
 import ChatMessageBody from '@/features/chat/components/ChatMessageBody.vue'
@@ -83,7 +88,7 @@ const chatStore = useChatStore()
 
 const authorName = computed(() => playerName(props.message.author))
 const isMine = computed(() => props.message.author.id === chatStore.selfId)
-const mentionsMe = computed(() => !!chatStore.selfId && props.message.mentions.some(p => p.id === chatStore.selfId))
+const mentionsMe = computed(() => mentionsPlayer(props.message, chatStore.selfId))
 /** Клік по імені відкриває приватний чат — лише в публічних каналах і не з собою. */
 const canMessageAuthor = computed(() =>
   chatStore.isLoggedIn && !isMine.value && isPublicChannel(props.message.channelKind)

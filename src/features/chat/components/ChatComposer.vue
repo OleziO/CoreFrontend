@@ -21,17 +21,26 @@
   <form v-else class="chat-composer" @submit.prevent="submit">
     <ul v-if="mentions.isOpen.value" class="chat-composer__mentions" role="listbox" aria-label="Згадати гравця">
       <li
-        v-for="(player, i) in mentions.suggestions.value"
-        :key="player.id"
+        v-for="(item, i) in mentions.suggestions.value"
+        :key="item.type === 'command' ? `cmd:${item.name}` : item.player.id"
         class="chat-composer__mention"
         :class="{ 'is-highlighted': i === mentions.highlighted.value }"
         role="option"
         :aria-selected="i === mentions.highlighted.value"
         @mouseenter="mentions.highlighted.value = i"
-        @mousedown.prevent="applyMention(player)"
+        @mousedown.prevent="applyMention(item)"
       >
-        <ChatAvatar :player="player" :size="20" />
-        <span class="truncate">{{ playerName(player) }}</span>
+        <template v-if="item.type === 'command'">
+          <span class="chat-composer__command-icon"><PhUsersThree :size="13" weight="bold" /></span>
+          <span class="chat-composer__command">
+            <span class="chat-composer__command-name">@{{ item.name }}</span>
+            <span class="chat-composer__command-desc">{{ item.description }}</span>
+          </span>
+        </template>
+        <template v-else>
+          <ChatAvatar :player="item.player" :size="20" />
+          <span class="truncate">{{ playerName(item.player) }}</span>
+        </template>
       </li>
     </ul>
 
@@ -72,8 +81,8 @@
 </template>
 
 <script setup lang="ts">
-import { PhLockSimple, PhPaperPlaneRight, PhSignIn } from '@phosphor-icons/vue'
-import type { TChatPlayer } from '@/api/types/api.types'
+import { PhLockSimple, PhPaperPlaneRight, PhSignIn, PhUsersThree } from '@phosphor-icons/vue'
+import type { TChatMentionSuggestion } from '@/features/chat/chat.d'
 import { useChatStore } from '@/features/chat/chat.store'
 import { useChatMentions } from '@/features/chat/composables/use-chat-mentions'
 import {
@@ -143,10 +152,10 @@ function onCaretMove () {
   if (el) mentions.onInput(el.value, el.selectionStart ?? el.value.length)
 }
 
-function applyMention (player: TChatPlayer) {
+function applyMention (item: TChatMentionSuggestion) {
   const el = textareaRef.value
   const caret = el?.selectionStart ?? text.value.length
-  const next = mentions.pick(player, text.value, caret)
+  const next = mentions.pick(item, text.value, caret)
   text.value = next.text
   nextTick(() => {
     el?.focus()
@@ -302,6 +311,34 @@ onMounted(() => {
 .chat-composer__mention.is-highlighted {
   background: rgba(var(--ds-primary-rgb), 0.12);
   color: var(--ds-text-strong);
+}
+
+.chat-composer__command-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  color: var(--ds-gold);
+  background: rgba(var(--ds-gold-rgb), 0.16);
+}
+
+.chat-composer__command {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.chat-composer__command-name {
+  font-weight: 600;
+  color: var(--ds-text-strong);
+}
+
+.chat-composer__command-desc {
+  font-size: 11px;
+  color: var(--ds-text-muted);
 }
 
 .chat-composer__notice {

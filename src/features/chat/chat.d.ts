@@ -94,6 +94,12 @@ export type TChatBodySegment =
   | { type: 'text'; text: string }
   | { type: 'link'; text: string; href: string }
   | { type: 'mention'; text: string; playerId: string }
+  | { type: 'command'; text: string }
+
+/** Пункт автодоповнення після `@`: гравець або команда (`@online`). */
+export type TChatMentionSuggestion =
+  | { type: 'player'; player: TChatPlayer }
+  | { type: 'command'; name: string; description: string }
 
 /** Звук нового повідомлення: свій для кожного типу каналу + окремий для згадки. */
 export type TChatSoundKind = 'general' | 'captains' | 'duel' | 'admin' | 'dm' | 'mention'

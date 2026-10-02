@@ -16,6 +16,12 @@
       >
         <span>{{ segment.text }}</span>
       </RouterLink>
+      <span
+        v-else-if="segment.type === 'command'"
+        class="chat-body__mention is-command"
+        :class="{ 'is-me': onlineTaggedMe }"
+        :title="onlineTitle"
+      >{{ segment.text }}</span>
       <template v-else>{{ segment.text }}</template>
     </template>
   </p>
@@ -30,12 +36,19 @@ import { parseMessageBody } from '@/features/chat/chat.utils'
 const props = defineProps<{
   body: string
   mentions: TChatPlayer[]
+  /** Кого тегнув `@online`; `null` — канал без команд (приватний), `@online` там звичайний текст. */
+  onlineMentionIds?: string[] | null
 }>()
 
 const chatStore = useChatStore()
 
 /** Текст рендериться інтерполяцією (екранується Vue) — HTML з повідомлення ніколи не виконується. */
-const segments = computed(() => parseMessageBody(props.body, props.mentions))
+const segments = computed(() => parseMessageBody(props.body, props.mentions, !!props.onlineMentionIds))
+
+const onlineTaggedMe = computed(() => !!chatStore.selfId && !!props.onlineMentionIds?.includes(chatStore.selfId))
+const onlineTitle = computed(() =>
+  `@online — тег усіх, хто був на сайті в момент надсилання (${props.onlineMentionIds?.length ?? 0})`
+)
 </script>
 
 <style scoped>
@@ -67,6 +80,10 @@ const segments = computed(() => parseMessageBody(props.body, props.mentions))
   font-weight: 600;
   color: var(--ds-primary);
   background: rgba(var(--ds-primary-rgb), 0.12);
+}
+
+.chat-body__mention.is-command {
+  cursor: help;
 }
 
 .chat-body__mention.is-me {
