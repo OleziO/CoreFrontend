@@ -1670,6 +1670,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/duel-seasons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ladder seasons, newest first
+         * @description Public. Ended seasons carry their winners per prize place.
+         */
+        get: operations["DuelSeasonsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-seasons/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The active ladder season
+         * @description Public. `closing` is true between the end of the month and the rollover (ladder queue closed).
+         */
+        get: operations["DuelSeasonsController_current"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-seasons/{id}/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Leaderboard of a season
+         * @description Public. The live ladder for the active season, the frozen final table for an ended one.
+         */
+        get: operations["DuelSeasonsController_leaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-seasons/{id}/prizes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set the prize places of the active season (admin)
+         * @description Replaces all places. VIP places are granted automatically at the end of the season; custom ones are handed out by admins. 409 once the season has ended.
+         */
+        patch: operations["DuelSeasonsController_updatePrizes"];
+        trace?: never;
+    };
+    "/duel-seasons/{id}/prizes/{place}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Mark a won prize as handed out (admin)
+         * @description For custom prizes (and VIP whose automatic grant failed). 409 before the winners are fixed or when nobody held the place.
+         */
+        patch: operations["DuelSeasonsController_setPrizeIssued"];
+        trace?: never;
+    };
     "/friends": {
         parameters: {
             query?: never;
@@ -3765,7 +3865,7 @@ export interface components {
             /** @description Points moved once the result was applied (25) */
             ratingDelta: number | null;
             /** @enum {string|null} */
-            cancelReason: "players_no_show" | "lobby_not_created" | "no_bots_available" | "admin" | "accept_timeout" | "player_cancelled" | "game_aborted" | "tournament_ended" | "tournament_deleted" | null;
+            cancelReason: "players_no_show" | "lobby_not_created" | "no_bots_available" | "admin" | "accept_timeout" | "player_cancelled" | "game_aborted" | "tournament_ended" | "tournament_deleted" | "season_ended" | null;
             /** @description Who cancelled the duel (player or admin); null for automatic cancels */
             cancelledById: string | null;
             /** @enum {string|null} */
@@ -3839,7 +3939,7 @@ export interface components {
             /** @description Whether POST /duels/queue would succeed right now */
             canQueue: boolean;
             /** @enum {string|null} */
-            queueBlockedReason: "steam_not_linked" | "cooldown" | "active_duel" | "already_queued" | "no_bots_online" | null;
+            queueBlockedReason: "steam_not_linked" | "cooldown" | "active_duel" | "already_queued" | "no_bots_online" | "season_closing" | null;
             /** @description Players in the 1v1 queue right now (me included when queued) — shown even outside the queue */
             playersInQueue: number;
             /** @description Host bot pool snapshot; queueing is blocked while `online` is 0 */
@@ -3976,6 +4076,62 @@ export interface components {
         DuelTournamentPrizeImageDto: {
             url: string;
         };
+        /** @description One prize place of a season: a tournament prize plus who won it and whether it was handed out. */
+        DuelSeasonPrizeDto: {
+            place: number;
+            /** @enum {string} */
+            kind: "vip" | "custom";
+            /** @description VIP months (kind `vip`) */
+            vipMonths: number | null;
+            title: string | null;
+            /** @description Prize image (kind `custom`) */
+            imageUrl: string | null;
+            /** @description Prize link (kind `custom`) */
+            linkUrl: string | null;
+            /** @description Who won the place — set once the prizes are settled (null: nobody with a played game held it) */
+            awardedPlayerId: string | null;
+            /** @description Winner of the place (once settled); rating is their final season rating */
+            awardedPlayer: components["schemas"]["DuelPlayerDto"] | null;
+            /**
+             * Format: date-time
+             * @description When the prize was handed out: VIP — granted automatically at settlement; custom — marked by an admin
+             */
+            issuedAt: string | null;
+        };
+        /** @description A monthly ladder season (Kyiv calendar month). */
+        DuelSeasonDto: {
+            id: string;
+            /** @description 1, 2, 3, … — «Сезон N» */
+            number: number;
+            /** Format: date-time */
+            startsAt: string;
+            /**
+             * Format: date-time
+             * @description Exclusive end: the first moment of the next season
+             */
+            endsAt: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "ENDED";
+            /** @description The time is up but the results are still being settled: the ladder queue is closed meanwhile */
+            closing: boolean;
+            /** Format: date-time */
+            endedAt: string | null;
+            /** @description Prize places, by place */
+            prizes: components["schemas"]["DuelSeasonPrizeDto"][];
+            /**
+             * Format: date-time
+             * @description Winners fixed and VIP granted
+             */
+            prizesAwardedAt: string | null;
+        };
+        UpdateDuelSeasonPrizesDto: {
+            /** @description Replaces all prize places; one prize per place */
+            prizes: components["schemas"]["DuelTournamentPrizeInputDto"][];
+        };
+        SetDuelSeasonPrizeIssuedDto: {
+            /** @description true — handed out, false — not yet */
+            issued: boolean;
+        };
         /** @description Player card on the friends page / in a request row. */
         FriendPlayerDto: {
             id: string;
@@ -4037,10 +4193,16 @@ export interface components {
             discordUsername: string | null;
             avatarUrl: string | null;
         };
+        NotificationSeasonPrizeDto: {
+            seasonNumber: number;
+            place: number;
+            /** @description The prize in words («VIP на 3 міс.» or a title) */
+            prize: string;
+        };
         NotificationDto: {
             id: string;
             /** @enum {string} */
-            type: "friend_request" | "friend_request_accepted" | "duel_challenge" | "duel_challenge_accepted" | "duel_challenge_declined" | "duel_challenge_expired" | "team_application" | "team_application_accepted" | "team_application_declined" | "team_invite" | "team_invite_accepted" | "team_invite_declined";
+            type: "friend_request" | "friend_request_accepted" | "duel_challenge" | "duel_challenge_accepted" | "duel_challenge_declined" | "duel_challenge_expired" | "team_application" | "team_application_accepted" | "team_application_declined" | "team_invite" | "team_invite_accepted" | "team_invite_declined" | "duel_season_prize";
             /**
              * @description Outcome of the request / challenge the entry is about; `pending` means the buttons are still live
              * @enum {string|null}
@@ -4058,6 +4220,8 @@ export interface components {
              * @description Until when a duel challenge / team request can be answered
              */
             expiresAt?: string | null;
+            /** @description Prize place won in a duel season (duel_season_prize) */
+            seasonPrize?: components["schemas"]["NotificationSeasonPrizeDto"] | null;
             /** Format: date-time */
             readAt?: string | null;
             /** Format: date-time */
@@ -7314,6 +7478,116 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DuelTournamentDto"];
+                };
+            };
+        };
+    };
+    DuelSeasonsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelSeasonDto"][];
+                };
+            };
+        };
+    };
+    DuelSeasonsController_current: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelSeasonDto"];
+                };
+            };
+        };
+    };
+    DuelSeasonsController_leaderboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelLeaderboardDto"];
+                };
+            };
+        };
+    };
+    DuelSeasonsController_updatePrizes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDuelSeasonPrizesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelSeasonDto"];
+                };
+            };
+        };
+    };
+    DuelSeasonsController_setPrizeIssued: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                place: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetDuelSeasonPrizeIssuedDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelSeasonDto"];
                 };
             };
         };

@@ -15,7 +15,8 @@
           <h1 class="leaderboard-head__title">Таблиця лідерів</h1>
           <p class="leaderboard-head__subtitle">
             <template v-if="isDuelBoard">
-              Рейтингові дуелі Solo Mid із випадковими героями: +25 за перемогу, −25 за поразку. Хто найкращий на міді.
+              Рейтингові дуелі Solo Mid із випадковими героями: +25 за перемогу, −25 за поразку. Сезон триває
+              календарний місяць — потім таблиця фіксується, а рейтинг починається з нуля.
             </template>
             <template v-else>
               Перемоги, п’єдестали, досягнення та турнірні очки — хто задає темп у лізі.
@@ -94,13 +95,32 @@
         >
           <header class="leaderboard-panel__head">
             <div class="flex min-w-0 flex-col gap-4">
-              <h2 id="duel-table" class="sys-label sys-label--muted">// Рейтинг дуелей</h2>
+              <h2 id="duel-table" class="sys-label sys-label--muted">
+                // Рейтинг дуелей<template v-if="selectedSeason"> · {{ duelSeasonTitle(selectedSeason) }}</template>
+              </h2>
               <p class="leaderboard-panel__subtitle">
+                <template v-if="selectedSeason">
+                  {{ formatDuelSeasonRange(selectedSeason) }}{{ isPastSeason ? ' · підсумкова таблиця' : '' }} ·
+                </template>
                 {{ pluralizeDuelPlayers(duelData.players.length) }} із зіграними дуелями
                 <template v-if="duelSearch.trim()"> · знайдено {{ duelRows.length }}</template>
               </p>
             </div>
             <div class="leaderboard-toolbar">
+              <el-select
+                v-if="seasons.length > 1"
+                :model-value="selectedSeason?.id"
+                class="leaderboard-toolbar__sort"
+                aria-label="Сезон"
+                @update:model-value="setSeason"
+              >
+                <el-option
+                  v-for="season in seasons"
+                  :key="season.id"
+                  :value="season.id"
+                  :label="`${duelSeasonTitle(season)}${season.status === 'ACTIVE' ? ' · поточний' : ''}`"
+                />
+              </el-select>
               <el-input
                 v-model="duelSearch"
                 class="leaderboard-toolbar__search"
@@ -121,7 +141,13 @@
             </div>
           </header>
 
-          <DuelLeaderboardTable v-if="duelRows.length" :rows="duelRows" :highlight-id="authStore.user?.id ?? null" />
+          <DuelLeaderboardTable
+            v-if="duelRows.length"
+            :rows="duelRows"
+            :highlight-id="authStore.user?.id ?? null"
+            :prizes="selectedSeason?.prizes"
+            :prizes-settled="!!selectedSeason?.prizesAwardedAt"
+          />
           <p v-else class="leaderboard-panel__empty">
             Нікого не знайдено за запитом «{{ duelSearch.trim() }}»
           </p>
@@ -265,12 +291,17 @@ import {
 } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import { useGetLeaderboard } from '@/views/leaderboard/leaderboard.queries'
-import { useGetDuelLeaderboard } from '@/views/duels/duels.queries'
+import { useGetDuelLeaderboard, useGetDuelSeasonLeaderboard, useGetDuelSeasons } from '@/views/duels/duels.queries'
 import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-status'
-import { duelPlayerName, pluralizeDuelPlayers } from '@/views/duels/duels.utils'
+import {
+  duelPlayerName,
+  duelSeasonTitle,
+  formatDuelSeasonRange,
+  pluralizeDuelPlayers
+} from '@/views/duels/duels.utils'
 import DuelBotsStatusStrip from '@/views/duels/components/DuelBotsStatusStrip.vue'
 import DuelLeaderboardTable from '@/views/duels/components/DuelLeaderboardTable.vue'
-import type { TDuelLeaderboardRow } from '@/api/types/api.types'
+import type { TDuelLeaderboardRow, TDuelSeason } from '@/api/types/api.types'
 import {
   DEFAULT_LEADERBOARD_SORT,
   describeLeaderboardWeights,
@@ -313,13 +344,32 @@ function setBoard (next: TLeaderboardBoard) {
 const { data, error, isPending, isLoading, refetch } = useGetLeaderboard(() => !isDuelBoard.value)
 
 // ─── Дуелі ────────────────────────────────────────────────────────────────
-const {
-  data: duelData,
-  error: duelError,
-  isPending: duelPending,
-  isLoading: duelLoading,
-  refetch: duelRefetch
-} = useGetDuelLeaderboard(() => isDuelBoard.value)
+// Сезон — `?season=<id>`; без нього (чи з невідомим id) — поточний, з живою таблицею.
+const { data: seasons } = useGetDuelSeasons(() => isDuelBoard.value)
+const selectedSeason = computed<TDuelSeason | null>(() => {
+  const list = seasons.value ?? []
+  return list.find(s => s.id === route.query.season) ?? list.find(s => s.status === 'ACTIVE') ?? null
+})
+/** Завершений сезон — заморожена підсумкова таблиця з переможцями призових місць. */
+const isPastSeason = computed(() => selectedSeason.value?.status === 'ENDED')
+
+function setSeason (id: string) {
+  const query = { ...route.query }
+  if (seasons.value?.find(s => s.id === id)?.status === 'ACTIVE') delete query.season
+  else query.season = id
+  router.replace({ query }).catch(() => { /* тихо */ })
+}
+
+const live = useGetDuelLeaderboard(() => isDuelBoard.value && !isPastSeason.value)
+const past = useGetDuelSeasonLeaderboard(() =>
+  (isDuelBoard.value && isPastSeason.value ? selectedSeason.value?.id : null)
+)
+const duelBoard = computed(() => (isPastSeason.value ? past : live))
+const duelData = computed(() => duelBoard.value.data.value)
+const duelError = computed(() => duelBoard.value.error.value)
+const duelPending = computed(() => duelBoard.value.isPending.value)
+const duelLoading = computed(() => duelBoard.value.isLoading.value)
+const duelRefetch = () => duelBoard.value.refetch()
 const { bots, isError: botsError } = useDuelBotsStatus()
 
 const duelSearch = ref('')

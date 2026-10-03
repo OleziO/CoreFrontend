@@ -13,9 +13,11 @@ import type {
   TDuelLeaderboard,
   TDuelPlayerProfile,
   TDuelRating,
+  TDuelSeason,
   TDuelState,
   TDuelStatus,
   TDuelTournament,
+  TDuelTournamentPrizeInput,
   THostBot,
   TJoinDuelQueueDto,
   TUpdateDuelTournamentDto,
@@ -224,6 +226,51 @@ class DuelsService {
       return tournament
     } catch (e) {
       ElMessage.error(getApiErrorMessage(e, 'Не вдалося увійти в турнір'))
+      throw e
+    }
+  }
+
+  // ─── сезони ───────────────────────────────────────────────────────────────
+
+  /** Усі сезони, новіші першими; у завершених — переможці призових місць. */
+  async fetchSeasons (): Promise<TDuelSeason[]> {
+    return await apiClient.get('/duel-seasons')
+  }
+
+  /** Поточний сезон; `closing` — місяць минув, підсумки ще підбиваються (черга ліги закрита). */
+  async fetchCurrentSeason (): Promise<TDuelSeason> {
+    return await apiClient.get('/duel-seasons/current')
+  }
+
+  /** Таблиця сезону: живий рейтинг для поточного, заморожена фінальна — для завершеного. */
+  async fetchSeasonLeaderboard (id: string): Promise<TDuelLeaderboard> {
+    return await apiClient.get('/duel-seasons/{id}/leaderboard', { dynamicKeys: { id } })
+  }
+
+  /** Призові місця поточного сезону (лише адмін). VIP видається автоматично наприкінці сезону. */
+  async updateSeasonPrizes (id: string, prizes: TDuelTournamentPrizeInput[]): Promise<TDuelSeason> {
+    try {
+      const season = await apiClient.patch('/duel-seasons/{id}/prizes', { prizes }, { dynamicKeys: { id } })
+      ElMessage.success('Призи сезону збережено')
+      return season
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося зберегти призи сезону'))
+      throw e
+    }
+  }
+
+  /** Позначити приз переможця виданим / невиданим (лише адмін). */
+  async setSeasonPrizeIssued (id: string, place: number, issued: boolean): Promise<TDuelSeason> {
+    try {
+      const season = await apiClient.patch(
+        '/duel-seasons/{id}/prizes/{place}',
+        { issued },
+        { dynamicKeys: { id, place } }
+      )
+      ElMessage.success(issued ? 'Приз позначено виданим' : 'Позначку знято')
+      return season
+    } catch (e) {
+      ElMessage.error(getApiErrorMessage(e, 'Не вдалося оновити статус призу'))
       throw e
     }
   }

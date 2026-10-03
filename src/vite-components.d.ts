@@ -53,6 +53,8 @@ declare module 'vue' {
     DuelQueuePanel: typeof import('./views/duels/components/DuelQueuePanel.vue')['default']
     DuelRatingBadge: typeof import('./views/duels/components/DuelRatingBadge.vue')['default']
     DuelResultBanner: typeof import('./views/duels/components/DuelResultBanner.vue')['default']
+    DuelSeasonAdminPanel: typeof import('./views/duels/components/DuelSeasonAdminPanel.vue')['default']
+    DuelSeasonBanner: typeof import('./views/duels/components/DuelSeasonBanner.vue')['default']
     DuelsTab: typeof import('./views/admin-panel/components/tabs/DuelsTab.vue')['default']
     DuelTournamentAdminList: typeof import('./views/duels/components/DuelTournamentAdminList.vue')['default']
     DuelTournamentPrizesEditor: typeof import('./views/duels/components/DuelTournamentPrizesEditor.vue')['default']

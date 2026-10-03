@@ -8,6 +8,7 @@ import type {
   TDuelLobbySide,
   TDuelPlayer,
   TDuelQueueBlockedReason,
+  TDuelSeason,
   TDuelState,
   TDuelStatsPlayer,
   TDuelTournamentPrize,
@@ -111,7 +112,8 @@ export const duelCancelReasonLabels: Record<TDuelCancelReason, string> = {
   player_cancelled: 'Скасовано гравцем',
   game_aborted: 'Гра не стартувала — гравець не завантажився в матч',
   tournament_ended: 'Турнір завершено до старту гри',
-  tournament_deleted: 'Турнір видалено до старту гри'
+  tournament_deleted: 'Турнір видалено до старту гри',
+  season_ended: 'Сезон завершився до старту гри'
 }
 
 /** Мінімальна / максимальна довжина назви й пароля турніру (дзеркало валідації бекенду). */
@@ -231,7 +233,8 @@ export const duelQueueBlockedLabels: Record<TDuelQueueBlockedReason, string> = {
   cooldown: 'Пауза після неявки — спробуйте трохи пізніше',
   active_duel: 'У вас уже є активна дуель',
   already_queued: 'Ви вже в черзі',
-  no_bots_online: 'Жоден бот-хост зараз не онлайн — черга тимчасово закрита'
+  no_bots_online: 'Жоден бот-хост зараз не онлайн — черга тимчасово закрита',
+  season_closing: 'Сезон завершився — підбиваємо підсумки, нова черга відкриється за хвилину'
 }
 
 export const duelSideLabels: Record<TDuelLobbySide, string> = {
@@ -433,3 +436,37 @@ export function formatDuelKda (stats: TDuelStatsPlayer | null | undefined): stri
 
 export const pluralizeDuels = (n: number) => pluralizeUk(n, 'дуель', 'дуелі', 'дуелей')
 export const pluralizeDuelPlayers = (n: number) => pluralizeUk(n, 'гравець', 'гравці', 'гравців')
+
+// ─── сезони ─────────────────────────────────────────────────────────────────
+
+/** Сезони — календарні місяці за київським часом (дзеркало `DUEL_SEASON_TIME_ZONE`). */
+export const DUEL_SEASON_TIME_ZONE = 'Europe/Kyiv'
+
+export const pluralizeDuelDays = (n: number) => pluralizeUk(n, 'день', 'дні', 'днів')
+export const pluralizeDuelHours = (n: number) => pluralizeUk(n, 'година', 'години', 'годин')
+
+export function duelSeasonTitle (season: Pick<TDuelSeason, 'number'>): string {
+  return `Сезон ${season.number}`
+}
+
+const seasonDayFormat = new Intl.DateTimeFormat('uk-UA', {
+  day: 'numeric',
+  month: 'long',
+  timeZone: DUEL_SEASON_TIME_ZONE
+})
+
+/** «1 жовтня — 31 жовтня»: `endsAt` виключний (перша мить наступного сезону), тож показуємо попередній день. */
+export function formatDuelSeasonRange (season: Pick<TDuelSeason, 'startsAt' | 'endsAt'>): string {
+  const lastMoment = new Date(new Date(season.endsAt).getTime() - 1)
+  return `${seasonDayFormat.format(new Date(season.startsAt))} — ${seasonDayFormat.format(lastMoment)}`
+}
+
+/** «ще 5 днів» / «ще 3 години» / «менше години» до кінця сезону; null, коли час вийшов. */
+export function duelSeasonTimeLeft (endsAt: string, now: Date): string | null {
+  const ms = new Date(endsAt).getTime() - now.getTime()
+  if (Number.isNaN(ms) || ms <= 0) return null
+  const hours = Math.floor(ms / 3_600_000)
+  if (hours >= 24) return `ще ${pluralizeDuelDays(Math.floor(hours / 24))}`
+  if (hours >= 1) return `ще ${pluralizeDuelHours(hours)}`
+  return 'менше години'
+}

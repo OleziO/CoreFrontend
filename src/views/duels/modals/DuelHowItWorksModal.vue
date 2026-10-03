@@ -87,6 +87,7 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
 import {
+  PhCalendarCheck,
   PhCheck,
   PhCheckCircle,
   PhCrosshair,
@@ -205,6 +206,14 @@ const phases: IHowPhase[] = [
         text: 'Викличте друга зі сторінки «Друзі» або звідси — без черги й без таймера, той самий бот і випадкові ' +
           `герої. До ${DUEL_CHALLENGE_DAILY_LIMIT} прийнятих дружніх дуелей на день.`,
         tag: `±${DUEL_FRIEND_RATING_DELTA}`,
+        tone: 'gold'
+      },
+      {
+        icon: PhCalendarCheck,
+        title: 'Сезони',
+        text: 'Сезон триває календарний місяць. Наприкінці таблиця фіксується, призові місця отримують нагороди ' +
+          '(VIP — автоматично), а рейтинг та історія дуелей починаються з нуля.',
+        tag: 'щомісяця',
         tone: 'gold'
       }
     ]

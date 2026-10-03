@@ -36,7 +36,7 @@
       </p>
 
       <!-- Другий рядок лише коли є що сказати: результат, таймер або перехід -->
-      <div v-if="statusLabel || expiresIn || isDuelReady" class="notif-item__meta">
+      <div v-if="statusLabel || expiresIn || isDuelReady || isSeasonPrize" class="notif-item__meta">
         <span v-if="statusLabel" class="notif-item__status" :class="`is-${item.status}`">{{ statusLabel }}</span>
         <span v-else-if="expiresIn" class="notif-item__status is-timer">
           <PhTimer :size="10" weight="bold" aria-hidden="true" />
@@ -49,6 +49,15 @@
           @click="emit('navigate')"
         >
           Перейти до дуелі
+          <PhArrowRight :size="11" weight="bold" class="notif-item__link-arrow" />
+        </RouterLink>
+        <RouterLink
+          v-if="isSeasonPrize"
+          :to="{ name: routeNames.leaderboard, query: { board: 'duels' } }"
+          class="notif-item__link no-underline"
+          @click="emit('navigate')"
+        >
+          Таблиця дуелей
           <PhArrowRight :size="11" weight="bold" class="notif-item__link-arrow" />
         </RouterLink>
       </div>
@@ -87,7 +96,7 @@
 import dayjs from 'dayjs'
 import {
   PhArrowRight, PhCheck, PhEnvelopeSimple, PhEye, PhPaperPlaneTilt, PhSword, PhUserPlus, PhUsersThree, PhXCircle,
-  PhTimer
+  PhTimer, PhTrophy
 } from '@phosphor-icons/vue'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
@@ -122,9 +131,13 @@ const { open: openModal } = useAppModals()
 const now = useNow({ interval: 1000 })
 
 const actorName = computed(() => props.item.actor?.discordName || props.item.actor?.discordUsername || 'Гравець')
-const actorInitial = computed(() => actorName.value.charAt(0).toUpperCase())
+/** Приз сезону дуелей приходить від ліги, без актора — в аватарі місце. */
+const actorInitial = computed(() =>
+  props.item.seasonPrize ? `#${props.item.seasonPrize.place}` : actorName.value.charAt(0).toUpperCase()
+)
 const isPending = computed(() => props.item.status === 'pending')
 const isDuelReady = computed(() => props.item.type === 'duel_challenge_accepted')
+const isSeasonPrize = computed(() => props.item.type === 'duel_season_prize')
 /** Заявка до команди / запрошення: окрім «Прийняти» є «Переглянути» з усіма деталями. */
 const isTeamRequest = computed(() => props.item.type === 'team_application' || props.item.type === 'team_invite')
 const busy = computed(() => store.isBusy(props.item.id))
@@ -141,9 +154,16 @@ const texts: Record<TNotificationType, string> = {
   team_application_declined: 'відхилив вашу заявку до команди',
   team_invite: 'запрошує вас до команди',
   team_invite_accepted: 'прийняв запрошення до команди',
-  team_invite_declined: 'відхилив запрошення до команди'
+  team_invite_declined: 'відхилив запрошення до команди',
+  duel_season_prize: 'Ви виграли приз сезону дуелей'
 }
-const text = computed(() => texts[props.item.type])
+const text = computed(() => {
+  const prize = props.item.seasonPrize
+  if (props.item.type === 'duel_season_prize' && prize) {
+    return `Сезон ${prize.seasonNumber} дуелей: ви посіли ${prize.place} місце — приз «${prize.prize}»`
+  }
+  return texts[props.item.type]
+})
 
 const icons = {
   friend_request: PhUserPlus,
@@ -157,7 +177,8 @@ const icons = {
   team_application_declined: PhXCircle,
   team_invite: PhEnvelopeSimple,
   team_invite_accepted: PhUsersThree,
-  team_invite_declined: PhXCircle
+  team_invite_declined: PhXCircle,
+  duel_season_prize: PhTrophy
 } satisfies Record<TNotificationType, unknown>
 const icon = computed(() => icons[props.item.type])
 
@@ -170,6 +191,7 @@ const tone = computed(() => {
       return 'success'
     case 'duel_challenge':
     case 'team_invite':
+    case 'duel_season_prize':
       return 'gold'
     case 'duel_challenge_declined':
     case 'duel_challenge_expired':

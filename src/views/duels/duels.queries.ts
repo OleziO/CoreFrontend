@@ -4,6 +4,7 @@ import type {
   TDuelBotsStatus,
   TDuelLeaderboard,
   TDuelPlayerProfile,
+  TDuelSeason,
   TDuelStatus,
   TDuelTournament
 } from '@/api/types/api.types'
@@ -92,4 +93,41 @@ export const useGetDuelBotsStatus = (enabled: () => boolean = () => true) => {
     refetchOnWindowFocus: true,
     staleTime: 5_000
   })
+}
+
+/** Ключі сезонів — під префіксом `duels`, тож `invalidateDuelQueries()` освіжає й їх. */
+export const DUEL_SEASONS_QUERY_KEY = ['duels', 'seasons'] as const
+export const DUEL_CURRENT_SEASON_QUERY_KEY = ['duels', 'seasons', 'current'] as const
+export const duelSeasonLeaderboardQueryKey = (id: string) => ['duels', 'seasons', id, 'leaderboard'] as const
+
+/** Усі сезони (новіші першими) — для вибору сезону в таблиці та адмінки. */
+export const useGetDuelSeasons = (enabled: () => boolean = () => true) => {
+  return useQueryWrapper<TDuelSeason[]>({
+    key: [...DUEL_SEASONS_QUERY_KEY, 'list'],
+    query: () => duelsService.fetchSeasons(),
+    enabled,
+    refetchOnWindowFocus: false,
+    staleTime: 60_000
+  }, [])
+}
+
+/** Поточний сезон: номер, межі, призи. Оновлюється з фокусом — щоб «підбиваємо підсумки» зникло саме. */
+export const useGetDuelCurrentSeason = () => {
+  return useQueryWrapper<TDuelSeason | null>({
+    key: [...DUEL_CURRENT_SEASON_QUERY_KEY],
+    query: () => duelsService.fetchCurrentSeason(),
+    refetchOnWindowFocus: true,
+    staleTime: 60_000
+  }, null)
+}
+
+/** Таблиця сезону. Запит вимкнено, поки id порожній. */
+export const useGetDuelSeasonLeaderboard = (getId: () => string | null | undefined) => {
+  return useQueryWrapper<TDuelLeaderboard | null>({
+    key: () => [...duelSeasonLeaderboardQueryKey(getId() ?? 'none')],
+    query: () => duelsService.fetchSeasonLeaderboard(getId() as string),
+    enabled: () => !!getId(),
+    refetchOnWindowFocus: false,
+    staleTime: 30_000
+  }, null)
 }

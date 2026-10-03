@@ -121,6 +121,9 @@ export type TUpdateDuelTournamentDto = components['schemas']['UpdateDuelTourname
 export type TDuelTournamentPrize = components['schemas']['DuelTournamentPrizeDto']
 export type TDuelTournamentPrizeInput = components['schemas']['DuelTournamentPrizeInputDto']
 export type TDuelTournamentPrizeKind = TDuelTournamentPrize['kind']
+/** Місячні сезони рейтингу дуелей (GET/PATCH /duel-seasons*) — записи в `schema.d.ts` додано вручну. */
+export type TDuelSeason = components['schemas']['DuelSeasonDto']
+export type TDuelSeasonPrize = components['schemas']['DuelSeasonPrizeDto']
 export type TJoinDuelQueueDto = components['schemas']['JoinDuelQueueDto']
 /** Друзі (GET /friends та мутації) — теж додано вручну. */
 export type TFriendPlayer = components['schemas']['FriendPlayerDto']

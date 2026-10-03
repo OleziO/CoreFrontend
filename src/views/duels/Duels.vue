@@ -155,11 +155,12 @@
 
           <section class="duels-panel neon-card hud-corners rounded-2xl">
             <header class="flex items-center justify-between gap-10">
-              <h2 class="sys-label sys-label--gold">// Топ-10</h2>
+              <h2 class="sys-label sys-label--gold">// Топ-10 сезону</h2>
               <span v-if="leaderboard" class="duels-panel__meta">
                 {{ pluralizeDuelPlayers(leaderboard.players.length) }} у рейтингу
               </span>
             </header>
+            <DuelSeasonBanner v-if="season" :season="season" />
             <template v-if="leaderboardPending">
               <span v-for="n in 5" :key="n" class="skeleton-bone block h-[44px] !rounded-xl" />
             </template>
@@ -169,7 +170,7 @@
             <p v-else-if="!topRows.length" class="duels-panel__empty">
               Таблиця ще порожня — перші рядки з’являться після перших дуелей.
             </p>
-            <DuelLeaderboardTable v-else :rows="topRows" :highlight-id="meId" />
+            <DuelLeaderboardTable v-else :rows="topRows" :highlight-id="meId" :prizes="season?.prizes" />
           </section>
         </div>
       </div>
@@ -186,7 +187,12 @@ import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-statu
 import { useDuelChallenges } from '@/views/duels/composables/use-duel-challenges'
 import { useDuelSounds } from '@/views/duels/composables/use-duel-sounds'
 import { useDuelStatus } from '@/views/duels/composables/use-duel-status'
-import { useGetDuelLeaderboard, useGetDuelPlayerProfile, useGetDuelTournaments } from '@/views/duels/duels.queries'
+import {
+  useGetDuelCurrentSeason,
+  useGetDuelLeaderboard,
+  useGetDuelPlayerProfile,
+  useGetDuelTournaments
+} from '@/views/duels/duels.queries'
 import {
   DUEL_HOW_IT_WORKS_STORAGE_KEY,
   DUEL_RESULT_BANNER_TTL_MS,
@@ -204,6 +210,7 @@ import DuelHistoryList from '@/views/duels/components/DuelHistoryList.vue'
 import DuelLeaderboardTable from '@/views/duels/components/DuelLeaderboardTable.vue'
 import DuelQueuePanel from '@/views/duels/components/DuelQueuePanel.vue'
 import DuelResultBanner from '@/views/duels/components/DuelResultBanner.vue'
+import DuelSeasonBanner from '@/views/duels/components/DuelSeasonBanner.vue'
 import DuelTournamentsPanel from '@/views/duels/components/DuelTournamentsPanel.vue'
 import type { TDuel, TDuelTournament } from '@/api/types/api.types'
 
@@ -264,6 +271,8 @@ onMounted(() => {
 
 const { data: leaderboard, isPending: leaderboardPending, error: leaderboardError } = useGetDuelLeaderboard()
 const topRows = computed(() => (leaderboard.value?.players ?? []).slice(0, TOP_SIZE))
+/** Поточний сезон: межі, призи місць (у таблиці — біля власників місць зараз). */
+const { data: season, refetch: refetchSeason } = useGetDuelCurrentSeason()
 
 const profile = useGetDuelPlayerProfile(() => meId.value)
 const profilePending = computed(() => !!meId.value && profile.isPending.value)
@@ -287,6 +296,14 @@ watch(
   () => status.value?.activeDuel?.id ?? null,
   (current, previous) => {
     if (previous && !current) invalidateDuelQueries()
+  }
+)
+// Кінець сезону: поки підбиваються підсумки — банер «Підбиваємо підсумки»; після — новий сезон, порожня таблиця й історія.
+watch(
+  () => status.value?.queueBlockedReason === 'season_closing',
+  (closing, wasClosing) => {
+    if (closing) refetchSeason().catch(() => { /* тихо */ })
+    else if (wasClosing) invalidateDuelQueries()
   }
 )
 watch(
@@ -313,13 +330,19 @@ const canCreateTournament = computed(() =>
   isAdmin.value || hasPlayerRole(authStore.user?.roles, ERole.MEDIA)
 )
 
-/** «Вже в черзі» не блокує: з черги ліги можна перейти в чергу турніру (бекенд переносить запис). */
+/**
+ * «Вже в черзі» не блокує: з черги ліги можна перейти в чергу турніру (бекенд переносить запис).
+ * Кінець сезону теж: закривається лише черга ліги, турніри грають далі.
+ */
+const TOURNAMENT_QUEUE_OPEN_REASONS = ['already_queued', 'season_closing'] as const
+const isTournamentQueueOpenReason = (reason: string | null | undefined) =>
+  TOURNAMENT_QUEUE_OPEN_REASONS.some(r => r === reason)
 const canQueueTournament = computed(() =>
-  !!status.value && (status.value.canQueue || status.value.queueBlockedReason === 'already_queued')
+  !!status.value && (status.value.canQueue || isTournamentQueueOpenReason(status.value.queueBlockedReason))
 )
 const tournamentBlockedReason = computed(() => {
   const reason = status.value?.queueBlockedReason
-  if (!reason || reason === 'already_queued') return ''
+  if (!reason || isTournamentQueueOpenReason(reason)) return ''
   return duelQueueBlockedLabels[reason]
 })
 

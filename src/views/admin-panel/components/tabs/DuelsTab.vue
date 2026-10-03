@@ -32,6 +32,9 @@
     <!-- ─── Стрім-турніри: перегляд і видалення ────────────────────────── -->
     <DuelTournamentAdminList v-else-if="section === 'tournaments'" class="min-h-0 flex-1" />
 
+    <!-- ─── Сезони: призи поточного, переможці й видача призів минулих ──── -->
+    <DuelSeasonAdminPanel v-else-if="section === 'seasons'" class="min-h-0 flex-1" />
+
     <!-- ─── Боти ───────────────────────────────────────────────────────── -->
     <div
       v-else
@@ -185,6 +188,7 @@ import {
   PhShieldCheck,
   PhSword,
   PhTrash,
+  PhTrophy,
   PhUser,
   PhWarning
 } from '@phosphor-icons/vue'
@@ -193,15 +197,17 @@ import { useDuelBotsStatus } from '@/views/duels/composables/use-duel-bots-statu
 import { hostBotStatusLabels } from '@/views/duels/duels.utils'
 import DuelAdminList from '@/views/duels/components/DuelAdminList.vue'
 import DuelBotsStatusStrip from '@/views/duels/components/DuelBotsStatusStrip.vue'
+import DuelSeasonAdminPanel from '@/views/duels/components/DuelSeasonAdminPanel.vue'
 import DuelTournamentAdminList from '@/views/duels/components/DuelTournamentAdminList.vue'
 import type { TStatusTone } from '@/components/status/status.presets'
 import type { THostBot } from '@/api/types/api.types'
 
-type TSection = 'duels' | 'tournaments' | 'bots'
+type TSection = 'duels' | 'tournaments' | 'seasons' | 'bots'
 
 const sections: { value: TSection; label: string; icon: Component }[] = [
   { value: 'duels', label: 'Дуелі', icon: PhSword },
   { value: 'tournaments', label: 'Стрім-турніри', icon: PhBroadcast },
+  { value: 'seasons', label: 'Сезони', icon: PhTrophy },
   { value: 'bots', label: 'Боти', icon: PhRobot }
 ]
 
