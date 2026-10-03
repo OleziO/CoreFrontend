@@ -97,7 +97,7 @@
           Підбираємо суперника серед учасників турніру. Не закривайте сторінку — так ми знаємо, що ви ще тут.
         </p>
         <p v-else class="queue-panel__text">
-          Вікно розширюється на 50 очок кожні 30 секунд. Не закривайте сторінку — так ми знаємо, що ви ще тут.
+          Вікно розширюється на 50 очок кожні 15 секунд. Не закривайте сторінку — так ми знаємо, що ви ще тут.
         </p>
         <el-button size="large" class="w-full" :loading="leaving" @click="emit('leave')">
           Вийти з черги
@@ -236,8 +236,8 @@ const liveWaitSeconds = computed(() => {
   return Math.max(0, base.seconds + Math.floor((now.value.getTime() - base.receivedAt) / 1000))
 })
 
-/** Дзеркало формули бекенду: ±50 на старті, +50 кожні 30 с. */
-const liveWindow = computed(() => 50 + 50 * Math.floor(liveWaitSeconds.value / 30))
+/** Дзеркало формули бекенду: ±50 на старті, +50 кожні 15 с. */
+const liveWindow = computed(() => 50 + 50 * Math.floor(liveWaitSeconds.value / 15))
 
 const blockedText = computed(() => {
   const reason = props.status?.queueBlockedReason
