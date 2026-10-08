@@ -3,13 +3,15 @@ import { useAuthStore } from '@/store/modules/auth'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
 import { match3Service } from '@/features/match3/match3.service'
 import {
+  MATCH3_ROUND_MS,
   MATCH3_SIZE,
   MATCH3_SKILL_COST,
   applyMatch3Action,
   cloneMatch3Board,
   createMatch3Game,
   findMatch3Hint,
-  hasMatch3Move
+  hasMatch3Move,
+  isMatch3TimeUp
 } from '@/features/match3/match3-engine.utils'
 import type {
   IMatch3State,
@@ -19,24 +21,36 @@ import type {
   TMatch3Pos,
   TMatch3Skill
 } from '@/features/match3/match3-engine.utils'
-import { MATCH3_HINT_DELAY_MS, MATCH3_LEADERBOARD_QUERY_KEY, MATCH3_STEP_MS } from '@/features/match3/match3.utils'
+import {
+  MATCH3_HINT_DELAY_MS,
+  MATCH3_LEADERBOARD_QUERY_KEY,
+  MATCH3_STEP_MS,
+  match3FallMs
+} from '@/features/match3/match3.utils'
 import type { IMatch3HeroSkin, IMatch3Popup, TMatch3Hint } from '@/features/match3/match3.d'
 import type { TMatch3RunResult, TMatch3RunStart } from '@/api/types/api.types'
 
 type TMatch3Status = 'idle' | 'starting' | 'playing' | 'over'
-/** Чому гра скінчилась: ходи вичерпано, поле «мертве», або гравець завершив сам. */
-export type TMatch3EndReason = 'moves' | 'board' | 'manual'
+/** Чому гра скінчилась: вийшов час, поле «мертве», або гравець завершив сам. */
+export type TMatch3EndReason = 'time' | 'board' | 'manual'
+/** Яка фаза анімації зараз грає — поле підбирає під неї криву й тривалість переходу. */
+export type TMatch3Phase = 'idle' | 'swap' | 'revert' | 'clear' | 'fall' | 'shuffle'
 type TTargetSkill = Exclude<TMatch3Skill, 'refresher'>
+/** Дія без часу — `t` проставляє годинник гри в момент виконання. */
+type TActionInput = {
+  [K in TMatch3Action['type']]: Omit<Extract<TMatch3Action, { type: K }>, 't'>
+}[TMatch3Action['type']]
 
-const POPUP_TTL_MS = 900
+const CLOCK_TICK_MS = 100
 
 const areAdjacent = (a: TMatch3Pos, b: TMatch3Pos) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) === 1
 const randomSeed = () => Math.floor(Math.random() * 2 ** 31)
 
 /**
- * Оркестратор однієї гри: рушій (джерело правди), покадрове відтворення анімацій, підказка після
- * бездіяльності, навички, і запис забігу на сервер. Залогінений гравець грає «рейтинговий» забіг
- * (seed від сервера, сервер перераховує очки з журналу дій); гість чи офлайн — просто грає.
+ * Оркестратор однієї гри: рушій (джерело правди), годинник раунду, покадрове відтворення анімацій,
+ * підказка після бездіяльності, навички, і запис забігу на сервер. Залогінений гравець грає
+ * «рейтинговий» забіг (seed від сервера, сервер перераховує очки з журналу дій і звіряє час);
+ * гість чи офлайн — просто грає.
  */
 export function useMatch3Game (getSkins: () => IMatch3HeroSkin[]) {
   const authStore = useAuthStore()
@@ -48,16 +62,17 @@ export function useMatch3Game (getSkins: () => IMatch3HeroSkin[]) {
   /** Покоління гри: анімації старої гри зупиняються, щойно почалась нова чи закрилась модалка. */
   let generation = 0
   let popupSeq = 0
+  /** `performance.now()` моменту t = 0 (після вступної анімації). */
+  let clockStart = 0
 
   const status = ref<TMatch3Status>('idle')
+  const phase = ref<TMatch3Phase>('idle')
   const board = shallowRef<TMatch3Board>([])
-  /** Портрети фіксуються на старті гри — дані OpenDota, що дійшли пізніше, не міняють фішки посеред гри. */
+  /** Іконки фіксуються на старті гри — дані OpenDota, що дійшли пізніше, не міняють фішки посеред гри. */
   const skins = shallowRef<IMatch3HeroSkin[]>([])
   const clearing = shallowRef<Set<number>>(new Set())
   const created = shallowRef<Set<number>>(new Set())
   const drops = shallowRef<Record<number, number>>({})
-  const invalid = shallowRef<Set<number>>(new Set())
-  const shuffling = ref(false)
   const busy = ref(false)
 
   const selected = ref<TMatch3Pos | null>(null)
@@ -67,11 +82,17 @@ export function useMatch3Game (getSkins: () => IMatch3HeroSkin[]) {
   const chain = ref(0)
 
   const score = ref(0)
-  const movesLeft = ref(0)
   const mana = ref(0)
   const bestChain = ref(0)
   const movesMade = ref(0)
   const hasMove = ref(true)
+
+  /** Годинник: мс від старту раунду і поточний дедлайн (росте з бонусами). */
+  const elapsedMs = ref(0)
+  const deadlineMs = ref(MATCH3_ROUND_MS)
+  const timeLeftMs = computed(() => Math.max(0, deadlineMs.value - elapsedMs.value))
+  /** Останній бонус часу — для спливаючого «+2 с» біля таймера. */
+  const timeBonus = ref<{ id: number; ms: number } | null>(null)
 
   const run = ref<TMatch3RunStart | null>(null)
   /** Гра без запису в таблицю: гість або сервер не видав забіг. */
@@ -89,43 +110,58 @@ export function useMatch3Game (getSkins: () => IMatch3HeroSkin[]) {
     if (isPlaying.value && !busy.value && engine) hint.value = findMatch3Hint(engine.board)
   }, MATCH3_HINT_DELAY_MS, { immediate: false })
 
+  // Час іде й під час анімацій (як у Blitz); якщо він вийшов посеред каскаду — гра закінчиться після нього
+  const clock = useIntervalFn(() => {
+    if (!isPlaying.value) return
+    elapsedMs.value = currentT()
+    if (timeLeftMs.value <= 0 && !busy.value) finish('time')
+  }, CLOCK_TICK_MS, { immediate: false })
+
+  function currentT (): number {
+    return Math.max(0, Math.round(performance.now() - clockStart))
+  }
+
   function restartHintTimer () {
     hint.value = null
     stopHintTimer()
     if (isPlaying.value) startHintTimer()
   }
 
+  function scaled (ms: number): number {
+    return reducedMotion.value === 'reduce' ? Math.round(ms * 0.35) : ms
+  }
+
   function wait (ms: number): Promise<void> {
-    const duration = reducedMotion.value === 'reduce' ? Math.round(ms * 0.35) : ms
-    return new Promise((resolve) => setTimeout(resolve, duration))
+    return new Promise((resolve) => setTimeout(resolve, scaled(ms)))
   }
 
   function syncStats () {
     if (!engine) return
     score.value = engine.score
-    movesLeft.value = engine.movesLeft
     mana.value = engine.mana
     bestChain.value = engine.bestChain
     movesMade.value = engine.movesMade
+    deadlineMs.value = engine.deadlineMs
     hasMove.value = hasMatch3Move(engine.board)
   }
 
   function resetVisuals () {
+    phase.value = 'idle'
     clearing.value = new Set()
     created.value = new Set()
     drops.value = {}
-    invalid.value = new Set()
-    shuffling.value = false
     selected.value = null
     skillMode.value = null
     hint.value = null
     popups.value = []
     chain.value = 0
+    timeBonus.value = null
   }
 
   async function start () {
     const current = ++generation
     stopHintTimer()
+    clock.pause()
     status.value = 'starting'
     busy.value = false
     resetVisuals()
@@ -134,6 +170,8 @@ export function useMatch3Game (getSkins: () => IMatch3HeroSkin[]) {
     result.value = null
     submitError.value = null
     endReason.value = null
+    elapsedMs.value = 0
+    deadlineMs.value = MATCH3_ROUND_MS
     skins.value = getSkins().slice()
 
     let seed = randomSeed()
@@ -150,10 +188,21 @@ export function useMatch3Game (getSkins: () => IMatch3HeroSkin[]) {
 
     engine = createMatch3Game(seed)
     syncStats()
-    // Перше поле «сиплеться» згори
+
+    // Перше поле «сиплеться» згори; годинник рушає, коли фішки впали
+    const introMs = scaled(match3FallMs(MATCH3_SIZE))
+    phase.value = 'fall'
     drops.value = Object.fromEntries(engine.board.flat().map((cell) => [cell.id, MATCH3_SIZE]))
     board.value = cloneMatch3Board(engine.board)
+    busy.value = true
     status.value = 'playing'
+    clockStart = performance.now() + introMs
+    clock.resume()
+    await wait(match3FallMs(MATCH3_SIZE))
+    if (current !== generation) return
+    busy.value = false
+    phase.value = 'idle'
+    drops.value = {}
     restartHintTimer()
   }
 
@@ -175,10 +224,19 @@ export function useMatch3Game (getSkins: () => IMatch3HeroSkin[]) {
     popups.value = [...popups.value, { id, text, x, y, big: step.gained >= 300 || step.chain >= 3 }]
     setTimeout(() => {
       popups.value = popups.value.filter((popup) => popup.id !== id)
-    }, POPUP_TTL_MS)
+    }, MATCH3_STEP_MS.popup)
+  }
+
+  function showTimeBonus (ms: number) {
+    const id = ++popupSeq
+    timeBonus.value = { id, ms }
+    setTimeout(() => {
+      if (timeBonus.value?.id === id) timeBonus.value = null
+    }, MATCH3_STEP_MS.popup)
   }
 
   async function playStep (step: IMatch3Step) {
+    phase.value = step.kind
     switch (step.kind) {
       case 'swap':
         board.value = step.board
@@ -195,38 +253,54 @@ export function useMatch3Game (getSkins: () => IMatch3HeroSkin[]) {
         await wait(MATCH3_STEP_MS.clear)
         break
       }
-      case 'fall':
+      case 'fall': {
         clearing.value = new Set()
         drops.value = step.drops
         board.value = step.board
-        await wait(MATCH3_STEP_MS.fall)
+        // Найдовше падіння — у нових фішок: вони падають з-над поля на всю глибину порожнечі
+        await wait(match3FallMs(Math.max(0, ...Object.values(step.drops))))
         break
+      }
       case 'shuffle':
-        shuffling.value = true
         board.value = step.board
         await wait(MATCH3_STEP_MS.shuffle)
-        shuffling.value = false
         break
     }
   }
 
-  async function shake (from: TMatch3Pos, to: TMatch3Pos) {
-    const ids = [board.value[from[0]]?.[from[1]]?.id, board.value[to[0]]?.[to[1]]?.id]
-    invalid.value = new Set(ids.filter((id): id is number => id !== undefined))
-    await wait(MATCH3_STEP_MS.invalid)
-    invalid.value = new Set()
+  /** Невдалий обмін: фішки міняються місцями й повертаються назад. */
+  async function revertSwap (from: TMatch3Pos, to: TMatch3Pos) {
+    const original = board.value
+    const swapped = cloneMatch3Board(original)
+    const tmp = swapped[from[0]][from[1]]
+    swapped[from[0]][from[1]] = swapped[to[0]][to[1]]
+    swapped[to[0]][to[1]] = tmp
+    busy.value = true
+    phase.value = 'revert'
+    board.value = swapped
+    await wait(MATCH3_STEP_MS.revert)
+    board.value = original
+    await wait(MATCH3_STEP_MS.revert)
+    phase.value = 'idle'
+    busy.value = false
   }
 
-  async function perform (action: TMatch3Action): Promise<boolean> {
+  async function perform (input: TActionInput): Promise<boolean> {
     if (!engine || busy.value || !isPlaying.value) return false
     const current = generation
     hint.value = null
     stopHintTimer()
 
+    const t = currentT()
+    if (isMatch3TimeUp(engine, t)) {
+      await finish('time')
+      return false
+    }
+    const action = { ...input, t } as TMatch3Action
     const manaBefore = engine.mana
     const outcome = applyMatch3Action(engine, action)
     if (!outcome.ok) {
-      if (action.type === 'swap') await shake(action.from, action.to)
+      if (action.type === 'swap') await revertSwap(action.from, action.to)
       restartHintTimer()
       return false
     }
@@ -236,8 +310,11 @@ export function useMatch3Game (getSkins: () => IMatch3HeroSkin[]) {
     skillMode.value = null
     busy.value = true
     drops.value = {}
-    if (action.type === 'swap') movesLeft.value--
-    else mana.value = manaBefore - MATCH3_SKILL_COST[action.type]
+    if (action.type !== 'swap') mana.value = manaBefore - MATCH3_SKILL_COST[action.type]
+    if (outcome.timeEarned > 0) {
+      deadlineMs.value = engine.deadlineMs
+      showTimeBonus(outcome.timeEarned)
+    }
 
     for (const step of outcome.steps) {
       if (current !== generation) return true
@@ -245,11 +322,14 @@ export function useMatch3Game (getSkins: () => IMatch3HeroSkin[]) {
     }
     if (current !== generation) return true
 
+    phase.value = 'idle'
     busy.value = false
     created.value = new Set()
     chain.value = 0
     syncStats()
-    if (engine.over) await finish()
+    elapsedMs.value = currentT()
+    if (engine.over) await finish('board')
+    else if (timeLeftMs.value <= 0) await finish('time')
     else restartHintTimer()
     return true
   }
@@ -301,11 +381,13 @@ export function useMatch3Game (getSkins: () => IMatch3HeroSkin[]) {
     skillMode.value = skillMode.value === skill ? null : skill
   }
 
-  /** Кінець гри: рушій сказав «усе» або гравець завершив сам. Забіг із ходами записується на сервер. */
-  async function finish () {
+  /** Кінець гри: вийшов час, поле «мертве» або гравець завершив сам. Забіг із ходами записується на сервер. */
+  async function finish (reason: TMatch3EndReason = 'manual') {
     if (status.value === 'over') return
     status.value = 'over'
-    endReason.value = !engine?.over ? 'manual' : engine.movesLeft <= 0 ? 'moves' : 'board'
+    endReason.value = reason
+    clock.pause()
+    if (reason === 'time') elapsedMs.value = deadlineMs.value
     stopHintTimer()
     hint.value = null
     selected.value = null
@@ -329,23 +411,25 @@ export function useMatch3Game (getSkins: () => IMatch3HeroSkin[]) {
   function leave () {
     generation++
     busy.value = false
-    if (isPlaying.value) finish()
+    phase.value = 'idle'
+    clock.pause()
+    if (isPlaying.value) finish('manual')
   }
 
   onScopeDispose(() => {
     generation++
     stopHintTimer()
+    clock.pause()
   })
 
   return {
     status,
+    phase,
     board,
     skins,
     clearing,
     created,
     drops,
-    invalid,
-    shuffling,
     busy,
     selected,
     skillMode,
@@ -353,10 +437,11 @@ export function useMatch3Game (getSkins: () => IMatch3HeroSkin[]) {
     popups,
     chain,
     score,
-    movesLeft,
     mana,
     bestChain,
     movesMade,
+    timeLeftMs,
+    timeBonus,
     isPlaying,
     isStuck,
     offline,

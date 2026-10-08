@@ -5,7 +5,10 @@ export interface IMatch3HeroSkin {
   /** Коротке ім'я Dota, напр. `pudge`. */
   key: string
   name: string
+  /** Іконка-голова героя (Stratz), як у «Улюблених героях» профілю. */
   imageUrl: string
+  /** Та сама іконка зі Steam CDN — якщо Stratz не віддав картинку. */
+  fallbackUrl: string
 }
 
 export interface IMatch3SkillMeta {

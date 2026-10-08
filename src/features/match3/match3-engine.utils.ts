@@ -12,14 +12,19 @@
  * - 5 в ряд → «Aegis» (обмін з героєм прибирає всіх героїв цього типу);
  * - обмін двох спецфішок → комбо (хрест, 3 рядки + 3 колонки, 5×5, перетворення всіх героїв типу);
  * - каскади: кожна наступна хвиля множить очки (×2, ×3…);
- * - ходи: стартовий запас, великі збіги та довгі каскади додають ходи;
+ * - час (як у Bejeweled Blitz): раунд 90 с, великі збіги й довгі каскади додають секунди, але
+ *   не більше ніж до MATCH3_MAX_ROUND_MS — гра завжди скінчиться. Кожна дія несе `t` (мс від старту);
+ *   рушій відкидає дії поза дедлайном чи з часом, що йде назад; бекенд звіряє `t` з реальним часом;
  * - навички за ману (мана — від кожної прибраної фішки): Blink, Laguna Blade, Refresher Orb;
- * - кінець гри: ходи закінчились або на полі немає жодного ходу, а мани не вистачає на навичку.
+ * - кінець гри: час вийшов або на полі немає жодного ходу, а мани не вистачає на навичку.
  */
 
 export const MATCH3_SIZE = 8
 export const MATCH3_KINDS = 6
-export const MATCH3_START_MOVES = 20
+/** Тривалість раунду без бонусів. */
+export const MATCH3_ROUND_MS = 90_000
+/** Стеля дедлайну з усіма бонусами. */
+export const MATCH3_MAX_ROUND_MS = 180_000
 export const MATCH3_MANA_MAX = 100
 /** Верхня межа журналу дій — бекенд відхиляє довші забіги. */
 export const MATCH3_MAX_ACTIONS = 1500
@@ -52,11 +57,12 @@ export interface IMatch3Cell {
 export type TMatch3Board = IMatch3Cell[][]
 export type TMatch3Pos = [number, number]
 
+/** `t` — мілісекунди від старту раунду (ціле, не спадає від дії до дії). */
 export type TMatch3Action =
-  | { type: 'swap'; from: TMatch3Pos; to: TMatch3Pos }
-  | { type: 'blink'; from: TMatch3Pos; to: TMatch3Pos }
-  | { type: 'laguna'; row: number }
-  | { type: 'refresher' }
+  | { type: 'swap'; from: TMatch3Pos; to: TMatch3Pos; t: number }
+  | { type: 'blink'; from: TMatch3Pos; to: TMatch3Pos; t: number }
+  | { type: 'laguna'; row: number; t: number }
+  | { type: 'refresher'; t: number }
 
 export interface IMatch3State {
   board: TMatch3Board
@@ -64,7 +70,10 @@ export interface IMatch3State {
   rng: number
   nextId: number
   score: number
-  movesLeft: number
+  /** Кінець раунду, мс від старту (росте з бонусами). */
+  deadlineMs: number
+  /** `t` останньої прийнятої дії. */
+  lastT: number
   mana: number
   /** Скільки звичайних ходів зроблено. */
   movesMade: number
@@ -93,14 +102,16 @@ export interface IMatch3Result {
   ok: boolean
   steps: IMatch3Step[]
   gained: number
-  movesEarned: number
+  /** Скільки мс додано до дедлайну (після стелі). */
+  timeEarned: number
   chain: number
 }
 
 const SPECIAL_BONUS: Record<TMatch3Special, number> = { none: 0, row: 30, col: 30, bomb: 50, aegis: 100 }
-const SPECIAL_MOVES: Record<TMatch3Special, number> = { none: 0, row: 0, col: 0, bomb: 1, aegis: 2 }
-/** На якій хвилі каскаду гравець отримує +1 хід. */
-const CHAIN_MOVE_AT = 3
+const SPECIAL_TIME: Record<TMatch3Special, number> = { none: 0, row: 1000, col: 1000, bomb: 2000, aegis: 3000 }
+/** На якій хвилі каскаду гравець отримує бонусний час. */
+const CHAIN_TIME_AT = 3
+const CHAIN_TIME_MS = 2000
 
 interface IRun {
   cells: TMatch3Pos[]
@@ -123,7 +134,7 @@ interface IPass {
   clear: Set<number>
   create: ICreate[]
   bonus: number
-  movesEarned: number
+  timeEarned: number
 }
 
 // ─── Утиліти ───────────────────────────────────────────────────────────────
@@ -281,7 +292,7 @@ function passFromMatches (board: TMatch3Board, preferred: TMatch3Pos[]): IPass |
   const groups = findGroups(board)
   if (!groups.length) return null
 
-  const pass: IPass = { clear: new Set(), create: [], bonus: 0, movesEarned: 0 }
+  const pass: IPass = { clear: new Set(), create: [], bonus: 0, timeEarned: 0 }
   for (const group of groups) {
     for (const key of group.keys) pass.clear.add(key)
     const special = specialForGroup(group)
@@ -292,7 +303,7 @@ function passFromMatches (board: TMatch3Board, preferred: TMatch3Pos[]): IPass |
     const kind = special === 'aegis' ? -1 : board[rowOf(key)][colOf(key)].kind
     pass.create.push({ key, special, kind })
     pass.bonus += SPECIAL_BONUS[special]
-    pass.movesEarned += SPECIAL_MOVES[special]
+    pass.timeEarned += SPECIAL_TIME[special]
   }
   return pass
 }
@@ -429,10 +440,12 @@ function applyPass (state: IMatch3State, pass: IPass, chain: number, steps: IMat
     created.push(cell.id)
   }
 
-  const movesEarned = pass.movesEarned + (chain === CHAIN_MOVE_AT ? 1 : 0)
+  const bonusTime = pass.timeEarned + (chain === CHAIN_TIME_AT ? CHAIN_TIME_MS : 0)
+  const deadline = Math.min(MATCH3_MAX_ROUND_MS, state.deadlineMs + bonusTime)
+  const timeEarned = deadline - state.deadlineMs
+  state.deadlineMs = deadline
   const gained = (clear.size * MATCH3_TILE_POINTS + pass.bonus) * chain
   state.score += gained
-  state.movesLeft += movesEarned
   state.mana = Math.min(MATCH3_MANA_MAX, state.mana + clear.size)
 
   const clearedIds = [...clear].map((key) => board[rowOf(key)][colOf(key)].id)
@@ -468,7 +481,7 @@ function applyPass (state: IMatch3State, pass: IPass, chain: number, steps: IMat
     steps.push({ kind: 'fall', board: cloneMatch3Board(board), cleared: [], created: [], drops, gained: 0, chain })
   }
 
-  return { ok: true, steps: steps ?? [], gained, movesEarned, chain }
+  return { ok: true, steps: steps ?? [], gained, timeEarned, chain }
 }
 
 /** Перша хвиля (якщо задана) + каскади, доки на полі є збіги. */
@@ -478,7 +491,7 @@ function resolve (
   preferred: TMatch3Pos[],
   steps: IMatch3Step[] | null
 ): IMatch3Result {
-  const total: IMatch3Result = { ok: true, steps: steps ?? [], gained: 0, movesEarned: 0, chain: 0 }
+  const total: IMatch3Result = { ok: true, steps: steps ?? [], gained: 0, timeEarned: 0, chain: 0 }
   let pass = firstPass
   while (total.chain < MAX_CHAIN) {
     if (!pass) pass = passFromMatches(state.board, total.chain === 0 ? preferred : [])
@@ -486,7 +499,7 @@ function resolve (
     total.chain++
     const result = applyPass(state, pass, total.chain, steps)
     total.gained += result.gained
-    total.movesEarned += result.movesEarned
+    total.timeEarned += result.timeEarned
     pass = null
   }
   state.bestChain = Math.max(state.bestChain, total.chain)
@@ -531,7 +544,7 @@ function comboPass (board: TMatch3Board, at: TMatch3Pos, other: TMatch3Pos): IPa
   // Самі обміняні фішки вже «витратили» свій ефект на комбо
   a.special = 'none'
   b.special = 'none'
-  return { clear, create: [], bonus: SPECIAL_BONUS.bomb, movesEarned: 0 }
+  return { clear, create: [], bonus: SPECIAL_BONUS.bomb, timeEarned: 0 }
 }
 
 // ─── Публічне API ─────────────────────────────────────────────────────────
@@ -567,7 +580,8 @@ export function createMatch3Game (seed: number): IMatch3State {
     rng: seed | 0,
     nextId: 1,
     score: 0,
-    movesLeft: MATCH3_START_MOVES,
+    deadlineMs: MATCH3_ROUND_MS,
+    lastT: 0,
     mana: 0,
     movesMade: 0,
     bestChain: 0,
@@ -577,8 +591,14 @@ export function createMatch3Game (seed: number): IMatch3State {
   return state
 }
 
+/** Час рушій не «бачить» — дедлайн перевіряє клієнт за годинником, а рушій лише відкидає пізні дії. */
 function updateOver (state: IMatch3State): void {
-  state.over = state.movesLeft <= 0 || (!hasMatch3Move(state.board) && state.mana < MIN_SKILL_COST)
+  state.over = !hasMatch3Move(state.board) && state.mana < MIN_SKILL_COST
+}
+
+/** Чи вийшов час раунду на момент `t` (мс від старту). */
+export function isMatch3TimeUp (state: IMatch3State, t: number): boolean {
+  return t >= state.deadlineMs
 }
 
 /** Чи можна зараз застосувати навичку (вистачає мани, гра триває). */
@@ -586,7 +606,7 @@ export function canUseMatch3Skill (state: IMatch3State, skill: TMatch3Skill): bo
   return !state.over && state.mana >= MATCH3_SKILL_COST[skill]
 }
 
-const FAILED: IMatch3Result = { ok: false, steps: [], gained: 0, movesEarned: 0, chain: 0 }
+const FAILED: IMatch3Result = { ok: false, steps: [], gained: 0, timeEarned: 0, chain: 0 }
 
 function applySwap (
   state: IMatch3State,
@@ -602,10 +622,7 @@ function applySwap (
 
   swapCells(board, from, to)
   if (free) state.mana -= MATCH3_SKILL_COST.blink
-  else {
-    state.movesLeft--
-    state.movesMade++
-  }
+  else state.movesMade++
   if (steps) {
     steps.push({ kind: 'swap', board: cloneMatch3Board(board), cleared: [], created: [], drops: {}, gained: 0, chain: 0 })
   }
@@ -618,7 +635,7 @@ function applySwap (
 function applyLaguna (state: IMatch3State, row: number, steps: IMatch3Step[] | null): IMatch3Result {
   if (!Number.isInteger(row) || row < 0 || row >= MATCH3_SIZE) return FAILED
   state.mana -= MATCH3_SKILL_COST.laguna
-  const pass: IPass = { clear: new Set(rowKeys(row)), create: [], bonus: 0, movesEarned: 0 }
+  const pass: IPass = { clear: new Set(rowKeys(row)), create: [], bonus: 0, timeEarned: 0 }
   return resolve(state, pass, [], steps)
 }
 
@@ -648,7 +665,7 @@ function applyRefresher (state: IMatch3State, steps: IMatch3Step[] | null): IMat
       chain: 0
     })
   }
-  return { ok: true, steps: steps ?? [], gained: 0, movesEarned: 0, chain: 0 }
+  return { ok: true, steps: steps ?? [], gained: 0, timeEarned: 0, chain: 0 }
 }
 
 /**
@@ -661,6 +678,9 @@ export function applyMatch3Action (
   recordSteps = true
 ): IMatch3Result {
   if (state.over || !action) return FAILED
+  // Час іде лише вперед і має вкладатися в раунд
+  const t = action.t
+  if (!Number.isInteger(t) || t < state.lastT || isMatch3TimeUp(state, t)) return FAILED
   const steps: IMatch3Step[] | null = recordSteps ? [] : null
   let result: IMatch3Result
 
@@ -684,7 +704,10 @@ export function applyMatch3Action (
       return FAILED
   }
 
-  if (result.ok) updateOver(state)
+  if (result.ok) {
+    state.lastT = t
+    updateOver(state)
+  }
   return result
 }
 

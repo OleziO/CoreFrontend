@@ -46,14 +46,32 @@ export const MATCH3_SKILL_BY_ID = Object.fromEntries(
   MATCH3_SKILLS.map((meta) => [meta.skill, meta])
 ) as Record<TMatch3Skill, IMatch3SkillMeta>
 
-/** Тривалість фаз анімації, мс. */
+/**
+ * Тривалість фаз анімації, мс. Падіння залежить від відстані: `fallBase + fallPerRow × рядки` —
+ * ті самі числа йдуть у CSS-змінні поля, тож очікування в коді й CSS-переходи збігаються.
+ */
 export const MATCH3_STEP_MS = {
-  swap: 200,
-  clear: 260,
-  fall: 300,
-  shuffle: 450,
-  invalid: 320
+  swap: 300,
+  /** Невдалий обмін: фішки міняються місцями й повертаються назад — кожен напрямок. */
+  revert: 280,
+  clear: 420,
+  fallBase: 260,
+  fallPerRow: 70,
+  shuffle: 700,
+  /** Скільки висить напис очок / бонусного часу. */
+  popup: 1300
 } as const
+
+/** Тривалість падіння на `rows` рядків. */
+export function match3FallMs (rows: number): number {
+  return MATCH3_STEP_MS.fallBase + MATCH3_STEP_MS.fallPerRow * Math.max(0, rows)
+}
+
+/** Скільки секунд лишилось → «1:05». */
+export function formatMatch3Clock (ms: number): string {
+  const total = Math.ceil(Math.max(0, ms) / 1000)
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
+}
 
 /** Через скільки секунд бездіяльності підсвітити можливий хід. */
 export const MATCH3_HINT_DELAY_MS = 6000

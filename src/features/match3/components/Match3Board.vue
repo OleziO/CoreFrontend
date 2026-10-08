@@ -1,16 +1,22 @@
 <template>
-  <!-- Поле 8×8: фішки позиціонуються transform-ом за (рядок, колонка) і ключуються за id, тож падіння
-       й обміни анімуються самим CSS-переходом; нові фішки «падають» згори власною анімацією. -->
+  <!-- Поле 8×8: фішки позиціонуються transform-ом за (рядок, колонка) і ключуються за id, тож обміни й
+       падіння анімуються CSS-переходом. Крива й тривалість залежать від фази (`phase-*` на полі), падіння —
+       ще й від відстані (`--fall`); нові фішки «падають» з-над поля власною анімацією (`--drop`). -->
   <div
     ref="boardEl"
     class="m3-board"
-    :class="{ 'is-shuffling': shuffling, 'is-laguna': skillMode === 'laguna', 'is-blink': skillMode === 'blink' }"
+    :class="[`phase-${phase}`, {
+      'is-laguna': skillMode === 'laguna',
+      'is-blink': skillMode === 'blink',
+      'is-dragging': !!drag?.axis
+    }]"
+    :style="timingVars"
     role="grid"
     :aria-label="`Поле ${MATCH3_SIZE}×${MATCH3_SIZE}`"
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"
     @pointercancel="drag = null"
-    @pointerleave="onPointerLeave"
+    @pointerleave="hoverRow = null"
     @keydown="onKeydown"
   >
     <span
@@ -41,12 +47,12 @@
         </template>
         <template v-else>
           <img
-            v-if="skinOf(tile.cell.kind)?.imageUrl && !broken.has(tile.cell.kind)"
-            :src="skinOf(tile.cell.kind)?.imageUrl"
+            v-if="iconOf(tile.cell.kind)"
+            :src="iconOf(tile.cell.kind)"
             alt=""
             class="m3-tile__img"
             draggable="false"
-            @error="onImageError(tile.cell.kind)"
+            @error="onImageError(tile.cell.kind, $event)"
           >
           <span v-else class="m3-tile__letter" aria-hidden="true">{{ skinOf(tile.cell.kind)?.name.charAt(0) }}</span>
           <span v-if="tile.cell.special !== 'none'" class="m3-tile__badge" aria-hidden="true">
@@ -77,8 +83,9 @@
 import { PhArrowsDownUp, PhArrowsLeftRight, PhFlame, PhShieldStar } from '@phosphor-icons/vue'
 import { MATCH3_SIZE } from '@/features/match3/match3-engine.utils'
 import type { IMatch3Cell, TMatch3Board, TMatch3Pos, TMatch3Skill } from '@/features/match3/match3-engine.utils'
-import { MATCH3_KIND_TONES } from '@/features/match3/match3.utils'
+import { MATCH3_KIND_TONES, MATCH3_STEP_MS } from '@/features/match3/match3.utils'
 import type { IMatch3HeroSkin, IMatch3Popup, TMatch3Hint } from '@/features/match3/match3.d'
+import type { TMatch3Phase } from '@/features/match3/composables/use-match3-game'
 
 interface ITile {
   cell: IMatch3Cell
@@ -86,17 +93,26 @@ interface ITile {
   c: number
 }
 
+/** Перетягування фішки: вона йде за пальцем уздовж однієї осі (не далі за сусідню клітинку). */
+interface IDrag {
+  pos: TMatch3Pos
+  x: number
+  y: number
+  axis: 'h' | 'v' | null
+  /** Зсув уздовж осі, px. */
+  offset: number
+}
+
 const props = defineProps<{
   board: TMatch3Board
   skins: IMatch3HeroSkin[]
+  phase: TMatch3Phase
   clearing: Set<number>
   created: Set<number>
   drops: Record<number, number>
-  invalid: Set<number>
   selected: TMatch3Pos | null
   hint: TMatch3Hint | null
   skillMode: Exclude<TMatch3Skill, 'refresher'> | null
-  shuffling: boolean
   popups: IMatch3Popup[]
   disabled: boolean
 }>()
@@ -113,41 +129,93 @@ const SPECIAL_LABELS: Record<IMatch3Cell['special'], string> = {
   bomb: ', бомба',
   aegis: ''
 }
+/** Скільки пікселів треба протягнути, щоб це був свайп, а не тап. */
+const DRAG_START_PX = 6
+/** Яку частку клітинки треба протягнути, щоб обмін відбувся (інакше фішка пружинить назад). */
+const SWAP_AT = 0.4
 
 const boardEl = ref<HTMLElement | null>(null)
 const focusPos = ref<TMatch3Pos>([0, 0])
 const hoverRow = ref<number | null>(null)
-const broken = ref(new Set<number>())
-const drag = ref<{ pos: TMatch3Pos; x: number; y: number; moved: boolean } | null>(null)
+/** Скільки джерел іконки вже не завантажилось для типу: 0 — Stratz, 1 — Steam, 2 — літера. */
+const failures = ref<Record<number, number>>({})
+const drag = ref<IDrag | null>(null)
+
+/** Тривалості фаз — ті самі числа, на які чекає composable. */
+const timingVars = {
+  '--swap-ms': `${MATCH3_STEP_MS.swap}ms`,
+  '--revert-ms': `${MATCH3_STEP_MS.revert}ms`,
+  '--clear-ms': `${MATCH3_STEP_MS.clear}ms`,
+  '--fall-base': `${MATCH3_STEP_MS.fallBase}ms`,
+  '--fall-row': `${MATCH3_STEP_MS.fallPerRow}ms`,
+  '--shuffle-ms': `${MATCH3_STEP_MS.shuffle}ms`,
+  '--popup-ms': `${MATCH3_STEP_MS.popup}ms`
+}
 
 const tiles = computed<ITile[]>(() =>
   props.board.flatMap((row, r) => row.map((cell, c) => ({ cell, r, c })))
 )
 
+/**
+ * Рядок кожної фішки на попередньому кадрі — щоб падіння на 1 рядок і на 6 тривали по-різному.
+ * Оновлюється після рендера, тож під час рендера нового кадру тут ще старі позиції.
+ */
+let previousRows = new Map<number, number>()
+watch(() => props.board, (board) => {
+  const rows = new Map<number, number>()
+  board.forEach((row, r) => row.forEach((cell) => rows.set(cell.id, r)))
+  previousRows = rows
+}, { flush: 'post', immediate: true })
+
 const skinOf = (kind: number): IMatch3HeroSkin | undefined => props.skins[kind]
 
 const isAt = (pos: TMatch3Pos | null | undefined, r: number, c: number) => !!pos && pos[0] === r && pos[1] === c
 
+/** Сусідня клітинка, з якою зараз міняємось при перетягуванні (або null). */
+const dragTarget = computed<TMatch3Pos | null>(() => {
+  const current = drag.value
+  if (!current?.axis || current.offset === 0) return null
+  const dir = Math.sign(current.offset)
+  const [r, c] = current.pos
+  const target: TMatch3Pos = current.axis === 'h' ? [r, c + dir] : [r + dir, c]
+  return inBounds(target) ? target : null
+})
+
+function inBounds ([r, c]: TMatch3Pos): boolean {
+  return r >= 0 && r < MATCH3_SIZE && c >= 0 && c < MATCH3_SIZE
+}
+
 function tileClass ({ cell, r, c }: ITile) {
+  const dragged = !!drag.value?.axis && isAt(drag.value.pos, r, c)
   return {
     'is-new': props.drops[cell.id] !== undefined,
     'is-clearing': props.clearing.has(cell.id),
     'is-created': props.created.has(cell.id),
-    'is-invalid': props.invalid.has(cell.id),
     'is-selected': isAt(props.selected, r, c),
     'is-hint': !!props.hint && (isAt(props.hint[0], r, c) || isAt(props.hint[1], r, c)),
     'is-special': cell.special !== 'none',
-    'is-aegis': cell.special === 'aegis'
+    'is-aegis': cell.special === 'aegis',
+    'is-held': dragged,
+    'is-pushed': isAt(dragTarget.value, r, c)
   }
 }
 
 function tileStyle ({ cell, r, c }: ITile) {
-  return {
+  const previous = previousRows.get(cell.id)
+  const style: Record<string, string | number> = {
     '--r': r,
     '--c': c,
+    '--fall': previous === undefined ? 0 : Math.max(0, r - previous),
     '--drop': props.drops[cell.id] ?? 0,
     '--tone': cell.kind >= 0 ? MATCH3_KIND_TONES[cell.kind] : 'var(--ds-gold-rgb)'
   }
+  const current = drag.value
+  if (current?.axis) {
+    // Фішка під пальцем іде за ним, сусідня — назустріч
+    const offset = isAt(current.pos, r, c) ? current.offset : isAt(dragTarget.value, r, c) ? -current.offset : 0
+    if (offset) style[current.axis === 'h' ? '--dx' : '--dy'] = `${offset}px`
+  }
+  return style
 }
 
 function tileLabel ({ cell, r, c }: ITile): string {
@@ -155,37 +223,61 @@ function tileLabel ({ cell, r, c }: ITile): string {
   return `${name}${SPECIAL_LABELS[cell.special]}, рядок ${r + 1}, колонка ${c + 1}`
 }
 
-function onImageError (kind: number) {
-  broken.value = new Set(broken.value).add(kind)
+function iconOf (kind: number): string {
+  const skin = skinOf(kind)
+  if (!skin) return ''
+  const failed = failures.value[kind] ?? 0
+  if (failed === 0) return skin.imageUrl || skin.fallbackUrl
+  return failed === 1 ? skin.fallbackUrl : ''
 }
 
-// ─── Свайп / тап ────────────────────────────────────────────────────────────
+function onImageError (kind: number, event: Event) {
+  // Кілька фішок одного типу падають разом — рахуємо помилку лише для поточного джерела
+  const current = iconOf(kind)
+  if (!current || (event.target as HTMLImageElement).getAttribute('src') !== current) return
+  failures.value = { ...failures.value, [kind]: (failures.value[kind] ?? 0) + 1 }
+}
+
+// ─── Перетягування / тап ────────────────────────────────────────────────────
 function onPointerDown (event: PointerEvent, pos: TMatch3Pos) {
   if (props.disabled || event.button > 0) return
-  drag.value = { pos, x: event.clientX, y: event.clientY, moved: false }
+  drag.value = { pos, x: event.clientX, y: event.clientY, axis: null, offset: 0 }
+  // Захоплення: рух і відпускання доходять до поля, навіть якщо палець вийшов за його межі
+  boardEl.value?.setPointerCapture?.(event.pointerId)
 }
 
 function onPointerMove (event: PointerEvent) {
   const current = drag.value
-  if (!current || current.moved || !boardEl.value) return
+  if (!current || !boardEl.value) return
   const dx = event.clientX - current.x
   const dy = event.clientY - current.y
-  const threshold = (boardEl.value.clientWidth / MATCH3_SIZE) * 0.35
-  if (Math.max(Math.abs(dx), Math.abs(dy)) < threshold) return
-  current.moved = true
+  if (!current.axis) {
+    // Laguna цілиться в рядок — там перетягування не потрібне
+    if (props.skillMode === 'laguna' || Math.max(Math.abs(dx), Math.abs(dy)) < DRAG_START_PX) return
+    current.axis = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v'
+  }
+  const cell = boardEl.value.clientWidth / MATCH3_SIZE
+  const raw = current.axis === 'h' ? dx : dy
   const [r, c] = current.pos
-  const to: TMatch3Pos = Math.abs(dx) > Math.abs(dy) ? [r, c + Math.sign(dx)] : [r + Math.sign(dy), c]
-  if (to[0] >= 0 && to[0] < MATCH3_SIZE && to[1] >= 0 && to[1] < MATCH3_SIZE) emit('swap', current.pos, to)
+  const dir = Math.sign(raw)
+  const target: TMatch3Pos = current.axis === 'h' ? [r, c + dir] : [r + dir, c]
+  // За край поля фішка лише трохи «пружинить»
+  const limited = inBounds(target) ? Math.max(-cell, Math.min(cell, raw)) : raw * 0.12
+  drag.value = { ...current, offset: Math.round(limited) }
 }
 
 function onPointerUp () {
-  if (drag.value && !drag.value.moved) emit('tap', drag.value.pos)
+  const current = drag.value
+  if (!current) return
+  const target = dragTarget.value
+  const cell = (boardEl.value?.clientWidth ?? 0) / MATCH3_SIZE
   drag.value = null
-}
-
-function onPointerLeave () {
-  drag.value = null
-  hoverRow.value = null
+  if (!current.axis) {
+    emit('tap', current.pos)
+    return
+  }
+  // Недотягнули — фішки пружинять на місце (перехід фази idle)
+  if (target && Math.abs(current.offset) >= cell * SWAP_AT) emit('swap', current.pos, target)
 }
 
 // ─── Клавіатура: стрілки рухають фокус, Enter / пробіл — як тап ──────────────
@@ -216,6 +308,9 @@ function onKeydown (event: KeyboardEvent) {
 <style scoped>
 .m3-board {
   --gap: 3px;
+  /* Обмін: м'який ease-in-out без «перельоту»; падіння: розгін як під вагою і легке приземлення */
+  --ease-swap: cubic-bezier(0.45, 0, 0.2, 1);
+  --ease-fall: cubic-bezier(0.55, 0, 0.45, 1.08);
 
   position: relative;
   width: 100%;
@@ -232,6 +327,7 @@ function onKeydown (event: KeyboardEvent) {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  transition: border-color 300ms ease, box-shadow 300ms ease;
 }
 
 .m3-board.is-blink {
@@ -255,7 +351,7 @@ function onKeydown (event: KeyboardEvent) {
   background: linear-gradient(90deg, rgba(251, 146, 60, 0), rgba(251, 146, 60, 0.35), rgba(251, 146, 60, 0));
   box-shadow: 0 0 18px rgba(251, 146, 60, 0.45);
   pointer-events: none;
-  transition: transform var(--ds-duration-fast) ease;
+  transition: transform 220ms var(--ease-swap);
 }
 
 /* ─── Фішка ─────────────────────────────────────────────────────────────── */
@@ -269,10 +365,41 @@ function onKeydown (event: KeyboardEvent) {
   padding: var(--gap);
   border: 0;
   background: none;
-  cursor: pointer;
-  transform: translate(calc(var(--c) * 100%), calc(var(--r) * 100%));
-  transition: transform 260ms cubic-bezier(0.3, 1.25, 0.55, 1);
+  cursor: grab;
+  transform: translate(
+    calc(var(--c) * 100% + var(--dx, 0px)),
+    calc(var(--r) * 100% + var(--dy, 0px))
+  );
+  /* idle: так фішка пружинить назад, якщо свайп не дотягнули */
+  transition: transform var(--swap-ms) var(--ease-swap);
   -webkit-tap-highlight-color: transparent;
+}
+
+.phase-swap .m3-tile {
+  transition: transform var(--swap-ms) var(--ease-swap);
+}
+
+.phase-revert .m3-tile {
+  transition: transform var(--revert-ms) var(--ease-swap);
+}
+
+.phase-fall .m3-tile {
+  transition: transform calc(var(--fall-base) + var(--fall) * var(--fall-row)) var(--ease-fall);
+}
+
+.phase-shuffle .m3-tile {
+  transition: transform var(--shuffle-ms) cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Під пальцем — без переходу, щоб фішка йшла за рухом без запізнення */
+.m3-tile.is-held,
+.m3-tile.is-pushed {
+  transition: none;
+}
+
+.m3-tile.is-held {
+  z-index: 2;
+  cursor: grabbing;
 }
 
 .m3-tile[aria-disabled="true"] {
@@ -288,10 +415,6 @@ function onKeydown (event: KeyboardEvent) {
   outline-offset: 1px;
 }
 
-.is-shuffling .m3-tile {
-  transition-duration: 450ms;
-}
-
 .m3-tile__inner {
   position: relative;
   display: flex;
@@ -302,17 +425,26 @@ function onKeydown (event: KeyboardEvent) {
   overflow: hidden;
   border-radius: 22%;
   border: 2px solid rgba(var(--tone), 0.85);
-  background: linear-gradient(160deg, rgba(var(--tone), 0.28), rgba(8, 10, 20, 0.95));
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(0, 0, 0, 0.35);
-  transition: transform var(--ds-duration-fast) var(--ds-ease-out), box-shadow var(--ds-duration-fast) ease;
+  /* «Самоцвіт» кольору типу: світла пляма згори + темний низ, іконка-голова по центру */
+  background:
+    radial-gradient(circle at 50% 30%, rgba(var(--tone), 0.55), transparent 62%),
+    linear-gradient(180deg, rgba(var(--tone), 0.3), rgba(8, 10, 20, 0.95));
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -6px 10px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 220ms var(--ease-swap),
+    box-shadow 220ms ease,
+    border-color 220ms ease;
 }
 
+/* Іконка 32 px — масштабуємо не більше ніж у ~2 рази, щоб лишалась чіткою */
 .m3-tile__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 30%;
-  transform: scale(1.35);
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7));
   pointer-events: none;
 }
 
@@ -356,37 +488,38 @@ function onKeydown (event: KeyboardEvent) {
   filter: drop-shadow(0 0 6px rgba(var(--ds-gold-rgb), 0.9));
 }
 
-.m3-tile.is-selected .m3-tile__inner {
+.m3-tile.is-selected .m3-tile__inner,
+.m3-tile.is-held .m3-tile__inner {
   transform: scale(1.08);
   border-color: #fff;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35), 0 0 16px rgba(var(--tone), 0.9);
 }
 
+.m3-tile.is-held .m3-tile__inner {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35), 0 10px 20px rgba(0, 0, 0, 0.55), 0 0 18px rgba(var(--tone), 0.9);
+}
+
 @media (hover: hover) and (pointer: fine) {
-  .m3-tile:not([aria-disabled="true"]):hover .m3-tile__inner {
+  .m3-board:not(.is-dragging) .m3-tile:not([aria-disabled="true"]):hover .m3-tile__inner {
     transform: scale(1.05);
   }
 }
 
 /* ─── Рух ───────────────────────────────────────────────────────────────── */
 .m3-tile.is-new .m3-tile__inner {
-  animation: m3-drop 300ms cubic-bezier(0.45, 0, 0.75, 1) both;
+  animation: m3-drop calc(var(--fall-base) + var(--drop) * var(--fall-row)) var(--ease-fall) both;
 }
 
 .m3-tile.is-clearing .m3-tile__inner {
-  animation: m3-clear 260ms var(--ds-ease-out) forwards;
+  animation: m3-clear var(--clear-ms) cubic-bezier(0.3, 0, 0.3, 1) forwards;
 }
 
 .m3-tile.is-created .m3-tile__inner {
-  animation: m3-created 420ms var(--ds-ease-out);
-}
-
-.m3-tile.is-invalid .m3-tile__inner {
-  animation: m3-shake 320ms ease;
+  animation: m3-created 600ms cubic-bezier(0.3, 0, 0.3, 1);
 }
 
 .m3-tile.is-hint .m3-tile__inner {
-  animation: m3-hint 1.1s ease-in-out infinite;
+  animation: m3-hint 1.6s ease-in-out infinite;
 }
 
 .m3-popup {
@@ -400,7 +533,7 @@ function onKeydown (event: KeyboardEvent) {
   color: #fff;
   text-shadow: 0 0 8px rgba(var(--ds-primary-rgb), 0.9), 0 2px 4px rgba(0, 0, 0, 0.8);
   pointer-events: none;
-  animation: m3-popup 900ms var(--ds-ease-out) forwards;
+  animation: m3-popup var(--popup-ms) cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
 }
 
 .m3-popup--big {
@@ -411,19 +544,24 @@ function onKeydown (event: KeyboardEvent) {
 
 @keyframes m3-drop {
   from {
+    opacity: 0.4;
     transform: translateY(calc(var(--drop) * -112%));
+  }
+
+  30% {
+    opacity: 1;
   }
 }
 
 @keyframes m3-clear {
-  40% {
-    transform: scale(1.15);
+  30% {
+    transform: scale(1.16);
     filter: brightness(1.8);
     opacity: 1;
   }
 
   100% {
-    transform: scale(0.2);
+    transform: scale(0.15);
     filter: brightness(2.2);
     opacity: 0;
   }
@@ -431,24 +569,17 @@ function onKeydown (event: KeyboardEvent) {
 
 @keyframes m3-created {
   0% {
-    transform: scale(0.6);
+    transform: scale(0.7);
     filter: brightness(2);
   }
 
-  60% {
+  55% {
     transform: scale(1.12);
   }
-}
 
-@keyframes m3-shake {
-  20%,
-  60% {
-    transform: translateX(-10%);
-  }
-
-  40%,
-  80% {
-    transform: translateX(10%);
+  100% {
+    transform: scale(1);
+    filter: none;
   }
 }
 
@@ -460,7 +591,7 @@ function onKeydown (event: KeyboardEvent) {
   }
 
   50% {
-    transform: scale(1.08);
+    transform: scale(1.07);
     box-shadow: 0 0 14px rgba(255, 255, 255, 0.7);
   }
 }
@@ -471,20 +602,28 @@ function onKeydown (event: KeyboardEvent) {
     transform: translate(-50%, -30%) scale(0.7);
   }
 
-  20% {
+  18% {
     opacity: 1;
-    transform: translate(-50%, -60%) scale(1.1);
+    transform: translate(-50%, -60%) scale(1.08);
+  }
+
+  70% {
+    opacity: 1;
   }
 
   100% {
     opacity: 0;
-    transform: translate(-50%, -160%) scale(1);
+    transform: translate(-50%, -150%) scale(1);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .m3-tile {
-    transition-duration: 90ms;
+  .m3-board {
+    --swap-ms: 110ms !important;
+    --revert-ms: 100ms !important;
+    --fall-base: 90ms !important;
+    --fall-row: 25ms !important;
+    --shuffle-ms: 240ms !important;
   }
 
   .m3-tile.is-hint .m3-tile__inner {
@@ -492,9 +631,7 @@ function onKeydown (event: KeyboardEvent) {
     box-shadow: 0 0 0 2px #fff;
   }
 
-  .m3-tile.is-new .m3-tile__inner,
-  .m3-tile.is-created .m3-tile__inner,
-  .m3-tile.is-invalid .m3-tile__inner {
+  .m3-tile.is-created .m3-tile__inner {
     animation-duration: 1ms;
   }
 }

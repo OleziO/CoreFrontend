@@ -395,6 +395,7 @@
     "heroPortraitUrl": true,
     "match3Service": true,
     "useMatch3Game": true,
-    "useMatch3Heroes": true
+    "useMatch3Heroes": true,
+    "heroSteamIconUrl": true
   }
 }

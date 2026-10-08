@@ -16,7 +16,8 @@
           <span class="sys-label">// Міні-гра</span>
           <h2 class="m3-dialog__title">Три в ряд</h2>
           <p class="m3-dialog__subtitle">
-            Збирайте героїв по троє, поки шукаємо суперника. Гра закінчується, коли ходів більше немає.
+            Збирайте героїв по троє, поки шукаємо суперника. Раунд — {{ roundSeconds }} секунд, великі
+            збіги додають час.
           </p>
         </div>
       </div>
@@ -33,23 +34,34 @@
           <Transition name="m3-chain">
             <span v-if="chain >= 2" :key="chain" class="m3-hud__chain">Каскад ×{{ chain }}</span>
           </Transition>
-          <div class="m3-hud__stat m3-hud__stat--moves" :class="{ 'is-low': isPlaying && movesLeft <= 3 }">
-            <span class="m3-hud__label">Ходи</span>
-            <span class="m3-hud__value">{{ movesLeft }}</span>
+          <div class="m3-hud__stat m3-hud__stat--time" :class="{ 'is-low': isLowTime }">
+            <span class="m3-hud__label">Час</span>
+            <span class="m3-hud__value" role="timer" :aria-label="`Лишилось ${formatMatch3Clock(timeLeftMs)}`">
+              {{ formatMatch3Clock(timeLeftMs) }}
+            </span>
+            <Transition name="m3-bonus">
+              <span v-if="timeBonus" :key="timeBonus.id" class="m3-hud__bonus" aria-hidden="true">
+                +{{ Math.round(timeBonus.ms / 1000) }} с
+              </span>
+            </Transition>
           </div>
+        </div>
+
+        <!-- Смуга часу: 100% = базовий раунд; бонуси можуть «переповнити» її — тоді вона просто повна -->
+        <div class="m3-timebar" :class="{ 'is-low': isLowTime }" aria-hidden="true">
+          <span class="m3-timebar__fill" :style="{ transform: `scaleX(${timeFraction})` }" />
         </div>
 
         <Match3Board
           :board="board"
           :skins="skins"
+          :phase="phase"
           :clearing="clearing"
           :created="created"
           :drops="drops"
-          :invalid="invalid"
           :selected="selected"
           :hint="hint"
           :skill-mode="skillMode"
-          :shuffling="shuffling"
           :popups="popups"
           :disabled="!isPlaying || busy"
           @tap="tap"
@@ -101,7 +113,7 @@
           <span class="m3-dialog__note">
             {{ heroesNote }}
           </span>
-          <el-button v-if="isPlaying" :disabled="busy" @click="finish">
+          <el-button v-if="isPlaying" :disabled="busy" @click="finish('manual')">
             <PhFlagCheckered :size="16" weight="bold" class="mr-6" />
             Завершити гру
           </el-button>
@@ -116,11 +128,12 @@
           <h3 id="m3-rules-title" class="sys-label sys-label--muted">// Правила</h3>
           <ul class="m3-rules__list">
             <li><b>3 в ряд</b> — {{ MATCH3_TILE_POINTS }} очок за героя.</li>
-            <li><b>4 в ряд</b> — лінія: спалює колонку чи рядок.</li>
-            <li><b>L / T</b> — бомба 3×3 і +1 хід.</li>
-            <li><b>5 в ряд</b> — Aegis: обміняйте з героєм, щоб прибрати всіх таких. +2 ходи.</li>
+            <li><b>Час</b> — {{ roundSeconds }} с на раунд; бонуси подовжують його максимум до {{ maxSeconds }} с.</li>
+            <li><b>4 в ряд</b> — лінія: спалює колонку чи рядок. +1 с.</li>
+            <li><b>L / T</b> — бомба 3×3. +2 с.</li>
+            <li><b>5 в ряд</b> — Aegis: обміняйте з героєм, щоб прибрати всіх таких. +3 с.</li>
             <li><b>Дві спецфішки</b> поруч — обміняйте їх для комбо.</li>
-            <li><b>Каскади</b> множать очки (×2, ×3…), третя хвиля дає +1 хід.</li>
+            <li><b>Каскади</b> множать очки (×2, ×3…), третя хвиля дає +2 с.</li>
             <li><b>Мана</b> — +1 за кожного прибраного героя, витрачається на навички.</li>
           </ul>
         </section>
@@ -132,9 +145,14 @@
 <script setup lang="ts">
 import { PhFlagCheckered, PhGameController, PhPlay, PhTrophy } from '@phosphor-icons/vue'
 import { useAuthStore } from '@/store/modules/auth'
-import { MATCH3_TILE_POINTS } from '@/features/match3/match3-engine.utils'
+import { MATCH3_MAX_ROUND_MS, MATCH3_ROUND_MS, MATCH3_TILE_POINTS } from '@/features/match3/match3-engine.utils'
 import type { TMatch3Skill } from '@/features/match3/match3-engine.utils'
-import { MATCH3_SKILL_BY_ID, formatMatch3Score, pluralizeMatch3Moves } from '@/features/match3/match3.utils'
+import {
+  MATCH3_SKILL_BY_ID,
+  formatMatch3Clock,
+  formatMatch3Score,
+  pluralizeMatch3Moves
+} from '@/features/match3/match3.utils'
 import { useMatch3Game } from '@/features/match3/composables/use-match3-game'
 import { useMatch3Heroes } from '@/features/match3/composables/use-match3-heroes'
 import Match3Board from '@/features/match3/components/Match3Board.vue'
@@ -151,13 +169,12 @@ const isNarrow = useMediaQuery('(max-width: 640px)')
 const { skins: heroSkins, isPersonal } = useMatch3Heroes()
 const {
   status,
+  phase,
   board,
   skins,
   clearing,
   created,
   drops,
-  invalid,
-  shuffling,
   busy,
   selected,
   skillMode,
@@ -165,10 +182,11 @@ const {
   popups,
   chain,
   score,
-  movesLeft,
   mana,
   bestChain,
   movesMade,
+  timeLeftMs,
+  timeBonus,
   isPlaying,
   isStuck,
   offline,
@@ -185,7 +203,13 @@ const {
   leave
 } = useMatch3Game(() => heroSkins.value)
 
-const displayScore = useTransition(score, { duration: 380 })
+const displayScore = useTransition(score, { duration: 600 })
+
+const roundSeconds = MATCH3_ROUND_MS / 1000
+const maxSeconds = MATCH3_MAX_ROUND_MS / 1000
+/** Останні 10 секунд — таймер червоніє й пульсує. */
+const isLowTime = computed(() => isPlaying.value && timeLeftMs.value <= 10_000)
+const timeFraction = computed(() => Math.min(1, timeLeftMs.value / MATCH3_ROUND_MS))
 
 const skillsAvailable = computed<Record<TMatch3Skill, boolean>>(() => ({
   blink: canUseSkill('blink'),
@@ -204,7 +228,7 @@ const heroesNote = computed(() => (
 ))
 
 const endTitle = computed(() => {
-  if (endReason.value === 'moves') return 'Ходи закінчились'
+  if (endReason.value === 'time') return 'Час вийшов'
   if (endReason.value === 'board') return 'Ходів на полі немає'
   return 'Гру завершено'
 })
@@ -369,12 +393,75 @@ watch(modelValue, (open) => {
     gap: 2px;
   }
 
-  .m3-hud__stat--moves {
+  .m3-hud__stat--time {
+    position: relative;
     align-items: flex-end;
 
     &.is-low .m3-hud__value {
-      color: var(--ds-warning, #fbbf24);
-      text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+      color: #f43f5e;
+      text-shadow: 0 0 10px rgba(244, 63, 94, 0.6);
+    }
+  }
+
+  .m3-hud__bonus {
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(52, 211, 153, 0.16);
+    font-family: var(--ds-font-mono);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    color: #34d399;
+  }
+
+  .m3-bonus-enter-active {
+    transition: opacity 260ms ease, transform 420ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  .m3-bonus-leave-active {
+    transition: opacity 400ms ease, transform 400ms ease;
+  }
+
+  .m3-bonus-enter-from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  .m3-bonus-leave-to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  // ─── Смуга часу ────────────────────────────────────────────────────────
+  .m3-timebar {
+    position: relative;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .m3-timebar__fill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--ds-primary), #34d399);
+    box-shadow: 0 0 10px rgba(var(--ds-primary-rgb), 0.6);
+    transform-origin: left center;
+    transition: transform 120ms linear, background 400ms ease;
+  }
+
+  .m3-timebar.is-low .m3-timebar__fill {
+    background: linear-gradient(90deg, #f43f5e, #fb923c);
+    box-shadow: 0 0 10px rgba(244, 63, 94, 0.6);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .m3-hud__stat--time.is-low .m3-hud__value {
+      animation: m3-tick 1s ease-in-out infinite;
     }
   }
 
@@ -422,11 +509,11 @@ watch(modelValue, (open) => {
   }
 
   .m3-chain-enter-active {
-    transition: opacity 160ms ease, transform 260ms cubic-bezier(0.3, 1.5, 0.5, 1);
+    transition: opacity 240ms ease, transform 420ms cubic-bezier(0.3, 1.35, 0.5, 1);
   }
 
   .m3-chain-leave-active {
-    transition: opacity 160ms ease;
+    transition: opacity 320ms ease;
   }
 
   .m3-chain-enter-from {
@@ -505,7 +592,7 @@ watch(modelValue, (open) => {
   }
 
   .m3-over-enter-active {
-    transition: opacity 280ms ease;
+    transition: opacity 500ms ease;
   }
 
   .m3-over-enter-from {
@@ -546,3 +633,14 @@ watch(modelValue, (open) => {
   }
 }
 </style>
+
+@keyframes m3-tick {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.12);
+  }
+}

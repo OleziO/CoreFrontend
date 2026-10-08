@@ -1,8 +1,9 @@
 import { useQueryWrapper } from '@/core/use-query.utils'
 import { useAuthStore } from '@/store/modules/auth'
 import {
-  heroPortraitUrl,
+  heroIconUrl,
   heroShortName,
+  heroSteamIconUrl,
   openDotaService,
   steamId64ToAccountId
 } from '@/services/opendota.service'
@@ -51,7 +52,8 @@ export function useMatch3Heroes () {
         return {
           key: heroShortName(constant.name),
           name: constant.localized_name,
-          imageUrl: heroPortraitUrl(constant.name)
+          imageUrl: heroIconUrl(constant.name),
+          fallbackUrl: heroSteamIconUrl(constant.name)
         }
       })
   })
@@ -62,7 +64,12 @@ export function useMatch3Heroes () {
     for (const hero of MATCH3_DEFAULT_HEROES) {
       if (result.length >= MATCH3_KINDS) break
       if (result.some((skin) => skin.key === hero.key)) continue
-      result.push({ key: hero.key, name: hero.name, imageUrl: heroPortraitUrl(hero.key) })
+      result.push({
+        key: hero.key,
+        name: hero.name,
+        imageUrl: heroIconUrl(hero.key),
+        fallbackUrl: heroSteamIconUrl(hero.key)
+      })
     }
     return result
   })

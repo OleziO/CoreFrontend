@@ -64,6 +64,7 @@ declare global {
   const heroIconUrl: typeof import('../src/services/opendota.service')['heroIconUrl']
   const heroPortraitUrl: typeof import('../src/services/opendota.service')['heroPortraitUrl']
   const heroShortName: typeof import('../src/services/opendota.service')['heroShortName']
+  const heroSteamIconUrl: typeof import('../src/services/opendota.service')['heroSteamIconUrl']
   const ignorableWatch: typeof import('@vueuse/core')['ignorableWatch']
   const inject: typeof import('vue')['inject']
   const injectLocal: typeof import('@vueuse/core')['injectLocal']
