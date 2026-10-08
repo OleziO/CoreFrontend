@@ -59,6 +59,15 @@ export function heroIconUrl (constantName: string | undefined | null): string {
   return short ? `https://cdn.stratz.com/images/dota2/heroes/${short}_icon.png` : ''
 }
 
+/**
+ * Великий портрет героя (256×144) зі Steam CDN — для плиток, де іконка Stratz (32 px) замала.
+ * Приймає і внутрішнє ім'я (`npc_dota_hero_pudge`), і коротке (`pudge`).
+ */
+export function heroPortraitUrl (constantName: string | undefined | null): string {
+  const short = heroShortName(constantName)
+  return short ? `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${short}.png` : ''
+}
+
 class OpenDotaService {
   async getPlayerHeroes (accountId: string): Promise<IOpenDotaPlayerHero[]> {
     const data = await openDotaGet<IOpenDotaPlayerHero[]>(`/players/${accountId}/heroes`)

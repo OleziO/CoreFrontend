@@ -99,6 +99,16 @@
         <p v-else class="queue-panel__text">
           Вікно розширюється на 50 очок кожні 15 секунд. Не закривайте сторінку — так ми знаємо, що ви ще тут.
         </p>
+        <!-- Міні-гра скорочує очікування; знайдений матч сам закриє її -->
+        <button type="button" class="queue-panel__play" @click="emit('play')">
+          <span class="queue-panel__play-icon" aria-hidden="true">
+            <PhGameController :size="18" weight="fill" />
+          </span>
+          <span class="flex min-w-0 flex-col items-start gap-2">
+            <span class="queue-panel__play-title">Зіграти в «Три в ряд», поки чекаєте</span>
+            <span class="queue-panel__play-text">Знайдеться суперник — гра закриється, а очки зарахуються</span>
+          </span>
+        </button>
         <el-button size="large" class="w-full" :loading="leaving" @click="emit('leave')">
           Вийти з черги
         </el-button>
@@ -161,6 +171,7 @@
 <script setup lang="ts">
 import {
   PhDiscordLogo,
+  PhGameController,
   PhShuffle,
   PhSpeakerHigh,
   PhSpeakerSlash,
@@ -199,6 +210,7 @@ const emit = defineEmits<{
   join: []
   leave: []
   login: []
+  play: []
 }>()
 
 const now = useNow({ interval: 1000 })
@@ -470,6 +482,61 @@ const blockedText = computed(() => {
   border-radius: 9999px;
   border: 2px solid var(--ds-primary);
   opacity: 0;
+}
+
+.queue-panel__play {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px dashed rgba(var(--ds-gold-rgb), 0.45);
+  background: rgba(var(--ds-gold-rgb), 0.06);
+  color: var(--ds-text-strong);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    border-color var(--ds-duration-fast) ease,
+    background-color var(--ds-duration-fast) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+}
+
+.queue-panel__play:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .queue-panel__play:hover {
+    border-color: rgba(var(--ds-gold-rgb), 0.8);
+    background: rgba(var(--ds-gold-rgb), 0.12);
+  }
+}
+
+.queue-panel__play-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: rgba(var(--ds-gold-rgb), 0.16);
+  color: var(--ds-gold);
+}
+
+.queue-panel__play-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.queue-panel__play-text {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--ds-text-muted);
 }
 
 .queue-panel__blocked {

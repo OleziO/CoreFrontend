@@ -1770,6 +1770,57 @@ export interface paths {
         patch: operations["DuelSeasonsController_setPrizeIssued"];
         trace?: never;
     };
+    "/match3/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Match-3 mini-game leaderboard */
+        get: operations["Match3Controller_getLeaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/match3/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start a match-3 run */
+        post: operations["Match3Controller_start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/match3/runs/{id}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finish a match-3 run */
+        post: operations["Match3Controller_finish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/friends": {
         parameters: {
             query?: never;
@@ -4625,6 +4676,57 @@ export interface components {
             applicationsLeft?: number | null;
             /** @description Teams the caller captains / coaches */
             managedTeams: components["schemas"]["ManagedTeamDto"][];
+        };
+        Match3PlayerDto: {
+            id: string;
+            discordName?: string | null;
+            discordUsername?: string | null;
+            avatarUrl?: string | null;
+        };
+        Match3LeaderboardRowDto: {
+            /** @description 1-based place */
+            position: number;
+            player: components["schemas"]["Match3PlayerDto"];
+            /** @description Best score of the player */
+            score: number;
+            /** Format: date-time */
+            achievedAt: string;
+        };
+        Match3LeaderboardMeDto: {
+            best: number;
+            position: number;
+        };
+        Match3LeaderboardDto: {
+            /** @description Top 10 */
+            rows: components["schemas"]["Match3LeaderboardRowDto"][];
+            /** @description Players with at least one scored run */
+            totalPlayers: number;
+            /** @description The viewer, when logged in and on the board */
+            me?: components["schemas"]["Match3LeaderboardMeDto"] | null;
+        };
+        Match3RunStartDto: {
+            /** @description Run id — finish it with this id */
+            id: string;
+            /** @description Board seed for the client engine (0…2^31-1) */
+            seed: number;
+        };
+        FinishMatch3RunDto: {
+            /** @description Action log in play order */
+            actions: {
+                [key: string]: unknown;
+            }[];
+        };
+        Match3RunResultDto: {
+            /** @description Score computed by the server replay */
+            score: number;
+            moves: number;
+            bestChain: number;
+            /** @description My best score after this run */
+            best: number;
+            /** @description My place on the board after this run; null with no score yet */
+            position?: number | null;
+            /** @description This run beat my previous best */
+            isRecord: boolean;
         };
     };
     responses: never;
@@ -8404,6 +8506,69 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JoinRequestDto"];
+                };
+            };
+        };
+    };
+    Match3Controller_getLeaderboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Match3LeaderboardDto"];
+                };
+            };
+        };
+    };
+    Match3Controller_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Match3RunStartDto"];
+                };
+            };
+        };
+    };
+    Match3Controller_finish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinishMatch3RunDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Match3RunResultDto"];
                 };
             };
         };

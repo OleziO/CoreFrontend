@@ -132,6 +132,12 @@ export type TFriendRequest = components['schemas']['FriendRequestDto']
 export type TFriendsOverview = components['schemas']['FriendsOverviewDto']
 export type TFriendRelation = components['schemas']['FriendRelationDto']
 export type TFriendRelationKind = TFriendRelation['relation']
+
+export type TMatch3Leaderboard = components['schemas']['Match3LeaderboardDto']
+export type TMatch3LeaderboardRow = components['schemas']['Match3LeaderboardRowDto']
+export type TMatch3RunStart = components['schemas']['Match3RunStartDto']
+export type TMatch3RunResult = components['schemas']['Match3RunResultDto']
+export type TFinishMatch3RunDto = components['schemas']['FinishMatch3RunDto']
 export type TCreateFriendRequestDto = components['schemas']['CreateFriendRequestDto']
 /** Центр сповіщень (GET /notifications + сокет `/notifications`) — теж додано вручну. */
 export type TNotification = components['schemas']['NotificationDto']

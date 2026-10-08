@@ -391,6 +391,10 @@
     "chatSoundService": true,
     "FIND_PAGE_SIZE": true,
     "findService": true,
-    "useFindStore": true
+    "useFindStore": true,
+    "heroPortraitUrl": true,
+    "match3Service": true,
+    "useMatch3Game": true,
+    "useMatch3Heroes": true
   }
 }

@@ -19,6 +19,11 @@
         <div class="duels-head__aside">
           <!-- Стан пулу ботів: червона пігулка, коли жоден не онлайн; деталі — у tooltip -->
           <DuelBotsStatusStrip :bots="bots" :is-error="botsError" minimal />
+          <!-- Міні-гра «Три в ряд» — щоб скоротати очікування в черзі -->
+          <el-button title="Міні-гра «Три в ряд»" @click="openMiniGame">
+            <PhGameController :size="16" weight="fill" />
+            <span class="ml-6">Міні-гра</span>
+          </el-button>
           <el-button title="Як це працює" @click="open('DuelHowItWorksModal')">
             <PhQuestion :size="16" weight="bold" />
             <span class="ml-6">Як це працює</span>
@@ -98,6 +103,7 @@
               @join="onJoin"
               @leave="leave"
               @login="openLogin"
+              @play="openMiniGame"
             />
           </Transition>
 
@@ -179,7 +185,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhListChecks, PhQuestion, PhRanking } from '@phosphor-icons/vue'
+import { PhGameController, PhListChecks, PhQuestion, PhRanking } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
 import { hasPlayerRole } from '@/core/helpers'
 import { ERole } from '@/types/general.enums'
@@ -217,7 +223,7 @@ import type { TDuel, TDuelTournament } from '@/api/types/api.types'
 const TOP_SIZE = 10
 
 const authStore = useAuthStore()
-const { open } = useAppModals()
+const { open, close } = useAppModals()
 const route = useRoute()
 
 const meId = computed(() => authStore.user?.id ?? null)
@@ -310,6 +316,19 @@ watch(
   () => status.value?.lastFinishedDuel?.state ?? null,
   (current, previous) => {
     if (previous === 'PROCESSING' && current && current !== 'PROCESSING') invalidateDuelQueries()
+  }
+)
+
+/** Міні-гра «Три в ряд»: грається, поки шукаємо суперника. */
+function openMiniGame () {
+  open('Match3Modal')
+}
+
+// Знайшовся матч — закриваємо міні-гру (зігране зараховується), щоб нічого не перекривало «Прийняти».
+watch(
+  () => status.value?.activeDuel?.id ?? null,
+  (current, previous) => {
+    if (current && !previous) close('Match3Modal')
   }
 )
 
