@@ -343,6 +343,19 @@
           </template>
         </div>
       </section>
+
+      <!-- Видалення власного акаунта: тиха «небезпечна» дія в самому низу, з підтвердженням -->
+      <div v-if="isOwnProfile" class="profile-danger">
+        <button
+          type="button"
+          class="profile-danger__btn"
+          :disabled="deletingAccount"
+          @click="onDeleteAccount"
+        >
+          <PhTrash :size="14" weight="bold" />
+          <span>{{ deletingAccount ? 'Видаляємо акаунт…' : 'Видалити акаунт' }}</span>
+        </button>
+      </div>
     </div>
 
     <!-- FOOTER -->
@@ -367,6 +380,7 @@ import {
   PhFloppyDisk,
   PhLinkBreak,
   PhMapPin,
+  PhTrash,
   PhX
 } from '@phosphor-icons/vue'
 import { MAX_RATING, positionOptions, wantToPlayOptions } from '@/components/player-tags/player.enums'
@@ -938,9 +952,70 @@ async function onSubmit () {
 function onClose () {
   modelValue.value = false
 }
+
+// ─── Видалення власного акаунта ─────────────────────────────────────────────
+const isOwnProfile = computed(() => !!authStore.user?.id && authStore.user.id === props.player.id)
+const deletingAccount = ref(false)
+
+async function onDeleteAccount () {
+  try {
+    await ElMessageBox.confirm(
+      'Буде видалено твій профіль і членство в команді, а автопродовження VIP — вимкнено. ' +
+        'Цю дію не можна скасувати.',
+      'Видалити акаунт?',
+      {
+        confirmButtonText: 'Так, видалити',
+        cancelButtonText: 'Скасувати',
+        confirmButtonClass: 'el-button--danger',
+        type: 'warning'
+      }
+    )
+  } catch {
+    return
+  }
+
+  deletingAccount.value = true
+  try {
+    await playersStore.deletePlayer(props.player.id)
+    modelValue.value = false
+    ElMessage.success('Акаунт видалено')
+    // Токен видаленого гравця більше не дійсний: виходимо й повертаємось на головну.
+    authStore.logout()
+  } catch (e) {
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося видалити акаунт'))
+  } finally {
+    deletingAccount.value = false
+  }
+}
 </script>
 
 <style scoped lang="scss">
+.profile-danger {
+  @apply flex justify-center pt-12;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.profile-danger__btn {
+  @apply inline-flex min-h-44 cursor-pointer items-center gap-6 border-0 bg-transparent px-10 text-xs
+    text-white/45 transition-colors duration-200;
+
+  &:disabled {
+    @apply cursor-wait;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(var(--ds-primary-rgb), 0.6);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .profile-danger__btn:not(:disabled):hover {
+    @apply text-error;
+  }
+}
+
 .profile-section__head {
   @apply flex items-center gap-12;
 }
