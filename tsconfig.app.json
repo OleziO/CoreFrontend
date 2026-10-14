@@ -5,7 +5,8 @@
     "src/**/*",
     "src/**/*.vue",
     "tests",
-    "tailwind/tailwind.colors.ts"
+    "tailwind/tailwind.colors.ts",
+    "legal/config.json"
   ],
   "compilerOptions": {
     "composite": true,

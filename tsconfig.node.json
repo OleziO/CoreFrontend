@@ -4,7 +4,9 @@
     "vite.config.*",
     "vitest.config.*",
     "cypress.config.*",
-    "playwright.config.*"
+    "playwright.config.*",
+    "tailwind/tailwind.colors.ts",
+    "src/config/legal-pages.ts"
   ],
   "compilerOptions": {
     "composite": true,

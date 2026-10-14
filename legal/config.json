@@ -1,0 +1,19 @@
+{
+  "legalVersion": "2026-10-14",
+  "seller": {
+    "FOP_NAME": "{{FOP_NAME}}",
+    "TAX_ID": "{{TAX_ID}}",
+    "LEGAL_ADDRESS": "{{LEGAL_ADDRESS}}",
+    "ACTUAL_ADDRESS": "{{ACTUAL_ADDRESS}}",
+    "PHONE": "{{PHONE}}",
+    "SUPPORT_EMAIL": "{{SUPPORT_EMAIL}}",
+    "SUPPORT_CHAT": "{{SUPPORT_CHAT}}",
+    "DOMAIN": "{{DOMAIN}}"
+  },
+  "policy": {
+    "WITHDRAW_DEADLINE_HOURS": "48",
+    "SUPPORT_REVIEW_DAYS": "3",
+    "SUPPORT_REFUND_WINDOW_DAYS": "14",
+    "DELIVERY_MAX_HOURS": "24"
+  }
+}

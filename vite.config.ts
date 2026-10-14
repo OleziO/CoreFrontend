@@ -7,6 +7,7 @@ import vue from '@vitejs/plugin-vue'
 import { IconsPluginCustom } from './vite.config.icons'
 import { ComponentsBuilder } from './vite.config.components'
 import { ImportsBuilder } from './vite.config.imports'
+import { LegalPagesPlugin } from './vite.config.legal'
 
 import svgLoader from 'vite-svg-loader'
 
@@ -19,7 +20,9 @@ export default defineConfig({
     IconsPluginCustom(),
     ComponentsBuilder(),
     ImportsBuilder(),
-    svgLoader()
+    svgLoader(),
+    // Статичні юридичні сторінки (/terms/, /offer/, … і /en/…) з legal/<lang>/*.md — поза SPA.
+    LegalPagesPlugin()
   ],
 
   resolve: {
