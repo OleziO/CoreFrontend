@@ -38,7 +38,7 @@
 
     <hr class="hud-line hud-line--pink m-0" aria-hidden="true">
 
-    <!-- Сцена: плеєр ліворуч, поруч — картка донатів (той самий Monobank ФОП-еквайринг, що й внесок) -->
+    <!-- Сцена: плеєр ліворуч, поруч — картка добровільної підтримки ліги (та сама сторінка оплати, що й внесок) -->
     <div class="stream__stage">
       <div class="stream__frame stream__reveal" style="--reveal-index: 1">
         <div class="stream__toolbar">
@@ -75,29 +75,36 @@
         </div>
       </div>
 
-      <aside class="stream__donate stream__reveal" style="--reveal-index: 2" aria-label="Підтримати лігу">
-        <span class="stream__donate-glow" aria-hidden="true" />
+      <aside class="stream__support stream__reveal" style="--reveal-index: 2" aria-label="Підтримати лігу">
+        <span class="stream__support-glow" aria-hidden="true" />
         <p class="stream__eyebrow stream__eyebrow--gold sys-label">
           <span class="stream__tick stream__tick--gold" aria-hidden="true" />
           <span>Підтримка</span>
           <span class="stream__sep stream__sep--gold" aria-hidden="true">/</span>
-          <span>Донат</span>
+          <span>Добровільно</span>
         </p>
-        <h3 class="stream__donate-title">Підтримати лігу</h3>
+        <h3 class="stream__support-title">Підтримати лігу</h3>
         <p class="stream__hint">
-          Донати йдуть на призовий фонд і розвиток трансляцій. Оплата карткою на захищеній сторінці оплати —
-          кошти надходять на рахунок ФОП організатора.
+          Добровільна підтримка ліги: розвиток трансляцій і турнірів. Нічого не нараховується — це добровільний
+          платіж. Оплата карткою на захищеній сторінці оплати.
         </p>
 
-        <div class="stream__donate-actions" role="group" aria-label="Сума донату">
+        <PaymentConsent
+          v-model="consentAgreed"
+          class="relative"
+          :unavailable="consentUnavailable"
+          @retry="retryConsent"
+        />
+
+        <div class="stream__support-actions" role="group" aria-label="Сума підтримки">
           <el-button
-            v-for="amountUah in DONATION_PRESETS_UAH"
+            v-for="amountUah in SUPPORT_PRESETS_UAH"
             :key="amountUah"
             size="large"
-            class="stream__donate-btn"
+            class="stream__support-btn"
             :loading="loadingAmountUah === amountUah"
-            :disabled="loadingAmountUah !== null && loadingAmountUah !== amountUah"
-            @click="donate(amountUah)"
+            :disabled="!consentBody || (loadingAmountUah !== null && loadingAmountUah !== amountUah)"
+            @click="paySupport(amountUah)"
           >
             <PhHandHeart v-if="loadingAmountUah !== amountUah" :size="18" weight="fill" class="shrink-0" />
             <span class="whitespace-nowrap">{{ amountUah }} грн</span>
@@ -120,8 +127,8 @@ interface IProps {
 
 const props = defineProps<IProps>()
 
-/** Пресети донату в гривнях; на бекенд відправляємо копійки, як і вступний внесок. */
-const DONATION_PRESETS_UAH = [100, 300, 500] as const
+/** Пресети добровільної підтримки в гривнях; на бекенд відправляємо копійки, як і вступний внесок. */
+const SUPPORT_PRESETS_UAH = [100, 300, 500] as const
 
 // `parent` плеєра має збігатися з hostname сторінки — беремо його з адреси, а не з конфігу.
 const playerUrl = buildTwitchPlayerUrl(window.location.hostname)
@@ -131,19 +138,27 @@ const playerLoaded = ref(false)
 
 const loadingAmountUah = ref<number | null>(null)
 
-async function donate (amountUah: number) {
-  if (loadingAmountUah.value !== null) return
+const {
+  agreed: consentAgreed,
+  consentBody,
+  unavailable: consentUnavailable,
+  retry: retryConsent
+} = usePaymentConsent()
+
+async function paySupport (amountUah: number) {
+  if (loadingAmountUah.value !== null || !consentBody.value) return
   loadingAmountUah.value = amountUah
   try {
-    const intent = await tournamentsService.createDonationIntent(props.tournamentId, amountUah * 100)
+    const intent = await tournamentsService.createSupportIntent(props.tournamentId, amountUah * 100, consentBody.value)
     if (intent.pageUrl) {
       window.open(intent.pageUrl, '_blank', 'noopener')
-      ElMessage.success('Дякуємо за підтримку! Завершіть оплату на сторінці оплати.')
+      // Подяку не показуємо: оплату ще не завершено — лише відкрито сторінку.
+      ElMessage.info('Сторінку оплати відкрито в новій вкладці')
     } else {
       ElMessage.warning('Сторінка оплати не налаштована. Зверніться до організатора.')
     }
   } catch (e: unknown) {
-    ElMessage.error(getApiErrorMessage(e, 'Не вдалося створити рахунок на донат'))
+    ElMessage.error(getApiErrorMessage(e, 'Не вдалося створити рахунок на оплату'))
   } finally {
     loadingAmountUah.value = null
   }
@@ -169,7 +184,7 @@ async function donate (amountUah: number) {
     radial-gradient(ellipse 40% 70% at 100% 100%, rgba(var(--ds-gold-rgb), 0.06), transparent 65%);
 }
 
-// Поява каскадом: шапка → плеєр → донати. Глушиться під `prefers-reduced-motion` у `_tokens.scss`.
+// Поява каскадом: шапка → плеєр → підтримка ліги. Глушиться під `prefers-reduced-motion` у `_tokens.scss`.
 @keyframes stream-in {
   from {
     opacity: 0;
@@ -248,7 +263,7 @@ async function donate (amountUah: number) {
 }
 
 // ─── Сцена ──────────────────────────────────────────────────────────────────
-// Плеєр займає ~2/3 ширини, картка донатів — решту; на вужчих екранах — у стовпчик.
+// Плеєр займає ~2/3 ширини, картка підтримки — решту; на вужчих екранах — у стовпчик.
 .stream__stage {
   @apply relative grid gap-16 px-16 py-16 sm:px-24 sm:py-20 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]
     lg:items-start lg:gap-20;
@@ -344,9 +359,9 @@ async function donate (amountUah: number) {
   }
 }
 
-// ─── Донати ─────────────────────────────────────────────────────────────────
+// ─── Підтримка ліги ─────────────────────────────────────────────────────────
 // Картка поруч із плеєром: золота рамка й м'який відблиск у куті.
-.stream__donate {
+.stream__support {
   @apply relative flex flex-col gap-10 overflow-hidden rounded-xl border px-20 py-20 sm:px-24 sm:py-24;
   isolation: isolate;
   border-color: rgba(var(--ds-gold-rgb), 0.22);
@@ -355,7 +370,7 @@ async function donate (amountUah: number) {
 }
 
 // Під текстом і кнопками, а не над ними — тому власний стековий контекст на картці.
-.stream__donate-glow {
+.stream__support-glow {
   position: absolute;
   inset: 0;
   z-index: -1;
@@ -363,7 +378,7 @@ async function donate (amountUah: number) {
   background: radial-gradient(ellipse 70% 60% at 100% 0%, rgba(var(--ds-gold-rgb), 0.1), transparent 65%);
 }
 
-.stream__donate-title {
+.stream__support-title {
   @apply relative m-0 font-display uppercase text-white;
   font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
   line-height: 1.1;
@@ -372,7 +387,7 @@ async function donate (amountUah: number) {
 }
 
 // Три суми в ряд на мобільному й планшеті, у стовпчик — у вузькій бічній картці.
-.stream__donate-actions {
+.stream__support-actions {
   @apply relative mt-6 grid grid-cols-3 gap-10 lg:grid-cols-1;
 
   :deep(.el-button) {
@@ -384,8 +399,8 @@ async function donate (amountUah: number) {
   }
 }
 
-// Золота кнопка донату: мономірна сума, тонка рамка й халo, що спалахує на ховері.
-.stream__donate-btn {
+// Золота кнопка суми підтримки: мономірна сума, тонка рамка й халo, що спалахує на ховері.
+.stream__support-btn {
   @apply m-0;
   --el-button-text-color: rgb(var(--ds-gold-rgb));
   --el-button-bg-color: rgba(var(--ds-gold-rgb), 0.08);
@@ -425,7 +440,7 @@ async function donate (amountUah: number) {
     box-shadow: inset 0 0 0 1px rgba(var(--ds-secondary-rgb), 0.6), var(--ds-glow-secondary);
   }
 
-  .stream__donate-btn:hover:not(.is-disabled) {
+  .stream__support-btn:hover:not(.is-disabled) {
     box-shadow: var(--ds-glow-gold);
   }
 }
@@ -433,13 +448,13 @@ async function donate (amountUah: number) {
 @media (prefers-reduced-motion: reduce) {
   .stream__meta,
   .stream__toolbar-link,
-  .stream__donate-btn,
+  .stream__support-btn,
   .stream__iframe {
     transition: none;
   }
 
   .stream__toolbar-link:active,
-  .stream__donate-btn:active:not(.is-disabled) {
+  .stream__support-btn:active:not(.is-disabled) {
     transform: none;
   }
 }

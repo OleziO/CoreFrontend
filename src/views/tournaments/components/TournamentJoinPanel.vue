@@ -149,12 +149,22 @@
                 {{ paymentStatusHint }}
               </p>
 
+              <!-- Перед оплатою: що саме оплачується і скільки, згода з офертою -->
+              <div class="join-checkout">
+                <p class="join-checkout__product">
+                  <span>Вступний внесок за участь команди у турнірі</span>
+                  <b>{{ formatEntryFeeUah(dueFee) }}</b>
+                </p>
+                <PaymentConsent v-model="consentAgreed" :unavailable="consentUnavailable" @retry="retryConsent" />
+              </div>
+
               <el-button
                 type="primary"
                 size="large"
                 :loading="paymentIntentLoading"
+                :disabled="!consentBody"
                 class="btn-cta w-full"
-                @click="emit('pay')"
+                @click="onPay"
               >
                 {{ myTeamPaymentStatus === 'UNDERPAID' ? 'Доплатити внесок' : 'Оплатити внесок' }}
               </el-button>
@@ -237,6 +247,7 @@ import { formatDate, isPlayerVip } from '@/core/helpers'
 import { getVipEntryFee, VIP_TOURNAMENT_DISCOUNT_PERCENT } from '@/core/vip.constants'
 import { formatEntryFeeUah } from '@/core/utils/formatters'
 import { TEAM_SIZE } from '@/views/tournaments/tournaments.enums'
+import type { IPaymentConsentBody } from '@/features/legal/legal.d'
 
 interface IProps {
   tournament: TTournament | null
@@ -316,9 +327,21 @@ const paymentStatusHint = computed(() => {
 const emit = defineEmits<{
   join: []
   leave: []
-  pay: []
+  /** Тіло для інтенту: згода з офертою та актуальна версія умов. */
+  pay: [consent: IPaymentConsentBody]
   recheck: []
 }>()
+
+const {
+  agreed: consentAgreed,
+  consentBody,
+  unavailable: consentUnavailable,
+  retry: retryConsent
+} = usePaymentConsent()
+
+function onPay () {
+  if (consentBody.value) emit('pay', consentBody.value)
+}
 </script>
 
 <style scoped lang="scss">
@@ -358,6 +381,21 @@ const emit = defineEmits<{
     flex: none;
     margin-top: 1px;
     color: rgba(var(--ds-primary-rgb), 0.7);
+  }
+}
+
+// ─── Оплата внеску: назва послуги, сума, згода ──────────────────────────────
+.join-checkout {
+  @apply flex flex-col gap-8 rounded-lg px-10 py-10 text-left;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.join-checkout__product {
+  @apply m-0 flex items-baseline justify-between gap-10 text-xs leading-snug;
+  color: var(--ds-text-muted);
+
+  b {
+    @apply whitespace-nowrap text-sm font-semibold text-white;
   }
 }
 

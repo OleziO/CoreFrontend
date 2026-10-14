@@ -8,6 +8,7 @@ import type {
 import { validateImageFileForUpload } from '@/services/image-upload.service'
 import { ElMessage } from 'element-plus'
 import { getApiErrorMessage } from '@/core/utils/api-errors'
+import type { IPaymentConsentBody } from '@/features/legal/legal.d'
 
 class TournamentsService {
   async fetchTournaments () {
@@ -69,9 +70,10 @@ class TournamentsService {
    * POST /tournaments/:id/payments/intent — створити або отримати наявний намір оплати
    * для команди поточного капітана (повертає reference + посилання на банку monobank).
    */
-  async createPaymentIntent (tournamentId: string): Promise<TTournamentPaymentIntent> {
+  async createPaymentIntent (tournamentId: string, consent: IPaymentConsentBody): Promise<TTournamentPaymentIntent> {
     const rawPost = apiClient.post as unknown as (url: string, data?: unknown) => Promise<unknown>
-    return await rawPost(`/tournaments/${tournamentId}/payments/intent`, {}) as TTournamentPaymentIntent
+    // Тіло — згода з офертою й версія умов: без них бек відмовляє (400).
+    return await rawPost(`/tournaments/${tournamentId}/payments/intent`, consent) as TTournamentPaymentIntent
   }
 
   /** GET /tournaments/:id/payments/me — статус оплати команди поточного капітана (для полінгу). */
@@ -81,13 +83,20 @@ class TournamentsService {
   }
 
   /**
-   * POST /tournaments/:id/donations/intent — створити рахунок на донат обраної суми (копійки)
-   * через Monobank ФОП-еквайринг; повертає посилання на сторінку оплати.
+   * POST /tournaments/:id/donations/intent (шлях бекенду) — рахунок на добровільну підтримку ліги
+   * обраної суми (копійки) разом зі згодою з офертою; повертає посилання на сторінку оплати.
    * Ендпоінт ще відсутній у згенерованій схемі, тож викликаємо через нетипізований клієнт.
    */
-  async createDonationIntent (tournamentId: string, amount: number): Promise<TTournamentDonationIntent> {
+  async createSupportIntent (
+    tournamentId: string,
+    amount: number,
+    consent: IPaymentConsentBody
+  ): Promise<TTournamentSupportIntent> {
     const rawPost = apiClient.post as unknown as (url: string, data?: unknown) => Promise<unknown>
-    return await rawPost(`/tournaments/${tournamentId}/donations/intent`, { amount }) as TTournamentDonationIntent
+    return await rawPost(
+      `/tournaments/${tournamentId}/donations/intent`,
+      { amount, ...consent }
+    ) as TTournamentSupportIntent
   }
 
   /** POST /tournaments/:id/payments/:teamId/mark-paid — адмін позначає команду як таку, що сплатила внесок. */

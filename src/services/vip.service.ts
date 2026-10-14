@@ -1,6 +1,7 @@
 import { ElMessage } from 'element-plus'
 import type { AxiosError } from 'axios'
 import apiClient from '@/api/client'
+import type { IPaymentConsentBody } from '@/features/legal/legal.d'
 
 export type TVipStatus = TResponse<'/vip/me', 'get'>
 export type TVipCheckout = TResponse<'/vip/checkout', 'post'>
@@ -27,10 +28,15 @@ class VipService {
     }
   }
 
-  /** Рахунок на перший платіж; `pageUrl` — сторінка оплати. */
-  async checkout (): Promise<TVipCheckout | null> {
+  /**
+   * Рахунок на перший платіж; `pageUrl` — сторінка оплати. Тіло — згода з
+   * офертою та версія умов (`{ consent: true, legalVersion }`); у `schema.d.ts`
+   * його ще немає (бек не задеплоєний), тож шлемо нетипізованим викликом.
+   */
+  async checkout (consent: IPaymentConsentBody): Promise<TVipCheckout | null> {
     try {
-      const res = await apiClient.post('/vip/checkout')
+      const rawPost = apiClient.post as unknown as (url: string, data: IPaymentConsentBody) => Promise<TVipCheckout>
+      const res = await rawPost('/vip/checkout', consent)
       if (!res.pageUrl) {
         ElMessage.error('Оплата тимчасово недоступна — спробуйте пізніше')
         return null

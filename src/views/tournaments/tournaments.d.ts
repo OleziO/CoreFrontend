@@ -56,11 +56,11 @@ type TTournamentPaymentIntent = {
   pageUrl: string | null
 }
 
-// Донат на лігу через той самий Monobank ФОП-еквайринг, що й вступний внесок
-// (POST .../donations/intent). Ендпоінт ще відсутній у згенерованій схемі.
-type TTournamentDonationIntent = {
+// Добровільна підтримка ліги через ту саму платіжну сторінку, що й вступний внесок
+// (POST .../donations/intent — шлях бекенду). Ендпоінт ще відсутній у згенерованій схемі.
+type TTournamentSupportIntent = {
   reference: string
-  /** Сума донату в копійках. */
+  /** Сума підтримки в копійках. */
   amount: number
   pageUrl: string | null
 }

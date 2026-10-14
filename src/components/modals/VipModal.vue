@@ -252,6 +252,22 @@
                 </div>
               </div>
 
+              <!-- Перед оплатою: назва й ціна, умови автопродовження з датою списання, згода з офертою -->
+              <div v-if="showCheckout" class="vip-checkout">
+                <p class="vip-checkout__product">
+                  <span>VIP-статус Core League — 1 місяць</span>
+                  <b>{{ price }} ₴</b>
+                </p>
+                <p class="vip-checkout__renew">
+                  <PhArrowsClockwise :size="14" weight="bold" class="vip-checkout__renew-icon" />
+                  <span>
+                    Підписка продовжується автоматично щомісяця за {{ price }} ₴ до скасування.
+                    Наступне списання — {{ nextChargeLabel }}.
+                  </span>
+                </p>
+                <PaymentConsent v-model="consentAgreed" :unavailable="consentUnavailable" @retry="retryConsent" />
+              </div>
+
               <div class="vip-offer__actions">
                 <template v-if="!isVip">
                   <el-button
@@ -259,6 +275,7 @@
                     size="large"
                     class="vip-cta"
                     :loading="vipStore.checkoutLoading"
+                    :disabled="!!authStore.token && !consentBody"
                     @click="onBuy"
                   >
                     <PhCrown v-if="!vipStore.checkoutLoading" :size="18" weight="fill" class="mr-8" />
@@ -293,6 +310,7 @@
                     size="large"
                     class="vip-cta"
                     :loading="vipStore.checkoutLoading"
+                    :disabled="!consentBody"
                     @click="onBuy"
                   >
                     <PhCrown v-if="!vipStore.checkoutLoading" :size="18" weight="fill" class="mr-8" />
@@ -307,7 +325,7 @@
                 <PhShieldCheck :size="14" weight="fill" /> Безпечна оплата через {{ providerLabel }}
               </li>
               <li class="vip-reveal" :style="revealDelay(offerStart + 170)">
-                <PhArrowCounterClockwise :size="14" weight="bold" /> Скасування в 1 клік
+                <PhArrowCounterClockwise :size="14" weight="bold" /> Скасування автопродовження будь-коли
               </li>
               <li class="vip-reveal" :style="revealDelay(offerStart + 220)">
                 <PhHeart :size="14" weight="fill" /> Кошти йдуть на розвиток ліги
@@ -315,8 +333,8 @@
             </ul>
           </div>
           <p class="vip__fine vip-reveal" :style="revealDelay(offerStart + 280)">
-            Підписка продовжується автоматично щомісяця зі збереженої картки.
-            Скасувати можна будь-коли — VIP діятиме до кінця оплаченого періоду.
+            Списання — зі збереженої картки через {{ providerLabel }}. Скасувати автопродовження можна будь-коли
+            в цьому вікні — VIP діятиме до кінця оплаченого періоду.
           </p>
         </section>
       </div>
@@ -355,6 +373,7 @@ import {
 import { useVipStore } from '@/store/modules/vip'
 import { FIND_DAILY_LIMIT } from '@/views/find/find.utils'
 import VipBadge from '@/components/VipBadge.vue'
+import dayjs from 'dayjs'
 
 const modelValue = defineModel<boolean>({ default: false })
 
@@ -373,6 +392,26 @@ const discountPercent = computed(() => status.value?.discountPercent ?? 0)
 const fullPrice = computed(() => Math.round((status.value?.fullPriceKopecks ?? VIP_PRICE_UAH * 100) / 100))
 const providerLabel = computed(() => status.value?.paymentProvider === 'wayforpay' ? 'WayForPay' : 'monobank')
 const pricePerDay = computed(() => Math.round(price.value / 30))
+
+// ─── Оплата: згода з офертою та розкриття автопродовження ───────────────────
+const {
+  agreed: consentAgreed,
+  pricing,
+  consentBody,
+  unavailable: consentUnavailable,
+  retry: retryConsent
+} = usePaymentConsent()
+
+/** Блок перед кнопкою — коли залогінений користувач бачить кнопку оплати (купівля або поновлення). */
+const showCheckout = computed(() => {
+  if (!authStore.token || isLifetime.value) return false
+  return !isVip.value || (!status.value?.autoRenew && !status.value?.hasSavedCard)
+})
+
+/** Наступне списання — через період підписки від сьогодні (dayjs не дає 31 січня перескочити в березень). */
+const nextChargeLabel = computed(() =>
+  dateFormat.format(dayjs().add(pricing.value?.vip.periodMonths ?? 1, 'month').toDate())
+)
 
 /** Колір попереднього перегляду: у VIP — збережений, у решти — вибраний для приміряння. */
 const trialColor = ref<string>(VIP_FRAME_PALETTE[0].hex)
@@ -498,7 +537,8 @@ function onBuy () {
     open('LoginModal', { redirectTo: route.fullPath })
     return
   }
-  vipStore.checkout()
+  if (!consentBody.value) return
+  vipStore.checkout(consentBody.value)
 }
 
 async function confirmCancel () {
@@ -1328,6 +1368,48 @@ watch(modelValue, (isOpen) => {
 
 .vip-offer__cup {
   flex-shrink: 0;
+  color: rgb(var(--vip-gold));
+}
+
+// Перед кнопкою оплати: що купуємо і за скільки, умови автопродовження, згода.
+.vip-checkout {
+  display: flex;
+  flex: 1 1 100%;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vip-checkout__product {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.82);
+
+  b {
+    font-family: var(--ds-font-display);
+    font-size: 18px;
+    font-weight: 400;
+    white-space: nowrap;
+    color: rgb(var(--vip-gold));
+  }
+}
+
+.vip-checkout__renew {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.vip-checkout__renew-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
   color: rgb(var(--vip-gold));
 }
 

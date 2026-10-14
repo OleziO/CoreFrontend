@@ -169,7 +169,8 @@ import {
   getRegistrationBlockReason,
   registrationBlockBannerMap
 } from '@/core/utils/tournament-registration'
-import type { TSponsor } from '@/config/sponsors'
+import { getTournamentSponsors, type TSponsor } from '@/config/sponsors'
+import type { IPaymentConsentBody } from '@/features/legal/legal.d'
 import { useSeo } from '@/composables/use-seo'
 
 const activeTab = ref('teams')
@@ -209,26 +210,8 @@ const apiBaseUrl = import.meta.env.VITE_API_PUBLIC_URL
 
 const { open: openAppModal } = useAppModals()
 
-const sponsors = ref<TSponsor[]>([
-  {
-    id: 'sponsor-1',
-    name: 'BETKING',
-    bannerUrl: '/sponsors/bet_1.webp',
-    logoUrl: '/sponsors/logo_1.png',
-    websiteUrl: 'https://77953937.uatracer.link/',
-    tier: 'title',
-    priority: 1
-  },
-  {
-    id: 'sponsor-2',
-    name: 'BETKING',
-    bannerUrl: '/sponsors/bet_2.webp',
-    logoUrl: '/sponsors/logo_2.png',
-    websiteUrl: 'https://77953937.uatracer.link/',
-    tier: 'title',
-    priority: 2
-  }
-])
+// Банери спонсорів — з `config/sponsors.ts`: букмекерські там приховані прапором на час перевірки еквайрингу.
+const sponsors = ref<TSponsor[]>(getTournamentSponsors())
 
 // const DUELO_PROMO_LS_KEY = 'dueloPromoLastShownAt'
 // const DUELO_PROMO_INTERVAL_MS = 30 * 60 * 1000
@@ -557,10 +540,10 @@ async function pollPaymentStatus () {
   }
 }
 
-async function startPayment () {
+async function startPayment (consent: IPaymentConsentBody) {
   paymentIntentLoading.value = true
   try {
-    const intent = await tournamentsService.createPaymentIntent(tournamentId)
+    const intent = await tournamentsService.createPaymentIntent(tournamentId, consent)
     paymentIntent.value = intent
     upsertMyPayment(intent)
     if (intent.pageUrl) {

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { vipService, type TAdminVipGrant, type TAdminVipResult, type TVipStatus } from '@/services/vip.service'
 import { useAuthStore } from '@/store/modules/auth'
 import { usePlayersStore } from '@/views/players/players.store'
+import type { IPaymentConsentBody } from '@/features/legal/legal.d'
 
 /** Скільки чекати вебхук платіжної системи після повернення зі сторінки оплати. */
 const RETURN_POLL_ATTEMPTS = 10
@@ -53,11 +54,11 @@ export const useVipStore = defineStore('vip', () => {
     }
   }
 
-  /** Перехід на сторінку оплати; назад повертає `/me?vip=return`. */
-  async function checkout () {
+  /** Перехід на сторінку оплати; назад повертає `/me?vip=return`. Без згоди з офертою бек відмовить. */
+  async function checkout (consent: IPaymentConsentBody) {
     checkoutLoading.value = true
     try {
-      const res = await vipService.checkout()
+      const res = await vipService.checkout(consent)
       if (res?.pageUrl) window.location.href = res.pageUrl
       else checkoutLoading.value = false
     } catch {
