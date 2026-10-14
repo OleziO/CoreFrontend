@@ -135,7 +135,7 @@
                   target="_blank"
                   rel="noopener"
                 >
-                  Відкрити сторінку оплати monobank
+                  Відкрити сторінку оплати
                 </el-button>
               </div>
             </template>
@@ -310,7 +310,7 @@ const paymentStatusHint = computed(() => {
   if (props.myTeamPaymentStatus === 'UNDERPAID') {
     return 'Отримано неповну оплату. Доплатіть різницю, щоб приєднатися до турніру.'
   }
-  return 'Натисніть «Оплатити внесок» — відкриється сторінка оплати monobank, а сторінка чекатиме підтвердження.'
+  return 'Натисніть «Оплатити внесок» — відкриється сторінка оплати, а ця сторінка чекатиме підтвердження.'
 })
 
 const emit = defineEmits<{

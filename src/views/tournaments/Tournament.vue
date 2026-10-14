@@ -566,7 +566,7 @@ async function startPayment () {
     if (intent.pageUrl) {
       window.open(intent.pageUrl, '_blank', 'noopener')
     } else {
-      ElMessage.warning('Сторінка оплати monobank не налаштована. Зверніться до організатора.')
+      ElMessage.warning('Сторінка оплати не налаштована. Зверніться до організатора.')
     }
     startPaymentPolling()
   } catch (e: unknown) {

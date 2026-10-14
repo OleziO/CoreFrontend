@@ -123,6 +123,7 @@ declare module 'vue' {
     Modals: typeof import('./components/modals/Modals.vue')['default']
     NotificationCenter: typeof import('./components/NotificationCenter.vue')['default']
     NotificationItem: typeof import('./components/NotificationItem.vue')['default']
+    PaymentSwitchModal: typeof import('./components/modals/PaymentSwitchModal.vue')['default']
     PhListNumbers: typeof import('~icons/ph/list-numbers')['default']
     PhUserPlus: typeof import('~icons/ph/user-plus')['default']
     PlayerAchievements: typeof import('./views/players/components/PlayerAchievements.vue')['default']

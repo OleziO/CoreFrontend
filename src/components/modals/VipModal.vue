@@ -222,6 +222,9 @@
                   <span class="vip-offer__value">{{ price }}</span>
                   <span class="vip-offer__currency">₴</span>
                   <span class="vip-offer__period">/ місяць</span>
+                  <span v-if="discountPercent" class="vip-offer__was">
+                    <s>{{ fullPrice }} ₴</s> −{{ discountPercent }}%
+                  </span>
                 </div>
                 <div class="vip-offer__daily">
                   <!-- Чашка, налита наполовину -->
@@ -301,7 +304,7 @@
 
             <ul v-if="!isVip" class="vip-trust">
               <li class="vip-reveal" :style="revealDelay(offerStart + 120)">
-                <PhShieldCheck :size="14" weight="fill" /> Безпечна оплата через monobank
+                <PhShieldCheck :size="14" weight="fill" /> Безпечна оплата через {{ providerLabel }}
               </li>
               <li class="vip-reveal" :style="revealDelay(offerStart + 170)">
                 <PhArrowCounterClockwise :size="14" weight="bold" /> Скасування в 1 клік
@@ -365,6 +368,10 @@ const isVip = computed(() => vipStore.isVip)
 const isLifetime = computed(() => isVipLifetime(status.value?.vipUntil ?? authStore.user?.vipUntil))
 
 const price = computed(() => Math.round((status.value?.priceKopecks ?? VIP_PRICE_UAH * 100) / 100))
+/** Знижка лояльності (−10% тим, хто платив до переходу на WayForPay) — показуємо стару ціну перекресленою. */
+const discountPercent = computed(() => status.value?.discountPercent ?? 0)
+const fullPrice = computed(() => Math.round((status.value?.fullPriceKopecks ?? VIP_PRICE_UAH * 100) / 100))
+const providerLabel = computed(() => status.value?.paymentProvider === 'wayforpay' ? 'WayForPay' : 'monobank')
 const pricePerDay = computed(() => Math.round(price.value / 30))
 
 /** Колір попереднього перегляду: у VIP — збережений, у решти — вибраний для приміряння. */
@@ -1284,6 +1291,19 @@ watch(modelValue, (isOpen) => {
   margin-left: 2px;
   font-size: 14px;
   color: rgba(255, 255, 255, 0.45);
+}
+
+.vip-offer__was {
+  margin-left: 6px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgb(255, 214, 102);
+
+  s {
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.4);
+  }
 }
 
 .vip-offer__daily {

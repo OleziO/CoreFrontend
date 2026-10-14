@@ -14,8 +14,9 @@ function apiErrorMessage (err: unknown, fallback: string): string {
 }
 
 /**
- * VIP-статус: оплата через Monobank (перший платіж зберігає картку, далі бек
- * списує 200 ₴ щомісяця сам), рамка профілю та ручна видача адміном.
+ * VIP-статус: щомісячна підписка (з 2026-10-14 через WayForPay — він сам
+ * списує щомісяця, раніше бек списував збережену картку monobank), рамка
+ * профілю та ручна видача адміном.
  */
 class VipService {
   async fetchStatus (): Promise<TVipStatus | null> {
@@ -26,7 +27,7 @@ class VipService {
     }
   }
 
-  /** Рахунок на перший платіж; `pageUrl` — сторінка оплати Monobank. */
+  /** Рахунок на перший платіж; `pageUrl` — сторінка оплати. */
   async checkout (): Promise<TVipCheckout | null> {
     try {
       const res = await apiClient.post('/vip/checkout')
@@ -59,6 +60,15 @@ class VipService {
       return res
     } catch (err) {
       ElMessage.error(apiErrorMessage(err, 'Не вдалося увімкнути автопродовження'))
+      return null
+    }
+  }
+
+  /** Сповіщення «Змінився спосіб оплати» прочитане — більше не показується (на жодному пристрої). */
+  async ackPaymentNotice (): Promise<TVipStatus | null> {
+    try {
+      return await apiClient.post('/vip/payment-notice/seen')
+    } catch {
       return null
     }
   }

@@ -4,9 +4,11 @@ import { useVipStore } from '@/store/modules/vip'
 /**
  * Викликається один раз із хедера (він змонтований на кожній сторінці).
  *
- * - Monobank повертає платника на `/me?vip=return`: прибираємо параметр, чекаємо
- *   вебхук і відкриваємо VIP-модалку вже в режимі VIP.
+ * - Платіжна сторінка повертає платника на `/me?vip=return`: прибираємо параметр,
+ *   чекаємо вебхук і відкриваємо VIP-модалку вже в режимі VIP.
  * - Для залогіненого користувача тягне `/vip/me`, щоб кнопка VIP знала статус.
+ * - Якщо `/vip/me` несе `paymentNotice` (перехід на WayForPay) — один раз
+ *   показує сповіщення про зміну способу оплати.
  */
 export function useVipPaymentReturn () {
   const vipStore = useVipStore()
@@ -14,6 +16,14 @@ export function useVipPaymentReturn () {
   const { open } = useAppModals()
   const route = useRoute()
   const router = useRouter()
+  /** Не відкриваємо сповіщення двічі за сесію, навіть якщо `/vip/me` перечитали. */
+  let noticeShown = false
+
+  watch(() => vipStore.status?.paymentNotice, (notice) => {
+    if (!notice || noticeShown || route.query.vip === 'return') return
+    noticeShown = true
+    open('PaymentSwitchModal')
+  })
 
   async function handlePaymentReturn () {
     const { vip: _vip, ...rest } = route.query
@@ -26,7 +36,7 @@ export function useVipPaymentReturn () {
       open('VipModal')
     } else {
       ElMessage.info({
-        message: 'Оплата ще обробляється — VIP з’явиться, щойно monobank її підтвердить',
+        message: 'Оплата ще обробляється — VIP з’явиться, щойно платіжна система її підтвердить',
         duration: 6000
       })
     }

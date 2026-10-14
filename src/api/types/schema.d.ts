@@ -2244,6 +2244,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/vip/payment-notice/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark the "payment method changed" pop-up as read */
+        post: operations["VipController_paymentNoticeSeen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/vip/frame-color": {
         parameters: {
             query?: never;
@@ -4384,8 +4401,18 @@ export interface components {
              * @enum {string|null}
              */
             vipFrameColor?: "#10B981" | "#A3E635" | "#F97316" | "#FDA4AF" | "#EC4899" | "#9D174D" | "#E2E8F0" | "#64748B" | null;
-            /** @description Price of one month, kopecks */
+            /** @description Price of one month for this player, kopecks (after the player's discount) */
             priceKopecks: number;
+            /** @description Regular price of one month, kopecks */
+            fullPriceKopecks: number;
+            /** @description This player's discount on every month, percent */
+            discountPercent: number;
+            /**
+             * @description Who takes new payments; null when payments are not configured
+             * @enum {string|null}
+             */
+            paymentProvider?: "wayforpay" | "monobank" | null;
+            paymentNotice?: components["schemas"]["VipPaymentNoticeDto"] | null;
             /** @description Frame colours a VIP may pick */
             frameColors: string[];
             /** @description A saved card will be charged automatically at the end of the period */
@@ -4399,8 +4426,23 @@ export interface components {
             /** @description A first-payment invoice was created and has not settled yet */
             paymentPending: boolean;
         };
+        VipPaymentNoticeDto: {
+            /**
+             * Format: date-time
+             * @description Paid VIP still running until then; null for an admin preview
+             */
+            vipUntil?: string | null;
+            /** @description Discount on every future month, percent */
+            discountPercent: number;
+            /** @description Discounted price of one month, kopecks */
+            priceKopecks: number;
+            /** @description Regular price of one month, kopecks */
+            fullPriceKopecks: number;
+            /** @description Shown to an admin who is not an affected subscriber */
+            adminPreview: boolean;
+        };
         VipCheckoutDto: {
-            /** @description Monobank payment page; null when acquiring is not configured */
+            /** @description Payment page; null when payments are not configured */
             pageUrl?: string | null;
             reference: string;
             /** @description Kopecks */
@@ -7941,6 +7983,25 @@ export interface operations {
         };
     };
     VipController_resume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VipStatusDto"];
+                };
+            };
+        };
+    };
+    VipController_paymentNoticeSeen: {
         parameters: {
             query?: never;
             header?: never;

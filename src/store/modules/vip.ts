@@ -3,7 +3,7 @@ import { vipService, type TAdminVipGrant, type TAdminVipResult, type TVipStatus 
 import { useAuthStore } from '@/store/modules/auth'
 import { usePlayersStore } from '@/views/players/players.store'
 
-/** Скільки чекати вебхук Monobank після повернення зі сторінки оплати. */
+/** Скільки чекати вебхук платіжної системи після повернення зі сторінки оплати. */
 const RETURN_POLL_ATTEMPTS = 10
 const RETURN_POLL_INTERVAL_MS = 3000
 
@@ -53,7 +53,7 @@ export const useVipStore = defineStore('vip', () => {
     }
   }
 
-  /** Перехід на сторінку оплати Monobank; назад повертає `/me?vip=return`. */
+  /** Перехід на сторінку оплати; назад повертає `/me?vip=return`. */
   async function checkout () {
     checkoutLoading.value = true
     try {
@@ -76,6 +76,12 @@ export const useVipStore = defineStore('vip', () => {
 
   const cancelAutoRenew = () => runMutation(() => vipService.cancelAutoRenew())
   const resumeAutoRenew = () => runMutation(() => vipService.resumeAutoRenew())
+  /** Сповіщення про зміну способу оплати прочитане: ховаємо одразу, бек запам'ятовує. */
+  async function ackPaymentNotice () {
+    if (status.value) status.value = { ...status.value, paymentNotice: null }
+    applyStatus(await vipService.ackPaymentNotice())
+  }
+
   const setFrameColor = (color: string | null) =>
     runMutation(() => vipService.setFrameColor(color as Parameters<typeof vipService.setFrameColor>[0]))
 
@@ -130,6 +136,7 @@ export const useVipStore = defineStore('vip', () => {
     checkout,
     cancelAutoRenew,
     resumeAutoRenew,
+    ackPaymentNotice,
     setFrameColor,
     awaitPaymentResult,
     grantByAdmin,

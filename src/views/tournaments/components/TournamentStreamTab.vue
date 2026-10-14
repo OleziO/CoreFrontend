@@ -85,7 +85,7 @@
         </p>
         <h3 class="stream__donate-title">Підтримати лігу</h3>
         <p class="stream__hint">
-          Донати йдуть на призовий фонд і розвиток трансляцій. Оплата карткою на сторінці monobank —
+          Донати йдуть на призовий фонд і розвиток трансляцій. Оплата карткою на захищеній сторінці оплати —
           кошти надходять на рахунок ФОП організатора.
         </p>
 
@@ -138,9 +138,9 @@ async function donate (amountUah: number) {
     const intent = await tournamentsService.createDonationIntent(props.tournamentId, amountUah * 100)
     if (intent.pageUrl) {
       window.open(intent.pageUrl, '_blank', 'noopener')
-      ElMessage.success('Дякуємо за підтримку! Завершіть оплату на сторінці monobank.')
+      ElMessage.success('Дякуємо за підтримку! Завершіть оплату на сторінці оплати.')
     } else {
-      ElMessage.warning('Сторінка оплати monobank не налаштована. Зверніться до організатора.')
+      ElMessage.warning('Сторінка оплати не налаштована. Зверніться до організатора.')
     }
   } catch (e: unknown) {
     ElMessage.error(getApiErrorMessage(e, 'Не вдалося створити рахунок на донат'))
