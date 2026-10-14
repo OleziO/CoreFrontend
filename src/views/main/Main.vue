@@ -429,6 +429,7 @@ import type { TIconName } from '@/components/Icon.vue'
 import type { Component } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 import { routeNames } from '@/router/route-names'
+import { BETTING_TITLE_SPONSOR, SHOW_BETTING_SPONSORS } from '@/config/sponsors'
 
 // ── Feature strip ──────────────────────────────────────────────────────────
 interface IFeature {
@@ -514,13 +515,8 @@ const sponsorTiers: ISponsorTier[] = [
     slots: 1,
     rgb: 'var(--ds-gold-rgb)',
     gridClass: 'grid-cols-1 max-w-[360px] mx-auto',
-    sponsors: [
-      {
-        name: 'BETKING',
-        url: 'https://77953937.uatracer.link/',
-        logo: '/sponsors/BETKING_Logo_Compact_Secondary_Secondary_Red_On_White.png'
-      }
-    ]
+    // Букмекерський титульний спонсор прихований прапором (перевірка WayForPay) — слот стає вільним.
+    sponsors: SHOW_BETTING_SPONSORS ? [{ ...BETTING_TITLE_SPONSOR }] : []
   },
   {
     key: 'gold',

@@ -31,6 +31,47 @@ export type TSponsor = {
   priority?: number
 }
 
+/**
+ * Букмекерські спонсори (BETKING: титульний слот на головній і банери bet_1/bet_2
+ * на сторінці турніру) приховані з публічного сайту на час перевірки WayForPay —
+ * рішення власника від 2026-10-14. Асети й записи лишаються; `true` повертає показ.
+ */
+export const SHOW_BETTING_SPONSORS = false
+
+/** Титульний спонсор для стійки «Партнери та спонсори» на головній (за прапором вище). */
+export const BETTING_TITLE_SPONSOR = {
+  name: 'BETKING',
+  url: 'https://77953937.uatracer.link/',
+  logo: '/sponsors/BETKING_Logo_Compact_Secondary_Secondary_Red_On_White.png'
+} as const
+
+/** Банери на сторінці турніру (за прапором вище). */
+const BETTING_TOURNAMENT_BANNERS: TSponsor[] = [
+  {
+    id: 'sponsor-1',
+    name: 'BETKING',
+    bannerUrl: '/sponsors/bet_1.webp',
+    logoUrl: '/sponsors/logo_1.png',
+    websiteUrl: 'https://77953937.uatracer.link/',
+    tier: 'title',
+    priority: 1
+  },
+  {
+    id: 'sponsor-2',
+    name: 'BETKING',
+    bannerUrl: '/sponsors/bet_2.webp',
+    logoUrl: '/sponsors/logo_2.png',
+    websiteUrl: 'https://77953937.uatracer.link/',
+    tier: 'title',
+    priority: 2
+  }
+]
+
+/** Банери спонсорів для сторінки турніру; без букмекерів, поки прапор вимкнено. */
+export function getTournamentSponsors (): TSponsor[] {
+  return SHOW_BETTING_SPONSORS ? [...BETTING_TOURNAMENT_BANNERS] : []
+}
+
 /** Вага ротації за рівнем (більше = довше в кадрі). */
 const TIER_WEIGHT: Record<TSponsorTier, number> = {
   title: 4,
