@@ -144,16 +144,19 @@
           <span>Вийти з аккаунту</span>
         </button>
 
-        <!-- Футер прихований на мобільних, тож договір доступний звідси -->
-        <a
-          href="/dogovir.pdf"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="mobile-menu-legal no-underline"
-          @click="close"
-        >
-          Договір публічної оферти
-        </a>
+        <!-- Документи — статичні сторінки поза SPA, тож звичайні посилання з повним переходом.
+             Реквізити продавця й картки — у юридичному блоці наприкінці кожної сторінки -->
+        <nav class="mobile-menu-legal" aria-label="Документи">
+          <a
+            v-for="slug in LEGAL_PAGE_SLUGS"
+            :key="slug"
+            :href="legalPageHref(slug)"
+            class="mobile-menu-legal__link no-underline"
+            @click="close"
+          >
+            {{ LEGAL_PAGE_LABELS.uk[slug] }}
+          </a>
+        </nav>
       </nav>
     </div>
   </transition>
@@ -166,6 +169,7 @@ import {
   PhDiscordLogo, PhUser, PhUserPlus, PhUsersThree, PhChartLineUp, PhGauge, PhSignOut, PhSword, PhX, PhBinoculars
 } from '@phosphor-icons/vue'
 import { hasAdminRole } from '@/core/helpers'
+import { LEGAL_PAGE_LABELS, LEGAL_PAGE_SLUGS, legalPageHref } from '@/config/legal-pages'
 
 const togglerStore = useTogglerStore()
 const authStore = useAuthStore()
@@ -271,6 +275,9 @@ function handleLogout () {
     backdrop-blur-2xl
     flex flex-col items-stretch gap-12
     py-24 px-20;
+  /* Сім посилань на документи внизу: на низьких екранах панель прокручується, а не обрізається. */
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   border-color: var(--ds-border-strong);
   box-shadow: var(--ds-elevation-4), var(--ds-glow-primary-soft);
 }
@@ -315,8 +322,13 @@ function handleLogout () {
 }
 
 .mobile-menu-legal {
+  @apply flex flex-wrap justify-center gap-x-12;
+}
+
+.mobile-menu-legal__link {
   @apply
-    text-center text-caption text-white/45
+    inline-flex min-h-32 items-center
+    text-caption text-white/45
     transition-colors duration-200
     hover:text-primary;
 }

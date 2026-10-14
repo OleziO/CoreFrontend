@@ -11,10 +11,9 @@
 
       <span class="footer__copy">© {{ year }}</span>
 
+      <!-- Статична сторінка поза SPA — звичайне посилання з повним переходом -->
       <a
-        href="/dogovir.pdf"
-        target="_blank"
-        rel="noopener noreferrer"
+        :href="legalPageHref('offer')"
         class="footer__legal"
         title="Договір публічної оферти"
       >
@@ -92,12 +91,14 @@ import {
   PhTwitchLogo
 } from '@phosphor-icons/vue'
 import { routeNames } from '@/router/route-names'
+import { legalPageHref } from '@/config/legal-pages'
 
 /**
  * Смуга внизу екрана лише для lg+: бренд і оферта | Telegram-група з новинами |
  * соцмережі й «нагору». Навігації тут немає — на десктопі вона в хедері, на
  * мобільному й планшеті футер не рендериться: навігація живе в
- * MobileBottomTabBar, соцмережі та оферта — в MobileMenu.
+ * MobileBottomTabBar, соцмережі — в MobileMenu. Повний юридичний блок
+ * (документи, реквізити, картки) — `LegalFooter` наприкінці кожної сторінки.
  */
 const year = new Date().getFullYear()
 
