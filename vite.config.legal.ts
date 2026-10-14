@@ -20,11 +20,13 @@ import {
  * live outside the SPA, so no age gate, no login and the text is in the HTML a
  * crawler gets. `npm run dev` serves the same pages from memory.
  *
- * Production build (`mode === 'production'`) fails while any `{{…}}`
- * placeholder is left, a page is missing or a version differs from
- * `legal/config.json` → `legalVersion`. Other modes, or
- * `LEGAL_ALLOW_PLACEHOLDERS=1` (local preview only, never in CI), build anyway
- * and put a warning banner on every page.
+ * Any build fails when a page is missing or a version differs from
+ * `legal/config.json` → `legalVersion`. Unfilled seller details (`{{…}}`) do
+ * not block a production build (owner 2026-10-14: the site must deploy before
+ * the details are added): their footer rows are left out and the text reads
+ * "[буде додано]" / "[to be added]". `LEGAL_STRICT=1` (or
+ * `npm run legal:check -- --strict`) fails on them — run it before submitting
+ * to WayForPay. Other modes keep the raw `{{…}}` and a draft banner.
  */
 
 interface ILegalConfig {
@@ -36,6 +38,8 @@ interface ILegalConfig {
 interface ILegalContext {
   root: string
   mode: string
+  /** Production without `LEGAL_STRICT`: unfilled `{{…}}` are published as "[буде додано]". */
+  publishPending: boolean
   config: ILegalConfig
   /** `{{KEY}}` → value: seller + policy keys. */
   values: Record<string, string>
@@ -86,7 +90,8 @@ const UI: Record<TLegalLang, Record<string, string>> = {
     failed: 'Не вдалося завантажити ціни. Оновіть сторінку або напишіть у підтримку.',
     noscript: 'Ціни завантажуються з сервера Core League — увімкніть JavaScript, щоб їх побачити, ' +
       'або напишіть у підтримку.',
-    draft: 'Чернетка для перевірки — не заповнено: {keys}. Production-збірка з такими полями не пройде.'
+    draft: 'Чернетка для перевірки — не заповнено: {keys}. Заповніть legal/config.json до подання у WayForPay.',
+    pending: '[буде додано]'
   },
   en: {
     locale: 'en-GB',
@@ -112,7 +117,8 @@ const UI: Record<TLegalLang, Record<string, string>> = {
     loading: 'Loading current prices…',
     failed: 'Could not load the prices. Reload the page or contact support.',
     noscript: 'Prices are loaded from the Core League server — enable JavaScript to see them, or contact support.',
-    draft: 'Draft preview — not filled in: {keys}. A production build with these fields will fail.'
+    draft: 'Draft preview — not filled in: {keys}. Fill legal/config.json before applying to WayForPay.',
+    pending: '[to be added]'
   }
 }
 
@@ -215,8 +221,25 @@ function contactValue (key: string, value: string): string {
 function footer (ctx: ILegalContext, lang: TLegalLang, current: TLegalPageSlug): string {
   const ui = UI[lang]
   const seller = ctx.config.seller
-  const row = (label: string, key: string) =>
-    `<div><dt>${label}</dt><dd>${contactValue(key, seller[key] ?? `{{${key}}}`)}</dd></div>`
+  const row = (label: string, key: string) => {
+    const value = seller[key] ?? `{{${key}}}`
+    if (ctx.publishPending && findPlaceholders(value).length) return ''
+    return `<div><dt>${label}</dt><dd>${contactValue(key, value)}</dd></div>`
+  }
+  const sellerRows = [
+    row(ui.fop, 'FOP_NAME'),
+    row(ui.taxId, 'TAX_ID'),
+    row(ui.legalAddress, 'LEGAL_ADDRESS'),
+    row(ui.actualAddress, 'ACTUAL_ADDRESS')
+  ].filter(Boolean)
+  const sellerSection = sellerRows.length
+    ? `<section aria-label="${ui.seller}">
+        <h2>${ui.seller}</h2>
+        <dl>
+          ${sellerRows.join('\n          ')}
+        </dl>
+      </section>`
+    : ''
   const links = LEGAL_PAGE_SLUGS.map(slug => {
     const currentAttr = slug === current ? ' aria-current="page"' : ''
     return `<li><a href="${legalPageHref(slug, lang)}"${currentAttr}>${LEGAL_PAGE_LABELS[lang][slug]}</a></li>`
@@ -226,15 +249,7 @@ function footer (ctx: ILegalContext, lang: TLegalLang, current: TLegalPageSlug):
   <div class="lg-wrap">
     <nav aria-label="${ui.docs}"><ul class="lg-footer__links">${links}</ul></nav>
     <div class="lg-footer__grid">
-      <section aria-label="${ui.seller}">
-        <h2>${ui.seller}</h2>
-        <dl>
-          ${row(ui.fop, 'FOP_NAME')}
-          ${row(ui.taxId, 'TAX_ID')}
-          ${row(ui.legalAddress, 'LEGAL_ADDRESS')}
-          ${row(ui.actualAddress, 'ACTUAL_ADDRESS')}
-        </dl>
-      </section>
+      ${sellerSection}
       <section aria-label="${ui.support}">
         <h2>${ui.support}</h2>
         <dl>
@@ -490,10 +505,11 @@ ${footer(ctx, lang, slug)}
 `
   // Плейсхолдери шукаємо до вставки даних API: назва турніру — вільний текст адміна.
   const placeholders = findPlaceholders(doc)
-  const banner = placeholders.length
+  const banner = placeholders.length && !ctx.publishPending
     ? `<p class="lg-draft" role="status">${escapeHtml(fill(ui.draft, { keys: placeholders.join(', ') }))}</p>`
     : ''
-  const html = doc
+  const published = ctx.publishPending ? doc.replace(PLACEHOLDER_RE, ui.pending) : doc
+  const html = published
     .replace('<!--legal-draft-banner-->', banner)
     .replace('<!--legal-pricing-->', slug === 'prices' ? pricingBlock(ctx, lang, pricing) : '')
   return { lang, slug, html, placeholders, problems }
@@ -534,6 +550,7 @@ function createContext (config: ResolvedConfig): ILegalContext {
   return {
     root,
     mode: config.mode,
+    publishPending: config.command === 'build' && config.mode === 'production' && process.env.LEGAL_STRICT !== '1',
     config: legalConfig,
     values: { ...legalConfig.seller, ...legalConfig.policy },
     siteUrl: (env.VITE_SITE_URL || DEFAULT_SITE_URL).replace(/\/+$/, ''),
@@ -575,12 +592,14 @@ export const LegalPagesPlugin = (): Plugin => {
     async closeBundle () {
       if (resolved.command !== 'build' || resolved.build.ssr) return
       const ctx = createContext(resolved)
-      const strict = resolved.mode === 'production' && process.env.LEGAL_ALLOW_PLACEHOLDERS !== '1'
+      const production = resolved.mode === 'production'
+      const strict = process.env.LEGAL_STRICT === '1'
       const warn = (msg: string) => resolved.logger.warn(msg)
       const outDir = resolve(resolved.root, resolved.build.outDir)
       const pricing = await fetchPricing(ctx, warn)
 
       const errors: string[] = []
+      const pending: string[] = []
       const placeholderKeys = new Set<string>()
       const pages: IRenderedPage[] = []
 
@@ -594,30 +613,34 @@ export const LegalPagesPlugin = (): Plugin => {
           page.problems.forEach(p => errors.push(`legal/${lang}/${slug}.md: ${p}`))
           if (page.placeholders.length) {
             page.placeholders.forEach(k => placeholderKeys.add(k))
-            errors.push(`legal/${lang}/${slug}.md (+ footer): unfilled ${page.placeholders.map(k => `{{${k}}}`).join(', ')}`)
+            pending.push(`legal/${lang}/${slug}.md (+ footer): unfilled ${page.placeholders.map(k => `{{${k}}}`).join(', ')}`)
           }
           pages.push(page)
         }
       }
 
-      if (errors.length && strict) {
-        const keys = [...placeholderKeys]
+      const fatal = [...(production ? errors : []), ...(strict ? pending : [])]
+      if (fatal.length) {
+        const keys = strict ? [...placeholderKeys] : []
         throw new Error([
-          'Legal pages are not ready for a production build:',
-          ...errors.map(e => `  - ${e}`),
-          keys.length ? `Fill these keys in legal/config.json (or fix the Markdown): ${keys.join(', ')}` : '',
-          'For a local preview build only: LEGAL_ALLOW_PLACEHOLDERS=1 or `npm run build-only -- --mode staging`.'
+          'Legal pages are not ready for this build:',
+          ...fatal.map(e => `  - ${e}`),
+          keys.length ? `Fill these keys in legal/config.json (or fix the Markdown): ${keys.join(', ')}` : ''
         ].filter(Boolean).join('\n'))
       }
-      // Пишемо лише після перевірки: невдала production-збірка не лишає в dist/ чернеток.
+      // Пишемо лише після перевірки: невдала збірка не лишає в dist/ чернеток.
       for (const page of pages) {
         const target = resolve(outDir, page.lang === 'en' ? 'en' : '', page.slug, 'index.html')
         mkdirSync(dirname(target), { recursive: true })
         writeFileSync(target, page.html)
       }
       errors.forEach(e => warn(`[legal] ${e}`))
-      resolved.logger.info(`[legal] ${pages.length} static legal pages written` +
-        (errors.length ? ' (draft: see warnings above, banner shown on the pages)' : ''))
+      if (placeholderKeys.size) {
+        warn(`[legal] Seller details not filled yet (${[...placeholderKeys].join(', ')}): ` +
+          (ctx.publishPending ? 'published as "[буде додано]", footer rows hidden.' : 'draft banner shown.') +
+          ' Fill legal/config.json and run `npm run legal:check -- --strict` before applying to WayForPay.')
+      }
+      resolved.logger.info(`[legal] ${pages.length} static legal pages written`)
     }
   }
 }

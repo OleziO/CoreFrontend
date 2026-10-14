@@ -11,7 +11,7 @@
       </nav>
 
       <div class="legal-footer__grid">
-        <dl class="legal-footer__list" aria-label="Продавець">
+        <dl v-if="sellerRows.length" class="legal-footer__list" aria-label="Продавець">
           <div v-for="item in sellerRows" :key="item.label">
             <dt>{{ item.label }}</dt>
             <dd>{{ item.value }}</dd>
@@ -62,12 +62,15 @@ interface ILegalRow {
 
 const year = new Date().getFullYear()
 
-const sellerRows: ILegalRow[] = [
+/** Ще не заповнені реквізити (`{{…}}`) не показуємо — рядок з'явиться, щойно власник їх внесе. */
+const filled = (rows: ILegalRow[]) => rows.filter(row => !isLegalPlaceholder(row.value))
+
+const sellerRows: ILegalRow[] = filled([
   { label: 'ФОП', value: LEGAL_SELLER.FOP_NAME },
   { label: 'РНОКПП', value: LEGAL_SELLER.TAX_ID },
   { label: 'Юридична адреса', value: LEGAL_SELLER.LEGAL_ADDRESS },
   { label: 'Фактична адреса', value: LEGAL_SELLER.ACTUAL_ADDRESS }
-]
+])
 
 /** Посилання лише на заповнені значення — плейсхолдер `{{…}}` лишається текстом. */
 function contactHref (value: string, kind: 'tel' | 'mail' | 'chat'): string | undefined {
@@ -77,7 +80,7 @@ function contactHref (value: string, kind: 'tel' | 'mail' | 'chat'): string | un
   return /^https?:\/\//.test(value) ? value : undefined
 }
 
-const supportRows: ILegalRow[] = [
+const supportRows: ILegalRow[] = filled([
   { label: 'Телефон', value: LEGAL_SELLER.PHONE, href: contactHref(LEGAL_SELLER.PHONE, 'tel') },
   { label: 'Email', value: LEGAL_SELLER.SUPPORT_EMAIL, href: contactHref(LEGAL_SELLER.SUPPORT_EMAIL, 'mail') },
   {
@@ -87,7 +90,7 @@ const supportRows: ILegalRow[] = [
     external: true
   },
   { label: 'Строк розгляду звернень', value: `до ${LEGAL_POLICY.SUPPORT_REVIEW_DAYS} робочих днів` }
-]
+])
 </script>
 
 <style scoped>
