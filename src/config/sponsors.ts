@@ -33,10 +33,16 @@ export type TSponsor = {
 
 /**
  * Букмекерські спонсори (BETKING: титульний слот на головній і банери bet_1/bet_2
- * на сторінці турніру) приховані з публічного сайту на час перевірки WayForPay —
- * рішення власника від 2026-10-14. Асети й записи лишаються; `true` повертає показ.
+ * на сторінці турніру). 2026-10-14 їх приховали з публічного сайту на час перевірки
+ * WayForPay; тепер показуємо лише авторизованим гравцям — гості їх не бачать.
+ * `false` вимикає показ для всіх.
  */
-export const SHOW_BETTING_SPONSORS = false
+export const SHOW_BETTING_SPONSORS = true
+
+/** Чи показувати букмекерських спонсорів: прапор увімкнено і користувач увійшов. */
+export function canShowBettingSponsors (isLoggedIn: boolean): boolean {
+  return SHOW_BETTING_SPONSORS && isLoggedIn
+}
 
 /** Титульний спонсор для стійки «Партнери та спонсори» на головній (за прапором вище). */
 export const BETTING_TITLE_SPONSOR = {
@@ -67,9 +73,9 @@ const BETTING_TOURNAMENT_BANNERS: TSponsor[] = [
   }
 ]
 
-/** Банери спонсорів для сторінки турніру; без букмекерів, поки прапор вимкнено. */
-export function getTournamentSponsors (): TSponsor[] {
-  return SHOW_BETTING_SPONSORS ? [...BETTING_TOURNAMENT_BANNERS] : []
+/** Банери спонсорів для сторінки турніру; букмекерські — лише для авторизованих. */
+export function getTournamentSponsors (isLoggedIn: boolean): TSponsor[] {
+  return canShowBettingSponsors(isLoggedIn) ? [...BETTING_TOURNAMENT_BANNERS] : []
 }
 
 /** Вага ротації за рівнем (більше = довше в кадрі). */
@@ -81,7 +87,7 @@ const TIER_WEIGHT: Record<TSponsorTier, number> = {
 }
 
 /**
- * Наразі порожньо: банери BETKING приховані, карусель показує вільні місця
+ * Наразі порожньо: банери BETKING живуть окремо (див. `getTournamentSponsors`), карусель показує вільні місця
  * (див. порожній стан у SponsorBanner). Щоб повернути спонсора — просто додати
  * запис сюди, компоненти не змінюються.
  */

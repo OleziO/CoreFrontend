@@ -169,7 +169,7 @@ import {
   getRegistrationBlockReason,
   registrationBlockBannerMap
 } from '@/core/utils/tournament-registration'
-import { getTournamentSponsors, type TSponsor } from '@/config/sponsors'
+import { getTournamentSponsors } from '@/config/sponsors'
 import type { IPaymentConsentBody } from '@/features/legal/legal.d'
 import { useSeo } from '@/composables/use-seo'
 
@@ -210,8 +210,8 @@ const apiBaseUrl = import.meta.env.VITE_API_PUBLIC_URL
 
 const { open: openAppModal } = useAppModals()
 
-// Банери спонсорів — з `config/sponsors.ts`: букмекерські там приховані прапором на час перевірки еквайрингу.
-const sponsors = ref<TSponsor[]>(getTournamentSponsors())
+// Банери спонсорів — з `config/sponsors.ts`: букмекерські бачать лише авторизовані гравці.
+const sponsors = computed(() => getTournamentSponsors(authStore.isLoggedIn))
 
 // const DUELO_PROMO_LS_KEY = 'dueloPromoLastShownAt'
 // const DUELO_PROMO_INTERVAL_MS = 30 * 60 * 1000

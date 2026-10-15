@@ -429,7 +429,7 @@ import type { TIconName } from '@/components/Icon.vue'
 import type { Component } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 import { routeNames } from '@/router/route-names'
-import { BETTING_TITLE_SPONSOR, SHOW_BETTING_SPONSORS } from '@/config/sponsors'
+import { BETTING_TITLE_SPONSOR, canShowBettingSponsors } from '@/config/sponsors'
 
 // ── Feature strip ──────────────────────────────────────────────────────────
 interface IFeature {
@@ -508,15 +508,17 @@ interface ISponsorTier {
   gridClass: string
 }
 
-const sponsorTiers: ISponsorTier[] = [
+const authStore = useAuthStore()
+
+const sponsorTiers = computed<ISponsorTier[]>(() => [
   {
     key: 'title',
     label: 'Титульний спонсор',
     slots: 1,
     rgb: 'var(--ds-gold-rgb)',
     gridClass: 'grid-cols-1 max-w-[360px] mx-auto',
-    // Букмекерський титульний спонсор прихований прапором (перевірка WayForPay) — слот стає вільним.
-    sponsors: SHOW_BETTING_SPONSORS ? [{ ...BETTING_TITLE_SPONSOR }] : []
+    // Букмекерський титульний спонсор — лише для авторизованих; гостям слот показується вільним.
+    sponsors: canShowBettingSponsors(authStore.isLoggedIn) ? [{ ...BETTING_TITLE_SPONSOR }] : []
   },
   {
     key: 'gold',
@@ -537,10 +539,10 @@ const sponsorTiers: ISponsorTier[] = [
       { name: 'CyberHUB', url: 'https://www.instagram.com/cyberhub_lviv/', logo: '/sponsors/CyberHUB_logo.png', dark: true }
     ]
   }
-]
+])
 
-const sponsorsFilled = sponsorTiers.reduce((sum, t) => sum + t.sponsors.length, 0)
-const sponsorsTotal = sponsorTiers.reduce((sum, t) => sum + t.slots, 0)
+const sponsorsFilled = computed(() => sponsorTiers.value.reduce((sum, t) => sum + t.sponsors.length, 0))
+const sponsorsTotal = computed(() => sponsorTiers.value.reduce((sum, t) => sum + t.slots, 0))
 
 // ── Social links ───────────────────────────────────────────────────────────
 interface ISocialLink {
