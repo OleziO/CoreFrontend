@@ -36,7 +36,7 @@
       </p>
 
       <!-- Другий рядок лише коли є що сказати: результат, таймер або перехід -->
-      <div v-if="statusLabel || expiresIn || isDuelReady || isSeasonPrize" class="notif-item__meta">
+      <div v-if="statusLabel || expiresIn || isDuelReady || isSeasonPrize || isBracketMatch" class="notif-item__meta">
         <span v-if="statusLabel" class="notif-item__status" :class="`is-${item.status}`">{{ statusLabel }}</span>
         <span v-else-if="expiresIn" class="notif-item__status is-timer">
           <PhTimer :size="10" weight="bold" aria-hidden="true" />
@@ -58,6 +58,15 @@
           @click="emit('navigate')"
         >
           Таблиця дуелей
+          <PhArrowRight :size="11" weight="bold" class="notif-item__link-arrow" />
+        </RouterLink>
+        <RouterLink
+          v-if="isBracketMatch && item.refId"
+          :to="{ name: routeNames.mediaBracket, params: { id: item.refId } }"
+          class="notif-item__link no-underline"
+          @click="emit('navigate')"
+        >
+          До матчу турніру
           <PhArrowRight :size="11" weight="bold" class="notif-item__link-arrow" />
         </RouterLink>
       </div>
@@ -96,7 +105,7 @@
 import dayjs from 'dayjs'
 import {
   PhArrowRight, PhCheck, PhEnvelopeSimple, PhEye, PhPaperPlaneTilt, PhSword, PhUserPlus, PhUsersThree, PhXCircle,
-  PhTimer, PhTrophy
+  PhTimer, PhTrophy, PhTwitchLogo
 } from '@phosphor-icons/vue'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
@@ -138,6 +147,8 @@ const actorInitial = computed(() =>
 const isPending = computed(() => props.item.status === 'pending')
 const isDuelReady = computed(() => props.item.type === 'duel_challenge_accepted')
 const isSeasonPrize = computed(() => props.item.type === 'duel_season_prize')
+/** Наступний матч медіа-турніру готовий: `refId` — id турніру, актор — суперник. */
+const isBracketMatch = computed(() => props.item.type === 'duel_bracket_match')
 /** Заявка до команди / запрошення: окрім «Прийняти» є «Переглянути» з усіма деталями. */
 const isTeamRequest = computed(() => props.item.type === 'team_application' || props.item.type === 'team_invite')
 const busy = computed(() => store.isBusy(props.item.id))
@@ -155,7 +166,8 @@ const texts: Record<TNotificationType, string> = {
   team_invite: 'запрошує вас до команди',
   team_invite_accepted: 'прийняв запрошення до команди',
   team_invite_declined: 'відхилив запрошення до команди',
-  duel_season_prize: 'Ви виграли приз сезону дуелей'
+  duel_season_prize: 'Ви виграли приз сезону дуелей',
+  duel_bracket_match: '— ваш суперник у медіа-турнірі. Бот уже створює лобі, прийміть інвайт у Dota 2'
 }
 const text = computed(() => {
   const prize = props.item.seasonPrize
@@ -178,7 +190,8 @@ const icons = {
   team_invite: PhEnvelopeSimple,
   team_invite_accepted: PhUsersThree,
   team_invite_declined: PhXCircle,
-  duel_season_prize: PhTrophy
+  duel_season_prize: PhTrophy,
+  duel_bracket_match: PhTwitchLogo
 } satisfies Record<TNotificationType, unknown>
 const icon = computed(() => icons[props.item.type])
 
@@ -192,6 +205,7 @@ const tone = computed(() => {
     case 'duel_challenge':
     case 'team_invite':
     case 'duel_season_prize':
+    case 'duel_bracket_match':
       return 'gold'
     case 'duel_challenge_declined':
     case 'duel_challenge_expired':

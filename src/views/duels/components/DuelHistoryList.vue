@@ -63,6 +63,7 @@ import {
   formatDuelDelta,
   formatDuelKda,
   isFriendDuel,
+  isBracketDuel,
   isTournamentDuel,
   toDuelHistoryRow
 } from '@/views/duels/duels.utils'
@@ -71,6 +72,7 @@ import type { TDuel } from '@/api/types/api.types'
 function kindTitle (duel: TDuel): string | undefined {
   if (isFriendDuel(duel)) return 'Дружня дуель (±10)'
   if (isTournamentDuel(duel)) return `Турнір «${duel.tournament?.name ?? '—'}» — рейтинг турніру, не загальний`
+  if (isBracketDuel(duel)) return `Медіа-турнір «${duel.bracket?.name ?? '—'}» — матч сітки, рейтинг не змінюється`
   return undefined
 }
 

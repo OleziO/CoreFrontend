@@ -43,7 +43,7 @@ import { PhHouse, PhTrophy, PhUsersThree, PhRanking, PhList } from '@phosphor-ic
 const route = useRoute()
 const togglerStore = useTogglerStore()
 
-/** Чотири головні розділи; решта (гравці, пошук команди, дуелі, друзі, профіль, адмінка) — у MobileMenu. */
+/** Чотири головні розділи; решта (гравці, пошук команди, дуелі, медіа-турніри, друзі, профіль, адмінка) — у MobileMenu. */
 const tabs: { name: string; label: string; icon: Component }[] = [
   { name: routeNames.rootPage, label: 'Головна', icon: PhHouse },
   { name: routeNames.tournaments, label: 'Турніри', icon: PhTrophy },
@@ -66,6 +66,9 @@ const menuRoutes = new Set<string>([
   routeNames.players,
   routeNames.player,
   routeNames.duels,
+  routeNames.mediaDuels,
+  routeNames.mediaTeams,
+  routeNames.mediaBracket,
   routeNames.friends,
   routeNames.find,
   routeNames.profile

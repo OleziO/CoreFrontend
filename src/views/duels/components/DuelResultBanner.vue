@@ -41,7 +41,8 @@ import {
   duelOutcomeFor,
   duelPlayerName,
   duelStakeOf,
-  formatDuelDelta
+  formatDuelDelta,
+  isBracketDuel
 } from '@/views/duels/duels.utils'
 import type { TDuel } from '@/api/types/api.types'
 
@@ -66,7 +67,33 @@ const title = computed(() => {
   }
 })
 
+/** Матч сітки медіа-турніру: рейтинг не рухається — кажемо, що далі в сітці. */
+const bracketMeta = computed(() => {
+  const ref = props.duel.bracket
+  const name = ref ? `«${ref.name}»` : 'турніру'
+  const iLost = props.duel.loserId === props.meId
+  // Програш у півфіналі — ще не кінець: далі матч за 3 місце.
+  const toThirdPlace = !!ref && !ref.isThirdPlace && ref.rounds >= 2 && ref.round === ref.rounds - 1
+  if (outcome.value === 'processing') return 'Обробляємо результат — сітка турніру оновиться автоматично.'
+  if (outcome.value === 'failed') return 'Результат вирішить організатор турніру.'
+  if (outcome.value === 'win') return `Ви проходите далі в сітці ${name}.`
+  if (props.duel.state === 'CANCELLED' && props.duel.cancelReason === 'player_cancelled') {
+    return iLost
+      ? 'Ви відмовилися від матчу — технічна поразка в сітці.'
+      : 'Суперник відмовився від матчу — ви проходите далі.'
+  }
+  if (props.duel.cancelReason === 'players_no_show' && props.duel.loserId && !iLost) {
+    return 'Суперник не зайшов у лобі — технічна перемога, ви проходите далі.'
+  }
+  if (outcome.value === 'loss') {
+    const lead = props.duel.cancelReason === 'players_no_show' ? 'Неявка в лобі — технічна поразка. ' : ''
+    return toThirdPlace ? `${lead}Попереду матч за 3 місце.` : `${lead}Ви вибули з турніру ${name}. Дякуємо за гру!`
+  }
+  return 'Матч переграють або його вирішить організатор турніру.'
+})
+
 const meta = computed(() => {
+  if (isBracketDuel(props.duel)) return bracketMeta.value
   const reason = duelEndReasonLabel(props.duel)
   if (outcome.value === 'processing') {
     return 'Обробляємо результат — рейтинг оновиться автоматично. Уже можна шукати наступного суперника.'

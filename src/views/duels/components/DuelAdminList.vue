@@ -84,6 +84,13 @@
               >
                 турнір
               </span>
+              <span
+                v-if="isBracketDuel(duel)"
+                class="duel-row__flag duel-row__flag--muted"
+                :title="duel.bracket?.name"
+              >
+                медіа-сітка
+              </span>
             </div>
 
             <div class="duel-row__versus">
@@ -241,6 +248,7 @@ import {
   duelPlayerName,
   duelStateLabels,
   isDuelActive,
+  isBracketDuel,
   isFriendDuel,
   isTournamentDuel,
   pluralizeDuels

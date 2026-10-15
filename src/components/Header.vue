@@ -35,7 +35,11 @@
         <!-- Одна підсвічена плашка, що переїжджає під активний розділ -->
         <span
           class="app-header__nav-indicator"
-          :class="{ 'is-visible': indicator.visible, 'is-animated': indicatorAnimated }"
+          :class="{
+            'is-visible': indicator.visible,
+            'is-animated': indicatorAnimated,
+            'is-media': isNavActive(routeNames.mediaDuels)
+          }"
           :style="{ width: `${indicator.w}px`, transform: `translateX(${indicator.x}px)` }"
           aria-hidden="true"
         />
@@ -45,7 +49,7 @@
           :key="item.name"
           :to="{ name: item.name }"
           class="app-header__nav-link"
-          :class="{ 'is-active': isNavActive(item.name) }"
+          :class="{ 'is-active': isNavActive(item.name), 'is-media': item.media }"
           :aria-current="isNavActive(item.name) ? 'page' : undefined"
           active-class=""
           exact-active-class=""
@@ -53,10 +57,12 @@
           <component
             :is="item.icon"
             :size="15"
-            :weight="isNavActive(item.name) ? 'fill' : 'bold'"
+            :weight="isNavActive(item.name) || item.media ? 'fill' : 'bold'"
             class="app-header__nav-icon"
           />
           <span>{{ item.label }}</span>
+          <!-- Медіа: крапка «в ефірі», поки хоч один турнір 1v1 грається -->
+          <span v-if="item.media && hasLiveMedia" class="app-header__nav-live" aria-label="Турнір наживо" />
         </RouterLink>
       </nav>
 
@@ -242,7 +248,7 @@ import { routeNames } from '@/router/route-names'
 import logo from '@/assets/images/core-league-logo-full.webp'
 import {
   PhDiscordLogo, PhSignOut, PhUser, PhUserPlus, PhTrophy, PhCaretDown, PhGauge, PhChartLineUp,
-  PhHouse, PhUsersThree, PhUsers, PhRanking, PhSword, PhBinoculars
+  PhHouse, PhUsersThree, PhUsers, PhRanking, PhSword, PhBinoculars, PhTwitchLogo
 } from '@phosphor-icons/vue'
 import type { Component } from 'vue'
 import NotificationCenter from '@/components/NotificationCenter.vue'
@@ -250,6 +256,7 @@ import VipHeaderButton from '@/components/VipHeaderButton.vue'
 import { useVipPaymentReturn } from '@/composables/use-vip-payment-return'
 import { hasAdminRole } from '@/core/helpers'
 import { roleLabelMap } from '@/components/player-tags/player.enums'
+import { useGetDuelBrackets } from '@/views/media/media.queries'
 
 const authStore = useAuthStore()
 const showCreateTournamentDrawer = ref(false)
@@ -306,21 +313,27 @@ const router = useRouter()
 // ─── Primary nav (lg+) ──────────────────────────────────────────────────────
 // Ті самі розділи, що й на мобільному (таббар + меню). «Друзі» — в меню
 // користувача, «Пошук команди» — лише для авторизованих (сторінка закрита для гостей).
-const navItems = computed<Array<{ name: string; label: string; icon: Component }>>(() => [
+const navItems = computed<Array<{ name: string; label: string; icon: Component; media?: boolean }>>(() => [
   { name: routeNames.rootPage, label: 'Головна', icon: PhHouse },
   { name: routeNames.tournaments, label: 'Турніри', icon: PhTrophy },
   { name: routeNames.teams, label: 'Команди', icon: PhUsersThree },
   { name: routeNames.players, label: 'Гравці', icon: PhUsers },
   ...(authStore.token ? [{ name: routeNames.find, label: 'Пошук команди', icon: PhBinoculars }] : []),
   { name: routeNames.leaderboard, label: 'Лідери', icon: PhRanking },
-  { name: routeNames.duels, label: 'Дуелі', icon: PhSword }
+  { name: routeNames.duels, label: 'Дуелі', icon: PhSword },
+  { name: routeNames.mediaDuels, label: 'Медіа', icon: PhTwitchLogo, media: true }
 ])
+
+/** Чи грається зараз хоч один медіа-турнір — для «живої» крапки на пункті «Медіа». */
+const { data: mediaBrackets } = useGetDuelBrackets(() => authStore.user?.id)
+const hasLiveMedia = computed(() => (mediaBrackets.value ?? []).some(b => b.status === 'LIVE'))
 
 /** Сторінка деталей підсвічує свій розділ; «Друзі» живуть під «Гравцями». */
 const navDetailOf: Record<string, string[]> = {
   [routeNames.tournaments]: [routeNames.tournament],
   [routeNames.teams]: [routeNames.team],
-  [routeNames.players]: [routeNames.player, routeNames.friends]
+  [routeNames.players]: [routeNames.player, routeNames.friends],
+  [routeNames.mediaDuels]: [routeNames.mediaTeams, routeNames.mediaBracket]
 }
 
 function isNavActive (name: string): boolean {
@@ -526,6 +539,54 @@ onMounted(() => {
   }
 }
 
+/* ─── «Медіа» — виділений пункт у фірмовому фіолетовому Twitch ──────────────
+   Скляна пігулка з фіолетовою рамкою; іконка видна й на lg (решта — лише з xl),
+   а підкреслення активного стану стає фіолетовим. */
+.app-header__nav-link.is-media {
+  --tw: 145, 70, 255;
+
+  margin-left: 6px;
+  color: rgb(205, 180, 255);
+  background: linear-gradient(120deg, rgba(var(--tw), 0.22), rgba(var(--tw), 0.08));
+  box-shadow: inset 0 0 0 1px rgba(var(--tw), 0.55), 0 0 14px rgba(var(--tw), 0.25);
+  text-shadow: 0 0 8px rgba(var(--tw), 0.6);
+}
+
+.app-header__nav-link.is-media .app-header__nav-icon {
+  display: block;
+  color: rgb(var(--tw));
+  filter: drop-shadow(0 0 6px rgba(var(--tw), 0.8));
+}
+
+.app-header__nav-link.is-media.is-active {
+  color: #fff;
+  background: linear-gradient(120deg, rgba(var(--tw), 0.55), rgba(var(--tw), 0.25));
+}
+
+.app-header__nav-link.is-media.is-active .app-header__nav-icon {
+  color: #fff;
+}
+
+.app-header__nav-live {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgb(239, 68, 68);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.9);
+  animation: header-live 1.4s ease-in-out infinite;
+}
+
+.app-header__nav-indicator.is-media::after {
+  background: rgb(145, 70, 255);
+  box-shadow: 0 0 10px rgba(145, 70, 255, 0.9);
+}
+
+@keyframes header-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
 /* ─── User pill ──────────────────────────────────────────────────────────── */
 .app-header__user {
   display: flex;
@@ -719,6 +780,11 @@ onMounted(() => {
     color: rgba(255, 255, 255, 0.92);
   }
 
+  .app-header__nav-link.is-media:hover:not(.is-active) {
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(145, 70, 255, 0.9), 0 0 18px rgba(145, 70, 255, 0.45);
+  }
+
   .app-header__nav-link:hover:not(.is-active) .app-header__nav-icon {
     color: rgba(var(--ds-primary-rgb), 0.75);
   }
@@ -729,6 +795,10 @@ onMounted(() => {
 @media (prefers-reduced-motion: reduce) {
   .app-header__sweep {
     display: none;
+  }
+
+  .app-header__nav-live {
+    animation: none;
   }
 }
 </style>

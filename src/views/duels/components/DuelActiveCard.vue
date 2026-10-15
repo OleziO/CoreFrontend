@@ -6,6 +6,15 @@
           // Дуель #{{ duel.number }}
           <template v-if="isFriendDuel(duel)"> · дружня · ±{{ duelStakeOf(duel) }}</template>
           <template v-else-if="isTournamentDuel(duel)"> · турнір «{{ duel.tournament?.name }}»</template>
+          <template v-else-if="isBracketDuel(duel) && duel.bracket">
+            ·
+            <RouterLink
+              :to="{ name: routeNames.mediaBracket, params: { id: duel.bracket.id } }"
+              class="active-card__bracket no-underline"
+            >
+              «{{ duel.bracket.name }}» · {{ bracketRoundOf(duel.bracket) }}
+            </RouterLink>
+          </template>
         </span>
         <h2 id="duel-active-title" class="active-card__title">{{ duelStateLabels[duel.state] }}</h2>
       </div>
@@ -179,7 +188,8 @@
         @click="confirmCancel"
       >
         <PhXCircle v-if="!cancelling" :size="16" weight="bold" class="mr-6" />
-        Скасувати матч (−{{ DUEL_CANCEL_PENALTY }})
+        <template v-if="isBracketDuel(duel)">Відмовитися від матчу</template>
+        <template v-else>Скасувати матч (−{{ DUEL_CANCEL_PENALTY }})</template>
       </el-button>
       <el-button
         v-if="isAdmin"
@@ -223,13 +233,16 @@ import {
   duelSteps,
   formatDuelCountdown,
   isDuelCancellable,
+  isBracketDuel,
   isFriendDuel,
   isTournamentDuel,
   secondsUntil
 } from '@/views/duels/duels.utils'
+import { routeNames } from '@/router/route-names'
+import { bracketRoundLabel } from '@/views/media/media.utils'
 import DuelHeroTile from '@/views/duels/components/DuelHeroTile.vue'
 import DuelPlayerTile from '@/views/duels/components/DuelPlayerTile.vue'
-import type { TDuel, TDuelLobbySide, TDuelPlayer } from '@/api/types/api.types'
+import type { TDuel, TDuelBracketRef, TDuelLobbySide, TDuelPlayer } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
   duel: TDuel
@@ -257,6 +270,9 @@ const emit = defineEmits<{
 
 /** Пауза між запитами інвайту — та сама, що `DUEL_INVITE_REQUEST_COOLDOWN_SECONDS` на бекенді. */
 const INVITE_COOLDOWN_SECONDS = 15
+
+/** Раунд матчу медіа-турніру для підпису: «Півфінал», «Матч за 3 місце»… */
+const bracketRoundOf = (ref: TDuelBracketRef) => bracketRoundLabel(ref.round, ref.rounds, ref.isThirdPlace)
 
 const now = useNow({ interval: 1000 })
 const { copy, isSupported } = useClipboard()
@@ -342,6 +358,19 @@ function nameOf (playerId: string): string {
 }
 
 async function confirmCancel () {
+  if (isBracketDuel(props.duel)) {
+    try {
+      await ElMessageBox.confirm(
+        'Це технічна поразка: суперник пройде далі в сітці, а ви вибудете з турніру. Рейтинг дуелей не зміниться.',
+        'Відмовитися від матчу?',
+        { confirmButtonText: 'Відмовитися', cancelButtonText: 'Залишитись', type: 'warning' }
+      )
+    } catch {
+      return
+    }
+    emit('cancel')
+    return
+  }
   try {
     await ElMessageBox.confirm(
       'Ви втратите  очок рейтингу, а суперник автоматично повернеться в чергу.',
@@ -378,6 +407,15 @@ async function copyText (text: string) {
 </script>
 
 <style scoped>
+.active-card__bracket {
+  color: rgb(200, 175, 255);
+  text-shadow: 0 0 8px rgba(145, 70, 255, 0.6);
+}
+
+.active-card__bracket:hover {
+  color: #fff;
+}
+
 .active-card {
   --hud-corner-inset: 8px;
   --hud-corner-color: rgba(var(--ds-gold-rgb), 0.55);

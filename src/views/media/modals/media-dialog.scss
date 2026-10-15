@@ -1,0 +1,153 @@
+// Спільний вигляд модалок медіа-турнірів (форма, вхід за паролем, запуск).
+// Не scoped: el-dialog телепортується в <body>. Підключається через
+// `<style lang="scss" src>` — Vite віддає файл один раз на всі три модалки.
+.el-dialog.media-dialog {
+  --tw: 145, 70, 255;
+
+  margin: 0 auto;
+  max-width: calc(100vw - 32px);
+  border: 1px solid rgba(var(--tw), 0.35);
+  background:
+    linear-gradient(90deg, transparent, rgba(var(--tw), 0.9), transparent) top / 100% 1px no-repeat,
+    rgba(18, 16, 38, 0.72);
+  backdrop-filter: blur(24px) saturate(130%);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  box-shadow: var(--ds-elevation-4), 0 0 40px rgba(var(--tw), 0.2);
+
+  .el-dialog__body {
+    max-height: calc(100dvh - 220px);
+    overflow-y: auto;
+  }
+
+  .media-dialog__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--ds-font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgb(190, 160, 255);
+  }
+
+  .media-dialog__title {
+    font-family: var(--ds-font-display);
+    font-size: 20px;
+    line-height: 1.2;
+    color: var(--ds-text-strong);
+    overflow-wrap: anywhere;
+  }
+
+  .media-dialog__text {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ds-text-muted);
+  }
+
+  .media-dialog__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ds-text-muted);
+  }
+
+  .media-dialog__hint {
+    font-size: 12px;
+    color: var(--ds-text-faint);
+  }
+
+  .media-dialog__error {
+    font-size: 12px;
+    color: var(--el-color-danger);
+  }
+
+  .media-dialog__primary {
+    --el-button-bg-color: rgb(var(--tw));
+    --el-button-border-color: rgb(var(--tw));
+    --el-button-hover-bg-color: rgb(165, 100, 255);
+    --el-button-hover-border-color: rgb(165, 100, 255);
+    --el-button-active-bg-color: rgb(125, 55, 230);
+    --el-button-text-color: #fff;
+    --el-button-hover-text-color: #fff;
+    --el-button-disabled-bg-color: rgba(var(--tw), 0.35);
+    --el-button-disabled-border-color: transparent;
+  }
+
+  .media-dialog__presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .media-dialog__preset {
+    min-width: 44px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-family: var(--ds-font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ds-text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    transition:
+      color var(--ds-duration-fast) ease,
+      background-color var(--ds-duration-fast) ease,
+      border-color var(--ds-duration-fast) ease;
+
+    &.is-active {
+      color: #fff;
+      background: rgba(var(--tw), 0.45);
+      border-color: rgba(var(--tw), 0.9);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba(var(--tw), 0.8);
+      outline-offset: 2px;
+    }
+  }
+
+  .media-dialog__choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    text-align: left;
+    color: var(--ds-text);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    transition:
+      background-color var(--ds-duration-fast) ease,
+      border-color var(--ds-duration-fast) ease;
+
+    &.is-active {
+      background: rgba(var(--tw), 0.16);
+      border-color: rgba(var(--tw), 0.8);
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba(var(--tw), 0.8);
+      outline-offset: 2px;
+    }
+  }
+
+  .media-dialog__choice-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ds-text-strong);
+  }
+
+  .media-dialog__choice-text {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--ds-text-faint);
+  }
+}

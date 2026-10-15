@@ -16,5 +16,7 @@ declare module 'vue-router' {
      * Приватні маршрути без `seo.noindex` отримують `noindex` автоматично.
      */
     seo?: TSeoOptions
+    /** Вкладка хабу медіа-турнірів, яку відкриває маршрут (див. `media.route.ts`). */
+    mediaTab?: '1v1' | '5v5'
   }
 }

@@ -85,6 +85,19 @@
           <span>Дуелі</span>
         </RouterLink>
 
+        <!-- Медіа-турніри: виділений пункт у фіолетовому Twitch -->
+        <RouterLink
+          :to="{ name: routeNames.mediaDuels }"
+          class="mobile-menu-link mobile-menu-link--media no-underline"
+          :class="{ 'mobile-menu-link--active': isMediaActive }"
+          :aria-current="isMediaActive ? 'page' : undefined"
+          @click="close"
+        >
+          <PhTwitchLogo :size="20" weight="fill" />
+          <span>Медіа-турніри</span>
+          <span class="mobile-menu-link__tag">1v1 · 5v5</span>
+        </RouterLink>
+
         <RouterLink
           v-if="hasAdminUaRole"
           class="mobile-menu-link no-underline"
@@ -166,7 +179,8 @@
 import { routeNames } from '@/router/route-names'
 import Icon, { type TIconName } from '@/components/Icon.vue'
 import {
-  PhDiscordLogo, PhUser, PhUserPlus, PhUsersThree, PhChartLineUp, PhGauge, PhSignOut, PhSword, PhX, PhBinoculars
+  PhDiscordLogo, PhUser, PhUserPlus, PhUsersThree, PhChartLineUp, PhGauge, PhSignOut, PhSword, PhX, PhBinoculars,
+  PhTwitchLogo
 } from '@phosphor-icons/vue'
 import { hasAdminRole } from '@/core/helpers'
 import { LEGAL_PAGE_LABELS, LEGAL_PAGE_SLUGS, legalPageHref } from '@/config/legal-pages'
@@ -179,6 +193,9 @@ const route = useRoute()
 function isActive (...names: string[]): boolean {
   return names.includes(String(route.name))
 }
+
+/** Медіа-турніри: обидві вкладки хабу й сторінка турніру. */
+const isMediaActive = computed(() => isActive(routeNames.mediaDuels, routeNames.mediaTeams, routeNames.mediaBracket))
 
 /** Єдиний предикат адмінського доступу — за прапором `isAdminRole`, спільний із гардом /finance. */
 const hasAdminUaRole = computed(() => hasAdminRole(authStore.user?.roles))
@@ -315,6 +332,28 @@ function handleLogout () {
 .mobile-menu-link--active {
   @apply text-primary border-primary/40;
   background-color: rgba(46, 229, 255, 0.08);
+}
+
+.mobile-menu-link--media {
+  color: rgb(205, 180, 255);
+  border-color: rgba(145, 70, 255, 0.55);
+  background: linear-gradient(120deg, rgba(145, 70, 255, 0.22), rgba(145, 70, 255, 0.06));
+  box-shadow: 0 0 14px rgba(145, 70, 255, 0.2);
+}
+
+.mobile-menu-link--media:hover,
+.mobile-menu-link--media.mobile-menu-link--active {
+  color: #fff;
+  border-color: rgba(145, 70, 255, 0.9);
+  background: linear-gradient(120deg, rgba(145, 70, 255, 0.45), rgba(145, 70, 255, 0.15));
+}
+
+.mobile-menu-link__tag {
+  margin-left: auto;
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .mobile-menu-link--danger {

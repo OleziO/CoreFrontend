@@ -89,8 +89,17 @@ export function isTournamentDuel (duel: TDuel | null | undefined): boolean {
   return duel?.kind === 'tournament'
 }
 
-/** Скільки очок на кону в цій дуелі (за її видом). */
+/** «Запросити мене в лобі» — не частіше, ніж раз на стільки секунд (дзеркало бекенду). */
+export const DUEL_INVITE_REQUEST_COOLDOWN_SECONDS = 15
+
+/** Матч медіа-турніру (сітка на вибування): рейтинг не змінюється, переможець проходить далі. */
+export function isBracketDuel (duel: TDuel | null | undefined): boolean {
+  return duel?.kind === 'bracket'
+}
+
+/** Скільки очок на кону в цій дуелі (за її видом); 0 — матч сітки, рейтинг не рухається. */
 export function duelStakeOf (duel: TDuel | null | undefined): number {
+  if (isBracketDuel(duel)) return 0
   return isFriendDuel(duel) ? DUEL_FRIEND_RATING_DELTA : DUEL_RATING_DELTA
 }
 
@@ -113,7 +122,8 @@ export const duelCancelReasonLabels: Record<TDuelCancelReason, string> = {
   game_aborted: 'Гра не стартувала — гравець не завантажився в матч',
   tournament_ended: 'Турнір завершено до старту гри',
   tournament_deleted: 'Турнір видалено до старту гри',
-  season_ended: 'Сезон завершився до старту гри'
+  season_ended: 'Сезон завершився до старту гри',
+  bracket_organiser: 'Організатор турніру вирішив матч до старту гри'
 }
 
 /** Мінімальна / максимальна довжина назви й пароля турніру (дзеркало валідації бекенду). */
@@ -193,9 +203,13 @@ export function duelStreamUrlError (value: string): string {
 }
 
 /** Помилка рядка призу (дзеркало валідації бекенду) або порожній рядок. */
-export function duelPrizeDraftError (draft: TDuelPrizeDraft, all: readonly TDuelPrizeDraft[]): string {
-  if (!Number.isInteger(draft.place) || draft.place < 1 || draft.place > DUEL_TOURNAMENT_PRIZE_PLACE_MAX) {
-    return `Місце — від 1 до ${DUEL_TOURNAMENT_PRIZE_PLACE_MAX}`
+export function duelPrizeDraftError (
+  draft: TDuelPrizeDraft,
+  all: readonly TDuelPrizeDraft[],
+  placeMax: number = DUEL_TOURNAMENT_PRIZE_PLACE_MAX
+): string {
+  if (!Number.isInteger(draft.place) || draft.place < 1 || draft.place > placeMax) {
+    return `Місце — від 1 до ${placeMax}`
   }
   if (all.some(other => other !== draft && other.place === draft.place)) return `${draft.place} місце вказано двічі`
   if (draft.kind === 'vip') {
@@ -338,9 +352,9 @@ export function duelOutcomeFor (duel: TDuel, playerId: string | null | undefined
   return 'cancelled'
 }
 
-/** ±delta з погляду гравця; null — рейтинг не змінювався (скасовано / збій / чужа дуель). */
+/** ±delta з погляду гравця; null — рейтинг не змінювався (скасовано / збій / чужа дуель / матч сітки). */
 export function duelDeltaFor (duel: TDuel, playerId: string | null | undefined): number | null {
-  if (!playerId || duel.ratingDelta == null) return null
+  if (!playerId || duel.ratingDelta == null || isBracketDuel(duel)) return null
   if (duel.winnerId === playerId) return duel.ratingDelta
   if (duel.loserId === playerId) return -duel.ratingDelta
   return null

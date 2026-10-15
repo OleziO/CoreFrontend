@@ -2,11 +2,13 @@
   <section class="dprize-ed" aria-labelledby="dprize-ed-title">
     <header class="flex flex-wrap items-baseline justify-between gap-x-12 gap-y-2">
       <span id="dprize-ed-title" class="dprize-ed__label">Призові місця</span>
-      <span class="dprize-ed__counter">{{ prizes.length }} / {{ DUEL_TOURNAMENT_PRIZES_MAX }}</span>
+      <span class="dprize-ed__counter">{{ prizes.length }} / {{ maxPrizes }}</span>
     </header>
     <p class="dprize-ed__hint">
-      Які місця таблиці отримують приз. Приз місця дістається гравцю, що посідає його після завершення
-      турніру й зіграв хоча б одну дуель.
+      <slot name="hint">
+        Які місця таблиці отримують приз. Приз місця дістається гравцю, що посідає його після завершення
+        турніру й зіграв хоча б одну дуель.
+      </slot>
       <template v-if="!canUseVip"> VIP як приз призначає лише адмін.</template>
     </p>
 
@@ -47,7 +49,7 @@
             <button
               type="button"
               class="dprize-place__step"
-              :disabled="isLocked(draft) || draft.place >= DUEL_TOURNAMENT_PRIZE_PLACE_MAX"
+              :disabled="isLocked(draft) || draft.place >= placeMax"
               aria-label="Наступне місце"
               @click="setPlace(draft, draft.place + 1)"
             >
@@ -184,7 +186,7 @@
     </TransitionGroup>
 
     <button
-      v-if="prizes.length < DUEL_TOURNAMENT_PRIZES_MAX"
+      v-if="prizes.length < maxPrizes"
       type="button"
       class="dprize-ed__add"
       @click="add"
@@ -233,11 +235,18 @@ import {
 import type { Component } from 'vue'
 import type { TDuelTournamentPrizeKind } from '@/api/types/api.types'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   /** Адмін — може додавати й змінювати VIP-призи; стрімер лише зберігає ті, що поставив адмін. */
   canUseVip: boolean
   showErrors: boolean
-}>()
+  /** Найнижче місце, на яке можна поставити приз (сітка медіа-турніру — лише 1–4). */
+  placeMax?: number
+  /** Скільки призових місць можна додати. */
+  maxPrizes?: number
+}>(), {
+  placeMax: DUEL_TOURNAMENT_PRIZE_PLACE_MAX,
+  maxPrizes: DUEL_TOURNAMENT_PRIZES_MAX
+})
 
 const prizes = defineModel<TDuelPrizeDraft[]>({ required: true })
 
@@ -249,12 +258,12 @@ const kindOptions: { value: TDuelTournamentPrizeKind; label: string; icon: Compo
 /** Стрімер не може змінити VIP-приз (бекенд відповість 403) — рядок лише для читання. */
 const isLocked = (draft: TDuelPrizeDraft) => draft.kind === 'vip' && !props.canUseVip
 
-const errorOf = (draft: TDuelPrizeDraft) => duelPrizeDraftError(draft, prizes.value)
+const errorOf = (draft: TDuelPrizeDraft) => duelPrizeDraftError(draft, prizes.value, props.placeMax)
 
 /** Колір «медалі» місця: золото / срібло / бронза, далі — нейтральний. */
 const tierOf = (place: number) => (place === 1 ? 'gold' : place === 2 ? 'silver' : place === 3 ? 'bronze' : 'plain')
 
-const clampPlace = (n: number) => Math.min(DUEL_TOURNAMENT_PRIZE_PLACE_MAX, Math.max(1, n))
+const clampPlace = (n: number) => Math.min(props.placeMax, Math.max(1, n))
 
 function setPlace (draft: TDuelPrizeDraft, place: number) {
   if (isLocked(draft)) return
@@ -289,7 +298,7 @@ function stepMonths (draft: TDuelPrizeDraft, delta: number, event: KeyboardEvent
 
 function add () {
   const nextPlace = Math.min(
-    DUEL_TOURNAMENT_PRIZE_PLACE_MAX,
+    props.placeMax,
     prizes.value.reduce((max, p) => Math.max(max, p.place), 0) + 1
   )
   prizes.value = [...prizes.value, createDuelPrizeDraft(nextPlace, props.canUseVip ? 'vip' : 'custom')]

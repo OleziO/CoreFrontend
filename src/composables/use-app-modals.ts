@@ -54,6 +54,12 @@ export const appModals = useModals({
     defineAsyncComponent(() => import('@/views/duels/modals/DuelTournamentFormModal.vue')) as Component,
   DuelTournamentJoinModal:
     defineAsyncComponent(() => import('@/views/duels/modals/DuelTournamentJoinModal.vue')) as Component,
+  DuelBracketFormModal:
+    defineAsyncComponent(() => import('@/views/media/modals/DuelBracketFormModal.vue')) as Component,
+  DuelBracketJoinModal:
+    defineAsyncComponent(() => import('@/views/media/modals/DuelBracketJoinModal.vue')) as Component,
+  DuelBracketStartModal:
+    defineAsyncComponent(() => import('@/views/media/modals/DuelBracketStartModal.vue')) as Component,
   Match3Modal: defineAsyncComponent(() => import('@/features/match3/components/Match3Modal.vue')) as Component,
   LeaderboardRowModal:
     defineAsyncComponent(() => import('@/views/leaderboard/modals/LeaderboardRowModal.vue')) as Component,

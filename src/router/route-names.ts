@@ -14,6 +14,7 @@ import { leaderboardRouteNames, leaderboardRoutes } from '@/views/leaderboard/le
 import { duelsRouteNames, duelsRoutes } from '@/views/duels/duels.route'
 import { friendsRouteNames, friendsRoutes } from '@/views/friends/friends.route'
 import { findRouteNames, findRoutes } from '@/views/find/find.route'
+import { mediaRouteNames, mediaRoutes } from '@/views/media/media.route'
 
 export const routeNames = {
   ...playersRouteNames,
@@ -30,7 +31,8 @@ export const routeNames = {
   ...leaderboardRouteNames,
   ...duelsRouteNames,
   ...friendsRouteNames,
-  ...findRouteNames
+  ...findRouteNames,
+  ...mediaRouteNames
 }
 
 export const routes = [
@@ -52,7 +54,8 @@ export const routes = [
       ...leaderboardRoutes,
       ...duelsRoutes,
       ...friendsRoutes,
-      ...findRoutes
+      ...findRoutes,
+      ...mediaRoutes
     ]
   }
 ]

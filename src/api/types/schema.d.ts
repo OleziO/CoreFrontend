@@ -1670,6 +1670,215 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/duel-brackets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Bracket tournaments: live, then open, then finished
+         * @description Public. With a token, `joined` / `canManage` describe the viewer.
+         */
+        get: operations["DuelBracketsController_list"];
+        put?: never;
+        /**
+         * Create a bracket tournament (streamer or admin)
+         * @description 403 when a non-admin puts VIP on a prize place.
+         */
+        post: operations["DuelBracketsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-brackets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One bracket tournament with participants and every match
+         * @description Public. `password` and the lobby passwords of running matches are filled for the organiser and admins.
+         */
+        get: operations["DuelBracketsController_get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a bracket tournament (admin)
+         * @description Unstarted duels are cancelled, then the tournament goes with its bracket. Past duels stay in the history.
+         */
+        delete: operations["DuelBracketsController_remove"];
+        options?: never;
+        head?: never;
+        /**
+         * Edit a bracket tournament (organiser or admin)
+         * @description Password and size only during registration (409 after). VIP prize places — admins only (403).
+         */
+        patch: operations["DuelBracketsController_update"];
+        trace?: never;
+    };
+    "/duel-brackets/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Close registration and generate the bracket
+         * @description Organiser or admin; at least 2 players. Byes go to the top seeds; a third-place match is added when there are semi-finals. Ready matches get their duels at once.
+         */
+        post: operations["DuelBracketsController_start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-brackets/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Call the tournament off (organiser or admin)
+         * @description Duels that have not started are cancelled; running games finish without counting. Irreversible.
+         */
+        post: operations["DuelBracketsController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-brackets/{id}/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register for a bracket tournament
+         * @description Needs a linked Steam account (409). 403 on a wrong password, 409 when full or started, 429 after 10 wrong passwords in 10 minutes.
+         */
+        post: operations["DuelBracketsController_join"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-brackets/{id}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Withdraw before the launch
+         */
+        post: operations["DuelBracketsController_leave"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-brackets/{id}/participants/{playerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a registered player (organiser or admin, before the launch)
+         */
+        delete: operations["DuelBracketsController_removeParticipant"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-brackets/{id}/matches/{matchId}/winner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Decide a match by hand (organiser or admin)
+         * @description Any undecided match with both players; its unstarted duel is cancelled. 409 while its game is running.
+         */
+        post: operations["DuelBracketsController_setWinner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-brackets/{id}/matches/{matchId}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Replay a match that waits for a decision (organiser or admin)
+         */
+        post: operations["DuelBracketsController_replay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/duel-brackets/{id}/matches/{matchId}/spectate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Watch a match from its lobby (organiser or admin)
+         * @description The host bot invites the viewer into the lobby and lets them stay without a game slot. Until the game launches; needs a linked Steam account.
+         */
+        post: operations["DuelBracketsController_spectate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/duel-seasons": {
         parameters: {
             query?: never;
@@ -3884,12 +4093,14 @@ export interface components {
             /** @enum {string} */
             state: "ACCEPTING" | "PENDING" | "LOBBY_CREATING" | "WAITING_PLAYERS" | "LIVE" | "PROCESSING" | "RESOLVED" | "CANCELLED" | "FAILED";
             /**
-             * @description `ranked` — paired from the queue (±25); `friend` — created from an accepted friend challenge (±10); `tournament` — paired from a tournament queue (±25 on the tournament table)
+             * @description `ranked` — paired from the queue (±25); `friend` — created from an accepted friend challenge (±10); `tournament` — paired from a tournament queue (±25 on the tournament table); `bracket` — a match of a single-elimination media tournament (no rating change)
              * @enum {string}
              */
-            kind: "ranked" | "friend" | "tournament";
+            kind: "ranked" | "friend" | "tournament" | "bracket";
             /** @description Tournament of a `tournament` duel; null otherwise */
             tournament: components["schemas"]["DuelTournamentRefDto"] | null;
+            /** @description Bracket tournament and match of a `bracket` duel; null otherwise */
+            bracket: components["schemas"]["DuelBracketRefDto"] | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -3933,7 +4144,7 @@ export interface components {
             /** @description Points moved once the result was applied (25) */
             ratingDelta: number | null;
             /** @enum {string|null} */
-            cancelReason: "players_no_show" | "lobby_not_created" | "no_bots_available" | "admin" | "accept_timeout" | "player_cancelled" | "game_aborted" | "tournament_ended" | "tournament_deleted" | "season_ended" | null;
+            cancelReason: "players_no_show" | "lobby_not_created" | "no_bots_available" | "admin" | "accept_timeout" | "player_cancelled" | "game_aborted" | "tournament_ended" | "tournament_deleted" | "season_ended" | "bracket_organiser" | null;
             /** @description Who cancelled the duel (player or admin); null for automatic cancels */
             cancelledById: string | null;
             /** @enum {string|null} */
@@ -4144,6 +4355,154 @@ export interface components {
         DuelTournamentPrizeImageDto: {
             url: string;
         };
+        /** @description Where a `bracket` duel sits in its media tournament. */
+        DuelBracketRefDto: {
+            /** @description Bracket tournament id */
+            id: string;
+            name: string;
+            /** @description Bracket match id */
+            matchId: string;
+            /** @description 1-based round of the match */
+            round: number;
+            /** @description Rounds of the bracket (the final is the last) */
+            rounds: number;
+            /** @description The match for third place */
+            isThirdPlace: boolean;
+        };
+        /** @description One bracket tournament as the media list shows it. */
+        DuelBracketSummaryDto: {
+            id: string;
+            name: string;
+            description: string | null;
+            /** @enum {string} */
+            status: "REGISTRATION" | "LIVE" | "FINISHED" | "CANCELLED";
+            /** @description Registration closes at this many players */
+            maxParticipants: number;
+            participantsCount: number;
+            /** @description Registration needs a password */
+            hasPassword: boolean;
+            /**
+             * Format: date-time
+             * @description Planned start announced by the organiser
+             */
+            scheduledAt: string | null;
+            /** @description Stream link (http/https) */
+            streamUrl: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            finishedAt: string | null;
+            /** @description Organiser (streamer or admin); rating is their ladder rating */
+            createdBy: components["schemas"]["DuelPlayerDto"] | null;
+            /** @description Champion, once FINISHED */
+            winner: components["schemas"]["DuelPlayerDto"] | null;
+            /** @description Rounds of the bracket; 0 before the launch */
+            rounds: number;
+            /** @description Prize places 1–4, by place */
+            prizes: components["schemas"]["DuelTournamentPrizeDto"][];
+            /** @description The viewer is registered */
+            joined: boolean;
+            /** @description The viewer may manage it (organiser or admin) */
+            canManage: boolean;
+        };
+        DuelBracketParticipantDto: {
+            player: components["schemas"]["DuelPlayerDto"];
+            /** @description 1 = top seed; null before the launch */
+            seed: number | null;
+            /** @description Final place (best of a shared range: 5 = places 5–8); null while still in the bracket */
+            place: number | null;
+            /** @description Knocked out of the bracket */
+            eliminated: boolean;
+            /** Format: date-time */
+            joinedAt: string;
+        };
+        DuelBracketMatchDto: {
+            id: string;
+            /** @description 1-based; the final is the last round */
+            round: number;
+            /** @description 0-based position inside the round */
+            position: number;
+            isThirdPlace: boolean;
+            /** @enum {string} */
+            status: "WAITING" | "READY" | "LIVE" | "NEEDS_DECISION" | "DONE";
+            /** @enum {string|null} */
+            result: "played" | "forfeit" | "bye" | "manual" | null;
+            player1: components["schemas"]["DuelPlayerDto"] | null;
+            player2: components["schemas"]["DuelPlayerDto"] | null;
+            seed1: number | null;
+            seed2: number | null;
+            winnerId: string | null;
+            loserId: string | null;
+            /** @description Why the match waits (organiser decision / busy player) */
+            note: string | null;
+            /** Format: date-time */
+            finishedAt: string | null;
+            /** @description Current (or last) duel of the match. `lobbyPassword` is filled for its players and the managers while the lobby is open. */
+            duel: components["schemas"]["DuelDto"] | null;
+            /** @description The viewer asked to watch this match */
+            spectating: boolean;
+        };
+        /** @description One bracket tournament with everything its page shows. */
+        DuelBracketDto: components["schemas"]["DuelBracketSummaryDto"] & {
+            /** @description Registration password — managers only */
+            password: string | null;
+            /** @enum {string|null} */
+            seeding: "random" | "rating" | null;
+            /** Format: date-time */
+            prizesAwardedAt: string | null;
+            /** @description By seed after the launch, by registration before */
+            participants: components["schemas"]["DuelBracketParticipantDto"][];
+            /** @description Every node, by round then position */
+            matches: components["schemas"]["DuelBracketMatchDto"][];
+            /** @description The viewer's unfinished match */
+            myMatchId: string | null;
+            /** @description The viewer has a linked Steam account (needed to play / spectate) */
+            viewerHasSteam: boolean;
+        };
+        CreateDuelBracketDto: {
+            name: string;
+            description?: string | null;
+            /** @description Registration password; empty = open registration */
+            password?: string | null;
+            maxParticipants: number;
+            /** Format: date-time */
+            scheduledAt?: string | null;
+            /** @description Stream link (http/https) */
+            streamUrl?: string | null;
+            /** @description Places 1–4, unique; VIP — admins only */
+            prizes?: components["schemas"]["DuelTournamentPrizeInputDto"][];
+        };
+        UpdateDuelBracketDto: {
+            name?: string;
+            /** @description null / empty clears it */
+            description?: string | null;
+            /** @description null / empty opens the registration */
+            password?: string | null;
+            maxParticipants?: number;
+            /** Format: date-time */
+            scheduledAt?: string | null;
+            /** @description null / empty clears it */
+            streamUrl?: string | null;
+            /** @description Replaces all prize places; VIP places — admins only */
+            prizes?: components["schemas"]["DuelTournamentPrizeInputDto"][];
+        };
+        JoinDuelBracketDto: {
+            /** @description Required when the bracket has a password */
+            password?: string | null;
+        };
+        StartDuelBracketDto: {
+            /**
+             * @default random
+             * @enum {string}
+             */
+            seeding?: "random" | "rating";
+        };
+        SetDuelBracketWinnerDto: {
+            /** @description One of the two players of the match */
+            winnerId: string;
+        };
         /** @description One prize place of a season: a tournament prize plus who won it and whether it was handed out. */
         DuelSeasonPrizeDto: {
             place: number;
@@ -4270,7 +4629,7 @@ export interface components {
         NotificationDto: {
             id: string;
             /** @enum {string} */
-            type: "friend_request" | "friend_request_accepted" | "duel_challenge" | "duel_challenge_accepted" | "duel_challenge_declined" | "duel_challenge_expired" | "team_application" | "team_application_accepted" | "team_application_declined" | "team_invite" | "team_invite_accepted" | "team_invite_declined" | "duel_season_prize";
+            type: "friend_request" | "friend_request_accepted" | "duel_challenge" | "duel_challenge_accepted" | "duel_challenge_declined" | "duel_challenge_expired" | "team_application" | "team_application_accepted" | "team_application_declined" | "team_invite" | "team_invite_accepted" | "team_invite_declined" | "duel_season_prize" | "duel_bracket_match";
             /**
              * @description Outcome of the request / challenge the entry is about; `pending` means the buttons are still live
              * @enum {string|null}
@@ -7622,6 +7981,297 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DuelTournamentDto"];
+                };
+            };
+        };
+    };
+    DuelBracketsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelBracketSummaryDto"][];
+                };
+            };
+        };
+    };
+    DuelBracketsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDuelBracketDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelBracketDto"];
+                };
+            };
+        };
+    };
+    DuelBracketsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelBracketDto"];
+                };
+            };
+        };
+    };
+    DuelBracketsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDuelBracketDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelBracketDto"];
+                };
+            };
+        };
+    };
+    DuelBracketsController_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartDuelBracketDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelBracketDto"];
+                };
+            };
+        };
+    };
+    DuelBracketsController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelBracketDto"];
+                };
+            };
+        };
+    };
+    DuelBracketsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DuelBracketsController_join: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinDuelBracketDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelBracketDto"];
+                };
+            };
+        };
+    };
+    DuelBracketsController_leave: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelBracketDto"];
+                };
+            };
+        };
+    };
+    DuelBracketsController_removeParticipant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                playerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelBracketDto"];
+                };
+            };
+        };
+    };
+    DuelBracketsController_setWinner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                matchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetDuelBracketWinnerDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelBracketDto"];
+                };
+            };
+        };
+    };
+    DuelBracketsController_replay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                matchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelBracketDto"];
+                };
+            };
+        };
+    };
+    DuelBracketsController_spectate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                matchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelBracketMatchDto"];
                 };
             };
         };

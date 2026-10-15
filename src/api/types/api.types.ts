@@ -125,6 +125,18 @@ export type TDuelTournamentPrizeKind = TDuelTournamentPrize['kind']
 export type TDuelSeason = components['schemas']['DuelSeasonDto']
 export type TDuelSeasonPrize = components['schemas']['DuelSeasonPrizeDto']
 export type TJoinDuelQueueDto = components['schemas']['JoinDuelQueueDto']
+
+export type TDuelBracketRef = components['schemas']['DuelBracketRefDto']
+export type TDuelBracketSummary = components['schemas']['DuelBracketSummaryDto']
+export type TDuelBracket = components['schemas']['DuelBracketDto']
+export type TDuelBracketStatus = TDuelBracketSummary['status']
+export type TDuelBracketParticipant = components['schemas']['DuelBracketParticipantDto']
+export type TDuelBracketMatch = components['schemas']['DuelBracketMatchDto']
+export type TDuelBracketMatchStatus = TDuelBracketMatch['status']
+export type TDuelBracketMatchResult = NonNullable<TDuelBracketMatch['result']>
+export type TDuelBracketSeeding = NonNullable<TDuelBracket['seeding']>
+export type TCreateDuelBracketDto = components['schemas']['CreateDuelBracketDto']
+export type TUpdateDuelBracketDto = components['schemas']['UpdateDuelBracketDto']
 /** Друзі (GET /friends та мутації) — теж додано вручну. */
 export type TFriendPlayer = components['schemas']['FriendPlayerDto']
 export type TFriend = components['schemas']['FriendDto']
