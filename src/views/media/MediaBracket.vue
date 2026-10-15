@@ -139,6 +139,15 @@
           </aside>
         </header>
 
+        <!-- ─── Стрімер і трансляція — головний акцент сторінки ────────── -->
+        <BracketStreamerCard
+          :streamer="bracket.createdBy"
+          :stream-url="bracket.streamUrl"
+          :streamer-links="bracket.streamerLinks"
+          :description="bracket.description"
+          :live="bracket.status === 'LIVE'"
+        />
+
         <!-- ─── Правила одним рядком ───────────────────────────────────── -->
         <ul class="mbp-rules" aria-label="Як грається турнір">
           <li v-for="rule in rules" :key="rule.title" class="mbp-rules__item">
@@ -277,16 +286,6 @@
                 <template v-else>Турнір завершено — керувати вже нічим.</template>
               </p>
             </section>
-
-            <div class="mbp-panel">
-              <BracketStreamerCard
-                :streamer="bracket.createdBy"
-                :stream-url="bracket.streamUrl"
-                :streamer-links="bracket.streamerLinks"
-                :description="bracket.description"
-                :live="bracket.status === 'LIVE'"
-              />
-            </div>
 
             <div v-if="bracket.prizes.length" class="mbp-panel">
               <BracketPrizes
