@@ -4369,6 +4369,19 @@ export interface components {
             /** @description The match for third place */
             isThirdPlace: boolean;
         };
+        /** @description Streamer channels besides the main stream link; null = not set. */
+        DuelBracketStreamerLinksDto: {
+            /** @description Telegram */
+            telegram?: string | null;
+            /** @description Kick */
+            kick?: string | null;
+            /** @description YouTube */
+            youtube?: string | null;
+            /** @description TikTok */
+            tiktok?: string | null;
+            /** @description Instagram */
+            instagram?: string | null;
+        };
         /** @description One bracket tournament as the media list shows it. */
         DuelBracketSummaryDto: {
             id: string;
@@ -4388,6 +4401,8 @@ export interface components {
             scheduledAt: string | null;
             /** @description Stream link (http/https) */
             streamUrl: string | null;
+            /** @description Streamer channels; every key present, null = not set */
+            streamerLinks: components["schemas"]["DuelBracketStreamerLinksDto"];
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -4471,6 +4486,8 @@ export interface components {
             scheduledAt?: string | null;
             /** @description Stream link (http/https) */
             streamUrl?: string | null;
+            /** @description Telegram / Kick / YouTube / TikTok / Instagram of the streamer */
+            streamerLinks?: components["schemas"]["DuelBracketStreamerLinksDto"];
             /** @description Places 1–4, unique; VIP — admins only */
             prizes?: components["schemas"]["DuelTournamentPrizeInputDto"][];
         };
@@ -4485,6 +4502,8 @@ export interface components {
             scheduledAt?: string | null;
             /** @description null / empty clears it */
             streamUrl?: string | null;
+            /** @description Replaces all streamer channels; null / empty clears one */
+            streamerLinks?: components["schemas"]["DuelBracketStreamerLinksDto"];
             /** @description Replaces all prize places; VIP places — admins only */
             prizes?: components["schemas"]["DuelTournamentPrizeInputDto"][];
         };

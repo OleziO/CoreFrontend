@@ -15,6 +15,7 @@ import TelegramIcon from '@/assets/icons/telegram.svg'
 import InstagramIcon from '@/assets/icons/instagram.svg'
 import TikTokIcon from '@/assets/icons/tiktok.svg'
 import TwitchIcon from '@/assets/icons/twitch.svg'
+import KickIcon from '@/assets/icons/kick.svg'
 
 const icons = {
   steam: SteamLogo,
@@ -24,7 +25,8 @@ const icons = {
   telegram: TelegramIcon,
   instagram: InstagramIcon,
   tiktok: TikTokIcon,
-  twitch: TwitchIcon
+  twitch: TwitchIcon,
+  kick: KickIcon
 }
 
 export type TIconName = keyof typeof icons

@@ -56,7 +56,11 @@
 
             <div v-if="bracket.winner" class="mbp-hero__champion">
               <PhCrown :size="22" weight="fill" aria-hidden="true" />
-              <el-avatar :src="resolvePublicOrApiUrl(bracket.winner.avatarUrl)" :size="32">
+              <el-avatar
+                :src="resolvePublicOrApiUrl(bracket.winner.avatarUrl)"
+                :size="32"
+                class="mbp-hero__champion-avatar"
+              >
                 {{ duelPlayerInitial(bracket.winner) }}
               </el-avatar>
               <span class="flex min-w-0 flex-col">
@@ -278,6 +282,7 @@
               <BracketStreamerCard
                 :streamer="bracket.createdBy"
                 :stream-url="bracket.streamUrl"
+                :streamer-links="bracket.streamerLinks"
                 :description="bracket.description"
                 :live="bracket.status === 'LIVE'"
               />
@@ -798,6 +803,14 @@ async function deleteBracket () {
   background: linear-gradient(90deg, rgba(var(--ds-gold-rgb), 0.22), rgba(var(--ds-gold-rgb), 0.05));
   border: 1px solid rgba(var(--ds-gold-rgb), 0.4);
   box-shadow: 0 0 20px rgba(var(--ds-gold-rgb), 0.2);
+}
+
+/* Глобальний .el-avatar фіксує 56px */
+.mbp-hero__champion-avatar {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  font-size: 13px;
 }
 
 .mbp-hero__champion-label {

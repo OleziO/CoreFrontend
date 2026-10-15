@@ -243,7 +243,11 @@ const whenLabel = computed(() => {
 }
 
 .mb-card__avatar {
+  /* Глобальний .el-avatar фіксує 56px */
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
+  font-size: 12px;
   box-shadow: 0 0 0 2px rgba(var(--tw), 0.55);
 }
 

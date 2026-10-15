@@ -53,6 +53,7 @@
 
         <DuelHeroTile
           v-if="match.duel?.heroes?.length"
+          class="bmatch__hero"
           :hero="side.hero"
           :label="side.isMe ? 'Ваш герой' : 'Герой'"
           :highlighted="side.isMe"
@@ -547,6 +548,11 @@ async function replay () {
   flex-direction: row-reverse;
 }
 
+/* Плитка героя — на всю ширину колонки з обох боків, а не за вмістом справа */
+.bmatch__hero {
+  align-self: stretch;
+}
+
 .bmatch__side.is-loser {
   opacity: 0.55;
 }
@@ -561,6 +567,9 @@ async function replay () {
 }
 
 .bmatch__avatar {
+  /* Глобальний .el-avatar фіксує 56px */
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
   box-shadow: 0 0 0 2px rgba(var(--tone), 0.5);
 }

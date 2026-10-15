@@ -1,8 +1,11 @@
+import { DUEL_TOURNAMENT_STREAM_URL_MAX } from '@/views/duels/duels.utils'
 import { pluralizeUk } from '@/views/players/player-achievements.utils'
+import type { TIconName } from '@/components/Icon.vue'
 import type {
   TDuelBracketMatch,
   TDuelBracketMatchResult,
-  TDuelBracketStatus
+  TDuelBracketStatus,
+  TDuelBracketStreamerLinks
 } from '@/api/types/api.types'
 
 /** Дзеркало валідації бекенду (`duel-bracket.dto.ts` / `duel.constants.ts`). */
@@ -105,6 +108,44 @@ export function streamPlatformOf (url: string | null | undefined): 'twitch' | 'y
     // невалідне посилання — показуємо як «стрім»
   }
   return 'other'
+}
+
+export type TStreamerPlatform = keyof TDuelBracketStreamerLinks
+
+/** Канали стрімера, окрім основного посилання на стрім. Дзеркало `DuelBracketStreamerLinksDto`. */
+export const STREAMER_LINK_PLATFORMS: ReadonlyArray<{
+  key: TStreamerPlatform
+  label: string
+  icon: TIconName
+  placeholder: string
+  /** Дозволені домени (з піддоменами) — як у валідації бекенду. */
+  hosts: readonly string[]
+  /** Фірмовий колір для кнопки. */
+  rgb: string
+}> = [
+  { key: 'telegram', label: 'Telegram', icon: 'telegram', placeholder: 'https://t.me/ваш_канал', hosts: ['t.me', 'telegram.me'], rgb: '38, 165, 228' },
+  { key: 'kick', label: 'Kick', icon: 'kick', placeholder: 'https://kick.com/ваш_канал', hosts: ['kick.com'], rgb: '83, 252, 24' },
+  { key: 'youtube', label: 'YouTube', icon: 'youtube', placeholder: 'https://youtube.com/@ваш_канал', hosts: ['youtube.com', 'youtu.be'], rgb: '255, 0, 0' },
+  { key: 'tiktok', label: 'TikTok', icon: 'tiktok', placeholder: 'https://tiktok.com/@ваш_акаунт', hosts: ['tiktok.com'], rgb: '255, 0, 80' },
+  { key: 'instagram', label: 'Instagram', icon: 'instagram', placeholder: 'https://instagram.com/ваш_акаунт', hosts: ['instagram.com'], rgb: '225, 48, 108' }
+]
+
+/** Помилка посилання на канал стрімера (необов’язкове) або порожній рядок. */
+export function streamerLinkError (platform: TStreamerPlatform, value: string): string {
+  const link = value.trim()
+  if (!link) return ''
+  const meta = STREAMER_LINK_PLATFORMS.find(p => p.key === platform)!
+  try {
+    const url = new URL(link)
+    const host = url.hostname.toLowerCase()
+    const okHost = meta.hosts.some(h => host === h || host.endsWith(`.${h}`))
+    if ((url.protocol === 'http:' || url.protocol === 'https:') && okHost && link.length <= DUEL_TOURNAMENT_STREAM_URL_MAX) {
+      return ''
+    }
+  } catch {
+    // невалідна адреса — нижче загальна помилка
+  }
+  return `Потрібне посилання ${meta.label}: ${meta.placeholder.replace(/ваш_\S+$/, '…')}`
 }
 
 export const pluralizeBracketPlayers = (n: number) => `${n} ${pluralizeUk(n, 'гравець', 'гравці', 'гравців')}`

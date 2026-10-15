@@ -28,7 +28,12 @@
         class="bnode__hero"
         loading="lazy"
       >
-      <el-avatar v-else-if="slot.player" :src="resolvePublicOrApiUrl(slot.player.avatarUrl)" :size="18">
+      <el-avatar
+        v-else-if="slot.player"
+        :src="resolvePublicOrApiUrl(slot.player.avatarUrl)"
+        :size="18"
+        class="bnode__avatar"
+      >
         {{ duelPlayerInitial(slot.player) }}
       </el-avatar>
       <span v-else class="bnode__empty-avatar" aria-hidden="true" />
@@ -250,6 +255,15 @@ const ariaLabel = computed(() => `${slots.value[0].label} проти ${slots.val
   flex-shrink: 0;
   object-fit: cover;
   border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+/* Глобальний .el-avatar фіксує 56px і кільце — у вузлі сітки потрібна мініатюра */
+.bnode__avatar {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  font-size: 9px;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 

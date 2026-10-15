@@ -16,7 +16,7 @@
         </span>
         <DuelPrizeTile :prize="prize" class="bprize__tile" />
         <span v-if="winnerOf(prize)" class="bprize__winner">
-          <el-avatar :src="resolvePublicOrApiUrl(winnerOf(prize)?.avatarUrl)" :size="20">
+          <el-avatar :src="resolvePublicOrApiUrl(winnerOf(prize)?.avatarUrl)" :size="20" class="bprize__avatar">
             {{ duelPlayerInitial(winnerOf(prize)) }}
           </el-avatar>
           <span class="truncate">{{ duelPlayerName(winnerOf(prize)) }}</span>
@@ -141,6 +141,14 @@ const tierOf = (place: number) => (place === 1 ? 'gold' : place === 2 ? 'silver'
 
 .bprize__tile {
   min-width: 0;
+}
+
+/* Глобальний .el-avatar фіксує 56px */
+.bprize__avatar {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  font-size: 9px;
 }
 
 .bprize__winner {

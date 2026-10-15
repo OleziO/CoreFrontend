@@ -144,6 +144,31 @@
         </span>
       </label>
 
+      <!-- Інші канали стрімера -->
+      <div class="flex flex-col gap-8">
+        <span class="media-dialog__label">Канали стрімера <span class="font-normal">(необов’язково)</span></span>
+        <div class="flex flex-col gap-8">
+          <div v-for="platform in STREAMER_LINK_PLATFORMS" :key="platform.key" class="flex flex-col gap-4">
+            <el-input
+              v-model="streamerLinks[platform.key]"
+              :maxlength="DUEL_TOURNAMENT_STREAM_URL_MAX"
+              :aria-label="platform.label"
+              clearable
+              inputmode="url"
+              :placeholder="platform.placeholder"
+            >
+              <template #prefix>
+                <Icon :name="platform.icon" :size="14" aria-hidden="true" />
+              </template>
+            </el-input>
+            <span v-if="showErrors && streamerLinkErrors[platform.key]" class="media-dialog__error">
+              {{ streamerLinkErrors[platform.key] }}
+            </span>
+          </div>
+        </div>
+        <span class="media-dialog__hint">Покажемо іконками в картці стрімера на сторінці турніру.</span>
+      </div>
+
       <DuelTournamentPrizesEditor
         v-model="prizes"
         :can-use-vip="isAdmin"
@@ -188,9 +213,12 @@ import {
   DUEL_BRACKET_MAX_PARTICIPANTS,
   DUEL_BRACKET_MIN_PARTICIPANTS,
   DUEL_BRACKET_PRIZE_PLACE_MAX,
-  DUEL_BRACKET_SIZE_PRESETS
+  DUEL_BRACKET_SIZE_PRESETS,
+  STREAMER_LINK_PLATFORMS,
+  streamerLinkError,
+  type TStreamerPlatform
 } from '@/views/media/media.utils'
-import type { TDuelBracket } from '@/api/types/api.types'
+import type { TDuelBracket, TDuelBracketStreamerLinks } from '@/api/types/api.types'
 
 const props = defineProps<{
   /** Є — редагування; немає — створення. */
@@ -218,6 +246,7 @@ const usePassword = ref(false)
 const password = ref('')
 const scheduledAt = ref<Date | null>(null)
 const streamUrl = ref('')
+const streamerLinks = ref<Record<TStreamerPlatform, string>>(streamerLinksDraft())
 const prizes = ref<TDuelPrizeDraft[]>([])
 const saving = ref(false)
 const showErrors = ref(false)
@@ -232,9 +261,21 @@ const passwordError = computed(() => {
     : ''
 })
 const streamUrlError = computed(() => duelStreamUrlError(streamUrl.value))
+const streamerLinkErrors = computed(() =>
+  Object.fromEntries(
+    STREAMER_LINK_PLATFORMS.map(p => [p.key, streamerLinkError(p.key, streamerLinks.value[p.key])])
+  ) as Record<TStreamerPlatform, string>
+)
+const hasStreamerLinkError = computed(() => Object.values(streamerLinkErrors.value).some(Boolean))
 const prizesError = computed(() =>
   prizes.value.some(p => duelPrizeDraftError(p, prizes.value, DUEL_BRACKET_PRIZE_PLACE_MAX))
 )
+
+function streamerLinksDraft (links?: TDuelBracketStreamerLinks | null): Record<TStreamerPlatform, string> {
+  return Object.fromEntries(
+    STREAMER_LINK_PLATFORMS.map(p => [p.key, links?.[p.key] ?? ''])
+  ) as Record<TStreamerPlatform, string>
+}
 
 const isPastDay = (date: Date) => dayjs(date).isBefore(dayjs().startOf('day'))
 
@@ -250,12 +291,15 @@ watch(modelValue, (open) => {
   password.value = b?.password ?? generateDuelTournamentPassword()
   scheduledAt.value = b?.scheduledAt ? new Date(b.scheduledAt) : null
   streamUrl.value = b?.streamUrl ?? ''
+  streamerLinks.value = streamerLinksDraft(b?.streamerLinks)
   prizes.value = duelPrizeDraftsFrom(b?.prizes)
 }, { immediate: true })
 
 async function submit () {
   showErrors.value = true
-  if (nameError.value || passwordError.value || streamUrlError.value || prizesError.value || saving.value) return
+  const invalid = nameError.value || passwordError.value || streamUrlError.value ||
+    hasStreamerLinkError.value || prizesError.value
+  if (invalid || saving.value) return
   saving.value = true
   try {
     const common = {
@@ -264,6 +308,10 @@ async function submit () {
       description: description.value.trim() || null,
       scheduledAt: scheduledAt.value ? scheduledAt.value.toISOString() : null,
       streamUrl: streamUrl.value.trim() || null,
+      // Усі ключі щоразу: на редагуванні бекенд замінює весь набір, null прибирає канал
+      streamerLinks: Object.fromEntries(
+        STREAMER_LINK_PLATFORMS.map(p => [p.key, streamerLinks.value[p.key].trim() || null])
+      ) as TDuelBracketStreamerLinks,
       prizes: [...prizes.value].sort((a, b) => a.place - b.place).map(duelPrizeDraftToInput)
     }
     const registration = !sizeLocked.value

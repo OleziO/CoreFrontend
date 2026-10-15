@@ -53,7 +53,24 @@
         </a>
       </div>
     </template>
-    <p v-else class="bstreamer__muted">Посилання на трансляцію стрімер ще не додав.</p>
+    <p v-else-if="!channels.length" class="bstreamer__muted">Посилання на трансляцію стрімер ще не додав.</p>
+
+    <!-- Інші канали стрімера -->
+    <ul v-if="channels.length" class="bstreamer__channels" aria-label="Канали стрімера">
+      <li v-for="channel in channels" :key="channel.key">
+        <a
+          :href="channel.url"
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          class="bstreamer__channel no-underline"
+          :style="{ '--brand': channel.rgb }"
+          :title="channel.label"
+          :aria-label="`${channel.label} стрімера`"
+        >
+          <Icon :name="channel.icon" :size="16" aria-hidden="true" />
+        </a>
+      </li>
+    </ul>
 
     <div v-if="description" class="bstreamer__about">
       <span class="bstreamer__about-label">Про турнір</span>
@@ -74,18 +91,26 @@ import { buildTwitchPlayerUrl } from '@/config/streaming'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
 import { duelPlayerInitial, duelPlayerName } from '@/views/duels/duels.utils'
-import { streamPlatformOf, twitchChannelOf } from '@/views/media/media.utils'
-import type { TDuelPlayer } from '@/api/types/api.types'
+import { STREAMER_LINK_PLATFORMS, streamPlatformOf, twitchChannelOf } from '@/views/media/media.utils'
+import type { TDuelBracketStreamerLinks, TDuelPlayer } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
   streamer: TDuelPlayer | null
   streamUrl: string | null
+  streamerLinks?: TDuelBracketStreamerLinks | null
   description: string | null
   /** Турнір іде зараз — плеєр відкривається сам. */
   live?: boolean
 }>(), {
+  streamerLinks: null,
   live: false
 })
+
+const channels = computed(() =>
+  STREAMER_LINK_PLATFORMS
+    .map(p => ({ ...p, url: props.streamerLinks?.[p.key] ?? null }))
+    .filter((c): c is typeof c & { url: string } => !!c.url)
+)
 
 const platform = computed(() => streamPlatformOf(props.streamUrl))
 const twitchChannel = computed(() => twitchChannelOf(props.streamUrl))
@@ -226,6 +251,46 @@ const streamLinkLabel = computed(() => {
 
 .bstreamer__actions :deep(.el-button + .el-button) {
   margin-left: 0;
+}
+
+.bstreamer__channels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bstreamer__channel {
+  --brand: 148, 163, 184;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--brand), 0.35);
+  background: rgba(var(--brand), 0.1);
+  color: rgb(var(--brand));
+  transition:
+    background-color var(--ds-duration-fast) ease,
+    border-color var(--ds-duration-fast) ease,
+    transform var(--ds-duration-press) var(--ds-ease-out);
+}
+
+.bstreamer__channel:focus-visible {
+  outline: 2px solid rgba(var(--brand), 0.8);
+  outline-offset: 2px;
+}
+
+.bstreamer__channel:active {
+  transform: scale(0.94);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bstreamer__channel:hover {
+    border-color: rgba(var(--brand), 0.8);
+    background: rgba(var(--brand), 0.2);
+  }
 }
 
 .bstreamer__watch {

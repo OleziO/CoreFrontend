@@ -20,7 +20,7 @@
         :class="{ 'is-out': p.eliminated, 'is-me': p.player.id === meId, 'is-champion': p.place === 1 }"
       >
         <span class="bpart__seed" :title="p.seed ? `Посів ${p.seed}` : undefined">{{ p.seed ?? '·' }}</span>
-        <el-avatar :src="resolvePublicOrApiUrl(p.player.avatarUrl)" :size="26" class="shrink-0">
+        <el-avatar :src="resolvePublicOrApiUrl(p.player.avatarUrl)" :size="26" class="bpart__avatar">
           {{ duelPlayerInitial(p.player) }}
         </el-avatar>
         <RouterLink
@@ -164,6 +164,15 @@ function stateOf (p: TDuelBracketParticipant): { label: string; tone: string } {
   font-size: 11px;
   text-align: center;
   color: var(--ds-text-faint);
+}
+
+/* Глобальний .el-avatar фіксує 56px — у списку потрібен компактний */
+.bpart__avatar {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  font-size: 11px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 .bpart__name {
