@@ -18,8 +18,8 @@
 
     <div class="flex flex-col gap-14">
       <p class="media-dialog__text">
-        Зареєстровано <b>{{ bracket.participantsCount }}</b> {{ playersWord }} → сітка на
-        <b>{{ size }}</b> ({{ roundsWord }}<template v-if="byes">, {{ byes }} bye</template>).
+        Зареєстровано <b>{{ playersWord }}</b> → сітка на
+        <b>{{ size }}</b> ({{ roundsWord }}<template v-if="byes">, {{ byesWord }} без противника</template>).
         Реєстрація закриється, а бот одразу почне створювати лобі першого раунду.
       </p>
 
@@ -84,7 +84,7 @@ const options: Array<{ value: TDuelBracketSeeding; title: string; text: string; 
   {
     value: 'rating',
     title: 'За рейтингом дуелей',
-    text: 'Найсильніші розведені по сітці й зустрінуться якомога пізніше; bye дістаються їм.',
+    text: 'Найсильніші розведені по сітці й зустрінуться якомога пізніше; слоти без противника дістаються їм.',
     icon: PhChartLineUp
   }
 ]
@@ -93,7 +93,8 @@ const rounds = computed(() => Math.max(1, Math.ceil(Math.log2(Math.max(2, props.
 const size = computed(() => 2 ** rounds.value)
 const byes = computed(() => size.value - props.bracket.participantsCount)
 const playersWord = computed(() => pluralizeUk(props.bracket.participantsCount, 'гравець', 'гравці', 'гравців'))
-const roundsWord = computed(() => `${rounds.value} ${pluralizeUk(rounds.value, 'раунд', 'раунди', 'раундів')}`)
+const roundsWord = computed(() => pluralizeUk(rounds.value, 'раунд', 'раунди', 'раундів'))
+const byesWord = computed(() => pluralizeUk(byes.value, 'слот', 'слоти', 'слотів'))
 
 async function start () {
   if (starting.value) return

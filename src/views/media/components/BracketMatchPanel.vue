@@ -46,8 +46,10 @@
             </span>
           </span>
         </RouterLink>
-        <div v-else class="bmatch__player is-empty">
-          <span class="bmatch__avatar-empty" aria-hidden="true" />
+        <div v-else class="bmatch__player is-empty" :class="{ 'is-bye': side.bye }">
+          <span class="bmatch__avatar-empty" aria-hidden="true">
+            <PhUserMinus v-if="side.bye" :size="18" weight="bold" />
+          </span>
           <span class="bmatch__name is-placeholder">{{ side.placeholder }}</span>
         </div>
 
@@ -203,6 +205,7 @@ import {
   PhEye,
   PhGameController,
   PhTrophy,
+  PhUserMinus,
   PhWarningCircle
 } from '@phosphor-icons/vue'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
@@ -219,7 +222,7 @@ import {
   duelStatsFor
 } from '@/views/duels/duels.utils'
 import { duelBracketsService } from '@/views/media/media.service'
-import { bracketRoundLabel, duelBracketResultLabels } from '@/views/media/media.utils'
+import { DUEL_BRACKET_BYE_LABEL, bracketRoundLabel, duelBracketResultLabels } from '@/views/media/media.utils'
 import type {
   TDuelBracket,
   TDuelBracketMatch,
@@ -300,10 +303,12 @@ const sides = computed(() => {
     if (m.duel?.direPlayerId === id) return 'dire'
     return m.duel?.lobbyPlayers?.find(p => p.playerId === id)?.side ?? null
   }
+  const isBye = m.round === 1 || m.status === 'DONE'
   const make = (player: TDuelPlayer | null, seed: number | null) => ({
     player,
     seed,
-    placeholder: m.round === 1 || m.status === 'DONE' ? 'bye' : 'Визначиться в попередньому раунді',
+    bye: !player && isBye,
+    placeholder: isBye ? DUEL_BRACKET_BYE_LABEL : 'Визначиться в попередньому раунді',
     hero: m.duel && player ? duelHeroFor(m.duel, player.id) : null,
     stats: m.duel && player ? duelStatsFor(m.duel, player.id) : null,
     lobbySide: player && m.duel && OPEN_DUEL_STATES.includes(m.duel.state) ? sideOf(player.id) : null,
@@ -579,11 +584,31 @@ async function replay () {
 }
 
 .bmatch__avatar-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 44px;
   height: 44px;
   flex-shrink: 0;
   border-radius: 50%;
   border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: var(--ds-text-faint);
+}
+
+.bmatch__player.is-bye .bmatch__avatar-empty {
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.bmatch__player.is-bye .bmatch__name.is-placeholder {
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ds-text-muted);
 }
 
 .bmatch__name {

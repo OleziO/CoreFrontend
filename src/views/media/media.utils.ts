@@ -32,10 +32,13 @@ export const duelBracketStatusLabels: Record<TDuelBracketStatus, string> = {
   CANCELLED: 'Скасовано'
 }
 
+/** Підпис порожнього слота (bye): гравець проходить далі без гри. */
+export const DUEL_BRACKET_BYE_LABEL = 'Без противника'
+
 export const duelBracketResultLabels: Record<TDuelBracketMatchResult, string> = {
   played: 'Зіграно',
   forfeit: 'Технічна перемога',
-  bye: 'Без суперника',
+  bye: DUEL_BRACKET_BYE_LABEL,
   manual: 'Рішення організатора'
 }
 
@@ -148,4 +151,4 @@ export function streamerLinkError (platform: TStreamerPlatform, value: string): 
   return `Потрібне посилання ${meta.label}: ${meta.placeholder.replace(/ваш_\S+$/, '…')}`
 }
 
-export const pluralizeBracketPlayers = (n: number) => `${n} ${pluralizeUk(n, 'гравець', 'гравці', 'гравців')}`
+export const pluralizeBracketPlayers = (n: number) => pluralizeUk(n, 'гравець', 'гравці', 'гравців')

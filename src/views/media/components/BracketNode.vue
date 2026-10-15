@@ -17,7 +17,7 @@
       v-for="slot in slots"
       :key="slot.key"
       class="bnode__row"
-      :class="{ 'is-winner': slot.winner, 'is-loser': slot.loser, 'is-me': slot.isMe }"
+      :class="{ 'is-winner': slot.winner, 'is-loser': slot.loser, 'is-me': slot.isMe, 'is-bye': slot.bye }"
     >
       <span class="bnode__seed">{{ slot.seed ?? '' }}</span>
       <img
@@ -36,18 +36,22 @@
       >
         {{ duelPlayerInitial(slot.player) }}
       </el-avatar>
+      <span v-else-if="slot.bye" class="bnode__bye-icon" aria-hidden="true">
+        <PhUserMinus :size="11" weight="bold" />
+      </span>
       <span v-else class="bnode__empty-avatar" aria-hidden="true" />
-      <span class="bnode__name" :class="{ 'is-placeholder': !slot.player }">{{ slot.label }}</span>
+      <span v-if="slot.bye" class="bnode__bye">{{ slot.label }}</span>
+      <span v-else class="bnode__name" :class="{ 'is-placeholder': !slot.player }">{{ slot.label }}</span>
       <PhCrown v-if="slot.winner" :size="12" weight="fill" class="bnode__crown" aria-hidden="true" />
     </span>
   </button>
 </template>
 
 <script setup lang="ts">
-import { PhCrown } from '@phosphor-icons/vue'
+import { PhCrown, PhUserMinus } from '@phosphor-icons/vue'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 import { duelHeroFor, duelHeroImageUrl, duelPlayerInitial, duelPlayerName, duelStateLabels } from '@/views/duels/duels.utils'
-import { duelBracketResultLabels } from '@/views/media/media.utils'
+import { DUEL_BRACKET_BYE_LABEL, duelBracketResultLabels } from '@/views/media/media.utils'
 import type { TDuelBracketMatch, TDuelPlayer } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
@@ -94,12 +98,14 @@ const slots = computed(() => {
   const make = (key: 'p1' | 'p2', player: TDuelPlayer | null, seed: number | null, fallback: string) => {
     const hero = m.duel && player ? duelHeroFor(m.duel, player.id) : null
     // Порожній слот у завершеному матчі — це bye, а не «очікуємо».
-    const label = player ? duelPlayerName(player) : (m.status === 'DONE' || m.round === 1 ? 'bye' : fallback)
+    const bye = !player && (m.status === 'DONE' || m.round === 1)
+    const label = player ? duelPlayerName(player) : (bye ? DUEL_BRACKET_BYE_LABEL : fallback)
     return {
       key,
       player,
       seed,
       label,
+      bye,
       heroUrl: hero ? duelHeroImageUrl(hero) : '',
       heroName: hero?.localizedName ?? '',
       winner: !!player && m.winnerId === player.id,
@@ -273,6 +279,47 @@ const ariaLabel = computed(() => `${slots.value[0].label} проти ${slots.val
   flex-shrink: 0;
   border-radius: 50%;
   border: 1px dashed rgba(255, 255, 255, 0.18);
+}
+
+/* Bye: слот свідомо порожній — штрихуємо рядок, щоб він не читався як «гравця ще немає» */
+.bnode__row.is-bye {
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.025) 0 6px,
+    transparent 6px 12px
+  );
+}
+
+.bnode__bye-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: var(--ds-text-faint);
+}
+
+.bnode__bye {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  min-width: 0;
+  padding: 0 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 999px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ds-text-muted);
 }
 
 .bnode__name {

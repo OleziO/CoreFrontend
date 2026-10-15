@@ -56,8 +56,8 @@
 <script setup lang="ts">
 import { PhMedal } from '@phosphor-icons/vue'
 import BracketNode from '@/views/media/components/BracketNode.vue'
-import { bracketRoundShortLabel, bracketRoundLabel } from '@/views/media/media.utils'
-import { pluralizeUk } from '@/views/players/player-achievements.utils'
+import { DUEL_BRACKET_BYE_LABEL, bracketRoundShortLabel, bracketRoundLabel } from '@/views/media/media.utils'
+import { pluralizeMatches } from '@/views/players/player-achievements.utils'
 import type { TDuelBracketMatch } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
@@ -76,8 +76,6 @@ const roundNumbers = computed(() => Array.from({ length: props.rounds }, (_, i) 
 
 const thirdPlace = computed(() => props.matches.find(m => m.isThirdPlace) ?? null)
 
-const pluralizeMatches = (n: number) => `${n} ${pluralizeUk(n, 'матч', 'матчі', 'матчів')}`
-
 function matchesOf (round: number): TDuelBracketMatch[] {
   return props.matches
     .filter(m => m.round === round && !m.isThirdPlace)
@@ -94,7 +92,7 @@ function pairsOf (round: number): TDuelBracketMatch[][] {
 
 /** «Переможець 1/4 #2» — звідки прийде гравець у порожній слот. */
 function waitingLabelsOf (match: TDuelBracketMatch): [string, string] {
-  if (match.round === 1) return ['bye', 'bye']
+  if (match.round === 1) return [DUEL_BRACKET_BYE_LABEL, DUEL_BRACKET_BYE_LABEL]
   const prev = bracketRoundShortLabel(match.round - 1, props.rounds)
   return [
     `Переможець ${prev} #${match.position * 2 + 1}`,
@@ -161,6 +159,9 @@ function waitingLabelsOf (match: TDuelBracketMatch): [string, string] {
 }
 
 .btree__head-meta {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
   font-size: 10px;
   color: var(--ds-text-faint);
 }
