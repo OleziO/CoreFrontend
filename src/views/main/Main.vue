@@ -535,8 +535,7 @@ const sponsorTiers = computed<ISponsorTier[]>(() => [
     rgb: 'var(--ds-primary-rgb)',
     gridClass: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5',
     sponsors: [
-      { name: 'PLAYERS', url: 'https://players.com.ua/', logo: playersPartnerLogo },
-      { name: 'CyberHUB', url: 'https://www.instagram.com/cyberhub_lviv/', logo: '/sponsors/CyberHUB_logo.png', dark: true }
+      { name: 'PLAYERS', url: 'https://players.com.ua/', logo: playersPartnerLogo }
     ]
   }
 ])
