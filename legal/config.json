@@ -6,9 +6,9 @@
     "IBAN": "UA95 3052 9900 0002 6002 0410 4688 6",
     "LEGAL_ADDRESS": "Україна, м. Львів, вул. Донцова, 16",
     "ACTUAL_ADDRESS": "Україна, м. Львів, вул. Донцова, 16",
-    "PHONE": "{{PHONE}}",
-    "SUPPORT_EMAIL": "{{SUPPORT_EMAIL}}",
-    "SUPPORT_CHAT": "{{SUPPORT_CHAT}}",
+    "PHONE": "+380 99 539 43 40",
+    "SUPPORT_EMAIL": "coreleaguedota2@gmail.com",
+    "SUPPORT_CHAT": "https://t.me/CoreLeague_Admin",
     "DOMAIN": "https://www.coreleague.online"
   },
   "sellerEn": {
