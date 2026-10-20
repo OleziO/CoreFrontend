@@ -32,6 +32,8 @@ import {
 interface ILegalConfig {
   legalVersion: string
   seller: Record<string, string>
+  /** English forms (transliterated name, address) that override `seller` on `/en/` pages. */
+  sellerEn?: Record<string, string>
   policy: Record<string, string>
 }
 
@@ -57,7 +59,7 @@ interface IRenderedPage {
   problems: string[]
 }
 
-const DEFAULT_SITE_URL = 'https://www.core-league-dota2.org'
+const DEFAULT_SITE_URL = 'https://www.coreleague.online'
 const FONTS_URL = 'https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,300..800;1,300..800' +
   '&family=JetBrains+Mono:wght@400;500;600;700&family=Russo+One&display=swap'
 const PLACEHOLDER_RE = /\{\{\s*([^{}]*?)\s*\}\}/g
@@ -218,9 +220,13 @@ function contactValue (key: string, value: string): string {
   return safe
 }
 
+function sellerFor (ctx: ILegalContext, lang: TLegalLang): Record<string, string> {
+  return lang === 'en' ? { ...ctx.config.seller, ...ctx.config.sellerEn } : ctx.config.seller
+}
+
 function footer (ctx: ILegalContext, lang: TLegalLang, current: TLegalPageSlug): string {
   const ui = UI[lang]
-  const seller = ctx.config.seller
+  const seller = sellerFor(ctx, lang)
   const row = (label: string, key: string) => {
     const value = seller[key] ?? `{{${key}}}`
     if (ctx.publishPending && findPlaceholders(value).length) return ''
@@ -433,8 +439,9 @@ function renderPage (
   const ui = UI[lang]
   const problems: string[] = []
   const { data, body } = parseFrontMatter(readFileSync(file, 'utf8'))
-  const title = substitute(data.title ?? '', ctx.values)
-  const description = substitute(data.description ?? '', ctx.values)
+  const values = { ...ctx.values, ...sellerFor(ctx, lang) }
+  const title = substitute(data.title ?? '', values)
+  const description = substitute(data.description ?? '', values)
   const version = data.version ?? ''
   const updated = data.updated ?? ''
   if (!data.title) problems.push('front matter has no `title`')
@@ -444,7 +451,7 @@ function renderPage (
     problems.push(`version ${version} ≠ legalVersion ${ctx.config.legalVersion} (legal/config.json)`)
   }
 
-  let content = renderMarkdown(substitute(body, ctx.values), lang)
+  let content = renderMarkdown(substitute(body, values), lang)
   const meta = `<p class="lg-meta"><span>${ui.updated}: <b>${escapeHtml(formatDay(updated, lang))}</b></span>` +
     `<span>${ui.version}: <b>${escapeHtml(version)}</b></span></p>`
   // Якщо текст сам відкривається `# Заголовком` — не дублюємо його з front matter.

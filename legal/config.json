@@ -1,14 +1,20 @@
 {
   "legalVersion": "2026-10-14",
   "seller": {
-    "FOP_NAME": "{{FOP_NAME}}",
-    "TAX_ID": "{{TAX_ID}}",
-    "LEGAL_ADDRESS": "{{LEGAL_ADDRESS}}",
-    "ACTUAL_ADDRESS": "{{ACTUAL_ADDRESS}}",
+    "FOP_NAME": "Герасимчук Олег Тарасович",
+    "TAX_ID": "3710405397",
+    "IBAN": "UA95 3052 9900 0002 6002 0410 4688 6",
+    "LEGAL_ADDRESS": "Україна, м. Львів, вул. Донцова, 16",
+    "ACTUAL_ADDRESS": "Україна, м. Львів, вул. Донцова, 16",
     "PHONE": "{{PHONE}}",
     "SUPPORT_EMAIL": "{{SUPPORT_EMAIL}}",
     "SUPPORT_CHAT": "{{SUPPORT_CHAT}}",
-    "DOMAIN": "{{DOMAIN}}"
+    "DOMAIN": "https://www.coreleague.online"
+  },
+  "sellerEn": {
+    "FOP_NAME": "Herasymchuk Oleh Tarasovych",
+    "LEGAL_ADDRESS": "16 Dontsova St., Lviv, Ukraine",
+    "ACTUAL_ADDRESS": "16 Dontsova St., Lviv, Ukraine"
   },
   "policy": {
     "WITHDRAW_DEADLINE_HOURS": "48",

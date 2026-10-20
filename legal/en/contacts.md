@@ -11,6 +11,7 @@ updated: 2026-10-14
 
 - **Name:** {{FOP_NAME}}, individual entrepreneur (FOP)
 - **RNOKPP (taxpayer number):** {{TAX_ID}}
+- **IBAN:** {{IBAN}}
 - **Registered address:** {{LEGAL_ADDRESS}}
 - **Actual address:** {{ACTUAL_ADDRESS}}
 - **Phone:** {{PHONE}}

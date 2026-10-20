@@ -168,6 +168,7 @@ By accepting the Offer, the User agrees to the processing of their personal data
 
 - **Provider:** {{FOP_NAME}}, individual entrepreneur (FOP)
 - **RNOKPP:** {{TAX_ID}}
+- **IBAN:** {{IBAN}}
 - **Registered address:** {{LEGAL_ADDRESS}}
 - **Actual address:** {{ACTUAL_ADDRESS}}
 - **Phone:** {{PHONE}}
