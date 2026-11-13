@@ -37,6 +37,12 @@
       <span v-if="platform === 'twitch'" class="mb-card__platform" title="Стрім на Twitch">
         <PhTwitchLogo :size="16" weight="fill" />
       </span>
+      <span v-else-if="platform === 'youtube'" class="mb-card__platform" title="Стрім на YouTube">
+        <PhYoutubeLogo :size="16" weight="fill" />
+      </span>
+      <span v-else-if="platform === 'kick'" class="mb-card__platform" title="Стрім на Kick">
+        <Icon name="kick" :size="16" />
+      </span>
       <span v-else-if="bracket.streamUrl" class="mb-card__platform" title="Є трансляція">
         <PhBroadcast :size="16" weight="bold" />
       </span>
@@ -87,7 +93,8 @@ import {
   PhCheckCircle,
   PhCrown,
   PhLockSimple,
-  PhTwitchLogo
+  PhTwitchLogo,
+  PhYoutubeLogo
 } from '@phosphor-icons/vue'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
