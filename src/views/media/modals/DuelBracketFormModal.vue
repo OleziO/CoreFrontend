@@ -126,24 +126,30 @@
         <span class="media-dialog__hint">Лише анонс для гравців — запускаєте турнір ви, кнопкою на його сторінці.</span>
       </label>
 
-      <label class="flex flex-col gap-6">
-        <span class="media-dialog__label">Посилання на стрім <span class="font-normal">(необов’язково)</span></span>
+      <div class="flex flex-col gap-6">
+        <span id="bracket-stream-label" class="media-dialog__label">
+          Трансляція <span class="font-normal">(необов’язково)</span>
+        </span>
+        <el-radio-group v-model="streamPlatform" aria-labelledby="bracket-stream-label">
+          <el-radio-button v-for="p in STREAM_PREVIEW_PLATFORMS" :key="p.key" :value="p.key">
+            <span class="inline-flex items-center gap-6">
+              <Icon v-if="p.icon" :name="p.icon" :size="14" aria-hidden="true" />
+              <PhTwitchLogo v-else :size="14" weight="fill" aria-hidden="true" />
+              {{ p.label }}
+            </span>
+          </el-radio-button>
+        </el-radio-group>
         <el-input
           v-model="streamUrl"
           :maxlength="DUEL_TOURNAMENT_STREAM_URL_MAX"
+          :aria-label="`Посилання на стрім ${streamPlatformMeta.label}`"
           clearable
           inputmode="url"
-          placeholder="https://twitch.tv/ваш_канал"
-        >
-          <template #prefix>
-            <PhTwitchLogo :size="14" aria-hidden="true" />
-          </template>
-        </el-input>
+          :placeholder="streamPlatformMeta.placeholder"
+        />
         <span v-if="showErrors && streamUrlError" class="media-dialog__error">{{ streamUrlError }}</span>
-        <span v-else class="media-dialog__hint">
-          Канал Twitch вбудуємо прямо на сторінку турніру; інші платформи — кнопкою.
-        </span>
-      </label>
+        <span v-else class="media-dialog__hint">{{ streamPlatformMeta.hint }}</span>
+      </div>
 
       <!-- Інші канали стрімера -->
       <div class="flex flex-col gap-8">
@@ -205,7 +211,6 @@ import {
   duelPrizeDraftError,
   duelPrizeDraftsFrom,
   duelPrizeDraftToInput,
-  duelStreamUrlError,
   generateDuelTournamentPassword
 } from '@/views/duels/duels.utils'
 import { duelBracketsService } from '@/views/media/media.service'
@@ -215,8 +220,12 @@ import {
   DUEL_BRACKET_MIN_PARTICIPANTS,
   DUEL_BRACKET_PRIZE_PLACE_MAX,
   DUEL_BRACKET_SIZE_PRESETS,
+  STREAM_PREVIEW_PLATFORMS,
   STREAMER_LINK_PLATFORMS,
+  streamPlatformOf,
+  streamPreviewUrlError,
   streamerLinkError,
+  type TStreamPreviewPlatform,
   type TStreamerPlatform
 } from '@/views/media/media.utils'
 import type { TDuelBracket, TDuelBracketStreamerLinks } from '@/api/types/api.types'
@@ -247,6 +256,9 @@ const usePassword = ref(false)
 const password = ref('')
 const scheduledAt = ref<Date | null>(null)
 const streamUrl = ref('')
+/** З якої платформи вбудовуємо прев’ю трансляції; на редагуванні — за збереженим посиланням. */
+const streamPlatform = ref<TStreamPreviewPlatform>('twitch')
+const streamPlatformMeta = computed(() => STREAM_PREVIEW_PLATFORMS.find(p => p.key === streamPlatform.value)!)
 const streamerLinks = ref<Record<TStreamerPlatform, string>>(streamerLinksDraft())
 const prizes = ref<TDuelPrizeDraft[]>([])
 const saving = ref(false)
@@ -261,7 +273,7 @@ const passwordError = computed(() => {
     ? `Пароль — щонайменше ${DUEL_TOURNAMENT_PASSWORD_MIN} символи`
     : ''
 })
-const streamUrlError = computed(() => duelStreamUrlError(streamUrl.value))
+const streamUrlError = computed(() => streamPreviewUrlError(streamPlatform.value, streamUrl.value))
 const streamerLinkErrors = computed(() =>
   Object.fromEntries(
     STREAMER_LINK_PLATFORMS.map(p => [p.key, streamerLinkError(p.key, streamerLinks.value[p.key])])
@@ -292,6 +304,8 @@ watch(modelValue, (open) => {
   password.value = b?.password ?? generateDuelTournamentPassword()
   scheduledAt.value = b?.scheduledAt ? new Date(b.scheduledAt) : null
   streamUrl.value = b?.streamUrl ?? ''
+  const savedPlatform = streamPlatformOf(b?.streamUrl)
+  streamPlatform.value = savedPlatform === 'other' ? 'twitch' : savedPlatform
   streamerLinks.value = streamerLinksDraft(b?.streamerLinks)
   prizes.value = duelPrizeDraftsFrom(b?.prizes)
 }, { immediate: true })

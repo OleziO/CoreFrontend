@@ -39,15 +39,17 @@
       </div>
 
       <a
-        v-if="twitchChannel && streamUrl"
+        v-if="embed && streamUrl"
         :href="streamUrl"
         target="_blank"
         rel="noopener noreferrer nofollow"
         class="no-underline w-fit"
       >
         <el-button size="large" class="bstreamer__external">
-          <PhTwitchLogo :size="16" weight="fill" />
-          <span class="ml-8">twitch.tv/{{ twitchChannel }}</span>
+          <PhTwitchLogo v-if="embed.platform === 'twitch'" :size="16" weight="fill" />
+          <PhYoutubeLogo v-else-if="embed.platform === 'youtube'" :size="16" weight="fill" />
+          <Icon v-else name="kick" :size="16" />
+          <span class="ml-8">{{ externalLabel }}</span>
           <PhArrowSquareOut :size="14" class="ml-8 opacity-60" />
         </el-button>
       </a>
@@ -70,18 +72,18 @@
       </ul>
     </div>
 
-    <!-- «Екран»: Twitch вбудовуємо, інші платформи — посиланням -->
+    <!-- «Екран»: Twitch / YouTube / Kick вбудовуємо, інші посилання — кнопкою -->
     <div class="bstreamer__screen">
       <iframe
-        v-if="twitchChannel && playerOpen"
-        :src="playerUrl"
-        :title="`Стрім ${twitchChannel} на Twitch`"
+        v-if="embed && playerOpen"
+        :src="embed.embedUrl"
+        :title="`Стрім ${embed.channel ?? duelPlayerName(streamer)} на ${platformName}`"
         allow="autoplay; fullscreen; picture-in-picture"
         allowfullscreen
         class="bstreamer__player"
       />
       <button
-        v-else-if="twitchChannel"
+        v-else-if="embed"
         type="button"
         class="bstreamer__poster is-action"
         @click="playerOpen = true"
@@ -90,7 +92,7 @@
           <PhPlay :size="30" weight="fill" />
         </span>
         <span class="bstreamer__poster-title">Дивитися трансляцію тут</span>
-        <span class="bstreamer__poster-sub">Плеєр Twitch відкриється прямо на сторінці</span>
+        <span class="bstreamer__poster-sub">Плеєр {{ platformName }} відкриється прямо на сторінці</span>
       </button>
       <a
         v-else-if="streamUrl"
@@ -137,11 +139,15 @@ import {
   PhTwitchLogo,
   PhYoutubeLogo
 } from '@phosphor-icons/vue'
-import { buildTwitchPlayerUrl } from '@/config/streaming'
 import { resolvePublicOrApiUrl } from '@/core/helpers'
 import { routeNames } from '@/router/route-names'
 import { duelPlayerInitial, duelPlayerName } from '@/views/duels/duels.utils'
-import { STREAMER_LINK_PLATFORMS, streamPlatformOf, twitchChannelOf } from '@/views/media/media.utils'
+import {
+  STREAM_PREVIEW_PLATFORMS,
+  STREAMER_LINK_PLATFORMS,
+  streamEmbedOf,
+  streamPlatformOf
+} from '@/views/media/media.utils'
 import type { TDuelBracketStreamerLinks, TDuelPlayer } from '@/api/types/api.types'
 
 const props = withDefaults(defineProps<{
@@ -163,23 +169,21 @@ const channels = computed(() =>
 )
 
 const platform = computed(() => streamPlatformOf(props.streamUrl))
-const twitchChannel = computed(() => twitchChannelOf(props.streamUrl))
-const playerUrl = computed(() =>
-  twitchChannel.value ? buildTwitchPlayerUrl(window.location.hostname, twitchChannel.value) : ''
-)
+/** Плеєр платформи, яку стрімер обрав для прев’ю; null — посилання не вбудовується. */
+const embed = computed(() => streamEmbedOf(props.streamUrl, window.location.hostname))
 
 const playerOpen = ref(props.live)
 watch(() => props.live, (live) => {
   if (live) playerOpen.value = true
 })
 
-const platformName = computed(() => {
-  switch (platform.value) {
-    case 'twitch': return 'Twitch'
-    case 'youtube': return 'YouTube'
-    case 'kick': return 'Kick'
-    default: return ''
-  }
+const platformName = computed(() => STREAM_PREVIEW_PLATFORMS.find(p => p.key === platform.value)?.label ?? '')
+
+const externalLabel = computed(() => {
+  if (!embed.value) return ''
+  if (embed.value.platform === 'twitch') return `twitch.tv/${embed.value.channel}`
+  if (embed.value.platform === 'kick') return `kick.com/${embed.value.channel}`
+  return 'Відкрити на YouTube'
 })
 </script>
 
